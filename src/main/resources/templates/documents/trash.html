@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>Corbeille - Documents supprimés</title>
+    <style>
+        .trash-header {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            border-radius: 20px;
+            padding: 40px;
+            color: white;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .trash-header h1 {
+            font-size: 32px;
+            font-weight: 800;
+            margin-bottom: 10px;
+        }
+        .file-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            border: 1px solid #e2e8f0;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            opacity: 0.7;
+        }
+        .file-card:hover {
+            opacity: 1;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .file-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+        .file-icon.pdf { background: #fee; color: #dc2626; }
+        .file-icon.doc { background: #eff6ff; color: #2563eb; }
+        .file-icon.img { background: #fef3c7; color: #f59e0b; }
+        .file-icon.default { background: #f1f5f9; color: #64748b; }
+        .file-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .file-name {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 4px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .file-meta {
+            font-size: 13px;
+            color: #64748b;
+        }
+        .file-actions {
+            display: flex;
+            gap: 8px;
+        }
+        .btn-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-restore { background: #dcfce7; color: #16a34a; }
+        .btn-restore:hover { background: #16a34a; color: white; }
+        .btn-delete { background: #fee; color: #dc2626; }
+        .btn-delete:hover { background: #dc2626; color: white; }
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #64748b;
+        }
+        .empty-state i {
+            font-size: 64px;
+            color: #cbd5e1;
+            margin-bottom: 16px;
+        }
+        .deleted-badge {
+            background: #fee;
+            color: #dc2626;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="container-fluid">
+            <!-- Messages -->
+            <div th:if="${message}" class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fas fa-check-circle"></i> <span th:text="${message}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-circle"></i> <span th:text="${error}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+
+            <!-- En-tête de la corbeille -->
+            <div class="trash-header">
+                <h1><i class="fas fa-trash"></i> Corbeille</h1>
+                <p style="font-size: 16px; opacity: 0.95;">Documents supprimés - Restauration possible</p>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <span class="text-muted">
+                        <i class="fas fa-info-circle"></i> 
+                        Les documents sont conservés 30 jours avant suppression définitive
+                    </span>
+                </div>
+                <div class="d-flex gap-2">
+                    <a th:href="@{/documents/case/{caseId}(caseId=${caseId})}" class="btn btn-outline-primary">
+                        <i class="fas fa-arrow-left"></i> Retour aux documents
+                    </a>
+                    <a th:href="@{/cases/{id}(id=${caseId})}" class="btn btn-outline-secondary">
+                        <i class="fas fa-folder"></i> Retour au dossier
+                    </a>
+                </div>
+            </div>
+
+            <!-- Liste des documents supprimés -->
+            <div th:if="${documents != null and !documents.empty}">
+                <div th:each="doc : ${documents}" class="file-card">
+                    <div class="file-icon"
+                         th:classappend="${#strings.endsWith(doc.originalName, '.pdf') ? 'pdf' :
+                                         (#strings.endsWith(doc.originalName, '.doc') or #strings.endsWith(doc.originalName, '.docx')) ? 'doc' :
+                                         (#strings.endsWith(doc.originalName, '.jpg') or #strings.endsWith(doc.originalName, '.png')) ? 'img' : 'default'}">
+                        <i class="fas"
+                           th:classappend="${#strings.endsWith(doc.originalName, '.pdf') ? 'fa-file-pdf' :
+                                           (#strings.endsWith(doc.originalName, '.doc') or #strings.endsWith(doc.originalName, '.docx')) ? 'fa-file-word' :
+                                           (#strings.endsWith(doc.originalName, '.jpg') or #strings.endsWith(doc.originalName, '.png')) ? 'fa-file-image' : 'fa-file'}"></i>
+                    </div>
+                    <div class="file-info">
+                        <div class="file-name" th:text="${doc.originalName}">document.pdf</div>
+                        <div class="file-meta">
+                            <span class="deleted-badge">Supprimé</span>
+                            <span th:text="${doc.fileSize != null ? #numbers.formatDecimal(doc.fileSize / 1024.0, 1, 2) + ' KB' : '-'}">1.2 MB</span>
+                            • Supprimé le <span th:text="${#temporals.format(doc.deletedAt, 'dd/MM/yyyy HH:mm')}">01/01/2024</span>
+                        </div>
+                    </div>
+                    <div class="file-actions">
+                        <form th:action="@{/documents/{id}/restore(id=${doc.id})}" method="post" style="display: inline;">
+                            <button type="submit" class="btn-icon btn-restore" title="Restaurer">
+                                <i class="fas fa-undo"></i>
+                            </button>
+                        </form>
+                        <form th:action="@{/documents/{id}/delete-permanent(id=${doc.id})}" method="post" style="display: inline;">
+                            <button type="submit" class="btn-icon btn-delete" title="Supprimer définitivement"
+                                    onclick="return confirm('⚠️ ATTENTION : Cette action est irréversible !\n\nVoulez-vous vraiment supprimer définitivement ce document ?')">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- État vide -->
+            <div th:if="${documents == null or documents.empty}" class="empty-state">
+                <i class="fas fa-check-circle"></i>
+                <h3>La corbeille est vide</h3>
+                <p>Aucun document supprimé</p>
+                <a th:href="@{/documents/case/{caseId}(caseId=${caseId})}" class="btn btn-primary mt-3">
+                    <i class="fas fa-arrow-left"></i> Retour aux documents
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

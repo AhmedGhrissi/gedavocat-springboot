@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>Choisir votre abonnement</title>
+    <style>
+        /* Hero Premium */
+        .pricing-hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            padding: 60px 40px;
+            text-align: center;
+            color: white;
+            margin-bottom: 48px;
+            position: relative;
+            overflow: hidden;
+        }
+        .pricing-hero::before {
+            content: '💳';
+            position: absolute;
+            font-size: 200px;
+            opacity: 0.1;
+            right: -30px;
+            top: -40px;
+        }
+        .pricing-hero h1 {
+            font-size: 42px;
+            font-weight: 800;
+            margin-bottom: 16px;
+            position: relative;
+        }
+        .pricing-hero p {
+            font-size: 18px;
+            opacity: 0.95;
+            max-width: 600px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        /* Toggle Period */
+        .period-toggle {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 48px;
+            background: #f8fafc;
+            padding: 8px;
+            border-radius: 12px;
+            max-width: 300px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .period-btn {
+            flex: 1;
+            padding: 12px 24px;
+            border: none;
+            background: transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            color: #64748b;
+            transition: all 0.3s;
+        }
+        .period-btn.active {
+            background: white;
+            color: #667eea;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .save-badge {
+            background: #10b981;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            margin-left: 4px;
+        }
+
+        /* Pricing Cards */
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 32px;
+            max-width: 1200px;
+            margin: 0 auto 48px;
+        }
+        .pricing-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px 32px;
+            border: 3px solid #e2e8f0;
+            position: relative;
+            transition: all 0.3s;
+        }
+        .pricing-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(102, 126, 234, 0.2);
+        }
+        .pricing-card.featured {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #f8f9ff 0%, #fff 100%);
+        }
+        .featured-badge {
+            position: absolute;
+            top: -16px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 8px 24px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 700;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        .plan-name {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 12px;
+        }
+        .plan-description {
+            color: #64748b;
+            font-size: 14px;
+            margin-bottom: 24px;
+            line-height: 1.6;
+        }
+        .price-container {
+            margin-bottom: 32px;
+        }
+        .price {
+            font-size: 48px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: inline-block;
+        }
+        .price-period {
+            color: #64748b;
+            font-size: 16px;
+            font-weight: 500;
+        }
+        .old-price {
+            text-decoration: line-through;
+            color: #94a3b8;
+            font-size: 20px;
+            margin-left: 8px;
+        }
+
+        /* Features List */
+        .features-list {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 32px 0;
+        }
+        .feature-item {
+            display: flex;
+            align-items: start;
+            gap: 12px;
+            margin-bottom: 16px;
+            font-size: 15px;
+            color: #475569;
+        }
+        .feature-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #d1fae5;
+            color: #065f46;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 12px;
+        }
+        .feature-icon.disabled {
+            background: #f1f5f9;
+            color: #cbd5e1;
+        }
+
+        /* CTA Button */
+        .cta-button {
+            width: 100%;
+            padding: 16px;
+            border-radius: 12px;
+            border: none;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: block;
+            text-align: center;
+        }
+        .cta-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+        .cta-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+            color: white;
+        }
+        .cta-secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+        .cta-secondary:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        /* Payment Methods */
+        .payment-methods {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            border: 2px solid #e2e8f0;
+            max-width: 800px;
+            margin: 0 auto 48px;
+        }
+        .payment-methods h3 {
+            text-align: center;
+            margin-bottom: 32px;
+            color: #1e293b;
+        }
+        .methods-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 16px;
+        }
+        .method-card {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s;
+        }
+        .method-card:hover {
+            border-color: #667eea;
+            transform: translateY(-4px);
+        }
+        .method-icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+        .method-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: #475569;
+        }
+
+        /* Trust Badges */
+        .trust-section {
+            text-align: center;
+            padding: 40px 20px;
+            background: #f8fafc;
+            border-radius: 16px;
+            margin-bottom: 48px;
+        }
+        .trust-badges {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            flex-wrap: wrap;
+            margin-top: 24px;
+        }
+        .trust-badge {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #475569;
+        }
+        .trust-badge i {
+            font-size: 24px;
+            color: #10b981;
+        }
+
+        /* FAQ */
+        .faq-section {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .faq-item {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 16px;
+            border: 2px solid #e2e8f0;
+        }
+        .faq-question {
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 8px;
+        }
+        .faq-answer {
+            color: #64748b;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="container-fluid">
+            <!-- Hero -->
+            <div class="pricing-hero">
+                <h1>Choisissez votre plan</h1>
+                <p>Gérez votre cabinet d'avocat avec efficacité. Annulez à tout moment.</p>
+            </div>
+
+            <!-- Period Toggle -->
+            <div class="period-toggle">
+                <button class="period-btn active" onclick="togglePeriod('monthly')">
+                    Mensuel
+                </button>
+                <button class="period-btn" onclick="togglePeriod('yearly')">
+                    Annuel
+                    <span class="save-badge">-20%</span>
+                </button>
+            </div>
+
+            <!-- Pricing Cards -->
+            <div class="pricing-grid">
+                <!-- SOLO -->
+                <div class="pricing-card">
+                    <div class="plan-name">Solo</div>
+                    <div class="plan-description">
+                        Parfait pour les avocats indépendants démarrant leur activité
+                    </div>
+                    <div class="price-container">
+                        <span class="price monthly-price">29€</span>
+                        <span class="price yearly-price" style="display: none;">23€</span>
+                        <span class="price-period">/mois</span>
+                        <span class="old-price yearly-price" style="display: none;">29€</span>
+                    </div>
+                    <ul class="features-list">
+                        <li class="feature-item">
+                            <div class="feature-icon"><i class="fas fa-check"></i></div>
+                            <span><strong>5 clients</strong> maximum</span>
+                        </li>
+                        <li class="feature-item">
+                            <div class="feature-icon"><i class="fas fa-check"></i></div>
+                            <span><strong>10 dossiers</strong> actifs</span>
+                        </li>
+                        <li class="feature-item">
+                            <div class="feature-icon"><i class="fas fa-check"></i></div>
+                            <span><strong>5 GB</strong> de stockage</span>
+                        </li>
+                        <li class="feature-item">
+                            <div class="feature-icon"><i class="fas fa-check"></i></div>
+                            <span>Gestion documentaire</span>
+                        </li>
+                        <li class="feature-item">
+                            <div class="feature-icon"><i class="fas fa-check"></i></div>
+                            <span>Support email</span>
+                        </li>
+                        <li class="feature-item">
+                            <div class="feature-icon disabled"><i class="fas fa-times"></i></div>
+                            <span style="color: #cbd5e1;">Signatures électroniques</span>
+                        </li>
+                        <li class="feature-item">
+                            <div class="feature-icon disabled"><i class="fas fa-times"></i></div>
+                            <span style="color: #cbd5e1;">RPVA / e-Barreau</span>
+                        </li>
+                    </ul>
+                    <a th:href="@{/subscription/checkout(plan=SOLO,period=monthly)}" class="cta-button cta-secondary">
+                        Commencer gratuitement
+                    </a>
+                </div>
+
+                <!-- CABINET (Featured) -->
+                <div class="pricing-card featured">
+                    <div class="featured-badge">⭐ Recommandé</div>
+                    <div class="plan-name">Cabinet</div>
+                    <div class="plan-description">
+                        Pour les cabinets établis avec plusieurs collaborateurs
+                    </div>
+                    <div class="price-container">
+                        <span class="price monthly-price">99€</span>
+                        <span class="price yearly-price" style="display: none;">79€</span>
+                        <span class="price-period">/mois</span>
+                        <span class="old-price yearly-price" style="display: none;">99€</span>
+                    </div>
+                    <ul class="features-list">
+                        <li class="feature-item">
+                            <div class="feature-icon"><i class="fas fa-check"></i></div>
+                            <span><strong>50 clients</strong> maximum</span>
+                        </li>
+                        <li class="feature-item">
+                            <div class="feature-icon"><i class="fas fa-check"></i></div>
+                            <span><strong>Dossiers illimités</strong></span>
+                        </li>
+                        <li class="feature-item">
+                            <div class="feature-icon"><i class="fas fa-check"></i></div>
+                            <span><strong>100 GB</strong> de stockage</span>
+                        </li>
+                        <li class="feature-item">
+                            <div class="feature-icon"><i class="fas fa-check"></i></div>
+                            <span>Gestion documentaire avancée</span>
+                        </li>
+                        <li class="feature-item">
+                            <div class="feature-icon"><i class="fas fa-check"></i></div>
+                            <span><strong>5 signatures/mois</strong> (Yousign)</span>
+                        </li>
+                        <li class="feature-item">
+                            <div class="feature-icon"><i class="fas fa-check"></i></div>
+                            <span>RPVA / e-Barreau intégré</span>
+                        </li>
+                        <li class="feature-item">
+                            <div class="feature-icon"><i class="fas fa-check"></i></div>
+                            <span><strong>3 utilisateurs</strong> inclus</span>
+                        </li>
+                        <li class="feature-item">
+                            <div class="feature-icon"><i class="fas fa-check"></i></div>
+                            <span>Support prioritaire</span>
+                        </li>
+                    </ul>
+                    <a th:href="@{/subscription/checkout(plan=CABINET,period=monthly)}" class="cta-button cta-primary">
+                        Démarrer maintenant
+                    </a>
+                </div>
+
+                <!-- ENTERPRISE -->
+                <div class="pricing-card">
+                    <div class="plan-name">Entreprise</div>
+                    <div class="plan-description">
+                        Pour les grands cabinets avec besoins personnalisés
+                    </div>
+                    <div class="price-container">
+                        <span class="price monthly-price">299€</span>
+                        <span class="price yearly-price" style="display: none;">239€</span>
+                        <span class="price-period">/mois</span>
+                        <span class="old-price yearly-price" style="display: none;">299€</span>
+                    </div>
+                    <ul class="features-list">
+                        <li class="feature-item">
+                            <div class="feature-icon"><i class="fas fa-check"></i></div>
+                            <span><strong>Clients illimités</strong></span>
+                        </li>
+                        <li class="feature-item">
+                            <div class="feature-icon"><i class="fas fa-check"></i></div>
+                            <span><strong>Dossiers illimités</strong></span>
+                        </li>
+                        <li class="feature-item">
+                            <div class="feature-icon"><i class="fas fa-check"></i></div>
+                            <span><strong>1 TB</strong> de stockage</span>
+                        </li>
+                        <li class="feature-item">
+                            <div class="feature-icon"><i class="fas fa-check"></i></div>
+                            <span>Toutes fonctionnalités Cabinet</span>
+                        </li>
+                        <li class="feature-item">
+                            <div class="feature-icon"><i class="fas fa-check"></i></div>
+                            <span><strong>30 signatures/mois</strong> incluses</span>
+                        </li>
+                        <li class="feature-item">
+                            <div class="feature-icon"><i class="fas fa-check"></i></div>
+                            <span><strong>Utilisateurs illimités</strong></span>
+                        </li>
+                        <li class="feature-item">
+                            <div class="feature-icon"><i class="fas fa-check"></i></div>
+                            <span>API personnalisée</span>
+                        </li>
+                        <li class="feature-item">
+                            <div class="feature-icon"><i class="fas fa-check"></i></div>
+                            <span>Support dédié 24/7</span>
+                        </li>
+                    </ul>
+                    <a th:href="@{/contact}" class="cta-button cta-secondary">
+                        Nous contacter
+                    </a>
+                </div>
+            </div>
+
+            <!-- Payment Methods -->
+            <div class="payment-methods">
+                <h3><i class="fas fa-shield-alt" style="color: #10b981;"></i> Moyens de paiement sécurisés</h3>
+                <div class="methods-grid">
+                    <div class="method-card">
+                        <div class="method-icon">💳</div>
+                        <div class="method-name">Carte Bancaire</div>
+                    </div>
+                    <div class="method-card">
+                        <div class="method-icon">🏦</div>
+                        <div class="method-name">SEPA</div>
+                    </div>
+                    <div class="method-card">
+                        <div class="method-icon">🍎</div>
+                        <div class="method-name">Apple Pay</div>
+                    </div>
+                    <div class="method-card">
+                        <div class="method-icon">🤖</div>
+                        <div class="method-name">Google Pay</div>
+                    </div>
+                    <div class="method-card">
+                        <div class="method-icon">💰</div>
+                        <div class="method-name">PayPlug</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Trust Section -->
+            <div class="trust-section">
+                <h3 style="margin-bottom: 8px; color: #1e293b;">Paiement 100% sécurisé 🔒</h3>
+                <p style="color: #64748b; margin-bottom: 0;">Powered by Stripe - Leader mondial des paiements en ligne</p>
+                <div class="trust-badges">
+                    <div class="trust-badge">
+                        <i class="fas fa-lock"></i>
+                        <span>Paiement crypté SSL</span>
+                    </div>
+                    <div class="trust-badge">
+                        <i class="fas fa-shield-check"></i>
+                        <span>Certifié PCI-DSS</span>
+                    </div>
+                    <div class="trust-badge">
+                        <i class="fas fa-undo"></i>
+                        <span>Annulation à tout moment</span>
+                    </div>
+                    <div class="trust-badge">
+                        <i class="fas fa-euro-sign"></i>
+                        <span>RGPD Compliant</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FAQ -->
+            <div class="faq-section">
+                <h2 style="text-align: center; margin-bottom: 32px;">Questions fréquentes</h2>
+
+                <div class="faq-item">
+                    <div class="faq-question">💳 Quels moyens de paiement acceptez-vous ?</div>
+                    <div class="faq-answer">
+                        Carte bancaire, SEPA, Apple Pay et Google Pay via Stripe, la plateforme de paiement la plus sécurisée au monde.
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">🔄 Puis-je changer de plan ?</div>
+                    <div class="faq-answer">
+                        Oui, vous pouvez changer de plan à tout moment. Le changement est immédiat et le prix est ajusté au prorata.
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">❌ Puis-je annuler mon abonnement ?</div>
+                    <div class="faq-answer">
+                        Absolument ! Vous pouvez annuler à tout moment depuis votre espace client. Aucune période d'engagement.
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">🔒 Mes données sont-elles sécurisées ?</div>
+                    <div class="faq-answer">
+                        Vos données sont hébergées en France, chiffrées et sauvegardées quotidiennement. Nous sommes 100% conformes RGPD.
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">📧 Quel support proposez-vous ?</div>
+                    <div class="faq-answer">
+                        Support email pour Solo, support prioritaire pour Cabinet, support dédié 24/7 pour Entreprise.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            function togglePeriod(period) {
+                // Toggle buttons
+                document.querySelectorAll('.period-btn').forEach(btn => btn.classList.remove('active'));
+                event.target.classList.add('active');
+
+                // Toggle prices
+                if (period === 'yearly') {
+                    document.querySelectorAll('.monthly-price').forEach(el => el.style.display = 'none');
+                    document.querySelectorAll('.yearly-price').forEach(el => el.style.display = 'inline');
+                } else {
+                    document.querySelectorAll('.monthly-price').forEach(el => el.style.display = 'inline');
+                    document.querySelectorAll('.yearly-price').forEach(el => el.style.display = 'none');
+                }
+                
+                // Mettre à jour les liens CTA avec la période
+                updateCheckoutLinks(period);
+            }
+            
+            function updateCheckoutLinks(period) {
+                // SOLO
+                const soloBtn = document.querySelector('a[href*="plan=SOLO"]');
+                if (soloBtn) {
+                    soloBtn.href = `/subscription/checkout?plan=SOLO&period=${period}`;
+                }
+                
+                // CABINET
+                const cabinetBtn = document.querySelector('a[href*="plan=CABINET"]');
+                if (cabinetBtn) {
+                    cabinetBtn.href = `/subscription/checkout?plan=CABINET&period=${period}`;
+                }
+                
+                // ENTERPRISE - pas de changement, c'est un lien de contact
+            }
+        </script>
+    </div>
+</body>
+</html>

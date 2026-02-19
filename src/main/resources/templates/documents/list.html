@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>Documents</title>
+    <style>
+        .upload-zone {
+            border: 2px dashed #cbd5e1;
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            background: #f8fafc;
+            transition: all 0.3s;
+            cursor: pointer;
+            margin-bottom: 24px;
+        }
+        .upload-zone:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+        .upload-zone.dragover {
+            border-color: #667eea;
+            background: #e0e7ff;
+        }
+        .file-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            border: 1px solid #e2e8f0;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .file-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .file-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+        .file-icon.pdf { background: #fee; color: #dc2626; }
+        .file-icon.doc { background: #eff6ff; color: #2563eb; }
+        .file-icon.img { background: #fef3c7; color: #f59e0b; }
+        .file-icon.default { background: #f1f5f9; color: #64748b; }
+        .file-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .file-name {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 4px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .file-meta {
+            font-size: 13px;
+            color: #64748b;
+        }
+        .file-actions {
+            display: flex;
+            gap: 8px;
+        }
+        .btn-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-download { background: #e0f2fe; color: #0284c7; }
+        .btn-download:hover { background: #0284c7; color: white; }
+        .btn-delete { background: #fee; color: #dc2626; }
+        .btn-delete:hover { background: #dc2626; color: white; }
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #64748b;
+        }
+        .empty-state i {
+            font-size: 64px;
+            color: #cbd5e1;
+            margin-bottom: 16px;
+        }
+        .version-badge {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="container-fluid">
+            <!-- Messages -->
+            <div th:if="${message}" class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fas fa-check-circle"></i> <span th:text="${message}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-circle"></i> <span th:text="${error}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1><i class="fas fa-file"></i> Documents</h1>
+                <div class="d-flex gap-2">
+                    <a th:href="@{/documents}" class="btn btn-outline-info">
+                        <i class="fas fa-list"></i> Tous mes documents
+                    </a>
+                    <a th:href="@{/documents/case/{caseId}/trash(caseId=${caseId})}" class="btn btn-outline-secondary" th:if="${caseId != null}">
+                        <i class="fas fa-trash"></i> Corbeille
+                    </a>
+                    <a th:href="@{/cases/{id}(id=${caseId})}" class="btn btn-outline-primary" th:if="${caseId != null}">
+                        <i class="fas fa-arrow-left"></i> Retour au dossier
+                    </a>
+                    <!-- Bouton pour uploader un nouveau document -->
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal">
+                        <i class="fas fa-plus"></i> Nouveau document
+                    </button>
+                </div>
+            </div>
+
+            <!-- Zone d'upload -->
+            <div class="upload-zone" id="uploadZone">
+                <input type="file" id="fileInput" multiple style="display: none;">
+                <i class="fas fa-cloud-upload-alt fa-3x mb-3" style="color: #667eea;"></i>
+                <h3>Glissez vos fichiers ici</h3>
+                <p class="text-muted">ou cliquez pour parcourir</p>
+                <small class="text-muted">PDF, Word, Excel, Images - Max 50MB par fichier</small>
+            </div>
+
+            <!-- Liste des documents -->
+            <div th:if="${documents != null and !documents.empty}">
+                <div th:each="doc : ${documents}" class="file-card">
+                    <div class="file-icon"
+                         th:classappend="${#strings.endsWith(doc.originalName, '.pdf') ? 'pdf' :
+                                         (#strings.endsWith(doc.originalName, '.doc') or #strings.endsWith(doc.originalName, '.docx')) ? 'doc' :
+                                         (#strings.endsWith(doc.originalName, '.jpg') or #strings.endsWith(doc.originalName, '.png')) ? 'img' : 'default'}">
+                        <i class="fas"
+                           th:classappend="${#strings.endsWith(doc.originalName, '.pdf') ? 'fa-file-pdf' :
+                                           (#strings.endsWith(doc.originalName, '.doc') or #strings.endsWith(doc.originalName, '.docx')) ? 'fa-file-word' :
+                                           (#strings.endsWith(doc.originalName, '.jpg') or #strings.endsWith(doc.originalName, '.png')) ? 'fa-file-image' : 'fa-file'}"></i>
+                    </div>
+                    <div class="file-info">
+                        <div class="file-name" th:text="${doc.originalName}">document.pdf</div>
+                        <div class="file-meta">
+                            <span th:if="${doc.version > 1}">
+                                <span class="version-badge">v<span th:text="${doc.version}">1</span></span>
+                            </span>
+                            <span th:text="${doc.fileSize != null ? #numbers.formatDecimal(doc.fileSize / 1024.0, 1, 2) + ' KB' : '-'}">1.2 MB</span>
+                            • <span th:text="${#temporals.format(doc.createdAt, 'dd/MM/yyyy HH:mm')}">01/01/2024</span>
+                        </div>
+                    </div>
+                    <div class="file-actions">
+                        <a th:href="@{/documents/{id}/download(id=${doc.id})}" class="btn-icon btn-download" title="Télécharger">
+                            <i class="fas fa-download"></i>
+                        </a>
+                        <form th:action="@{/documents/{id}/delete(id=${doc.id})}" method="post" style="display: inline;">
+                            <button type="submit" class="btn-icon btn-delete" title="Supprimer"
+                                    onclick="return confirm('Supprimer ce document ?')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- État vide -->
+            <div th:if="${documents == null or documents.empty}" class="empty-state">
+                <i class="fas fa-folder-open"></i>
+                <h3>Aucun document</h3>
+                <p>Commencez par télécharger vos premiers documents</p>
+            </div>
+        </div>
+
+        <!-- Modal d'upload -->
+        <div class="modal fade" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title" id="uploadModalLabel">
+                            <i class="fas fa-cloud-upload-alt"></i> Nouveau Document
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form th:action="@{/documents/case/{caseId}/upload(caseId=${caseId != null ? caseId : '__CASE_ID__'})}" 
+                              method="post" enctype="multipart/form-data" id="uploadForm">
+                            
+                            <!-- Zone de drag & drop dans le modal -->
+                            <div class="upload-zone mb-4" id="modalUploadZone" style="padding: 30px; cursor: pointer;">
+                                <input type="file" id="modalFileInput" name="file" style="display: none;" required
+                                       accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.txt">
+                                <i class="fas fa-cloud-upload-alt fa-2x mb-2" style="color: #667eea;"></i>
+                                <h5>Glissez votre fichier ici</h5>
+                                <p class="text-muted mb-2">ou cliquez pour parcourir</p>
+                                <small class="text-muted">PDF, Word, Excel, Images - Max 50MB</small>
+                                <div id="selectedFileName" class="mt-2 text-primary" style="display: none; font-weight: 600;"></div>
+                            </div>
+
+                            <!-- Sélection du dossier si pas déjà dans un dossier -->
+                            <div class="mb-3" th:if="${caseId == null}">
+                                <label for="caseSelectModal" class="form-label">
+                                    <i class="fas fa-folder"></i> Dossier
+                                </label>
+                                <select class="form-control" id="caseSelectModal" name="caseId" required>
+                                    <option value="">-- Sélectionner un dossier --</option>
+                                    <option th:each="case : ${cases}" th:value="${case.id}" th:text="${case.name}">Dossier</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Message si on est déjà dans un dossier -->
+                            <div class="alert alert-info" th:if="${caseId != null}">
+                                <i class="fas fa-info-circle"></i>
+                                Le document sera ajouté au dossier en cours
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times"></i> Annuler
+                        </button>
+                        <button type="submit" form="uploadForm" class="btn btn-primary" id="modalUploadBtn" disabled>
+                            <i class="fas fa-upload"></i> Uploader
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            const uploadZone = document.getElementById('uploadZone');
+            const fileInput = document.getElementById('fileInput');
+
+            // Gestion du drag & drop principal
+            uploadZone.addEventListener('click', () => fileInput.click());
+
+            uploadZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadZone.classList.add('dragover');
+            });
+
+            uploadZone.addEventListener('dragleave', () => {
+                uploadZone.classList.remove('dragover');
+            });
+
+            uploadZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadZone.classList.remove('dragover');
+                const files = e.dataTransfer.files;
+                handleFiles(files);
+            });
+
+            fileInput.addEventListener('change', (e) => {
+                handleFiles(e.target.files);
+            });
+
+            // Gestion du modal d'upload
+            const modalUploadZone = document.getElementById('modalUploadZone');
+            const modalFileInput = document.getElementById('modalFileInput');
+            const modalUploadBtn = document.getElementById('modalUploadBtn');
+            const selectedFileName = document.getElementById('selectedFileName');
+            const uploadForm = document.getElementById('uploadForm');
+
+            // Drag & drop dans le modal
+            modalUploadZone.addEventListener('click', () => modalFileInput.click());
+
+            modalUploadZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                modalUploadZone.classList.add('dragover');
+            });
+
+            modalUploadZone.addEventListener('dragleave', () => {
+                modalUploadZone.classList.remove('dragover');
+            });
+
+            modalUploadZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                modalUploadZone.classList.remove('dragover');
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    modalFileInput.files = files;
+                    updateSelectedFile(files[0]);
+                }
+            });
+
+            // Sélection de fichier dans le modal
+            modalFileInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    updateSelectedFile(e.target.files[0]);
+                }
+            });
+
+            function updateSelectedFile(file) {
+                selectedFileName.textContent = `✓ Fichier sélectionné: ${file.name}`;
+                selectedFileName.style.display = 'block';
+                modalUploadBtn.disabled = false;
+            }
+
+            // Soumettre le formulaire et gérer le cas où il faut remplacer __CASE_ID__
+            uploadForm.addEventListener('submit', (e) => {
+                const caseId = /*[[${caseId}]]*/ '';
+                if (!caseId) {
+                    const caseSelectModal = document.getElementById('caseSelectModal');
+                    if (caseSelectModal && caseSelectModal.value) {
+                        const selectedCaseId = caseSelectModal.value;
+                        uploadForm.action = uploadForm.action.replace('__CASE_ID__', selectedCaseId);
+                    } else {
+                        e.preventDefault();
+                        alert('Veuillez sélectionner un dossier');
+                        return false;
+                    }
+                }
+            });
+
+            function handleFiles(files) {
+                if (files.length === 0) return;
+
+                const caseId = /*[[${caseId}]]*/ '';
+                
+                // Vérifier si caseId existe, sinon utiliser le modal
+                if (!caseId) {
+                    showErrorMessage('Veuillez utiliser le bouton "Nouveau document" pour uploader des fichiers');
+                    return;
+                }
+                
+                const uploadZone = document.getElementById('uploadZone');
+                
+                // Afficher un indicateur de progression
+                uploadZone.innerHTML = `
+                    <i class="fas fa-spinner fa-spin fa-3x mb-3" style="color: #667eea;"></i>
+                    <h3>Upload en cours...</h3>
+                    <p class="text-muted">Veuillez patienter</p>
+                `;
+
+                let uploadedCount = 0;
+                let errorCount = 0;
+                const totalFiles = files.length;
+
+                // Récupérer le token CSRF
+                const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+                const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+
+                // Upload chaque fichier individuellement
+                Array.from(files).forEach((file, index) => {
+                    const formData = new FormData();
+                    formData.append('file', file);
+
+                    // Headers pour l'authentification
+                    const headers = {};
+                    if (csrfToken && csrfHeader) {
+                        headers[csrfHeader] = csrfToken;
+                    }
+
+                    fetch(`/documents/case/${caseId}/upload-ajax`, {
+                        method: 'POST',
+                        body: formData,
+                        headers: headers,
+                        credentials: 'same-origin'
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            uploadedCount++;
+                            console.log(`✅ Fichier ${file.name} uploadé avec succès`);
+                        } else {
+                            errorCount++;
+                            console.error(`❌ Erreur upload ${file.name}:`, data.message);
+                        }
+                        
+                        // Quand tous les fichiers sont traités
+                        if (uploadedCount + errorCount === totalFiles) {
+                            handleUploadComplete(uploadedCount, errorCount, totalFiles);
+                        }
+                    })
+                    .catch(error => {
+                        errorCount++;
+                        console.error(`❌ Erreur réseau pour ${file.name}:`, error);
+                        
+                        if (uploadedCount + errorCount === totalFiles) {
+                            handleUploadComplete(uploadedCount, errorCount, totalFiles);
+                        }
+                    });
+                });
+            }
+
+            function handleUploadComplete(uploaded, errors, total) {
+                console.log(`📊 Upload terminé: ${uploaded}/${total} réussis, ${errors} erreurs`);
+                
+                if (errors === 0) {
+                    // Tous les uploads ont réussi
+                    showSuccessMessage(`${uploaded} fichier(s) uploadé(s) avec succès !`);
+                    setTimeout(() => window.location.reload(), 1500);
+                } else if (uploaded > 0) {
+                    // Succès partiel
+                    showWarningMessage(`${uploaded} fichier(s) uploadé(s), ${errors} échec(s)`);
+                    setTimeout(() => window.location.reload(), 2000);
+                } else {
+                    // Tous les uploads ont échoué
+                    showErrorMessage(`Erreur: Aucun fichier n'a pu être uploadé`);
+                    resetUploadZone();
+                }
+            }
+
+            function showSuccessMessage(message) {
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'alert alert-success alert-dismissible fade show';
+                alertDiv.innerHTML = `
+                    <i class="fas fa-check-circle"></i> ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                document.querySelector('.container-fluid').insertBefore(alertDiv, document.querySelector('.d-flex'));
+            }
+
+            function showWarningMessage(message) {
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'alert alert-warning alert-dismissible fade show';
+                alertDiv.innerHTML = `
+                    <i class="fas fa-exclamation-triangle"></i> ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                document.querySelector('.container-fluid').insertBefore(alertDiv, document.querySelector('.d-flex'));
+            }
+
+            function showErrorMessage(message) {
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'alert alert-danger alert-dismissible fade show';
+                alertDiv.innerHTML = `
+                    <i class="fas fa-exclamation-circle"></i> ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                document.querySelector('.container-fluid').insertBefore(alertDiv, document.querySelector('.d-flex'));
+            }
+
+            function resetUploadZone() {
+                const uploadZone = document.getElementById('uploadZone');
+                uploadZone.innerHTML = `
+                    <i class="fas fa-cloud-upload-alt fa-3x mb-3" style="color: #667eea;"></i>
+                    <h3>Glissez vos fichiers ici</h3>
+                    <p class="text-muted">ou cliquez pour parcourir</p>
+                    <small class="text-muted">PDF, Word, Excel, Images - Max 50MB par fichier</small>
+                `;
+            }
+        </script>
+    </div>
+</body>
+</html>

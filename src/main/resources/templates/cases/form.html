@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title th:text="${isEdit ? 'Modifier le dossier' : 'Nouveau dossier'}">Dossier</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="container">
+            <div class="row justify-content-center mt-4">
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="mb-0">
+                                <i class="fas fa-folder-plus"></i>
+                                <span th:text="${isEdit ? 'Modifier le dossier' : 'Nouveau dossier'}">Dossier</span>
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <!-- Affichage des erreurs globales -->
+                            <div class="alert alert-danger" th:if="${error}">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <span th:text="${error}">Erreur</span>
+                            </div>
+                            
+                            <form th:action="${isEdit ? '/cases/' + case.id : '/cases'}" 
+                                  method="post" 
+                                  th:object="${case}">
+                                
+                                <!-- Champ caché pour l'ID en mode édition -->
+                                <input type="hidden" th:if="${isEdit}" th:field="*{id}" />
+                                
+                                <!-- Nom du dossier -->
+                                <div class="mb-3">
+                                    <label for="name" class="form-label">Nom du dossier <span class="text-danger">*</span></label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="name" 
+                                           th:field="*{name}"
+                                           required
+                                           placeholder="Ex: Divorce Dupont">
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
+                                </div>
+
+                                <!-- Client -->
+                                <div class="mb-3">
+                                    <label for="clientId" class="form-label">Client <span class="text-danger">*</span></label>
+                                    <select class="form-select" 
+                                            id="clientId" 
+                                            name="clientId"
+                                            th:classappend="${#fields.hasErrors('client')} ? 'is-invalid' : ''"
+                                            required>
+                                        <option value="">Sélectionnez un client</option>
+                                        <option th:each="client : ${clients}" 
+                                                th:value="${client.id}" 
+                                                th:text="${client.name}"
+                                                th:selected="${case.client != null and case.client.id == client.id}">
+                                            Client
+                                        </option>
+                                    </select>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('client')}" th:errors="*{client}">
+                                        Veuillez sélectionner un client
+                                    </div>
+                                    <div class="form-text">
+                                        <a th:href="@{/clients/new}" target="_blank">
+                                            <i class="fas fa-plus-circle"></i> Créer un nouveau client
+                                        </a>
+                                    </div>
+                                </div>
+
+                                <!-- Description -->
+                                <div class="mb-3">
+                                    <label for="description" class="form-label">Description</label>
+                                    <textarea class="form-control" 
+                                              id="description" 
+                                              th:field="*{description}"
+                                              rows="4"
+                                              placeholder="Description du dossier..."></textarea>
+                                </div>
+
+                                <!-- Statut (uniquement en modification) -->
+                                <div class="mb-3" th:if="${isEdit}">
+                                    <label for="status" class="form-label">Statut</label>
+                                    <select class="form-select" id="status" th:field="*{status}">
+                                        <option th:each="stat : ${T(com.gedavocat.model.Case.CaseStatus).values()}" 
+                                                th:value="${stat}" 
+                                                th:text="${stat.displayName}">
+                                            Statut
+                                        </option>
+                                    </select>
+                                </div>
+
+                                <!-- Boutons -->
+                                <div class="d-flex justify-content-between mt-4">
+                                    <a th:href="@{/cases}" class="btn btn-secondary">
+                                        <i class="fas fa-arrow-left"></i> Annuler
+                                    </a>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save"></i>
+                                        <span th:text="${isEdit ? 'Modifier' : 'Créer'}">Enregistrer</span>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

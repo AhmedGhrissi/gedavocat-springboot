@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>Paramètres</title>
+    <style>
+        .settings-container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .settings-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            padding: 40px;
+            color: white;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .settings-header h1 {
+            font-size: 32px;
+            font-weight: 800;
+            margin-bottom: 10px;
+        }
+        .settings-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 30px;
+            background: #f8fafc;
+            padding: 8px;
+            border-radius: 12px;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 12px 24px;
+            border: none;
+            background: transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            color: #64748b;
+            transition: all 0.3s;
+        }
+        .tab-btn.active {
+            background: white;
+            color: #667eea;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .settings-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 25px;
+        }
+        .settings-card h3 {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .form-floating {
+            margin-bottom: 20px;
+        }
+        .btn-test {
+            background: #e0f2fe;
+            color: #0284c7;
+            border: 1px solid #0284c7;
+        }
+        .btn-test:hover {
+            background: #0284c7;
+            color: white;
+        }
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .status-success {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+        .status-warning {
+            background: #fef3c7;
+            color: #d97706;
+        }
+        .api-key-display {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 12px;
+            font-family: monospace;
+            color: #64748b;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="container-fluid">
+            <div class="settings-container">
+                <!-- En-tête -->
+                <div class="settings-header">
+                    <h1><i class="fas fa-cog"></i> Paramètres</h1>
+                    <p style="font-size: 16px; opacity: 0.95;">Configuration de votre compte et intégrations</p>
+                </div>
+
+                <!-- Messages -->
+                <div th:if="${message}" class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fas fa-check-circle"></i> <span th:text="${message}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-circle"></i> <span th:text="${error}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+
+                <!-- Onglets -->
+                <div class="settings-tabs">
+                    <button class="tab-btn active" onclick="switchTab('profile')">
+                        <i class="fas fa-user"></i> Profil
+                    </button>
+                    <button class="tab-btn" onclick="switchTab('yousign')">
+                        <i class="fas fa-signature"></i> Yousign
+                    </button>
+                    <button class="tab-btn" onclick="switchTab('security')">
+                        <i class="fas fa-shield-alt"></i> Sécurité
+                    </button>
+                </div>
+
+                <!-- Onglet Profil -->
+                <div id="profile-tab" class="settings-card">
+                    <h3><i class="fas fa-user-edit"></i> Informations personnelles</h3>
+                    
+                    <form th:action="@{/settings/profile}" method="post">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="text" id="firstName" name="firstName" 
+                                           th:value="${user.firstName}" class="form-control" required>
+                                    <label for="firstName">Prénom</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="text" id="lastName" name="lastName" 
+                                           th:value="${user.lastName}" class="form-control" required>
+                                    <label for="lastName">Nom</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-floating">
+                            <input type="email" id="email" th:value="${user.email}" 
+                                   class="form-control" readonly>
+                            <label for="email">Email (non modifiable)</label>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="text" id="phone" name="phone" 
+                                           th:value="${user.phone}" class="form-control">
+                                    <label for="phone">Téléphone</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="text" id="barNumber" name="barNumber" 
+                                           th:value="${user.barNumber}" class="form-control">
+                                    <label for="barNumber">Numéro au barreau</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Sauvegarder
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Onglet Yousign -->
+                <div id="yousign-tab" class="settings-card" style="display: none;">
+                    <h3>
+                        <i class="fas fa-signature"></i> Configuration Yousign
+                        <span th:if="${yousignConfigured}" class="status-indicator status-success">
+                            <i class="fas fa-check-circle"></i> Configuré
+                        </span>
+                        <span th:if="${!yousignConfigured}" class="status-indicator status-warning">
+                            <i class="fas fa-exclamation-triangle"></i> Non configuré
+                        </span>
+                    </h3>
+
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Intégration Yousign :</strong> Configurez votre clé API pour activer les signatures électroniques.
+                        <a href="https://yousign.app" target="_blank" class="alert-link">Obtenir une clé API</a>
+                    </div>
+
+                    <form th:action="@{/settings/yousign}" method="post">
+                        <div class="form-floating">
+                            <input type="text" id="apiKey" name="apiKey" 
+                                   th:value="${yousignApiKey}" class="form-control" 
+                                   placeholder="Votre clé API Yousign">
+                            <label for="apiKey">Clé API Yousign</label>
+                            <small class="text-muted">Format: prod_XXXXXXXX ou test_XXXXXXXX</small>
+                        </div>
+
+                        <div class="form-check mb-3">
+                            <input type="checkbox" id="sandbox" name="sandbox" class="form-check-input" checked>
+                            <label for="sandbox" class="form-check-label">
+                                Mode sandbox (test)
+                            </label>
+                            <small class="form-text text-muted d-block">
+                                Activez pour tester sans créer de vraies signatures
+                            </small>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Sauvegarder
+                            </button>
+                            
+                            <button type="button" class="btn btn-test" onclick="testYousignConnection()">
+                                <i class="fas fa-vial"></i> Tester la connexion
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Onglet Sécurité -->
+                <div id="security-tab" class="settings-card" style="display: none;">
+                    <h3><i class="fas fa-shield-alt"></i> Sécurité du compte</h3>
+                    
+                    <div class="alert alert-warning">
+                        <i class="fas fa-construction"></i>
+                        <strong>En développement :</strong> 
+                        Les paramètres de sécurité seront bientôt disponibles.
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>Abonnement actuel</h5>
+                            <p class="badge bg-primary fs-6" th:text="${user.subscriptionPlan?.displayName ?: 'FREE'}">FREE</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Limite de clients</h5>
+                            <p th:text="${user.maxClients} + ' clients maximum'">5 clients maximum</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            function switchTab(tabName) {
+                // Masquer tous les onglets
+                document.querySelectorAll('[id$="-tab"]').forEach(tab => {
+                    tab.style.display = 'none';
+                });
+
+                // Désactiver tous les boutons
+                document.querySelectorAll('.tab-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+
+                // Afficher l'onglet sélectionné et activer le bouton
+                document.getElementById(tabName + '-tab').style.display = 'block';
+                event.target.classList.add('active');
+            }
+
+            function testYousignConnection() {
+                fetch('/settings/yousign/test', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'same-origin'
+                })
+                .then(response => {
+                    window.location.reload(); // Rechargement pour voir le message
+                })
+                .catch(error => {
+                    alert('Erreur lors du test de connexion');
+                });
+            }
+        </script>
+    </div>
+</body>
+</html>

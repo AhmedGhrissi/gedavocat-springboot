@@ -1,0 +1,133 @@
+# ===================================================================
+# .htaccess pour GED Avocat sur O2Switch
+# À placer dans le dossier public_html ou dans un sous-dossier
+# ===================================================================
+
+# Activer le module de réécriture
+RewriteEngine On
+
+# ===================================================================
+# Redirection HTTPS (recommandé pour la sécurité)
+# ===================================================================
+# Décommenter les lignes suivantes après avoir activé SSL
+# RewriteCond %{HTTPS} off
+# RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# ===================================================================
+# Configuration du Reverse Proxy vers l'application Spring Boot
+# ===================================================================
+
+<IfModule mod_proxy.c>
+    # Préserver le nom d'hôte original
+    ProxyPreserveHost On
+    
+    # Configuration du proxy pour l'application Spring Boot
+    # Adapter le port (8080) si vous utilisez un autre port
+    ProxyPass / http://localhost:8080/
+    ProxyPassReverse / http://localhost:8080/
+    
+    # Timeout pour les requêtes longues
+    ProxyTimeout 300
+    
+    # Configuration pour WebSocket (si nécessaire plus tard)
+    # RewriteEngine On
+    # RewriteCond %{HTTP:Upgrade} =websocket [NC]
+    # RewriteRule /(.*)           ws://localhost:8080/$1 [P,L]
+</IfModule>
+
+# ===================================================================
+# Compression GZIP pour améliorer les performances
+# ===================================================================
+<IfModule mod_deflate.c>
+    # Compresser les types de fichiers texte
+    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript
+    AddOutputFilterByType DEFLATE application/javascript application/json
+    AddOutputFilterByType DEFLATE application/xml application/xhtml+xml
+    
+    # Exclure certains navigateurs anciens
+    BrowserMatch ^Mozilla/4 gzip-only-text/html
+    BrowserMatch ^Mozilla/4\.0[678] no-gzip
+    BrowserMatch \bMSIE !no-gzip !gzip-only-text/html
+</IfModule>
+
+# ===================================================================
+# Mise en cache des ressources statiques
+# ===================================================================
+<IfModule mod_expires.c>
+    ExpiresActive On
+    
+    # Images
+    ExpiresByType image/jpeg "access plus 1 year"
+    ExpiresByType image/png "access plus 1 year"
+    ExpiresByType image/gif "access plus 1 year"
+    ExpiresByType image/svg+xml "access plus 1 year"
+    ExpiresByType image/x-icon "access plus 1 year"
+    
+    # CSS et JavaScript
+    ExpiresByType text/css "access plus 1 month"
+    ExpiresByType application/javascript "access plus 1 month"
+    ExpiresByType text/javascript "access plus 1 month"
+    
+    # Fonts
+    ExpiresByType font/woff "access plus 1 year"
+    ExpiresByType font/woff2 "access plus 1 year"
+    ExpiresByType application/font-woff "access plus 1 year"
+</IfModule>
+
+# ===================================================================
+# En-têtes de sécurité
+# ===================================================================
+<IfModule mod_headers.c>
+    # Protection contre le clickjacking
+    Header always set X-Frame-Options "SAMEORIGIN"
+    
+    # Protection XSS
+    Header always set X-XSS-Protection "1; mode=block"
+    
+    # Empêcher le sniffing MIME
+    Header always set X-Content-Type-Options "nosniff"
+    
+    # Politique de référent
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    
+    # Content Security Policy (à adapter selon vos besoins)
+    # Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com;"
+</IfModule>
+
+# ===================================================================
+# Protection des fichiers sensibles
+# ===================================================================
+
+# Interdire l'accès aux fichiers de configuration
+<FilesMatch "\.(properties|yml|yaml|sql|log)$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+# Interdire l'accès aux fichiers .git
+<FilesMatch "^\.git">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+# ===================================================================
+# Pages d'erreur personnalisées (optionnel)
+# ===================================================================
+# ErrorDocument 404 /error/404.html
+# ErrorDocument 500 /error/500.html
+# ErrorDocument 503 /error/503.html
+
+# ===================================================================
+# Encodage UTF-8
+# ===================================================================
+AddDefaultCharset UTF-8
+
+# ===================================================================
+# Notes d'utilisation
+# ===================================================================
+# 1. Placer ce fichier dans votre dossier public_html
+# 2. Vérifier que mod_proxy est activé sur votre hébergement O2Switch
+# 3. Adapter le port (8080) si nécessaire
+# 4. Activer SSL/HTTPS via le cPanel O2Switch (Let's Encrypt gratuit)
+# 5. Décommenter la redirection HTTPS une fois SSL activé
+# ===================================================================

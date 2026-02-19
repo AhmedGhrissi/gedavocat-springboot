@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GED Avocat - Gestion Électronique de Documents pour Avocats</title>
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 100px 20px;
+            text-align: center;
+        }
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        .hero p {
+            font-size: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .features {
+            padding: 60px 20px;
+            background: white;
+        }
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+        .feature-card {
+            text-align: center;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .feature-card i {
+            font-size: 3rem;
+            color: #667eea;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="/" class="logo">
+                <i class="fas fa-balance-scale"></i>
+                <span>GED Avocat</span>
+            </a>
+            <div>
+                <a th:href="@{/login}" class="btn btn-secondary">Connexion</a>
+                <a th:href="@{/register}" class="btn btn-primary">Inscription</a>
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="container">
+            <h1><i class="fas fa-balance-scale"></i> GED Avocat</h1>
+            <p>Gestion Électronique de Documents pour Avocats</p>
+            <p>La solution complète pour gérer vos clients, dossiers et documents en toute sécurité</p>
+            <a th:href="@{/register}" class="btn btn-primary" style="font-size: 1.2rem; padding: 1rem 2rem;">
+                <i class="fas fa-rocket"></i> Commencer maintenant
+            </a>
+        </div>
+    </section>
+
+    <section class="features">
+        <div class="container">
+            <h2 class="text-center">Fonctionnalités principales</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <i class="fas fa-users"></i>
+                    <h3>Gestion des clients</h3>
+                    <p>Gérez facilement tous vos clients avec leurs informations et historique complet</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-folder-open"></i>
+                    <h3>Dossiers juridiques</h3>
+                    <p>Organisez vos affaires par client avec un suivi détaillé de l'avancement</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-file-alt"></i>
+                    <h3>Documents sécurisés</h3>
+                    <p>Stockage sécurisé avec gestion des versions et corbeille</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-share-alt"></i>
+                    <h3>Partage collaboratif</h3>
+                    <p>Partagez des dossiers avec vos collaborateurs en toute sécurité</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-shield-alt"></i>
+                    <h3>Sécurité maximale</h3>
+                    <p>Chiffrement des données et conformité RGPD garantie</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-chart-line"></i>
+                    <h3>Statistiques</h3>
+                    <p>Tableau de bord complet avec toutes vos métriques importantes</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <p class="text-center">&copy; 2024 GED Avocat. Tous droits réservés.</p>
+        </div>
+    </footer>
+</body>
+</html>

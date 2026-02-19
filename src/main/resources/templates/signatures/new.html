@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>Nouvelle signature électronique</title>
+    <style>
+        .signature-form-container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        .page-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            padding: 40px;
+            color: white;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .page-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        .form-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .section-title i {
+            color: #667eea;
+        }
+        
+        .form-group {
+            margin-bottom: 24px;
+        }
+        
+        .form-label {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 8px;
+            display: block;
+        }
+        
+        .form-label .required {
+            color: #ef4444;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 15px;
+            transition: all 0.3s;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .form-text {
+            font-size: 13px;
+            color: #64748b;
+            margin-top: 6px;
+        }
+        
+        .signature-level-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+            margin-top: 12px;
+        }
+        
+        .level-card {
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+        
+        .level-card:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+        }
+        
+        .level-card input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+        }
+        
+        .level-card input[type="radio"]:checked + .level-content {
+            border-color: #667eea;
+        }
+        
+        .level-card input[type="radio"]:checked ~ .level-badge {
+            display: block;
+        }
+        
+        .level-content {
+            display: flex;
+            align-items: start;
+            gap: 12px;
+        }
+        
+        .level-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+        
+        .level-info h4 {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 4px;
+        }
+        
+        .level-info p {
+            font-size: 13px;
+            color: #64748b;
+            margin: 0;
+        }
+        
+        .level-badge {
+            display: none;
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: #667eea;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+        
+        .document-selector {
+            border: 2px dashed #cbd5e1;
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            background: #f8fafc;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .document-selector:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+        
+        .document-selector i {
+            font-size: 48px;
+            color: #667eea;
+            margin-bottom: 16px;
+        }
+        
+        .selected-document {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 16px;
+        }
+        
+        .doc-preview-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+        }
+        
+        .doc-info {
+            flex: 1;
+        }
+        
+        .doc-name {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 4px;
+        }
+        
+        .doc-meta {
+            font-size: 13px;
+            color: #64748b;
+        }
+        
+        .btn-submit {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 16px 48px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .btn-cancel {
+            background: #f1f5f9;
+            color: #64748b;
+            border: none;
+            padding: 16px 48px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+            text-align: center;
+            text-decoration: none;
+            display: block;
+        }
+        
+        .btn-cancel:hover {
+            background: #e2e8f0;
+            color: #1e293b;
+        }
+        
+        .actions-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 16px;
+            margin-top: 30px;
+        }
+        
+        @media (max-width: 768px) {
+            .actions-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .signature-level-cards {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="container-fluid">
+            <div class="signature-form-container">
+                <!-- En-tête -->
+                <div class="page-header">
+                    <h1><i class="fas fa-signature"></i> Nouvelle signature électronique</h1>
+                    <p style="font-size: 16px; opacity: 0.95;">
+                        Envoyez un document à signer électroniquement via Yousign
+                    </p>
+                </div>
+
+                <!-- Messages d'alerte -->
+                <div th:if="${error}" class="alert alert-danger" style="border-radius: 12px; margin-bottom: 20px;">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span th:text="${error}"></span>
+                </div>
+
+                <!-- Formulaire -->
+                <form th:action="@{/signatures/create}" method="post" enctype="multipart/form-data">
+                    <!-- Section 1: Document -->
+                    <div class="form-card">
+                        <div class="section-title">
+                            <i class="fas fa-file-pdf"></i>
+                            1. Sélectionner le document
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">
+                                Document à signer <span class="required">*</span>
+                            </label>
+                            
+                            <div th:if="${document != null}" class="selected-document">
+                                <div class="doc-preview-icon">
+                                    <i class="fas fa-file-pdf"></i>
+                                </div>
+                                <div class="doc-info">
+                                    <div class="doc-name" th:text="${document.originalName}">Document.pdf</div>
+                                    <div class="doc-meta">
+                                        <span th:text="${document.fileSize != null ? #numbers.formatDecimal(document.fileSize / 1024.0, 1, 2) + ' KB' : ''}"></span>
+                                    </div>
+                                </div>
+                                <input type="hidden" name="documentId" th:value="${document.id}" required>
+                            </div>
+
+                            <div th:unless="${document != null}" class="document-selector" onclick="document.getElementById('documentSelect').click()">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <h4>Sélectionner un document</h4>
+                                <p style="color: #64748b; margin: 0;">Cliquez pour choisir un document depuis vos dossiers</p>
+                                <select id="documentSelect" name="documentId" class="form-control mt-3" required style="max-width: 400px; margin: 20px auto 0;">
+                                    <option value="">-- Choisir un document --</option>
+                                    <!-- TODO: Liste des documents disponibles -->
+                                </select>
+                            </div>
+                            <small class="form-text">
+                                <i class="fas fa-info-circle"></i> 
+                                Seuls les fichiers PDF sont acceptés pour la signature électronique
+                            </small>
+                        </div>
+                    </div>
+
+                    <!-- Section 2: Signataire -->
+                    <div class="form-card">
+                        <div class="section-title">
+                            <i class="fas fa-user-edit"></i>
+                            2. Informations du signataire
+                        </div>
+
+                        <div class="form-group">
+                            <label for="signerName" class="form-label">
+                                Nom complet <span class="required">*</span>
+                            </label>
+                            <input type="text" 
+                                   id="signerName" 
+                                   name="signerName" 
+                                   class="form-control" 
+                                   placeholder="Ex: Jean Dupont"
+                                   required>
+                            <small class="form-text">
+                                Nom et prénom de la personne qui doit signer le document
+                            </small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="signerEmail" class="form-label">
+                                Adresse e-mail <span class="required">*</span>
+                            </label>
+                            <input type="email" 
+                                   id="signerEmail" 
+                                   name="signerEmail" 
+                                   class="form-control" 
+                                   placeholder="Ex: jean.dupont@example.com"
+                                   required>
+                            <small class="form-text">
+                                <i class="fas fa-envelope"></i> 
+                                Un e-mail avec le lien de signature sera envoyé à cette adresse
+                            </small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="signerPhone" class="form-label">
+                                Téléphone (optionnel)
+                            </label>
+                            <input type="tel" 
+                                   id="signerPhone" 
+                                   name="signerPhone" 
+                                   class="form-control" 
+                                   placeholder="+33 6 12 34 56 78">
+                            <small class="form-text">
+                                Pour les signatures avec authentification par SMS
+                            </small>
+                        </div>
+                    </div>
+
+                    <!-- Section 3: Niveau de signature -->
+                    <div class="form-card">
+                        <div class="section-title">
+                            <i class="fas fa-shield-alt"></i>
+                            3. Niveau de signature
+                        </div>
+
+                        <div class="signature-level-cards">
+                            <!-- Signature Simple -->
+                            <label class="level-card">
+                                <input type="radio" name="signatureLevel" value="simple" checked>
+                                <div class="level-content">
+                                    <div class="level-icon">
+                                        <i class="fas fa-pencil-alt"></i>
+                                    </div>
+                                    <div class="level-info">
+                                        <h4>Simple</h4>
+                                        <p>Signature électronique de base, valeur juridique limitée</p>
+                                    </div>
+                                </div>
+                                <div class="level-badge">
+                                    <i class="fas fa-check"></i>
+                                </div>
+                            </label>
+
+                            <!-- Signature Avancée -->
+                            <label class="level-card">
+                                <input type="radio" name="signatureLevel" value="advanced">
+                                <div class="level-content">
+                                    <div class="level-icon">
+                                        <i class="fas fa-signature"></i>
+                                    </div>
+                                    <div class="level-info">
+                                        <h4>Avancée</h4>
+                                        <p>Conforme eIDAS, valeur juridique reconnue en Europe</p>
+                                    </div>
+                                </div>
+                                <div class="level-badge">
+                                    <i class="fas fa-check"></i>
+                                </div>
+                            </label>
+
+                            <!-- Signature Qualifiée -->
+                            <label class="level-card">
+                                <input type="radio" name="signatureLevel" value="qualified">
+                                <div class="level-content">
+                                    <div class="level-icon">
+                                        <i class="fas fa-certificate"></i>
+                                    </div>
+                                    <div class="level-info">
+                                        <h4>Qualifiée</h4>
+                                        <p>Équivalent signature manuscrite, valeur légale maximale</p>
+                                    </div>
+                                </div>
+                                <div class="level-badge">
+                                    <i class="fas fa-check"></i>
+                                </div>
+                            </label>
+                        </div>
+
+                        <div class="alert alert-info mt-3" style="border-radius: 12px;">
+                            <i class="fas fa-info-circle"></i>
+                            <strong>Recommandation :</strong> 
+                            Pour la plupart des contrats juridiques, une signature <strong>avancée</strong> est suffisante et reconnue légalement.
+                        </div>
+                    </div>
+
+                    <!-- Section 4: Options supplémentaires -->
+                    <div class="form-card">
+                        <div class="section-title">
+                            <i class="fas fa-cog"></i>
+                            4. Options supplémentaires
+                        </div>
+
+                        <div class="form-group">
+                            <label for="expirationDays" class="form-label">
+                                Délai d'expiration (jours)
+                            </label>
+                            <input type="number" 
+                                   id="expirationDays" 
+                                   name="expirationDays" 
+                                   class="form-control" 
+                                   value="7"
+                                   min="1"
+                                   max="90">
+                            <small class="form-text">
+                                Nombre de jours avant expiration de la demande de signature (par défaut: 7 jours)
+                            </small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="message" class="form-label">
+                                Message personnalisé (optionnel)
+                            </label>
+                            <textarea id="message" 
+                                      name="message" 
+                                      class="form-control" 
+                                      rows="4"
+                                      placeholder="Ajoutez un message qui sera envoyé avec l'e-mail de demande de signature..."></textarea>
+                            <small class="form-text">
+                                Ce message sera inclus dans l'e-mail envoyé au signataire
+                            </small>
+                        </div>
+
+                        <div class="form-check">
+                            <input type="checkbox" 
+                                   id="sendCopy" 
+                                   name="sendCopy" 
+                                   class="form-check-input"
+                                   checked>
+                            <label for="sendCopy" class="form-check-label">
+                                M'envoyer une copie de l'e-mail de notification
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="actions-grid">
+                        <a th:href="@{/signatures}" class="btn-cancel">
+                            <i class="fas fa-times"></i> Annuler
+                        </a>
+                        <button type="submit" class="btn-submit">
+                            <i class="fas fa-paper-plane"></i>
+                            Envoyer la demande de signature
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

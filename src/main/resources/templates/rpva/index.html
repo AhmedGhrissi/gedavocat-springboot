@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>RPVA - e-Barreau</title>
+    <style>
+        /* Hero Premium */
+        .rpva-hero {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            border-radius: 16px;
+            padding: 48px;
+            color: white;
+            margin-bottom: 32px;
+            position: relative;
+            overflow: hidden;
+        }
+        .rpva-hero::before {
+            content: '⚖️';
+            position: absolute;
+            font-size: 200px;
+            opacity: 0.1;
+            right: -20px;
+            top: -40px;
+        }
+        .rpva-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Feature Cards */
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+        .feature-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s;
+        }
+        .feature-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(30, 58, 138, 0.15);
+            border-color: #3b82f6;
+        }
+        .feature-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 16px;
+        }
+        .feature-icon.blue { background: #dbeafe; color: #1e40af; }
+        .feature-icon.green { background: #d1fae5; color: #065f46; }
+        .feature-icon.yellow { background: #fef3c7; color: #92400e; }
+        .feature-icon.purple { background: #e0e7ff; color: #4f46e5; }
+
+        /* Stats Dashboard */
+        .stats-dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, white 0%, #f8fafc 100%);
+            border-radius: 12px;
+            padding: 24px;
+            border: 2px solid #e2e8f0;
+            position: relative;
+            overflow: hidden;
+        }
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+        }
+        .stat-card.blue::before { background: #3b82f6; }
+        .stat-card.green::before { background: #10b981; }
+        .stat-card.yellow::before { background: #f59e0b; }
+        .stat-card.red::before { background: #ef4444; }
+        .stat-value {
+            font-size: 36px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+        .stat-label {
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        /* Communication Timeline */
+        .comm-timeline {
+            position: relative;
+        }
+        .comm-item {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            border-left: 4px solid #e2e8f0;
+            transition: all 0.3s;
+            display: flex;
+            align-items: start;
+            gap: 16px;
+        }
+        .comm-item:hover {
+            border-left-color: #3b82f6;
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .comm-item.sent { border-left-color: #3b82f6; }
+        .comm-item.received { border-left-color: #10b981; }
+        .comm-badge {
+            flex-shrink: 0;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+        .comm-badge.sent {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        .comm-badge.received {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .comm-content {
+            flex: 1;
+        }
+        .comm-title {
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 4px;
+        }
+        .comm-meta {
+            font-size: 13px;
+            color: #64748b;
+            margin-bottom: 8px;
+        }
+        .comm-details {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .comm-detail {
+            font-size: 13px;
+            color: #64748b;
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+        .action-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+        .action-btn:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+            color: white;
+        }
+        .action-icon {
+            width: 48px;
+            height: 48px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        /* Empty State */
+        .rpva-empty {
+            text-align: center;
+            padding: 80px 40px;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border-radius: 16px;
+        }
+        .rpva-empty i {
+            font-size: 80px;
+            background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 24px;
+        }
+    </style>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="container-fluid">
+            <!-- Hero -->
+            <div class="rpva-hero">
+                <div class="rpva-content">
+                    <h1 style="font-size: 32px; font-weight: 700; margin-bottom: 12px;">
+                        <i class="fas fa-gavel"></i> RPVA - e-Barreau
+                    </h1>
+                    <p style="font-size: 16px; opacity: 0.9;">
+                        Communications sécurisées avec les juridictions françaises
+                    </p>
+                </div>
+            </div>
+
+            <!-- Alert Config -->
+            <div th:if="${!isConfigured}" class="alert alert-warning" style="border-radius: 12px;">
+                <i class="fas fa-exclamation-triangle"></i>
+                <strong>Configuration requise :</strong>
+                Le RPVA n'est pas configuré.
+                <a th:href="@{/settings}" class="alert-link">Configurer maintenant</a>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="quick-actions">
+                <a th:href="@{/rpva/send}" class="action-btn">
+                    <div class="action-icon">
+                        <i class="fas fa-paper-plane"></i>
+                    </div>
+                    <div>
+                        <div style="font-weight: 700; font-size: 16px;">Envoyer</div>
+                        <div style="opacity: 0.9; font-size: 13px;">Nouvelle communication</div>
+                    </div>
+                </a>
+                <a th:href="@{/rpva/received}" class="action-btn" style="background: linear-gradient(135deg, #10b981, #059669);">
+                    <div class="action-icon">
+                        <i class="fas fa-inbox"></i>
+                    </div>
+                    <div>
+                        <div style="font-weight: 700; font-size: 16px;">Réception</div>
+                        <div style="opacity: 0.9; font-size: 13px;">Communications reçues</div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Features -->
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon blue">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h4>Réseau sécurisé</h4>
+                    <p style="color: #64748b; font-size: 14px; margin: 0;">
+                        Communications chiffrées de bout en bout
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon green">
+                        <i class="fas fa-certificate"></i>
+                    </div>
+                    <h4>Certificat CNB</h4>
+                    <p style="color: #64748b; font-size: 14px; margin: 0;">
+                        Authentification par certificat électronique
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon yellow">
+                        <i class="fas fa-file-signature"></i>
+                    </div>
+                    <h4>Accusé réception</h4>
+                    <p style="color: #64748b; font-size: 14px; margin: 0;">
+                        AR automatique pour chaque envoi
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon purple">
+                        <i class="fas fa-university"></i>
+                    </div>
+                    <h4>Toutes juridictions</h4>
+                    <p style="color: #64748b; font-size: 14px; margin: 0;">
+                        TJ, CA, Cour de Cassation
+                    </p>
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="stats-dashboard">
+                <div class="stat-card blue">
+                    <div class="stat-value" th:text="${#lists.size(sentCommunications)}">0</div>
+                    <div class="stat-label">
+                        <i class="fas fa-paper-plane"></i> Communications envoyées
+                    </div>
+                </div>
+                <div class="stat-card green">
+                    <div class="stat-value" th:text="${#lists.size(receivedCommunications)}">0</div>
+                    <div class="stat-label">
+                        <i class="fas fa-inbox"></i> Communications reçues
+                    </div>
+                </div>
+                <div class="stat-card yellow">
+                    <div class="stat-value">0</div>
+                    <div class="stat-label">
+                        <i class="fas fa-hourglass-half"></i> En attente de réponse
+                    </div>
+                </div>
+                <div class="stat-card red">
+                    <div class="stat-value">0</div>
+                    <div class="stat-label">
+                        <i class="fas fa-check-circle"></i> Traitées ce mois
+                    </div>
+                </div>
+            </div>
+
+            <!-- Communications récentes -->
+            <div class="card" style="border-radius: 16px; border: 2px solid #e2e8f0;">
+                <div class="card-body">
+                    <h3 style="margin-bottom: 24px;">
+                        <i class="fas fa-history"></i> Communications récentes
+                    </h3>
+
+                    <div th:if="${sentCommunications.empty and receivedCommunications.empty}" class="rpva-empty">
+                        <i class="fas fa-gavel"></i>
+                        <h3>Aucune communication</h3>
+                        <p>Envoyez votre première communication juridiction</p>
+                        <a th:href="@{/rpva/send}" class="btn btn-primary btn-lg">
+                            <i class="fas fa-paper-plane"></i> Envoyer une communication
+                        </a>
+                    </div>
+
+                    <div class="comm-timeline" th:if="${!sentCommunications.empty or !receivedCommunications.empty}">
+                        <!-- Communications envoyées -->
+                        <div th:each="comm : ${sentCommunications}" class="comm-item sent">
+                            <div class="comm-badge sent">
+                                <i class="fas fa-arrow-up"></i>
+                            </div>
+                            <div class="comm-content">
+                                <div class="comm-title" th:text="${comm.subject}">Dépôt de conclusions</div>
+                                <div class="comm-meta">
+                                    <span class="badge" style="background: #dbeafe; color: #1e40af;">Envoyée</span>
+                                    • <span th:text="${#temporals.format(comm.createdAt, 'dd/MM/yyyy à HH:mm')}">01/01/2024</span>
+                                </div>
+                                <div class="comm-details">
+                                    <div class="comm-detail">
+                                        <i class="fas fa-university"></i>
+                                        <span th:text="${comm.jurisdiction}">TJ Paris</span>
+                                    </div>
+                                    <div class="comm-detail">
+                                        <i class="fas fa-hashtag"></i>
+                                        <span th:text="${comm.reference}">RG 23/12345</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <a th:href="@{/rpva/communications/{id}(id=${comm.id})}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                        </div>
+
+                        <!-- Communications reçues -->
+                        <div th:each="comm : ${receivedCommunications}" class="comm-item received">
+                            <div class="comm-badge received">
+                                <i class="fas fa-arrow-down"></i>
+                            </div>
+                            <div class="comm-content">
+                                <div class="comm-title" th:text="${comm.subject}">Notification d'audience</div>
+                                <div class="comm-meta">
+                                    <span class="badge" style="background: #d1fae5; color: #065f46;">Reçue</span>
+                                    • <span th:text="${#temporals.format(comm.createdAt, 'dd/MM/yyyy à HH:mm')}">01/01/2024</span>
+                                </div>
+                                <div class="comm-details">
+                                    <div class="comm-detail">
+                                        <i class="fas fa-university"></i>
+                                        <span th:text="${comm.jurisdiction}">TJ Lyon</span>
+                                    </div>
+                                    <div class="comm-detail">
+                                        <i class="fas fa-hashtag"></i>
+                                        <span th:text="${comm.reference}">RG 23/54321</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <a th:href="@{/rpva/communications/{id}(id=${comm.id})}" class="btn btn-sm btn-outline-success">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

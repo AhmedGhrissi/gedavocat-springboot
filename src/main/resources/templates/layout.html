@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <title layout:title-pattern="$CONTENT_TITLE - $LAYOUT_TITLE">GED Avocat</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --sidebar-width: 260px;
+            --primary: #667eea;
+            --sidebar-bg: #1e293b;
+            --sidebar-text: #cbd5e1;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f8fafc;
+        }
+
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: var(--sidebar-bg);
+            color: var(--sidebar-text);
+            display: flex;
+            flex-direction: column;
+            z-index: 1000;
+        }
+
+        .sidebar-header {
+            padding: 24px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar-header h1 {
+            color: white;
+            font-size: 20px;
+            margin-bottom: 4px;
+        }
+
+        .subtitle {
+            font-size: 12px;
+            opacity: 0.7;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 0;
+        }
+
+        .nav-section-title {
+            padding: 8px 20px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            opacity: 0.5;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            color: var(--sidebar-text);
+            text-decoration: none;
+            border-left: 3px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .nav-link:hover {
+            background: #334155;
+            color: white;
+        }
+
+        .nav-link.active {
+            background: linear-gradient(90deg, rgba(102, 126, 234, 0.1), transparent);
+            border-left-color: var(--primary);
+            color: white;
+        }
+
+        .sidebar-footer {
+            padding: 16px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+        }
+
+        .main-content {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+        }
+
+        .header {
+            height: 64px;
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-search {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 8px 16px;
+            width: 400px;
+        }
+
+        .header-search input {
+            border: none;
+            background: none;
+            outline: none;
+            width: 100%;
+        }
+
+        .icon-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            border: none;
+            background: transparent;
+            color: #64748b;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .icon-btn:hover {
+            background: #f1f5f9;
+            color: var(--primary);
+        }
+
+        .page-content {
+            padding: 24px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 24px;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            .main-content {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h1>⚖️ GED Avocat</h1>
+            <div class="subtitle">Gestion documentaire</div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <div class="nav-section-title">Navigation</div>
+
+            <div sec:authorize="hasRole('ADMIN')">
+                <a href="/dashboard" class="nav-link">
+                    <i class="fas fa-database"></i>
+                    <span>Supervision</span>
+                </a>
+            </div>
+
+            <div sec:authorize="hasAnyRole('LAWYER', 'LAWYER_SECONDARY')">
+                <a href="/dashboard" class="nav-link">
+                    <i class="fas fa-home"></i>
+                    <span>Tableau de bord</span>
+                </a>
+                <a href="/cases" class="nav-link">
+                    <i class="fas fa-folder"></i>
+                    <span>Mes dossiers</span>
+                </a>
+                <a href="/clients" class="nav-link" sec:authorize="hasRole('LAWYER')">
+                    <i class="fas fa-users"></i>
+                    <span>Mes clients</span>
+                </a>
+                <a href="/documents" class="nav-link">
+                    <i class="fas fa-file"></i>
+                    <span>Documents</span>
+                </a>
+                <a href="/signatures" class="nav-link">
+                    <i class="fas fa-edit"></i>
+                    <span>Signatures</span>
+                </a>
+                <a href="/rpva" class="nav-link">
+                    <i class="fas fa-envelope"></i>
+                    <span>RPVA</span>
+                </a>
+            </div>
+
+            <div sec:authorize="hasRole('CLIENT')">
+                <a href="/dashboard" class="nav-link">
+                    <i class="fas fa-home"></i>
+                    <span>Tableau de bord</span>
+                </a>
+                <a href="/cases" class="nav-link">
+                    <i class="fas fa-folder"></i>
+                    <span>Mes dossiers</span>
+                </a>
+                <a href="/documents" class="nav-link">
+                    <i class="fas fa-file"></i>
+                    <span>Mes documents</span>
+                </a>
+            </div>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <div class="user-avatar">AB</div>
+                <div style="flex: 1;">
+                    <div style="font-size: 14px; font-weight: 600; color: white;">Avocat Test</div>
+                    <div style="font-size: 12px; opacity: 0.7;">Avocat principal</div>
+                </div>
+                <!-- Menu utilisateur -->
+                <div class="dropdown dropup">
+                    <button class="icon-btn text-light" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-ellipsis-v"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end mb-2">
+                        <li>
+                            <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#settingsModal">
+                                <i class="fas fa-cog"></i> Paramètres
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" th:href="@{/payment/manage}">
+                                <i class="fas fa-credit-card"></i> Mon abonnement
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item text-danger" th:href="@{/logout}">
+                                <i class="fas fa-sign-out-alt"></i> Déconnexion
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <div class="main-content">
+        <header class="header">
+            <div>
+                <form class="header-search d-none d-md-flex" action="/documents" method="get" sec:authorize="!hasRole('ADMIN')">
+                    <i class="fas fa-search" style="color: #94a3b8;"></i>
+                    <input type="text" placeholder="Rechercher..." name="q">
+                </form>
+            </div>
+            <div class="d-flex gap-2">
+                <button class="icon-btn" sec:authorize="!hasRole('ADMIN')">
+                    <i class="fas fa-bell"></i>
+                </button>
+                <a href="/logout" class="icon-btn">
+                    <i class="fas fa-sign-out-alt"></i>
+                </a>
+            </div>
+        </header>
+
+        <div class="page-content">
+            <div layout:fragment="content"></div>
+        </div>
+    </div>
+
+    <!-- Modal Paramètres -->
+    <div class="modal fade" id="settingsModal" tabindex="-1" aria-labelledby="settingsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header bg-gradient text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <h5 class="modal-title" id="settingsModalLabel">
+                        <i class="fas fa-cog"></i> Paramètres
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Onglets -->
+                    <ul class="nav nav-tabs" id="settingsTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile-pane" type="button" role="tab">
+                                <i class="fas fa-user"></i> Profil
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="yousign-tab" data-bs-toggle="tab" data-bs-target="#yousign-pane" type="button" role="tab">
+                                <i class="fas fa-signature"></i> Yousign
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="security-tab" data-bs-toggle="tab" data-bs-target="#security-pane" type="button" role="tab">
+                                <i class="fas fa-shield-alt"></i> Sécurité
+                            </button>
+                        </li>
+                    </ul>
+
+                    <!-- Contenu des onglets -->
+                    <div class="tab-content mt-3" id="settingsTabContent">
+                        <!-- Onglet Profil -->
+                        <div class="tab-pane fade show active" id="profile-pane" role="tabpanel">
+                            <h6><i class="fas fa-user-edit"></i> Informations personnelles</h6>
+                            <form th:action="@{/settings/profile}" method="post">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <div class="form-floating">
+                                            <input type="text" id="modalFirstName" name="firstName"
+                                                   class="form-control" required>
+                                            <label for="modalFirstName">Prénom</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-floating">
+                                            <input type="text" id="modalLastName" name="lastName"
+                                                   class="form-control" required>
+                                            <label for="modalLastName">Nom</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <div class="form-floating">
+                                            <input type="email" id="modalEmail" 
+                                                   sec:authentication="principal.username" class="form-control" readonly>
+                                            <label for="modalEmail">Email (non modifiable)</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-floating">
+                                            <input type="text" id="modalPhone" name="phone" 
+                                                   class="form-control" placeholder="Téléphone">
+                                            <label for="modalPhone">Téléphone</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-floating">
+                                            <input type="text" id="modalBarNumber" name="barNumber" 
+                                                   class="form-control" placeholder="Numéro au barreau">
+                                            <label for="modalBarNumber">Numéro au barreau</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mt-3">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save"></i> Sauvegarder
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Onglet Yousign -->
+                        <div class="tab-pane fade" id="yousign-pane" role="tabpanel">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6><i class="fas fa-signature"></i> Configuration Yousign</h6>
+                                <span class="badge bg-warning">
+                                    <i class="fas fa-exclamation-triangle"></i> Non configuré
+                                </span>
+                            </div>
+                            
+                            <div class="alert alert-info alert-sm">
+                                <i class="fas fa-info-circle"></i>
+                                <strong>Intégration Yousign :</strong> Configurez votre clé API pour activer les signatures électroniques.
+                                <a href="https://yousign.app" target="_blank" class="alert-link">Obtenir une clé API</a>
+                            </div>
+
+                            <form th:action="@{/settings/yousign}" method="post">
+                                <div class="form-floating mb-3">
+                                    <input type="text" id="modalApiKey" name="apiKey" 
+                                           class="form-control" placeholder="Votre clé API Yousign">
+                                    <label for="modalApiKey">Clé API Yousign</label>
+                                    <div class="form-text">Format: prod_XXXXXXXX ou test_XXXXXXXX</div>
+                                </div>
+
+                                <div class="form-check mb-3">
+                                    <input type="checkbox" id="modalSandbox" name="sandbox" class="form-check-input" checked>
+                                    <label for="modalSandbox" class="form-check-label">
+                                        Mode sandbox (test)
+                                    </label>
+                                    <div class="form-text">Activez pour tester sans créer de vraies signatures</div>
+                                </div>
+
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save"></i> Sauvegarder
+                                    </button>
+                                    <button type="button" class="btn btn-outline-info" onclick="testYousignModal()">
+                                        <i class="fas fa-vial"></i> Tester
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Onglet Sécurité -->
+                        <div class="tab-pane fade" id="security-pane" role="tabpanel">
+                            <h6><i class="fas fa-shield-alt"></i> Sécurité du compte</h6>
+                            
+                            <div class="alert alert-warning">
+                                <i class="fas fa-construction"></i>
+                                <strong>En développement :</strong> 
+                                Les paramètres de sécurité avancés seront bientôt disponibles.
+                            </div>
+
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="card border-0 bg-light">
+                                        <div class="card-body text-center">
+                                            <h6>Abonnement actuel</h6>
+                                            <span class="badge bg-primary fs-6">FREE</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card border-0 bg-light">
+                                        <div class="card-body text-center">
+                                            <h6>Limite de clients</h6>
+                                            <p class="mb-0">5 clients maximum</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-3 text-center">
+                                <a th:href="@{/payment/manage}" class="btn btn-outline-primary" data-bs-dismiss="modal">
+                                    <i class="fas fa-crown"></i> Gérer mon abonnement
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i> Fermer
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function testYousignModal() {
+            const apiKey = document.getElementById('modalApiKey').value;
+            if (!apiKey) {
+                showAlert('Veuillez saisir votre clé API Yousign', 'warning');
+                return;
+            }
+            
+            // Désactiver le bouton pendant le test
+            const testBtn = document.querySelector('[onclick="testYousignModal()"]');
+            testBtn.disabled = true;
+            testBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Test...';
+            
+            fetch('/settings/yousign/test', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                credentials: 'same-origin'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert(data.message, 'success');
+                    // Mettre à jour le badge
+                    const badge = document.querySelector('.badge.bg-warning');
+                    if (badge) {
+                        badge.innerHTML = '<i class="fas fa-check-circle"></i> Configuré';
+                        badge.className = 'badge bg-success';
+                    }
+                } else {
+                    showAlert(data.message, 'danger');
+                }
+            })
+            .catch(error => {
+                showAlert('Erreur lors du test de connexion', 'danger');
+            })
+            .finally(() => {
+                // Réactiver le bouton
+                testBtn.disabled = false;
+                testBtn.innerHTML = '<i class="fas fa-vial"></i> Tester';
+            });
+        }
+
+        function saveProfile() {
+            const formData = new FormData(document.querySelector('#profile-pane form'));
+            
+            fetch('/settings/profile', {
+                method: 'POST',
+                body: formData,
+                credentials: 'same-origin'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert(data.message, 'success');
+                } else {
+                    showAlert(data.message, 'danger');
+                }
+            })
+            .catch(error => {
+                showAlert('Erreur lors de la sauvegarde', 'danger');
+            });
+        }
+
+        function saveYousignSettings() {
+            const formData = new FormData(document.querySelector('#yousign-pane form'));
+            
+            fetch('/settings/yousign', {
+                method: 'POST',
+                body: formData,
+                credentials: 'same-origin'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert(data.message, 'success');
+                    // Mettre à jour le badge
+                    const badge = document.querySelector('.badge.bg-warning');
+                    if (badge) {
+                        badge.innerHTML = '<i class="fas fa-check-circle"></i> Configuré';
+                        badge.className = 'badge bg-success';
+                    }
+                } else {
+                    showAlert(data.message, 'danger');
+                }
+            })
+            .catch(error => {
+                showAlert('Erreur lors de la sauvegarde', 'danger');
+            });
+        }
+
+        function loadUserData() {
+            fetch('/settings/user-data', {
+                method: 'GET',
+                credentials: 'same-origin'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (!data.error) {
+                    // Remplir les champs du profil
+                    document.getElementById('modalFirstName').value = data.firstName || '';
+                    document.getElementById('modalLastName').value = data.lastName || '';
+                    document.getElementById('modalEmail').value = data.email || '';
+                    document.getElementById('modalPhone').value = data.phone || '';
+                    document.getElementById('modalBarNumber').value = data.barNumber || '';
+                    
+                    // Remplir les champs Yousign
+                    document.getElementById('modalApiKey').value = data.yousignApiKey || '';
+                    
+                    // Mettre à jour le badge Yousign
+                    const badge = document.querySelector('#yousign-pane .badge');
+                    if (data.yousignConfigured) {
+                        badge.innerHTML = '<i class="fas fa-check-circle"></i> Configuré';
+                        badge.className = 'badge bg-success';
+                    } else {
+                        badge.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Non configuré';
+                        badge.className = 'badge bg-warning';
+                    }
+                    
+                    // Mettre à jour les infos d'abonnement
+                    document.querySelector('#security-pane .badge').textContent = data.subscriptionPlan;
+                    document.querySelector('#security-pane p').textContent = data.maxClients + ' clients maximum';
+                }
+            })
+            .catch(error => {
+                console.error('Erreur lors du chargement des données:', error);
+            });
+        }
+
+        function showAlert(message, type) {
+            // Supprimer les anciennes alertes
+            const existingAlerts = document.querySelectorAll('.modal .alert');
+            existingAlerts.forEach(alert => alert.remove());
+            
+            // Créer une nouvelle alerte
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+            alertDiv.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'danger' ? 'exclamation-circle' : 'info-circle'}"></i>
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            // Insérer l'alerte au début du modal-body
+            const modalBody = document.querySelector('#settingsModal .modal-body');
+            modalBody.insertBefore(alertDiv, modalBody.firstChild);
+            
+            // Auto-hide après 5 secondes pour les succès
+            if (type === 'success') {
+                setTimeout(() => {
+                    alertDiv.remove();
+                }, 5000);
+            }
+        }
+
+        // Active state avec JavaScript (évite les problèmes Thymeleaf)
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentPath = window.location.pathname;
+            document.querySelectorAll('.nav-link').forEach(link => {
+                try {
+                    // Gérer les URLs relatives et absolues
+                    const linkPath = link.getAttribute('href');
+                    if (linkPath && linkPath.startsWith('/')) {
+                        if (currentPath === linkPath ||
+                            (linkPath !== '/dashboard' && currentPath.startsWith(linkPath))) {
+                            link.classList.add('active');
+                        }
+                    }
+                } catch (e) {
+                    console.error('Erreur lors de la vérification du lien actif:', e);
+                }
+            });
+        });
+
+        // Charger les données utilisateur lors de l'ouverture du modal
+        document.getElementById('settingsModal').addEventListener('show.bs.modal', function () {
+            loadUserData();
+        });
+
+        // Auto-focus sur le premier champ lors de l'ouverture du modal
+        document.getElementById('settingsModal').addEventListener('shown.bs.modal', function () {
+            document.getElementById('modalFirstName').focus();
+        });
+
+        // Intercepter les soumissions de formulaire pour utiliser AJAX
+        document.addEventListener('DOMContentLoaded', function() {
+            // Formulaire profil
+            const profileForm = document.querySelector('#profile-pane form');
+            if (profileForm) {
+                profileForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    saveProfile();
+                });
+            }
+
+            // Formulaire Yousign
+            const yousignForm = document.querySelector('#yousign-pane form');
+            if (yousignForm) {
+                yousignForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    saveYousignSettings();
+                });
+            }
+        });
+    </script>
+</body>
+</html>

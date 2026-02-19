@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GED Avocat - Gestion documentaire pour cabinets d'avocats</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #2d3748;
+        }
+        
+        .navbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: white;
+            text-decoration: none;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        
+        .btn-outline {
+            background: transparent;
+            color: white;
+            border: 2px solid white;
+        }
+        
+        .btn-outline:hover {
+            background: white;
+            color: #667eea;
+        }
+        
+        .btn-primary {
+            background: white;
+            color: #667eea;
+        }
+        
+        .btn-primary:hover {
+            background: #f7fafc;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 6rem 2rem;
+            text-align: center;
+        }
+        
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+        
+        .hero p {
+            font-size: 1.3rem;
+            opacity: 0.95;
+            max-width: 700px;
+            margin: 0 auto 2rem;
+        }
+        
+        .pricing-section {
+            padding: 4rem 2rem;
+            background: #f7fafc;
+        }
+        
+        .pricing-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+            color: #2d3748;
+        }
+        
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+        
+        .pricing-card {
+            background: white;
+            border-radius: 12px;
+            padding: 2.5rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            transition: all 0.3s;
+            position: relative;
+        }
+        
+        .pricing-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 40px rgba(102, 126, 234, 0.2);
+        }
+        
+        .pricing-card.popular {
+            border: 3px solid #667eea;
+        }
+        
+        .popular-badge {
+            position: absolute;
+            top: -15px;
+            right: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        
+        .plan-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: #2d3748;
+        }
+        
+        .plan-price {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+        
+        .plan-price small {
+            font-size: 1.2rem;
+            color: #718096;
+            font-weight: 400;
+        }
+        
+        .plan-features {
+            list-style: none;
+            margin: 2rem 0;
+            padding: 0;
+        }
+        
+        .plan-features li {
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #e2e8f0;
+            color: #4a5568;
+        }
+        
+        .plan-features li:before {
+            content: '✓';
+            color: #48bb78;
+            font-weight: 700;
+            margin-right: 0.75rem;
+        }
+        
+        .btn-select {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-select:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        footer {
+            background: #2d3748;
+            color: white;
+            text-align: center;
+            padding: 2rem;
+            margin-top: 4rem;
+        }
+        
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 2rem; }
+            .hero p { font-size: 1.1rem; }
+            .pricing-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="logo">⚖️ GED Avocat</a>
+            <div class="nav-buttons">
+                <a th:href="@{/login}" class="btn btn-outline">Se connecter</a>
+                <a th:href="@{/register}" class="btn btn-primary">S'inscrire</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <h1>Gérez vos documents juridiques en toute simplicité</h1>
+        <p>La solution complète pour les cabinets d'avocats : gestion documentaire, signatures électroniques, communications e-Barreau (RPVA)</p>
+    </section>
+
+    <!-- Pricing Section -->
+    <section class="pricing-section">
+        <div class="pricing-container">
+            <h2 class="section-title">Choisissez votre formule</h2>
+            
+            <div class="pricing-grid">
+                
+                <!-- Plan Solo -->
+                <div class="pricing-card">
+                    <div class="plan-name">Solo</div>
+                    <div class="plan-price">29,99€<small>/mois</small></div>
+                    <ul class="plan-features">
+                        <li>Jusqu'à 10 clients</li>
+                        <li>Stockage 5 GB</li>
+                        <li>Gestion documentaire</li>
+                        <li>Support email</li>
+                    </ul>
+                    <form th:action="@{/register}" method="get">
+                        <input type="hidden" name="plan" value="SOLO">
+                        <button type="submit" class="btn-select">Choisir Solo</button>
+                    </form>
+                </div>
+
+                <!-- Plan Cabinet (Popular) -->
+                <div class="pricing-card popular">
+                    <span class="popular-badge">⭐ Populaire</span>
+                    <div class="plan-name">Cabinet</div>
+                    <div class="plan-price">99,99€<small>/mois</small></div>
+                    <ul class="plan-features">
+                        <li>Jusqu'à 100 clients</li>
+                        <li>Stockage 50 GB</li>
+                        <li>Signatures électroniques (Yousign)</li>
+                        <li>Communications RPVA</li>
+                        <li>Support prioritaire</li>
+                    </ul>
+                    <form th:action="@{/register}" method="get">
+                        <input type="hidden" name="plan" value="CABINET">
+                        <button type="submit" class="btn-select">Choisir Cabinet</button>
+                    </form>
+                </div>
+
+                <!-- Plan Enterprise -->
+                <div class="pricing-card">
+                    <div class="plan-name">Enterprise</div>
+                    <div class="plan-price">299,99€<small>/mois</small></div>
+                    <ul class="plan-features">
+                        <li>Clients illimités</li>
+                        <li>Stockage 500 GB</li>
+                        <li>Toutes les fonctionnalités</li>
+                        <li>API complète</li>
+                        <li>Support dédié 24/7</li>
+                        <li>Formation personnalisée</li>
+                    </ul>
+                    <form th:action="@{/register}" method="get">
+                        <input type="hidden" name="plan" value="ENTERPRISE">
+                        <button type="submit" class="btn-select">Choisir Enterprise</button>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2026 GED Avocat - Solution de gestion documentaire pour avocats</p>
+    </footer>
+
+</body>
+</html>

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title th:text="${client.id != null ? 'Modifier client' : 'Nouveau client'}">Client</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="container">
+            <h1 class="mt-3 mb-3">
+                <i class="fas fa-user"></i> 
+                <span th:text="${client.id != null ? 'Modifier le client' : 'Nouveau client'}">Client</span>
+            </h1>
+            
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-body">
+                            <form th:action="${client.id != null ? '/clients/' + client.id : '/clients'}" 
+                                  method="post" 
+                                  th:object="${client}">
+                                
+                                <div class="form-group mb-3">
+                                    <label for="name" class="form-label">Nom *</label>
+                                    <input type="text" id="name" th:field="*{name}" 
+                                           class="form-control" required>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('name')}" 
+                                         th:errors="*{name}">Erreur</div>
+                                </div>
+                                
+                                <div class="form-group mb-3">
+                                    <label for="email" class="form-label">Email *</label>
+                                    <input type="email" id="email" th:field="*{email}" 
+                                           class="form-control" required>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('email')}" 
+                                         th:errors="*{email}">Erreur</div>
+                                </div>
+                                
+                                <div class="form-group mb-3">
+                                    <label for="phone" class="form-label">Téléphone</label>
+                                    <input type="tel" id="phone" th:field="*{phone}" 
+                                           class="form-control" placeholder="0612345678">
+                                </div>
+                                
+                                <div class="form-group mb-3">
+                                    <label for="address" class="form-label">Adresse</label>
+                                    <textarea id="address" th:field="*{address}" 
+                                              class="form-control" rows="3"></textarea>
+                                </div>
+                                
+                                <div class="form-group mb-3">
+                                    <label for="accessEndsAt" class="form-label">Date de fin d'accès (optionnel)</label>
+                                    <input type="datetime-local" id="accessEndsAt" th:field="*{accessEndsAt}" 
+                                           class="form-control">
+                                    <small class="form-text">Laissez vide pour un accès permanent</small>
+                                </div>
+                                
+                                <div class="mt-4">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save"></i> Enregistrer
+                                    </button>
+                                    <a th:href="@{/clients}" class="btn btn-secondary">
+                                        <i class="fas fa-times"></i> Annuler
+                                    </a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5><i class="fas fa-info-circle"></i> Aide</h5>
+                        </div>
+                        <div class="card-body">
+                            <p><strong>Nom :</strong> Nom complet du client ou de l'entreprise</p>
+                            <p><strong>Email :</strong> Adresse email principale de contact</p>
+                            <p><strong>Téléphone :</strong> Numéro de téléphone du client</p>
+                            <p><strong>Date de fin d'accès :</strong> Si définie, le client n'aura plus accès après cette date</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

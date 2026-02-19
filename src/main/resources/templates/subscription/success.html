@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>Abonnement activé</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="container">
+            <div class="success-page">
+                <div class="success-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                
+                <h1>Bienvenue dans GED Avocat ! 🎉</h1>
+                
+                <p class="success-message">
+                    Votre abonnement a été activé avec succès.
+                    Vous avez maintenant accès à toutes les fonctionnalités de votre plan.
+                </p>
+                
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h3 class="card-title">Prochaines étapes</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="steps">
+                            <div class="step">
+                                <div class="step-number">1</div>
+                                <div class="step-content">
+                                    <h4>Ajoutez vos premiers clients</h4>
+                                    <p>Commencez par créer les fiches de vos clients</p>
+                                    <a href="/clients/new" class="btn btn-primary">
+                                        <i class="fas fa-user-plus"></i> Ajouter un client
+                                    </a>
+                                </div>
+                            </div>
+                            
+                            <div class="step">
+                                <div class="step-number">2</div>
+                                <div class="step-content">
+                                    <h4>Créez vos dossiers</h4>
+                                    <p>Organisez vos affaires par client et par type</p>
+                                    <a href="/cases/new" class="btn btn-success">
+                                        <i class="fas fa-folder-plus"></i> Créer un dossier
+                                    </a>
+                                </div>
+                            </div>
+                            
+                            <div class="step">
+                                <div class="step-number">3</div>
+                                <div class="step-content">
+                                    <h4>Importez vos documents</h4>
+                                    <p>Uploadez et organisez vos pièces juridiques</p>
+                                    <a href="/documents/upload" class="btn btn-info">
+                                        <i class="fas fa-upload"></i> Importer des documents
+                                    </a>
+                                </div>
+                            </div>
+                            
+                            <div class="step">
+                                <div class="step-number">4</div>
+                                <div class="step-content">
+                                    <h4>Configurez vos intégrations</h4>
+                                    <p>Yousign (signature) et RPVA (e-Barreau)</p>
+                                    <a href="/settings" class="btn btn-warning">
+                                        <i class="fas fa-cog"></i> Paramètres
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h3 class="card-title">Vos avantages</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="benefits">
+                            <div class="benefit">
+                                <i class="fas fa-signature"></i>
+                                <h4>Signature électronique</h4>
+                                <p>Faites signer vos documents en ligne avec Yousign</p>
+                            </div>
+                            
+                            <div class="benefit">
+                                <i class="fas fa-gavel"></i>
+                                <h4>Connexion RPVA</h4>
+                                <p>Communiquez avec les juridictions via e-Barreau</p>
+                            </div>
+                            
+                            <div class="benefit">
+                                <i class="fas fa-users"></i>
+                                <h4>Portail client</h4>
+                                <p>Vos clients accèdent à leurs dossiers en ligne</p>
+                            </div>
+                            
+                            <div class="benefit">
+                                <i class="fas fa-shield-alt"></i>
+                                <h4>Sécurité maximale</h4>
+                                <p>Données hébergées en France, chiffrées et sauvegardées</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card mt-3 help-card">
+                    <div class="card-body">
+                        <h4><i class="fas fa-question-circle"></i> Besoin d'aide ?</h4>
+                        <p>Notre équipe est là pour vous accompagner dans vos premiers pas.</p>
+                        <div class="help-actions">
+                            <a href="/help" class="btn btn-outline-primary">
+                                <i class="fas fa-book"></i> Documentation
+                            </a>
+                            <a href="/support" class="btn btn-outline-primary">
+                                <i class="fas fa-life-ring"></i> Support
+                            </a>
+                            <a href="mailto:support@gedavocat.com" class="btn btn-outline-primary">
+                                <i class="fas fa-envelope"></i> Nous contacter
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="text-center mt-3">
+                    <a href="/dashboard" class="btn btn-primary btn-lg">
+                        <i class="fas fa-chart-line"></i> Accéder au tableau de bord
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <th:block layout:fragment="extra-css">
+        <style>
+            .success-page {
+                max-width: 900px;
+                margin: 3rem auto;
+                text-align: center;
+            }
+            
+            .success-icon {
+                font-size: 6rem;
+                color: #27ae60;
+                margin-bottom: 2rem;
+                animation: successPop 0.5s ease-out;
+            }
+            
+            @keyframes successPop {
+                0% { transform: scale(0); }
+                50% { transform: scale(1.1); }
+                100% { transform: scale(1); }
+            }
+            
+            .success-page h1 {
+                color: #2c3e50;
+                margin-bottom: 1rem;
+            }
+            
+            .success-message {
+                font-size: 1.2rem;
+                color: #7f8c8d;
+                margin-bottom: 2rem;
+            }
+            
+            .steps {
+                display: flex;
+                flex-direction: column;
+                gap: 2rem;
+                text-align: left;
+            }
+            
+            .step {
+                display: flex;
+                gap: 1.5rem;
+                align-items: start;
+            }
+            
+            .step-number {
+                flex-shrink: 0;
+                width: 50px;
+                height: 50px;
+                background: linear-gradient(135deg, #3498db, #2980b9);
+                color: white;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1.5rem;
+                font-weight: bold;
+            }
+            
+            .step-content h4 {
+                margin-top: 0;
+                margin-bottom: 0.5rem;
+                color: #2c3e50;
+            }
+            
+            .step-content p {
+                margin-bottom: 1rem;
+                color: #7f8c8d;
+            }
+            
+            .benefits {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                gap: 2rem;
+                text-align: center;
+            }
+            
+            .benefit i {
+                font-size: 3rem;
+                color: #3498db;
+                margin-bottom: 1rem;
+            }
+            
+            .benefit h4 {
+                color: #2c3e50;
+                margin-bottom: 0.5rem;
+            }
+            
+            .benefit p {
+                color: #7f8c8d;
+                font-size: 0.9rem;
+            }
+            
+            .help-card {
+                background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+                border: none;
+            }
+            
+            .help-card h4 {
+                color: #2c3e50;
+                margin-bottom: 1rem;
+            }
+            
+            .help-actions {
+                display: flex;
+                gap: 1rem;
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+            
+            @media (max-width: 768px) {
+                .success-icon {
+                    font-size: 4rem;
+                }
+                
+                .steps {
+                    gap: 1.5rem;
+                }
+                
+                .step {
+                    flex-direction: column;
+                    text-align: center;
+                }
+                
+                .step-number {
+                    margin: 0 auto;
+                }
+                
+                .benefits {
+                    grid-template-columns: 1fr;
+                }
+            }
+        </style>
+    </th:block>
+</body>
+</html>

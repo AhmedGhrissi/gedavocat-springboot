@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>Dossiers</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="container">
+            <!-- Messages -->
+            <div th:if="${message}" class="alert alert-success alert-dismissible fade show mt-3" role="alert">
+                <i class="fas fa-check-circle"></i> <span th:text="${message}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            <div th:if="${error}" class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
+                <i class="fas fa-exclamation-circle"></i> <span th:text="${error}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mt-3 mb-3">
+                <h1><i class="fas fa-folder-open"></i> Mes dossiers</h1>
+                <a th:href="@{/cases/new}" class="btn btn-primary">
+                    <i class="fas fa-folder-plus"></i> Nouveau dossier
+                </a>
+            </div>
+            
+            <!-- Recherche et filtres -->
+            <div class="card mb-3">
+                <div class="card-body">
+                    <form th:action="@{/cases}" method="get" class="row g-3">
+                        <div class="col-md-6">
+                            <input type="text" name="search" th:value="${search}" 
+                                   class="form-control" placeholder="Rechercher un dossier...">
+                        </div>
+                        <div class="col-md-4">
+                            <select name="status" class="form-select">
+                                <option value="">Tous les statuts</option>
+                                <option th:each="stat : ${statuses}" 
+                                        th:value="${stat}" 
+                                        th:text="${stat.displayName}"
+                                        th:selected="${stat == selectedStatus}">Statut</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-search"></i> Filtrer
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Liste des dossiers -->
+            <div class="card">
+                <div class="card-body">
+                    <table class="table table-hover" th:if="${cases != null and !cases.empty}">
+                        <thead>
+                            <tr>
+                                <th>Nom du dossier</th>
+                                <th>Client</th>
+                                <th>Statut</th>
+                                <th>Date création</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="case : ${cases}">
+                                <td>
+                                    <a th:href="@{/cases/{id}(id=${case.id})}" th:text="${case.name}" class="text-decoration-none">Dossier</a>
+                                </td>
+                                <td>
+                                    <span th:if="${case.client != null}">
+                                        <a th:href="@{/clients/{id}(id=${case.client.id})}" 
+                                           th:text="${case.client.name}" 
+                                           class="text-decoration-none">Client</a>
+                                    </span>
+                                    <span th:if="${case.client == null}" class="text-muted">Aucun client</span>
+                                </td>
+                                <td>
+                                    <span class="badge" 
+                                          th:classappend="${case.status.name == 'OPEN' ? 'bg-success' : (case.status.name == 'IN_PROGRESS' ? 'bg-info' : (case.status.name == 'CLOSED' ? 'bg-warning' : 'bg-secondary'))}"
+                                          th:text="${case.status.displayName}">Statut</span>
+                                </td>
+                                <td th:text="${case.createdAt != null ? #temporals.format(case.createdAt, 'dd/MM/yyyy') : '-'}">Date</td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a th:href="@{/cases/{id}(id=${case.id})}" class="btn btn-sm btn-outline-info" title="Voir">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a th:href="@{/cases/{id}/edit(id=${case.id})}" class="btn btn-sm btn-outline-warning" title="Modifier">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a th:href="@{/documents/case/{id}(id=${case.id})}" class="btn btn-sm btn-outline-primary" title="Documents">
+                                            <i class="fas fa-file"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <div th:if="${cases == null or cases.empty}" class="text-center p-4">
+                        <i class="fas fa-folder-open fa-4x text-muted mb-3"></i>
+                        <h4 class="text-muted">Aucun dossier trouvé</h4>
+                        <p class="text-muted" th:if="${search != null and !search.isEmpty()}">
+                            Aucun résultat pour "<span th:text="${search}"></span>"
+                        </p>
+                        <p class="text-muted" th:if="${search == null or search.isEmpty()}">
+                            Vous n'avez pas encore créé de dossier
+                        </p>
+                        <a th:href="@{/cases/new}" class="btn btn-primary">
+                            <i class="fas fa-folder-plus"></i> Créer votre premier dossier
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

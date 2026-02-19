@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title th:text="${case.name}">Détail du dossier</title>
+    <style>
+        .case-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            padding: 40px;
+            color: white;
+            margin-bottom: 30px;
+        }
+        
+        .info-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .document-item {
+            padding: 15px;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .doc-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="container-fluid">
+            <!-- En-tête -->
+            <div class="case-header">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <a th:href="@{/my-cases}" class="btn btn-light">
+                        <i class="fas fa-arrow-left"></i> Retour
+                    </a>
+                </div>
+                <h1 th:text="${case.name}">Nom du dossier</h1>
+                <p style="font-size: 16px; opacity: 0.95;" th:text="${case.description}">Description</p>
+            </div>
+
+            <!-- Informations du dossier -->
+            <div class="info-card">
+                <h4 class="mb-3"><i class="fas fa-info-circle"></i> Informations</h4>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted">Statut</label>
+                        <div>
+                            <span class="badge bg-primary" th:text="${case.status.displayName}">Ouvert</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted">Date de création</label>
+                        <div th:text="${#temporals.format(case.createdAt, 'dd/MM/yyyy HH:mm')}">01/01/2024</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted">Avocat en charge</label>
+                        <div>
+                            <i class="fas fa-user-tie"></i>
+                            <span th:text="${case.lawyer.name}">Nom de l'avocat</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted">Contact avocat</label>
+                        <div>
+                            <i class="fas fa-envelope"></i>
+                            <span th:text="${case.lawyer.email}">email@exemple.com</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Documents du dossier -->
+            <div class="info-card">
+                <h4 class="mb-3">
+                    <i class="fas fa-file-pdf"></i> Documents 
+                    <span class="badge bg-secondary" th:text="${documents.size()}">0</span>
+                </h4>
+                
+                <div th:if="${documents != null and !documents.empty}">
+                    <div th:each="doc : ${documents}" class="document-item">
+                        <div class="doc-icon">
+                            <i class="fas fa-file-pdf"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="fw-bold" th:text="${doc.originalName}">Document.pdf</div>
+                            <small class="text-muted">
+                                <span th:text="${doc.fileSize != null ? #numbers.formatDecimal(doc.fileSize / 1024.0, 1, 2) + ' KB' : ''}"></span>
+                                • Ajouté le <span th:text="${#temporals.format(doc.createdAt, 'dd/MM/yyyy')}"></span>
+                            </small>
+                        </div>
+                        <a th:href="@{/documents/{id}/download(id=${doc.id})}" 
+                           class="btn btn-sm btn-primary">
+                            <i class="fas fa-download"></i> Télécharger
+                        </a>
+                    </div>
+                </div>
+                
+                <div th:if="${documents == null or documents.empty}" class="text-center py-4 text-muted">
+                    <i class="fas fa-file fa-2x mb-2"></i>
+                    <p>Aucun document disponible pour le moment</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

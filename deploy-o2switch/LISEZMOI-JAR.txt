@@ -1,0 +1,26 @@
+IMPORTANT - FICHIER JAR MANQUANT
+==================================
+
+Ce dossier doit contenir le fichier "app.jar" compilé.
+
+Pour générer le fichier JAR, exécutez sur votre machine locale :
+
+    mvn clean package -DskipTests
+
+Le fichier JAR sera généré dans le dossier target/ :
+    target/gedavocat-app-1.0.0.jar
+
+Renommez-le en "app.jar" et placez-le dans ce dossier avant de déployer.
+
+Alternative : Utilisez le script build-deploy.sh qui automatise tout :
+    ./build-deploy.sh
+
+Ce script va :
+1. Compiler le projet avec Maven
+2. Créer le package de déploiement complet
+3. Générer une archive ZIP prête à uploader
+
+INSTRUCTIONS COMPLÈTES
+======================
+
+Voir le fichier DEPLOIEMENT-O2SWITCH.md pour les instructions complètes.

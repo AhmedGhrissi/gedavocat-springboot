@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout}">
+<head>
+    <title>Tableau de bord</title>
+    <style>
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s;
+            margin-bottom: 20px;
+        }
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        }
+        .stat-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 16px;
+        }
+        .stat-icon.blue { background: #dbeafe; color: #1e40af; }
+        .stat-icon.green { background: #d1fae5; color: #065f46; }
+        .stat-icon.yellow { background: #fef3c7; color: #92400e; }
+        .stat-icon.purple { background: #e0e7ff; color: #4f46e5; }
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 4px;
+        }
+        .stat-label {
+            color: #64748b;
+            font-size: 14px;
+        }
+        .quick-action {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            text-decoration: none;
+            transition: all 0.3s;
+            margin-bottom: 16px;
+        }
+        .quick-action:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+            color: white;
+        }
+        .action-icon {
+            width: 48px;
+            height: 48px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        .subscription-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 13px;
+        }
+        .badge-active {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .badge-inactive {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+    </style>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="container-fluid">
+            <!-- En-tête avec nom utilisateur -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1>Bonjour, <span th:text="${user.name}">Utilisateur</span> 👋</h1>
+                    <p class="text-muted" th:text="'Connecté en tant que ' + ${user.role.displayName}">
+                        Connecté en tant que client
+                    </p>
+                </div>
+                <div>
+                    <!-- Badge abonnement -->
+                    <span th:if="${user.hasActiveSubscription()}" class="subscription-badge badge-active">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Abonnement actif</span>
+                    </span>
+                    <span th:if="${!user.hasActiveSubscription()}" class="subscription-badge badge-inactive">
+                        <i class="fas fa-times-circle"></i>
+                        <span>Pas d'abonnement</span>
+                    </span>
+                </div>
+            </div>
+
+            <!-- Alerte abonnement actif -->
+            <div class="alert alert-success"
+                 style="border-radius: 12px; border-left: 4px solid #10b981;"
+                 th:if="${user.hasActiveSubscription()}">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="fas fa-check-circle"></i>
+                        <strong>Abonnement actif</strong> -
+                        Plan <span class="badge bg-primary" th:text="${user.subscriptionPlan != null ? user.subscriptionPlan.displayName : ''}">CABINET</span>
+                        <span th:if="${user.subscriptionEndsAt != null}">
+                            jusqu'au <strong th:text="${#temporals.format(user.subscriptionEndsAt, 'dd/MM/yyyy')}">31/12/2024</strong>
+                        </span>
+                        <span th:if="${user.daysRemaining > 0 and user.daysRemaining < 30}"
+                              class="badge bg-warning ms-2">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            Expire dans <span th:text="${user.daysRemaining}">7</span> jours
+                        </span>
+                    </div>
+                    <a th:href="@{/payment/manage}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-cog"></i> Gérer
+                    </a>
+                </div>
+            </div>
+
+            <!-- Alerte pas d'abonnement -->
+            <div class="alert alert-warning"
+                 style="border-radius: 12px; border-left: 4px solid #f59e0b;"
+                 th:if="${!user.hasActiveSubscription()}">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>Aucun abonnement actif</strong> -
+                        Profitez de toutes les fonctionnalités en souscrivant à un plan
+                    </div>
+                    <a th:href="@{/payment/pricing}" class="btn btn-warning">
+                        <i class="fas fa-crown"></i> Choisir un plan
+                    </a>
+                </div>
+            </div>
+
+            <!-- Statistiques -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-icon blue">
+                            <i class="fas fa-folder"></i>
+                        </div>
+                        <div class="stat-value" th:text="${activeCases != null ? activeCases : 0}">0</div>
+                        <div class="stat-label">Dossiers actifs</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-icon green">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-value" th:text="${clientsCount != null ? clientsCount : 0}">0</div>
+                        <div class="stat-label">Clients</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-icon yellow">
+                            <i class="fas fa-file"></i>
+                        </div>
+                        <div class="stat-value" th:text="${documentsCount != null ? documentsCount : 0}">0</div>
+                        <div class="stat-label">Documents</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-icon purple">
+                            <i class="fas fa-signature"></i>
+                        </div>
+                        <div class="stat-value" th:text="${signaturesCount != null ? signaturesCount : 0}">0</div>
+                        <div class="stat-label">Signatures en cours</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions rapides -->
+            <div class="row">
+                <div class="col-md-8">
+                    <h3 class="mb-3">Actions rapides</h3>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <a th:href="@{/cases/new}" class="quick-action">
+                                <div class="action-icon">
+                                    <i class="fas fa-plus"></i>
+                                </div>
+                                <div>
+                                    <div style="font-weight: 700; font-size: 16px;">Nouveau dossier</div>
+                                    <div style="opacity: 0.9; font-size: 13px;">Créer un nouveau dossier client</div>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-6">
+                            <a th:href="@{/clients/new}" class="quick-action" style="background: linear-gradient(135deg, #10b981, #059669);">
+                                <div class="action-icon">
+                                    <i class="fas fa-user-plus"></i>
+                                </div>
+                                <div>
+                                    <div style="font-weight: 700; font-size: 16px;">Nouveau client</div>
+                                    <div style="opacity: 0.9; font-size: 13px;">Ajouter un nouveau client</div>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-6">
+                            <a th:href="@{/signatures/new}" class="quick-action" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                                <div class="action-icon">
+                                    <i class="fas fa-signature"></i>
+                                </div>
+                                <div>
+                                    <div style="font-weight: 700; font-size: 16px;">Demander signature</div>
+                                    <div style="opacity: 0.9; font-size: 13px;">Signature électronique Yousign</div>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-6">
+                            <a th:href="@{/rpva}" class="quick-action" style="background: linear-gradient(135deg, #3b82f6, #1e40af);">
+                                <div class="action-icon">
+                                    <i class="fas fa-gavel"></i>
+                                </div>
+                                <div>
+                                    <div style="font-weight: 700; font-size: 16px;">Communication RPVA</div>
+                                    <div style="opacity: 0.9; font-size: 13px;">e-Barreau / Juridictions</div>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <h3 class="mb-3">Activité récente</h3>
+                    <div class="card" style="border-radius: 12px;">
+                        <div class="card-body">
+                            <div th:if="${recentActivities != null and !#lists.isEmpty(recentActivities)}">
+                                <div th:each="activity : ${recentActivities}" class="mb-3">
+                                    <div class="d-flex align-items-start gap-2">
+                                        <i class="fas fa-circle" style="font-size: 8px; color: #667eea; margin-top: 8px;"></i>
+                                        <div>
+                                            <div style="font-weight: 600; font-size: 14px;" th:text="${activity.title}">
+                                                Nouveau document
+                                            </div>
+                                            <div style="font-size: 12px; color: #64748b;" th:text="${activity.description}">
+                                                contrat.pdf ajouté
+                                            </div>
+                                            <div style="font-size: 11px; color: #94a3b8;" th:text="${activity.time}">
+                                                Il y a 2 heures
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div th:if="${recentActivities == null or #lists.isEmpty(recentActivities)}"
+                                 class="text-center text-muted py-4">
+                                <i class="fas fa-inbox fa-2x mb-2"></i>
+                                <p>Aucune activité récente</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Section dossiers récents (correction de l'erreur recentCases.empty) -->
+                    <div class="mt-4">
+                        <h4 class="mb-3">Dossiers récents</h4>
+                        <div class="card" style="border-radius: 12px;">
+                            <div class="card-body">
+                                <div th:if="${recentCases != null and !#lists.isEmpty(recentCases)}">
+                                    <div th:each="case : ${recentCases}" class="mb-3">
+                                        <div class="d-flex align-items-start gap-2">
+                                            <i class="fas fa-folder" style="font-size: 12px; color: #667eea; margin-top: 4px;"></i>
+                                            <div class="flex-grow-1">
+                                                <div style="font-weight: 600; font-size: 14px;">
+                                                    <a th:href="@{/cases/{id}(id=${case.id})}" th:text="${case.name}" class="text-decoration-none">
+                                                        Nom du dossier
+                                                    </a>
+                                                </div>
+                                                <div style="font-size: 12px; color: #64748b;" th:text="${case.client != null ? case.client.name : 'Client inconnu'}">
+                                                    Nom du client
+                                                </div>
+                                                <div style="font-size: 11px; color: #94a3b8;" th:text="${#temporals.format(case.createdAt, 'dd/MM/yyyy')}">
+                                                    Date de création
+                                                </div>
+                                            </div>
+                                            <span class="badge"
+                                                  th:classappend="${case.status.name() == 'OPEN' ? 'bg-success' : (case.status.name() == 'IN_PROGRESS' ? 'bg-warning' : (case.status.name() == 'CLOSED' ? 'bg-secondary' : 'bg-dark'))}"
+                                                  th:text="${case.status.displayName}">
+                                                Statut
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div th:if="${recentCases == null or #lists.isEmpty(recentCases)}"
+                                     class="text-center text-muted py-4">
+                                    <i class="fas fa-folder fa-2x mb-2"></i>
+                                    <p>Aucun dossier récent</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
