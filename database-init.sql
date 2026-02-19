@@ -250,36 +250,85 @@ CREATE TABLE audit_logs (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================
+-- TABLE: invoices (factures)
+-- ============================================
+DROP TABLE IF EXISTS invoices;
+CREATE TABLE invoices (
+    id VARCHAR(36) PRIMARY KEY,
+    invoice_number VARCHAR(50) NOT NULL UNIQUE,
+    client_id VARCHAR(36) NOT NULL,
+    invoice_date DATE NOT NULL,
+    due_date DATE NULL,
+    paid_date DATE NULL,
+    status ENUM('DRAFT','SENT','PAID','OVERDUE','CANCELLED') NOT NULL DEFAULT 'DRAFT',
+    total_ht DECIMAL(10, 2) NOT NULL,
+    total_tva DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
+    total_ttc DECIMAL(10, 2) NOT NULL,
+    currency VARCHAR(3) DEFAULT 'EUR',
+    notes TEXT NULL,
+    payment_method VARCHAR(50) NULL,
+    document_url VARCHAR(500) NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE,
+    INDEX idx_invoice_client_id (client_id),
+    INDEX idx_invoice_number (invoice_number),
+    INDEX idx_invoice_status (status),
+    INDEX idx_invoice_date (invoice_date)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================
+-- TABLE: invoice_items (lignes de facture)
+-- ============================================
+DROP TABLE IF EXISTS invoice_items;
+CREATE TABLE invoice_items (
+    id VARCHAR(36) PRIMARY KEY,
+    invoice_id VARCHAR(36) NOT NULL,
+    description VARCHAR(500) NOT NULL,
+    quantity DECIMAL(10, 2) NOT NULL,
+    unit_price_ht DECIMAL(10, 2) NOT NULL,
+    tva_rate DECIMAL(5, 2) NOT NULL DEFAULT 20.00,
+    total_ht DECIMAL(10, 2) NULL,
+    total_tva DECIMAL(10, 2) NULL,
+    total_ttc DECIMAL(10, 2) NULL,
+    display_order INT NULL,
+
+    FOREIGN KEY (invoice_id) REFERENCES invoices(id) ON DELETE CASCADE,
+    INDEX idx_invoice_item_invoice_id (invoice_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================
 -- DONNÉES DE TEST
 -- ============================================
 
 -- ============================================
 -- UTILISATEURS DE TEST (mot de passe pour tous: password123)
--- Hash bcrypt de "password123": $2a$10$rGDvmQqHd8F6GQpJ2m6C4.6gZKWXj0zLJYH2BhV7P/YKfN5sxKEG2
+-- Hash bcrypt: $2a$12$zChbFEgJQsSVmhlWhH4kiuLhV1uasxBInAncAQCPdTDygFl66FbZ6
 -- ============================================
 
 -- 1. ADMIN
 INSERT INTO users (id, name, first_name, last_name, email, password, role, subscription_plan, subscription_status, subscription_ends_at, max_clients, created_at) VALUES
-('admin-001', 'Admin Principal', 'Admin', 'Principal', 'admin@gedavocat.com', '$2a$10$rGDvmQqHd8F6GQpJ2m6C4.6gZKWXj0zLJYH2BhV7P/YKfN5sxKEG2', 'ADMIN', 'ENTERPRISE', 'ACTIVE', DATE_ADD(NOW(), INTERVAL 1 YEAR), 999, NOW());
+('admin-001', 'Admin Principal', 'Admin', 'Principal', 'admin@gedavocat.com', '$2a$12$zChbFEgJQsSVmhlWhH4kiuLhV1uasxBInAncAQCPdTDygFl66FbZ6', 'ADMIN', 'ENTERPRISE', 'ACTIVE', DATE_ADD(NOW(), INTERVAL 1 YEAR), 999, NOW());
 
 -- 2. AVOCATS
 INSERT INTO users (id, name, first_name, last_name, phone, bar_number, email, password, role, subscription_plan, subscription_status, subscription_start_date, subscription_ends_at, max_clients, gdpr_consent_at, terms_accepted_at, created_at) VALUES
-('lawyer-001', 'Jean Dupont', 'Jean', 'Dupont', '+33612345678', 'P123456', 'jean.dupont@gedavocat.com', '$2a$10$rGDvmQqHd8F6GQpJ2m6C4.6gZKWXj0zLJYH2BhV7P/YKfN5sxKEG2', 'LAWYER', 'CABINET', 'ACTIVE', NOW(), DATE_ADD(NOW(), INTERVAL 1 YEAR), 100, NOW(), NOW(), NOW()),
-('lawyer-002', 'Sophie Bernard', 'Sophie', 'Bernard', '+33623456789', 'P234567', 'sophie.bernard@gedavocat.com', '$2a$10$rGDvmQqHd8F6GQpJ2m6C4.6gZKWXj0zLJYH2BhV7P/YKfN5sxKEG2', 'LAWYER', 'SOLO', 'ACTIVE', NOW(), DATE_ADD(NOW(), INTERVAL 6 MONTH), 10, NOW(), NOW(), NOW()),
-('lawyer-003', 'Marc Dubois', 'Marc', 'Dubois', '+33634567890', 'P345678', 'marc.dubois@gedavocat.com', '$2a$10$rGDvmQqHd8F6GQpJ2m6C4.6gZKWXj0zLJYH2BhV7P/YKfN5sxKEG2', 'LAWYER', 'ENTERPRISE', 'ACTIVE', NOW(), DATE_ADD(NOW(), INTERVAL 1 YEAR), 500, NOW(), NOW(), NOW()),
-('lawyer-004', 'Julie Moreau', 'Julie', 'Moreau', '+33645678901', 'P456789', 'julie.moreau@gedavocat.com', '$2a$10$rGDvmQqHd8F6GQpJ2m6C4.6gZKWXj0zLJYH2BhV7P/YKfN5sxKEG2', 'LAWYER', 'SOLO', 'TRIAL', NOW(), DATE_ADD(NOW(), INTERVAL 14 DAY), 10, NOW(), NOW(), NOW());
+('lawyer-001', 'Jean Dupont', 'Jean', 'Dupont', '+33612345678', 'P123456', 'jean.dupont@gedavocat.com', '$2a$12$zChbFEgJQsSVmhlWhH4kiuLhV1uasxBInAncAQCPdTDygFl66FbZ6', 'LAWYER', 'CABINET', 'ACTIVE', NOW(), DATE_ADD(NOW(), INTERVAL 1 YEAR), 100, NOW(), NOW(), NOW()),
+('lawyer-002', 'Sophie Bernard', 'Sophie', 'Bernard', '+33623456789', 'P234567', 'sophie.bernard@gedavocat.com', '$2a$12$zChbFEgJQsSVmhlWhH4kiuLhV1uasxBInAncAQCPdTDygFl66FbZ6', 'LAWYER', 'SOLO', 'ACTIVE', NOW(), DATE_ADD(NOW(), INTERVAL 6 MONTH), 10, NOW(), NOW(), NOW()),
+('lawyer-003', 'Marc Dubois', 'Marc', 'Dubois', '+33634567890', 'P345678', 'marc.dubois@gedavocat.com', '$2a$12$zChbFEgJQsSVmhlWhH4kiuLhV1uasxBInAncAQCPdTDygFl66FbZ6', 'LAWYER', 'ENTERPRISE', 'ACTIVE', NOW(), DATE_ADD(NOW(), INTERVAL 1 YEAR), 500, NOW(), NOW(), NOW()),
+('lawyer-004', 'Julie Moreau', 'Julie', 'Moreau', '+33645678901', 'P456789', 'julie.moreau@gedavocat.com', '$2a$12$zChbFEgJQsSVmhlWhH4kiuLhV1uasxBInAncAQCPdTDygFl66FbZ6', 'LAWYER', 'SOLO', 'TRIAL', NOW(), DATE_ADD(NOW(), INTERVAL 14 DAY), 10, NOW(), NOW(), NOW());
 
 -- 3. AVOCATS SECONDAIRES
 INSERT INTO users (id, name, first_name, last_name, phone, email, password, role, created_at) VALUES
-('lawyer-sec-001', 'Pierre Lefebvre', 'Pierre', 'Lefebvre', '+33656789012', 'pierre.lefebvre@gedavocat.com', '$2a$10$rGDvmQqHd8F6GQpJ2m6C4.6gZKWXj0zLJYH2BhV7P/YKfN5sxKEG2', 'LAWYER_SECONDARY', NOW()),
-('lawyer-sec-002', 'Émilie Petit', 'Émilie', 'Petit', '+33667890123', 'emilie.petit@gedavocat.com', '$2a$10$rGDvmQqHd8F6GQpJ2m6C4.6gZKWXj0zLJYH2BhV7P/YKfN5sxKEG2', 'LAWYER_SECONDARY', NOW());
+('lawyer-sec-001', 'Pierre Lefebvre', 'Pierre', 'Lefebvre', '+33656789012', 'pierre.lefebvre@gedavocat.com', '$2a$12$zChbFEgJQsSVmhlWhH4kiuLhV1uasxBInAncAQCPdTDygFl66FbZ6', 'LAWYER_SECONDARY', NOW()),
+('lawyer-sec-002', 'Émilie Petit', 'Émilie', 'Petit', '+33667890123', 'emilie.petit@gedavocat.com', '$2a$12$zChbFEgJQsSVmhlWhH4kiuLhV1uasxBInAncAQCPdTDygFl66FbZ6', 'LAWYER_SECONDARY', NOW());
 
 -- 4. CLIENTS (avec compte utilisateur)
 INSERT INTO users (id, name, first_name, last_name, phone, email, password, role, gdpr_consent_at, terms_accepted_at, created_at) VALUES
-('client-user-001', 'Marie Martin', 'Marie', 'Martin', '+33678901234', 'marie.martin@example.com', '$2a$10$rGDvmQqHd8F6GQpJ2m6C4.6gZKWXj0zLJYH2BhV7P/YKfN5sxKEG2', 'CLIENT', NOW(), NOW(), NOW()),
-('client-user-002', 'Paul Durand', 'Paul', 'Durand', '+33689012345', 'paul.durand@example.com', '$2a$10$rGDvmQqHd8F6GQpJ2m6C4.6gZKWXj0zLJYH2BhV7P/YKfN5sxKEG2', 'CLIENT', NOW(), NOW(), NOW()),
-('client-user-003', 'Claire Rousseau', 'Claire', 'Rousseau', '+33690123456', 'claire.rousseau@example.com', '$2a$10$rGDvmQqHd8F6GQpJ2m6C4.6gZKWXj0zLJYH2BhV7P/YKfN5sxKEG2', 'CLIENT', NOW(), NOW(), NOW()),
-('client-user-004', 'Thomas Vincent', 'Thomas', 'Vincent', '+33601234567', 'thomas.vincent@example.com', '$2a$10$rGDvmQqHd8F6GQpJ2m6C4.6gZKWXj0zLJYH2BhV7P/YKfN5sxKEG2', 'CLIENT', NOW(), NOW(), NOW());
+('client-user-001', 'Marie Martin', 'Marie', 'Martin', '+33678901234', 'marie.martin@example.com', '$2a$12$zChbFEgJQsSVmhlWhH4kiuLhV1uasxBInAncAQCPdTDygFl66FbZ6', 'CLIENT', NOW(), NOW(), NOW()),
+('client-user-002', 'Paul Durand', 'Paul', 'Durand', '+33689012345', 'paul.durand@example.com', '$2a$12$zChbFEgJQsSVmhlWhH4kiuLhV1uasxBInAncAQCPdTDygFl66FbZ6', 'CLIENT', NOW(), NOW(), NOW()),
+('client-user-003', 'Claire Rousseau', 'Claire', 'Rousseau', '+33690123456', 'claire.rousseau@example.com', '$2a$12$zChbFEgJQsSVmhlWhH4kiuLhV1uasxBInAncAQCPdTDygFl66FbZ6', 'CLIENT', NOW(), NOW(), NOW()),
+('client-user-004', 'Thomas Vincent', 'Thomas', 'Vincent', '+33601234567', 'thomas.vincent@example.com', '$2a$12$zChbFEgJQsSVmhlWhH4kiuLhV1uasxBInAncAQCPdTDygFl66FbZ6', 'CLIENT', NOW(), NOW(), NOW());
 
 -- ============================================
 -- CLIENTS (entités clients rattachées aux avocats)
@@ -333,11 +382,90 @@ INSERT INTO cases (id, name, description, status, lawyer_id, client_id, created_
 ('case-015', 'Dossier archivé Renard', 'Ancien dossier de référence', 'ARCHIVED', 'lawyer-004', 'client-011', DATE_SUB(NOW(), INTERVAL 200 DAY));
 
 -- ============================================
+-- FACTURES (INVOICES)
+-- ============================================
+INSERT INTO invoices (id, invoice_number, client_id, invoice_date, due_date, paid_date, status, total_ht, total_tva, total_ttc, currency, notes, payment_method, created_at) VALUES
+-- Factures de Jean Dupont (lawyer-001)
+('invoice-001', 'FACT-2026-00001', 'client-001', DATE_SUB(NOW(), INTERVAL 30 DAY), DATE_ADD(DATE_SUB(NOW(), INTERVAL 30 DAY), INTERVAL 30 DAY), DATE_SUB(NOW(), INTERVAL 10 DAY), 'PAID', 2500.00, 500.00, 3000.00, 'EUR', 'Honoraires pour consultation et première procédure', 'Virement bancaire', DATE_SUB(NOW(), INTERVAL 30 DAY)),
+('invoice-002', 'FACT-2026-00002', 'client-002', DATE_SUB(NOW(), INTERVAL 25 DAY), DATE_ADD(DATE_SUB(NOW(), INTERVAL 25 DAY), INTERVAL 30 DAY), NULL, 'SENT', 3500.00, 700.00, 4200.00, 'EUR', 'Frais de dossier succession', NULL, DATE_SUB(NOW(), INTERVAL 25 DAY)),
+('invoice-003', 'FACT-2026-00003', 'client-003', DATE_SUB(NOW(), INTERVAL 45 DAY), DATE_SUB(NOW(), INTERVAL 15 DAY), NULL, 'OVERDUE', 4200.00, 840.00, 5040.00, 'EUR', 'Honoraires contentieux commercial - phase 1', NULL, DATE_SUB(NOW(), INTERVAL 45 DAY)),
+('invoice-004', 'FACT-2026-00004', 'client-004', DATE_SUB(NOW(), INTERVAL 10 DAY), DATE_ADD(DATE_SUB(NOW(), INTERVAL 10 DAY), INTERVAL 30 DAY), NULL, 'SENT', 1800.00, 360.00, 2160.00, 'EUR', 'Consultation initiale et analyse du dossier prud''homal', NULL, DATE_SUB(NOW(), INTERVAL 10 DAY)),
+
+-- Factures de Sophie Bernard (lawyer-002)
+('invoice-005', 'FACT-2026-00005', 'client-005', DATE_SUB(NOW(), INTERVAL 15 DAY), DATE_ADD(DATE_SUB(NOW(), INTERVAL 15 DAY), INTERVAL 30 DAY), DATE_SUB(NOW(), INTERVAL 5 DAY), 'PAID', 1500.00, 300.00, 1800.00, 'EUR', 'Expertise vice caché immobilier', 'Chèque', DATE_SUB(NOW(), INTERVAL 15 DAY)),
+('invoice-006', 'FACT-2026-00006', 'client-006', DATE_SUB(NOW(), INTERVAL 20 DAY), DATE_ADD(DATE_SUB(NOW(), INTERVAL 20 DAY), INTERVAL 30 DAY), NULL, 'SENT', 2200.00, 440.00, 2640.00, 'EUR', 'Procédure contentieux locatif', NULL, DATE_SUB(NOW(), INTERVAL 20 DAY)),
+('invoice-007', 'FACT-2026-00007', 'client-007', DATE_SUB(NOW(), INTERVAL 5 DAY), DATE_ADD(DATE_SUB(NOW(), INTERVAL 5 DAY), INTERVAL 30 DAY), NULL, 'SENT', 3000.00, 600.00, 3600.00, 'EUR', 'Dossier indemnisation accident', NULL, DATE_SUB(NOW(), INTERVAL 5 DAY)),
+
+-- Factures de Marc Dubois (lawyer-003)
+('invoice-008', 'FACT-2026-00008', 'client-008', DATE_SUB(NOW(), INTERVAL 20 DAY), DATE_ADD(DATE_SUB(NOW(), INTERVAL 20 DAY), INTERVAL 30 DAY), DATE_SUB(NOW(), INTERVAL 2 DAY), 'PAID', 5000.00, 1000.00, 6000.00, 'EUR', 'Création de société - conseil juridique', 'Virement bancaire', DATE_SUB(NOW(), INTERVAL 20 DAY)),
+('invoice-009', 'FACT-2026-00009', 'client-009', DATE_SUB(NOW(), INTERVAL 35 DAY), DATE_SUB(NOW(), INTERVAL 5 DAY), NULL, 'OVERDUE', 8500.00, 1700.00, 10200.00, 'EUR', 'Contentieux fiscal - phase préparatoire', NULL, DATE_SUB(NOW(), INTERVAL 35 DAY)),
+('invoice-010', 'FACT-2026-00010', 'client-010', DATE_SUB(NOW(), INTERVAL 40 DAY), DATE_ADD(DATE_SUB(NOW(), INTERVAL 40 DAY), INTERVAL 30 DAY), DATE_SUB(NOW(), INTERVAL 15 DAY), 'PAID', 12000.00, 2400.00, 14400.00, 'EUR', 'Due diligence acquisition société', 'Virement bancaire', DATE_SUB(NOW(), INTERVAL 40 DAY)),
+
+-- Factures de Julie Moreau (lawyer-004)
+('invoice-011', 'FACT-2026-00011', 'client-011', DATE_SUB(NOW(), INTERVAL 12 DAY), DATE_ADD(DATE_SUB(NOW(), INTERVAL 12 DAY), INTERVAL 30 DAY), NULL, 'SENT', 1800.00, 360.00, 2160.00, 'EUR', 'Défense pénale - consultation et analyse', NULL, DATE_SUB(NOW(), INTERVAL 12 DAY)),
+('invoice-012', 'FACT-2026-00012', 'client-012', DATE_SUB(NOW(), INTERVAL 25 DAY), DATE_ADD(DATE_SUB(NOW(), INTERVAL 25 DAY), INTERVAL 30 DAY), NULL, 'SENT', 1200.00, 240.00, 1440.00, 'EUR', 'Révision pension alimentaire', NULL, DATE_SUB(NOW(), INTERVAL 25 DAY)),
+
+-- Facture brouillon
+('invoice-013', 'FACT-2026-00013', 'client-001', NOW(), NULL, NULL, 'DRAFT', 0.00, 0.00, 0.00, 'EUR', 'Facture en cours de préparation', NULL, NOW());
+
+-- ============================================
+-- LIGNES DE FACTURE (INVOICE_ITEMS)
+-- ============================================
+INSERT INTO invoice_items (id, invoice_id, description, quantity, unit_price_ht, tva_rate, total_ht, total_tva, total_ttc, display_order) VALUES
+-- Lignes pour FACT-2026-00001
+('item-001', 'invoice-001', 'Consultation initiale (2 heures)', 2.00, 250.00, 20.00, 500.00, 100.00, 600.00, 1),
+('item-002', 'invoice-001', 'Rédaction requête divorce', 1.00, 1200.00, 20.00, 1200.00, 240.00, 1440.00, 2),
+('item-003', 'invoice-001', 'Correspondances et démarches', 1.00, 800.00, 20.00, 800.00, 160.00, 960.00, 3),
+
+-- Lignes pour FACT-2026-00002
+('item-004', 'invoice-002', 'Analyse dossier succession', 1.00, 1500.00, 20.00, 1500.00, 300.00, 1800.00, 1),
+('item-005', 'invoice-002', 'Rédaction acte de partage', 1.00, 2000.00, 20.00, 2000.00, 400.00, 2400.00, 2),
+
+-- Lignes pour FACT-2026-00003
+('item-006', 'invoice-003', 'Étude du contrat commercial', 1.00, 1200.00, 20.00, 1200.00, 240.00, 1440.00, 1),
+('item-007', 'invoice-003', 'Rédaction conclusions', 1.00, 2000.00, 20.00, 2000.00, 400.00, 2400.00, 2),
+('item-008', 'invoice-003', 'Préparation audience', 1.00, 1000.00, 20.00, 1000.00, 200.00, 1200.00, 3),
+
+-- Lignes pour FACT-2026-00004
+('item-009', 'invoice-004', 'Consultation droit du travail', 1.00, 1800.00, 20.00, 1800.00, 360.00, 2160.00, 1),
+
+-- Lignes pour FACT-2026-00005
+('item-010', 'invoice-005', 'Expertise technique immobilière', 1.00, 1500.00, 20.00, 1500.00, 300.00, 1800.00, 1),
+
+-- Lignes pour FACT-2026-00006
+('item-011', 'invoice-006', 'Procédure contentieux locatif', 1.00, 2200.00, 20.00, 2200.00, 440.00, 2640.00, 1),
+
+-- Lignes pour FACT-2026-00007
+('item-012', 'invoice-007', 'Constitution dossier indemnisation', 1.00, 1500.00, 20.00, 1500.00, 300.00, 1800.00, 1),
+('item-013', 'invoice-007', 'Négociation avec assurance', 1.00, 1500.00, 20.00, 1500.00, 300.00, 1800.00, 2),
+
+-- Lignes pour FACT-2026-00008
+('item-014', 'invoice-008', 'Conseil création société', 1.00, 3000.00, 20.00, 3000.00, 600.00, 3600.00, 1),
+('item-015', 'invoice-008', 'Rédaction statuts', 1.00, 2000.00, 20.00, 2000.00, 400.00, 2400.00, 2),
+
+-- Lignes pour FACT-2026-00009
+('item-016', 'invoice-009', 'Analyse redressement fiscal', 1.00, 4000.00, 20.00, 4000.00, 800.00, 4800.00, 1),
+('item-017', 'invoice-009', 'Préparation recours', 1.00, 3000.00, 20.00, 3000.00, 600.00, 3600.00, 2),
+('item-018', 'invoice-009', 'Correspondances administration', 1.00, 1500.00, 20.00, 1500.00, 300.00, 1800.00, 3),
+
+-- Lignes pour FACT-2026-00010
+('item-019', 'invoice-010', 'Due diligence juridique', 1.00, 8000.00, 20.00, 8000.00, 1600.00, 9600.00, 1),
+('item-020', 'invoice-010', 'Rédaction protocole acquisition', 1.00, 4000.00, 20.00, 4000.00, 800.00, 4800.00, 2),
+
+-- Lignes pour FACT-2026-00011
+('item-021', 'invoice-011', 'Consultation pénale et analyse', 1.00, 1800.00, 20.00, 1800.00, 360.00, 2160.00, 1),
+
+-- Lignes pour FACT-2026-00012
+('item-022', 'invoice-012', 'Dossier révision pension', 1.00, 1200.00, 20.00, 1200.00, 240.00, 1440.00, 1);
+
+-- ============================================
 -- AFFICHAGE FINAL
 -- ============================================
 SELECT '✅ Base de données GED Avocat créée avec succès !' AS Status;
 SELECT COUNT(*) AS NombreUtilisateurs FROM users;
 SELECT COUNT(*) AS NombreClients FROM clients;
 SELECT COUNT(*) AS NombreDossiers FROM cases;
+SELECT COUNT(*) AS NombreFactures FROM invoices;
+SELECT COUNT(*) AS NombreLignesFacture FROM invoice_items;
 
 SET FOREIGN_KEY_CHECKS = 1;

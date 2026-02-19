@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>Administration - Base de données</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="container-fluid">
+        <!-- En-tête -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="mb-1">🗄️ Base de données</h2>
+                <p class="text-muted">Informations et gestion de la base de données</p>
+            </div>
+            <a href="/admin" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Retour au dashboard
+            </a>
+        </div>
+
+        <!-- Informations de connexion -->
+        <div class="row mb-4">
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-database"></i> Informations de connexion</h5>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-sm">
+                            <tr>
+                                <td style="width: 40%;"><strong>Type de base:</strong></td>
+                                <td th:text="${metrics != null ? metrics.databaseProductName : 'N/A'}">MySQL</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Version:</strong></td>
+                                <td th:text="${metrics != null ? metrics.databaseVersion : 'N/A'}">8.0.27</td>
+                            </tr>
+                            <tr>
+                                <td><strong>URL:</strong></td>
+                                <td class="text-break" th:text="${metrics != null ? metrics.databaseUrl : 'N/A'}">
+                                    jdbc:mysql://localhost:3306/gedavocat
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>Connexions actives:</strong></td>
+                                <td>
+                                    <span th:text="${metrics != null ? metrics.activeConnections : '0'}">5</span> / 
+                                    <span th:text="${metrics != null ? metrics.maxConnections : '0'}">100</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>Statut:</strong></td>
+                                <td>
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-circle"></i> Connecté
+                                    </span>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="fas fa-chart-pie"></i> Statistiques des tables</h5>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-sm">
+                            <tr>
+                                <td style="width: 40%;"><strong>Utilisateurs:</strong></td>
+                                <td><span class="badge bg-primary" th:text="${metrics != null ? metrics.totalUsers : 0}">42</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Clients:</strong></td>
+                                <td><span class="badge bg-info" th:text="${metrics != null ? metrics.totalClients : 0}">128</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Dossiers:</strong></td>
+                                <td><span class="badge bg-warning" th:text="${metrics != null ? metrics.totalCases : 0}">256</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Documents:</strong></td>
+                                <td><span class="badge bg-secondary" th:text="${metrics != null ? metrics.totalDocuments : 0}">1,234</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Factures:</strong></td>
+                                <td><span class="badge bg-success" th:text="${metrics != null ? metrics.totalInvoices : 0}">89</span></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions de maintenance -->
+        <div class="row mb-4">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0"><i class="fas fa-tools"></i> Actions de maintenance</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Attention :</strong> Ces actions peuvent affecter les performances de l'application. 
+                            À utiliser avec précaution.
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <div class="card h-100">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-database fa-3x text-primary mb-3"></i>
+                                        <h6>Optimiser les tables</h6>
+                                        <p class="text-muted small">Optimise toutes les tables de la base de données</p>
+                                        <button class="btn btn-sm btn-primary" onclick="alert('Fonctionnalité à implémenter')">
+                                            <i class="fas fa-cog"></i> Optimiser
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="card h-100">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-download fa-3x text-success mb-3"></i>
+                                        <h6>Sauvegarde complète</h6>
+                                        <p class="text-muted small">Crée une sauvegarde complète de la BDD</p>
+                                        <button class="btn btn-sm btn-success" onclick="alert('Sauvegarde en cours...')">
+                                            <i class="fas fa-download"></i> Sauvegarder
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="card h-100">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-broom fa-3x text-warning mb-3"></i>
+                                        <h6>Nettoyer les logs</h6>
+                                        <p class="text-muted small">Supprime les anciens logs d'audit</p>
+                                        <button class="btn btn-sm btn-warning" onclick="alert('Nettoyage...')">
+                                            <i class="fas fa-broom"></i> Nettoyer
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Accès direct à la BDD -->
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header bg-dark text-white">
+                        <h5 class="mb-0"><i class="fas fa-terminal"></i> Accès rapides</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="list-group">
+                            <a href="https://www.o2switch.fr/manager/index.php?module=phpmyadmin" 
+                               target="_blank" 
+                               class="list-group-item list-group-item-action">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <i class="fas fa-external-link-alt me-2 text-primary"></i>
+                                        <strong>phpMyAdmin</strong>
+                                        <p class="mb-0 text-muted small">Interface web de gestion MySQL</p>
+                                    </div>
+                                    <i class="fas fa-chevron-right text-muted"></i>
+                                </div>
+                            </a>
+                            
+                            <a href="https://www.o2switch.fr/manager/" 
+                               target="_blank" 
+                               class="list-group-item list-group-item-action">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <i class="fas fa-external-link-alt me-2 text-success"></i>
+                                        <strong>cPanel O2Switch</strong>
+                                        <p class="mb-0 text-muted small">Gestion des bases de données et utilisateurs</p>
+                                    </div>
+                                    <i class="fas fa-chevron-right text-muted"></i>
+                                </div>
+                            </a>
+
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <i class="fas fa-download me-2 text-info"></i>
+                                        <strong>Dernière sauvegarde</strong>
+                                        <p class="mb-0 text-muted small">18/02/2026 à 03:00 (automatique)</p>
+                                    </div>
+                                    <button class="btn btn-sm btn-outline-info" onclick="alert('Téléchargement...')">
+                                        <i class="fas fa-download"></i> Télécharger
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

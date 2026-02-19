@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>Administration - Paramètres</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="container-fluid">
+        <!-- En-tête -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="mb-1">⚙️ Paramètres et intégrations</h2>
+                <p class="text-muted">Configuration et liens vers les plateformes externes</p>
+            </div>
+            <a href="/admin" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Retour au dashboard
+            </a>
+        </div>
+
+        <!-- Intégrations externes -->
+        <div class="row mb-4">
+            <!-- O2Switch - Hébergement -->
+            <div class="col-lg-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-server"></i> O2Switch - Hébergement</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted">Gestion de votre hébergement et serveur</p>
+                        
+                        <div class="list-group list-group-flush">
+                            <a href="https://www.o2switch.fr/manager/" target="_blank" class="list-group-item list-group-item-action">
+                                <i class="fas fa-external-link-alt me-2"></i> Panel cPanel
+                            </a>
+                            <a href="https://www.o2switch.fr/manager/clientarea.php" target="_blank" class="list-group-item list-group-item-action">
+                                <i class="fas fa-user-circle me-2"></i> Espace client
+                            </a>
+                            <a href="https://www.o2switch.fr/manager/clientarea.php?action=domains" target="_blank" class="list-group-item list-group-item-action">
+                                <i class="fas fa-globe me-2"></i> Gestion des domaines
+                            </a>
+                            <a href="https://www.o2switch.fr/manager/submitticket.php" target="_blank" class="list-group-item list-group-item-action">
+                                <i class="fas fa-ticket-alt me-2"></i> Support O2Switch
+                            </a>
+                        </div>
+                        
+                        <div class="mt-3">
+                            <span class="badge bg-success">
+                                <i class="fas fa-check-circle"></i> Actif
+                            </span>
+                            <span class="badge bg-info ms-1">
+                                <i class="fas fa-shield-alt"></i> SSL Actif
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Yousign - Signature électronique -->
+            <div class="col-lg-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="fas fa-signature"></i> Yousign - Signature</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted">Plateforme de signature électronique</p>
+                        
+                        <div class="list-group list-group-flush">
+                            <a href="https://yousign.app/" target="_blank" class="list-group-item list-group-item-action">
+                                <i class="fas fa-tachometer-alt me-2"></i> Dashboard Yousign
+                            </a>
+                            <a href="https://yousign.app/signatures" target="_blank" class="list-group-item list-group-item-action">
+                                <i class="fas fa-file-signature me-2"></i> Mes signatures
+                            </a>
+                            <a href="https://yousign.app/settings/api" target="_blank" class="list-group-item list-group-item-action">
+                                <i class="fas fa-key me-2"></i> Configuration API
+                            </a>
+                            <a href="https://developers.yousign.com/docs" target="_blank" class="list-group-item list-group-item-action">
+                                <i class="fas fa-book me-2"></i> Documentation API
+                            </a>
+                            <a href="https://support.yousign.com/" target="_blank" class="list-group-item list-group-item-action">
+                                <i class="fas fa-life-ring me-2"></i> Support Yousign
+                            </a>
+                        </div>
+                        
+                        <div class="mt-3">
+                            <span class="badge bg-success">
+                                <i class="fas fa-check-circle"></i> Configuré
+                            </span>
+                            <span class="badge bg-warning text-dark ms-1">
+                                <i class="fas fa-bolt"></i> API v3
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stripe - Paiements -->
+            <div class="col-lg-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0"><i class="fas fa-credit-card"></i> Stripe - Paiements</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted">Plateforme de gestion des paiements</p>
+                        
+                        <div class="list-group list-group-flush">
+                            <a href="https://dashboard.stripe.com/" target="_blank" class="list-group-item list-group-item-action">
+                                <i class="fas fa-chart-line me-2"></i> Dashboard Stripe
+                            </a>
+                            <a href="https://dashboard.stripe.com/payments" target="_blank" class="list-group-item list-group-item-action">
+                                <i class="fas fa-dollar-sign me-2"></i> Paiements
+                            </a>
+                            <a href="https://dashboard.stripe.com/customers" target="_blank" class="list-group-item list-group-item-action">
+                                <i class="fas fa-users me-2"></i> Clients
+                            </a>
+                            <a href="https://dashboard.stripe.com/subscriptions" target="_blank" class="list-group-item list-group-item-action">
+                                <i class="fas fa-sync-alt me-2"></i> Abonnements
+                            </a>
+                            <a href="https://dashboard.stripe.com/settings/api" target="_blank" class="list-group-item list-group-item-action">
+                                <i class="fas fa-key me-2"></i> Clés API
+                            </a>
+                            <a href="https://stripe.com/docs" target="_blank" class="list-group-item list-group-item-action">
+                                <i class="fas fa-book me-2"></i> Documentation
+                            </a>
+                        </div>
+                        
+                        <div class="mt-3">
+                            <span class="badge bg-success">
+                                <i class="fas fa-check-circle"></i> Actif
+                            </span>
+                            <span class="badge bg-primary ms-1">
+                                <i class="fas fa-lock"></i> Sécurisé
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Outils de développement -->
+        <div class="row mb-4">
+            <!-- GitHub -->
+            <div class="col-lg-3 mb-3">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <i class="fab fa-github fa-3x mb-3"></i>
+                        <h6>GitHub Repository</h6>
+                        <a href="https://github.com" target="_blank" class="btn btn-sm btn-outline-dark mt-2">
+                            <i class="fas fa-external-link-alt"></i> Accéder
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Google Analytics -->
+            <div class="col-lg-3 mb-3">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <i class="fas fa-chart-bar fa-3x mb-3 text-warning"></i>
+                        <h6>Google Analytics</h6>
+                        <a href="https://analytics.google.com" target="_blank" class="btn btn-sm btn-outline-warning mt-2">
+                            <i class="fas fa-external-link-alt"></i> Accéder
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sentry (Monitoring erreurs) -->
+            <div class="col-lg-3 mb-3">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <i class="fas fa-bug fa-3x mb-3 text-danger"></i>
+                        <h6>Sentry</h6>
+                        <a href="https://sentry.io" target="_blank" class="btn btn-sm btn-outline-danger mt-2">
+                            <i class="fas fa-external-link-alt"></i> Accéder
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Postman -->
+            <div class="col-lg-3 mb-3">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <i class="fas fa-rocket fa-3x mb-3 text-primary"></i>
+                        <h6>Postman API</h6>
+                        <a href="https://www.postman.com" target="_blank" class="btn btn-sm btn-outline-primary mt-2">
+                            <i class="fas fa-external-link-alt"></i> Accéder
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Configuration application -->
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header bg-dark text-white">
+                        <h5 class="mb-0"><i class="fas fa-cogs"></i> Configuration de l'application</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="mb-3">Variables d'environnement</h6>
+                                <table class="table table-sm">
+                                    <tr>
+                                        <td><strong>Mode:</strong></td>
+                                        <td><span class="badge bg-success">Production</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Port:</strong></td>
+                                        <td>8080</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Profil actif:</strong></td>
+                                        <td>prod</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Logs niveau:</strong></td>
+                                        <td>INFO</td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="mb-3">Limites et quotas</h6>
+                                <table class="table table-sm">
+                                    <tr>
+                                        <td><strong>Taille max upload:</strong></td>
+                                        <td>50 MB</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Timeout requêtes:</strong></td>
+                                        <td>30 secondes</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Pool connexions DB:</strong></td>
+                                        <td>20</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Session timeout:</strong></td>
+                                        <td>30 minutes</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 p-3 bg-light border-start border-5 border-warning">
+                            <p class="mb-0">
+                                <i class="fas fa-info-circle text-warning me-2"></i>
+                                <strong>Note:</strong> Les modifications de configuration nécessitent un redémarrage de l'application.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

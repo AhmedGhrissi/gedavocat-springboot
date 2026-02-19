@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title th:text="${appointment.id != null ? 'Modifier le rendez-vous' : 'Nouveau rendez-vous'}">Rendez-vous</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="container-fluid">
+        
+        <!-- En-tête -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="mb-1" th:text="${appointment.id != null ? '✏️ Modifier le rendez-vous' : '➕ Nouveau rendez-vous'}">Rendez-vous</h2>
+                <p class="text-muted">Planifiez un rendez-vous client ou une audience tribunal</p>
+            </div>
+            <a href="/appointments" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Retour au calendrier
+            </a>
+        </div>
+
+        <!-- Formulaire -->
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-calendar-plus"></i> Informations du rendez-vous</h5>
+                    </div>
+                    <div class="card-body">
+                        <form th:action="${appointment.id != null ? '/appointments/' + appointment.id + '/update' : '/appointments/create'}" 
+                              method="post">
+                            
+                            <!-- Type de rendez-vous -->
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Type de rendez-vous <span class="text-danger">*</span></label>
+                                    <select name="type" class="form-select" th:field="*{appointment.type}" required>
+                                        <option th:each="type : ${appointmentTypes}" 
+                                                th:value="${type}" 
+                                                th:text="${type.displayName}">Type</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Statut</label>
+                                    <select name="status" class="form-select" th:field="*{appointment.status}">
+                                        <option th:each="status : ${appointmentStatuses}" 
+                                                th:value="${status}" 
+                                                th:text="${status.displayName}">Statut</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Titre -->
+                            <div class="mb-3">
+                                <label class="form-label">Titre <span class="text-danger">*</span></label>
+                                <input type="text" name="title" class="form-control" 
+                                       th:value="${appointment.title}" 
+                                       placeholder="Ex: Consultation client, Audience tribunal..."
+                                       required>
+                            </div>
+
+                            <!-- Date et heure -->
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Date et heure de début <span class="text-danger">*</span></label>
+                                    <input type="datetime-local" name="appointmentDate" class="form-control" 
+                                           th:value="${appointment.appointmentDate != null ? #temporals.format(appointment.appointmentDate, 'yyyy-MM-dd''T''HH:mm') : ''}"
+                                           required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Date et heure de fin</label>
+                                    <input type="datetime-local" name="endDate" class="form-control" 
+                                           th:value="${appointment.endDate != null ? #temporals.format(appointment.endDate, 'yyyy-MM-dd''T''HH:mm') : ''}">
+                                    <small class="text-muted">Optionnel</small>
+                                </div>
+                            </div>
+
+                            <!-- Client et Dossier -->
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Client</label>
+                                    <select name="clientId" class="form-select">
+                                        <option value="">Aucun client</option>
+                                        <option th:each="client : ${clients}" 
+                                                th:value="${client.id}" 
+                                                th:text="${client.name}"
+                                                th:selected="${appointment.client != null and appointment.client.id == client.id}">Client</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Dossier associé</label>
+                                    <select name="caseId" class="form-select">
+                                        <option value="">Aucun dossier</option>
+                                        <option th:each="case : ${cases}" 
+                                                th:value="${case.id}" 
+                                                th:text="${case.name}"
+                                                th:selected="${appointment.relatedCase != null and appointment.relatedCase.id == case.id}">Dossier</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Lieu -->
+                            <div class="mb-3">
+                                <label class="form-label">Lieu</label>
+                                <input type="text" name="location" class="form-control" 
+                                       th:value="${appointment.location}" 
+                                       placeholder="Ex: Cabinet, Palais de justice...">
+                            </div>
+
+                            <!-- Informations tribunal (si audience) -->
+                            <div id="courtInfo" style="display: none;">
+                                <hr>
+                                <h6 class="mb-3"><i class="fas fa-gavel"></i> Informations tribunal</h6>
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Nom du tribunal</label>
+                                        <input type="text" name="courtName" class="form-control" 
+                                               th:value="${appointment.courtName}" 
+                                               placeholder="Ex: Tribunal de grande instance">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Salle d'audience</label>
+                                        <input type="text" name="courtRoom" class="form-control" 
+                                               th:value="${appointment.courtRoom}" 
+                                               placeholder="Ex: Salle 3">
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Nom du juge</label>
+                                    <input type="text" name="judgeName" class="form-control" 
+                                           th:value="${appointment.judgeName}" 
+                                           placeholder="Ex: Juge Martin">
+                                </div>
+                            </div>
+
+                            <!-- Description -->
+                            <div class="mb-3">
+                                <label class="form-label">Description</label>
+                                <textarea name="description" class="form-control" rows="3" 
+                                          th:text="${appointment.description}"
+                                          placeholder="Détails du rendez-vous..."></textarea>
+                            </div>
+
+                            <!-- Notes privées -->
+                            <div class="mb-3">
+                                <label class="form-label">Notes privées</label>
+                                <textarea name="notes" class="form-control" rows="2" 
+                                          th:text="${appointment.notes}"
+                                          placeholder="Notes personnelles (non visibles par le client)..."></textarea>
+                            </div>
+
+                            <!-- Lien visioconférence -->
+                            <div class="mb-3">
+                                <label class="form-label">Lien de visioconférence</label>
+                                <input type="url" name="videoConferenceLink" class="form-control" 
+                                       th:value="${appointment.videoConferenceLink}" 
+                                       placeholder="https://meet.google.com/...">
+                                <small class="text-muted">Pour les rendez-vous en ligne</small>
+                            </div>
+
+                            <!-- Rappel -->
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        <input type="checkbox" name="sendReminder" class="form-check-input" 
+                                               th:checked="${appointment.sendReminder}" value="true">
+                                        <label class="form-check-label">Envoyer un rappel</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Rappel avant (minutes)</label>
+                                    <input type="number" name="reminderMinutesBefore" class="form-control" 
+                                           th:value="${appointment.reminderMinutesBefore}" 
+                                           min="0" step="15" value="60">
+                                </div>
+                            </div>
+
+                            <!-- Couleur -->
+                            <div class="mb-3">
+                                <label class="form-label">Couleur dans le calendrier</label>
+                                <input type="color" name="color" class="form-control form-control-color" 
+                                       th:value="${appointment.color}" value="#3788d8">
+                            </div>
+
+                            <!-- Boutons -->
+                            <div class="d-flex justify-content-between">
+                                <a href="/appointments" class="btn btn-secondary">
+                                    <i class="fas fa-times"></i> Annuler
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> Enregistrer
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panneau d'aide -->
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header bg-info text-white">
+                        <h6 class="mb-0"><i class="fas fa-info-circle"></i> Aide</h6>
+                    </div>
+                    <div class="card-body">
+                        <h6>Types de rendez-vous</h6>
+                        <ul class="small">
+                            <li><strong>Rendez-vous client</strong> : Consultation au cabinet</li>
+                            <li><strong>Audience tribunal</strong> : Comparution devant le juge</li>
+                            <li><strong>Visioconférence</strong> : Rendez-vous en ligne</li>
+                            <li><strong>Appel téléphonique</strong> : Communication à distance</li>
+                            <li><strong>Visite sur site</strong> : Déplacement chez le client</li>
+                        </ul>
+
+                        <hr>
+
+                        <h6>Rappels automatiques</h6>
+                        <p class="small text-muted">
+                            Les rappels sont envoyés par email avant le rendez-vous selon le délai configuré.
+                        </p>
+
+                        <hr>
+
+                        <h6>Audiences tribunal</h6>
+                        <p class="small text-muted">
+                            Pour les audiences, renseignez le nom du tribunal, la salle et le juge pour un meilleur suivi.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Actions rapides si édition -->
+                <div th:if="${appointment.id != null}" class="card mt-3">
+                    <div class="card-header bg-warning">
+                        <h6 class="mb-0"><i class="fas fa-cog"></i> Actions</h6>
+                    </div>
+                    <div class="card-body">
+                        <form th:action="@{/appointments/{id}/confirm(id=${appointment.id})}" method="post" class="d-inline">
+                            <button type="submit" class="btn btn-sm btn-success w-100 mb-2">
+                                <i class="fas fa-check"></i> Confirmer
+                            </button>
+                        </form>
+                        <form th:action="@{/appointments/{id}/cancel(id=${appointment.id})}" method="post" class="d-inline">
+                            <button type="submit" class="btn btn-sm btn-warning w-100 mb-2"
+                                    onclick="return confirm('Annuler ce rendez-vous ?')">
+                                <i class="fas fa-ban"></i> Annuler
+                            </button>
+                        </form>
+                        <form th:action="@{/appointments/{id}/complete(id=${appointment.id})}" method="post" class="d-inline">
+                            <button type="submit" class="btn btn-sm btn-secondary w-100 mb-2">
+                                <i class="fas fa-check-circle"></i> Marquer terminé
+                            </button>
+                        </form>
+                        <hr>
+                        <form th:action="@{/appointments/{id}/delete(id=${appointment.id})}" method="post" class="d-inline">
+                            <button type="submit" class="btn btn-sm btn-danger w-100"
+                                    onclick="return confirm('Supprimer définitivement ce rendez-vous ?')">
+                                <i class="fas fa-trash"></i> Supprimer
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+// Afficher/masquer les champs tribunal selon le type
+document.querySelector('select[name="type"]').addEventListener('change', function() {
+    const courtInfo = document.getElementById('courtInfo');
+    if (this.value === 'COURT_HEARING') {
+        courtInfo.style.display = 'block';
+    } else {
+        courtInfo.style.display = 'none';
+    }
+});
+
+// Initialiser l'affichage au chargement
+window.addEventListener('DOMContentLoaded', function() {
+    const typeSelect = document.querySelector('select[name="type"]');
+    if (typeSelect.value === 'COURT_HEARING') {
+        document.getElementById('courtInfo').style.display = 'block';
+    }
+});
+</script>
+
+</body>
+</html>

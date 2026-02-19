@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>Administration - Statistiques</title>
+    <style>
+        .stat-card {
+            transition: transform 0.2s;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="container-fluid">
+        <!-- En-tête -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="mb-1">📊 Statistiques avancées</h2>
+                <p class="text-muted">Analyse détaillée de l'activité et des performances</p>
+            </div>
+            <a href="/admin" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Retour au dashboard
+            </a>
+        </div>
+
+        <!-- Message d'erreur -->
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-triangle"></i> <span th:text="${error}">Erreur</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Navigation admin -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="btn-group" role="group">
+                    <a href="/admin" class="btn btn-outline-primary">
+                        <i class="fas fa-home"></i> Dashboard
+                    </a>
+                    <a href="/admin/system" class="btn btn-outline-primary">
+                        <i class="fas fa-server"></i> Système
+                    </a>
+                    <a href="/admin/database" class="btn btn-outline-primary">
+                        <i class="fas fa-database"></i> Base de données
+                    </a>
+                    <a href="/admin/logs" class="btn btn-outline-primary">
+                        <i class="fas fa-file-alt"></i> Logs
+                    </a>
+                    <a href="/admin/users" class="btn btn-outline-primary">
+                        <i class="fas fa-users"></i> Utilisateurs
+                    </a>
+                    <a href="/admin/statistics" class="btn btn-primary">
+                        <i class="fas fa-chart-line"></i> Statistiques
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistiques globales -->
+        <div class="row mb-4">
+            <div class="col-md-3 mb-3">
+                <div class="card stat-card bg-primary text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <p class="mb-1 opacity-75">Total Utilisateurs</p>
+                                <h3 class="mb-0" th:text="${metrics != null ? metrics.totalUsers : 0}">0</h3>
+                            </div>
+                            <div>
+                                <i class="fas fa-users fa-2x opacity-75"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3 mb-3">
+                <div class="card stat-card bg-success text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <p class="mb-1 opacity-75">Total Clients</p>
+                                <h3 class="mb-0" th:text="${metrics != null ? metrics.totalClients : 0}">0</h3>
+                            </div>
+                            <div>
+                                <i class="fas fa-user-tie fa-2x opacity-75"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3 mb-3">
+                <div class="card stat-card bg-info text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <p class="mb-1 opacity-75">Total Dossiers</p>
+                                <h3 class="mb-0" th:text="${metrics != null ? metrics.totalCases : 0}">0</h3>
+                            </div>
+                            <div>
+                                <i class="fas fa-folder fa-2x opacity-75"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3 mb-3">
+                <div class="card stat-card bg-warning text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <p class="mb-1 opacity-75">Total Documents</p>
+                                <h3 class="mb-0" th:text="${metrics != null ? metrics.totalDocuments : 0}">0</h3>
+                            </div>
+                            <div>
+                                <i class="fas fa-file-alt fa-2x opacity-75"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistiques d'activité -->
+        <div class="row mb-4">
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-chart-bar"></i> Activité récente (7 derniers jours)</h5>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Métrique</th>
+                                    <th class="text-end">Valeur</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><i class="fas fa-user-plus text-success"></i> Nouveaux utilisateurs</td>
+                                    <td class="text-end">
+                                        <span class="badge bg-success" th:text="${activityStats != null ? activityStats['newUsersLast7Days'] : 0}">0</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><i class="fas fa-user-tie text-info"></i> Nouveaux clients</td>
+                                    <td class="text-end">
+                                        <span class="badge bg-info" th:text="${activityStats != null ? activityStats['newClientsLast7Days'] : 0}">0</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><i class="fas fa-folder-plus text-warning"></i> Nouveaux dossiers</td>
+                                    <td class="text-end">
+                                        <span class="badge bg-warning" th:text="${activityStats != null ? activityStats['newCasesLast7Days'] : 0}">0</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><i class="fas fa-file-upload text-primary"></i> Documents uploadés</td>
+                                    <td class="text-end">
+                                        <span class="badge bg-primary" th:text="${activityStats != null ? activityStats['newDocumentsLast7Days'] : 0}">0</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><i class="fas fa-sign-in-alt text-secondary"></i> Connexions</td>
+                                    <td class="text-end">
+                                        <span class="badge bg-secondary" th:text="${activityStats != null ? activityStats['loginCountLast7Days'] : 0}">0</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="fas fa-chart-pie"></i> Répartition des utilisateurs</h5>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Rôle</th>
+                                    <th class="text-end">Nombre</th>
+                                    <th class="text-end">%</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><i class="fas fa-shield-alt text-danger"></i> Administrateurs</td>
+                                    <td class="text-end" th:text="${activityStats != null ? activityStats['adminsCount'] : 0}">0</td>
+                                    <td class="text-end">
+                                        <span th:if="${activityStats != null and metrics != null and metrics.totalUsers > 0}"
+                                              th:text="${#numbers.formatDecimal((activityStats['adminsCount'] * 100.0 / metrics.totalUsers), 1, 1) + '%'}">0%</span>
+                                        <span th:if="${activityStats == null or metrics == null or metrics.totalUsers == 0}">0%</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><i class="fas fa-gavel text-primary"></i> Avocats</td>
+                                    <td class="text-end" th:text="${activityStats != null ? activityStats['lawyersCount'] : 0}">0</td>
+                                    <td class="text-end">
+                                        <span th:if="${activityStats != null and metrics != null and metrics.totalUsers > 0}"
+                                              th:text="${#numbers.formatDecimal((activityStats['lawyersCount'] * 100.0 / metrics.totalUsers), 1, 1) + '%'}">0%</span>
+                                        <span th:if="${activityStats == null or metrics == null or metrics.totalUsers == 0}">0%</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><i class="fas fa-user text-info"></i> Clients</td>
+                                    <td class="text-end" th:text="${activityStats != null ? activityStats['clientsCount'] : 0}">0</td>
+                                    <td class="text-end">
+                                        <span th:if="${activityStats != null and metrics != null and metrics.totalUsers > 0}"
+                                              th:text="${#numbers.formatDecimal((activityStats['clientsCount'] * 100.0 / metrics.totalUsers), 1, 1) + '%'}">0%</span>
+                                        <span th:if="${activityStats == null or metrics == null or metrics.totalUsers == 0}">0%</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                            <tfoot>
+                                <tr class="table-active">
+                                    <th>Total</th>
+                                    <th class="text-end" th:text="${metrics != null ? metrics.totalUsers : 0}">0</th>
+                                    <th class="text-end">100%</th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statut des dossiers -->
+        <div class="row mb-4">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0"><i class="fas fa-tasks"></i> Statut des dossiers</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3 text-center mb-3">
+                                <div class="p-3 border rounded">
+                                    <i class="fas fa-folder-open fa-3x text-primary mb-2"></i>
+                                    <h4 th:text="${activityStats != null ? activityStats['openCases'] : 0}">0</h4>
+                                    <p class="text-muted mb-0">Ouverts</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3 text-center mb-3">
+                                <div class="p-3 border rounded">
+                                    <i class="fas fa-spinner fa-3x text-warning mb-2"></i>
+                                    <h4 th:text="${activityStats != null ? activityStats['inProgressCases'] : 0}">0</h4>
+                                    <p class="text-muted mb-0">En cours</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3 text-center mb-3">
+                                <div class="p-3 border rounded">
+                                    <i class="fas fa-check-circle fa-3x text-success mb-2"></i>
+                                    <h4 th:text="${activityStats != null ? activityStats['closedCases'] : 0}">0</h4>
+                                    <p class="text-muted mb-0">Fermés</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3 text-center mb-3">
+                                <div class="p-3 border rounded">
+                                    <i class="fas fa-archive fa-3x text-secondary mb-2"></i>
+                                    <h4 th:text="${activityStats != null ? activityStats['archivedCases'] : 0}">0</h4>
+                                    <p class="text-muted mb-0">Archivés</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Performances système -->
+        <div class="row mb-4">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header bg-dark text-white">
+                        <h5 class="mb-0"><i class="fas fa-tachometer-alt"></i> Performances système</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <h6>Utilisation mémoire</h6>
+                                <div class="progress" style="height: 25px;">
+                                    <div class="progress-bar" 
+                                         th:classappend="${metrics != null and metrics.memoryUsagePercent > 80} ? 'bg-danger' : (${metrics != null and metrics.memoryUsagePercent > 60} ? 'bg-warning' : 'bg-success')"
+                                         th:style="${'width: ' + (metrics != null ? metrics.memoryUsagePercent : 0) + '%'}"
+                                         th:text="${metrics != null ? #numbers.formatDecimal(metrics.memoryUsagePercent, 1, 1) + '%' : '0%'}">
+                                    </div>
+                                </div>
+                                <small class="text-muted">
+                                    <span th:text="${metrics != null ? metrics.usedMemoryFormatted : 'N/A'}">N/A</span> / 
+                                    <span th:text="${metrics != null ? metrics.maxMemoryFormatted : 'N/A'}">N/A</span>
+                                </small>
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <h6>Utilisation stockage</h6>
+                                <div class="progress" style="height: 25px;">
+                                    <div class="progress-bar bg-info" 
+                                         th:style="${'width: ' + (metrics != null ? metrics.storageUsagePercent : 0) + '%'}"
+                                         th:text="${metrics != null ? #numbers.formatDecimal(metrics.storageUsagePercent, 1, 1) + '%' : '0%'}">
+                                    </div>
+                                </div>
+                                <small class="text-muted">
+                                    <span th:text="${metrics != null ? metrics.storageUsedFormatted : 'N/A'}">N/A</span> / 
+                                    <span th:text="${metrics != null ? metrics.storageLimitFormatted : 'N/A'}">N/A</span>
+                                </small>
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <h6>Connexions base de données</h6>
+                                <div class="progress" style="height: 25px;">
+                                    <div class="progress-bar bg-primary" 
+                                         th:style="${'width: ' + (metrics != null and metrics.maxConnections > 0 ? (metrics.activeConnections * 100.0 / metrics.maxConnections) : 0) + '%'}"
+                                         th:text="${metrics != null ? metrics.activeConnections : 0}">
+                                    </div>
+                                </div>
+                                <small class="text-muted">
+                                    <span th:text="${metrics != null ? metrics.activeConnections : 0}">0</span> / 
+                                    <span th:text="${metrics != null ? metrics.maxConnections : 0}">0</span> connexions
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header bg-secondary text-white">
+                        <h5 class="mb-0"><i class="fas fa-download"></i> Export et rapports</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted mb-3">Exporter les statistiques sous différents formats</p>
+                        <div class="btn-group" role="group">
+                            <button class="btn btn-outline-success" onclick="alert('Export CSV à implémenter')">
+                                <i class="fas fa-file-csv"></i> Export CSV
+                            </button>
+                            <button class="btn btn-outline-primary" onclick="alert('Export Excel à implémenter')">
+                                <i class="fas fa-file-excel"></i> Export Excel
+                            </button>
+                            <button class="btn btn-outline-danger" onclick="alert('Export PDF à implémenter')">
+                                <i class="fas fa-file-pdf"></i> Rapport PDF
+                            </button>
+                            <button class="btn btn-outline-info" onclick="window.location.reload()">
+                                <i class="fas fa-sync"></i> Actualiser
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>

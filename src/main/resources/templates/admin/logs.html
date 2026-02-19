@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>Administration - Logs</title>
+    <style>
+        .log-entry {
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            padding: 0.5rem;
+            border-left: 3px solid #ccc;
+            margin-bottom: 0.25rem;
+        }
+        .log-entry:hover {
+            background-color: #f8f9fa;
+        }
+        .log-ERROR { border-left-color: #dc3545; background-color: #fff5f5; }
+        .log-WARN { border-left-color: #ffc107; background-color: #fffbf0; }
+        .log-INFO { border-left-color: #0dcaf0; background-color: #f0f9ff; }
+        .log-DEBUG { border-left-color: #6c757d; background-color: #f8f9fa; }
+        .log-timestamp { color: #6c757d; font-weight: bold; }
+        .log-level { font-weight: bold; padding: 2px 6px; border-radius: 3px; font-size: 0.75rem; }
+        .log-level-ERROR { background-color: #dc3545; color: white; }
+        .log-level-WARN { background-color: #ffc107; color: black; }
+        .log-level-INFO { background-color: #0dcaf0; color: black; }
+        .log-level-DEBUG { background-color: #6c757d; color: white; }
+        .log-viewer {
+            max-height: 600px;
+            overflow-y: auto;
+            background: #f8f9fa;
+            border-radius: 5px;
+            padding: 1rem;
+        }
+    </style>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="container-fluid">
+        <!-- En-tête -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="mb-1">📋 Logs système</h2>
+                <p class="text-muted">Consultation et recherche dans les logs de l'application</p>
+            </div>
+            <a href="/admin" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Retour au dashboard
+            </a>
+        </div>
+
+        <!-- Statistiques des logs -->
+        <div class="row mb-4" th:if="${logStats != null}">
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <p class="text-muted mb-1">Total lignes</p>
+                                <h4 class="mb-0" th:text="${logStats.total}">1,234</h4>
+                            </div>
+                            <div style="font-size: 2rem; opacity: 0.7;">
+                                <i class="fas fa-file-alt text-secondary"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <p class="text-muted mb-1">Erreurs</p>
+                                <h4 class="mb-0 text-danger" th:text="${logStats.errors}">12</h4>
+                            </div>
+                            <div style="font-size: 2rem; opacity: 0.7;">
+                                <i class="fas fa-exclamation-circle text-danger"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <p class="text-muted mb-1">Avertissements</p>
+                                <h4 class="mb-0 text-warning" th:text="${logStats.warnings}">45</h4>
+                            </div>
+                            <div style="font-size: 2rem; opacity: 0.7;">
+                                <i class="fas fa-exclamation-triangle text-warning"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <p class="text-muted mb-1">Taille fichier</p>
+                                <h4 class="mb-0" th:text="${#numbers.formatDecimal(logStats.fileSize / 1024 / 1024, 1, 2)} + ' MB'">2.5 MB</h4>
+                            </div>
+                            <div style="font-size: 2rem; opacity: 0.7;">
+                                <i class="fas fa-hdd text-info"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filtres et recherche -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form method="get" action="/admin/logs" class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Recherche</label>
+                        <input type="text" name="search" class="form-control" 
+                               th:value="${searchQuery}" 
+                               placeholder="Mot-clé à rechercher...">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Niveau de log</label>
+                        <select name="level" class="form-select" th:value="${level}">
+                            <option value="">Tous les niveaux</option>
+                            <option value="ERROR" th:selected="${level == 'ERROR'}">ERROR</option>
+                            <option value="WARN" th:selected="${level == 'WARN'}">WARN</option>
+                            <option value="INFO" th:selected="${level == 'INFO'}">INFO</option>
+                            <option value="DEBUG" th:selected="${level == 'DEBUG'}">DEBUG</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Nombre de lignes</label>
+                        <select name="maxLines" class="form-select">
+                            <option value="100" th:selected="${maxLines == 100}">100</option>
+                            <option value="500" th:selected="${maxLines == 500}">500</option>
+                            <option value="1000" th:selected="${maxLines == 1000}">1000</option>
+                            <option value="5000" th:selected="${maxLines == 5000}">5000</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end gap-2">
+                        <button type="submit" class="btn btn-primary flex-fill">
+                            <i class="fas fa-search"></i> Filtrer
+                        </button>
+                        <a href="/admin/logs" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Réinitialiser
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Visualiseur de logs -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-terminal"></i> Logs en temps réel</h5>
+                <button class="btn btn-sm btn-outline-primary" onclick="window.location.reload()">
+                    <i class="fas fa-sync"></i> Actualiser
+                </button>
+            </div>
+            <div class="card-body p-0">
+                <div class="log-viewer">
+                    <div th:if="${logs == null or logs.empty}" class="text-center text-muted py-5">
+                        <i class="fas fa-inbox fa-3x mb-3"></i>
+                        <p>Aucun log trouvé</p>
+                    </div>
+                    
+                    <div th:each="log : ${logs}" 
+                         th:class="'log-entry log-' + ${log.level}">
+                        <div class="d-flex align-items-start">
+                            <span class="log-timestamp me-2" th:text="${#temporals.format(log.timestamp, 'yyyy-MM-dd HH:mm:ss.SSS')}">
+                                2026-02-19 16:30:45.123
+                            </span>
+                            <span th:class="'log-level log-level-' + ${log.level}" th:text="${log.level}">INFO</span>
+                            <span class="ms-2 text-muted" th:text="'[' + ${log.thread} + ']'">[main]</span>
+                            <span class="ms-2 text-primary" th:text="${log.logger}">com.gedavocat.service</span>
+                        </div>
+                        <div class="mt-1" th:text="${log.message}">
+                            Application started successfully
+                        </div>
+                        <div th:if="${log.exception != null}" class="mt-1 text-danger small">
+                            <pre th:text="${log.exception}"></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Raccourcis rapides -->
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-bolt"></i> Actions rapides</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="btn-group" role="group">
+                            <a href="/admin/logs?level=ERROR" class="btn btn-outline-danger">
+                                <i class="fas fa-bug"></i> Voir uniquement les erreurs
+                            </a>
+                            <a href="/admin/logs?level=WARN" class="btn btn-outline-warning">
+                                <i class="fas fa-exclamation-triangle"></i> Voir les avertissements
+                            </a>
+                            <a href="/admin/logs?maxLines=5000" class="btn btn-outline-info">
+                                <i class="fas fa-list"></i> Charger 5000 lignes
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Auto-refresh toutes les 30 secondes
+        setTimeout(function() {
+            window.location.reload();
+        }, 30000);
+    </script>
+</div>
+</body>
+</html>

@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>Administration - Dashboard</title>
+    <style>
+        .metric-card {
+            transition: transform 0.2s;
+        }
+        .metric-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .metric-icon {
+            font-size: 2.5rem;
+            opacity: 0.8;
+        }
+        .progress-custom {
+            height: 10px;
+            border-radius: 5px;
+        }
+        .status-badge {
+            font-size: 0.75rem;
+            padding: 0.35rem 0.65rem;
+        }
+    </style>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="container-fluid">
+        <!-- En-tête -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="mb-1">🛡️ Administration</h2>
+                <p class="text-muted">Supervision et gestion du système</p>
+            </div>
+            <div>
+                <span class="badge bg-success status-badge">
+                    <i class="fas fa-circle"></i> Système opérationnel
+                </span>
+            </div>
+        </div>
+
+        <!-- Navigation admin -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="btn-group" role="group">
+                    <a href="/admin" class="btn btn-primary">
+                        <i class="fas fa-home"></i> Dashboard
+                    </a>
+                    <a href="/admin/system" class="btn btn-outline-primary">
+                        <i class="fas fa-server"></i> Système
+                    </a>
+                    <a href="/admin/database" class="btn btn-outline-primary">
+                        <i class="fas fa-database"></i> Base de données
+                    </a>
+                    <a href="/admin/logs" class="btn btn-outline-primary">
+                        <i class="fas fa-file-alt"></i> Logs
+                    </a>
+                    <a href="/admin/users" class="btn btn-outline-primary">
+                        <i class="fas fa-users"></i> Utilisateurs
+                    </a>
+                    <a href="/admin/statistics" class="btn btn-outline-primary">
+                        <i class="fas fa-chart-line"></i> Statistiques
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Métriques principales -->
+        <div class="row mb-4">
+            <!-- Uptime -->
+            <div class="col-md-3 mb-3">
+                <div class="card metric-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <p class="text-muted mb-1">Temps de fonctionnement</p>
+                                <h4 class="mb-0" th:text="${uptime}">2 jours, 5 heures</h4>
+                            </div>
+                            <div class="metric-icon text-success">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Utilisateurs totaux -->
+            <div class="col-md-3 mb-3">
+                <div class="card metric-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <p class="text-muted mb-1">Utilisateurs</p>
+                                <h4 class="mb-0" th:text="${metrics.totalUsers}">42</h4>
+                            </div>
+                            <div class="metric-icon text-primary">
+                                <i class="fas fa-users"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Clients -->
+            <div class="col-md-3 mb-3">
+                <div class="card metric-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <p class="text-muted mb-1">Clients</p>
+                                <h4 class="mb-0" th:text="${metrics.totalClients}">128</h4>
+                            </div>
+                            <div class="metric-icon text-info">
+                                <i class="fas fa-user-tie"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dossiers -->
+            <div class="col-md-3 mb-3">
+                <div class="card metric-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <p class="text-muted mb-1">Dossiers</p>
+                                <h4 class="mb-0" th:text="${metrics.totalCases}">256</h4>
+                            </div>
+                            <div class="metric-icon text-warning">
+                                <i class="fas fa-folder"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <!-- Documents -->
+            <div class="col-md-3 mb-3">
+                <div class="card metric-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <p class="text-muted mb-1">Documents</p>
+                                <h4 class="mb-0" th:text="${metrics.totalDocuments}">1,234</h4>
+                            </div>
+                            <div class="metric-icon text-secondary">
+                                <i class="fas fa-file"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Factures -->
+            <div class="col-md-3 mb-3">
+                <div class="card metric-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <p class="text-muted mb-1">Factures</p>
+                                <h4 class="mb-0" th:text="${metrics.totalInvoices}">89</h4>
+                            </div>
+                            <div class="metric-icon text-success">
+                                <i class="fas fa-file-invoice-dollar"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CPU -->
+            <div class="col-md-3 mb-3">
+                <div class="card metric-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <p class="text-muted mb-1">Utilisation CPU</p>
+                                <h4 class="mb-0" th:text="${#numbers.formatDecimal(metrics.cpuUsage, 1, 1)} + '%'">15.2%</h4>
+                            </div>
+                            <div class="metric-icon text-danger">
+                                <i class="fas fa-microchip"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mémoire -->
+            <div class="col-md-3 mb-3">
+                <div class="card metric-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <p class="text-muted mb-1">Mémoire utilisée</p>
+                                <h4 class="mb-0" th:text="${usedMemoryFormatted}">512 MB</h4>
+                            </div>
+                            <div class="metric-icon text-warning">
+                                <i class="fas fa-memory"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Informations système -->
+            <div class="col-lg-6 mb-4">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-info-circle"></i> Informations système</h5>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-sm">
+                            <tr>
+                                <td><strong>Java Version:</strong></td>
+                                <td th:text="${metrics.javaVersion}">17.0.1</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Système d'exploitation:</strong></td>
+                                <td th:text="${metrics.osName + ' ' + metrics.osVersion}">Windows 11</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Processeurs:</strong></td>
+                                <td th:text="${metrics.availableProcessors}">8</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Mémoire max:</strong></td>
+                                <td th:text="${maxMemoryFormatted}">2 GB</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Démarrage:</strong></td>
+                                <td th:text="${#temporals.format(metrics.startTime, 'dd/MM/yyyy HH:mm:ss')}">19/02/2026 10:00:00</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Base de données -->
+            <div class="col-lg-6 mb-4">
+                <div class="card">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0"><i class="fas fa-database"></i> Base de données</h5>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-sm">
+                            <tr>
+                                <td><strong>Type:</strong></td>
+                                <td th:text="${metrics.databaseProductName}">MySQL</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Version:</strong></td>
+                                <td th:text="${metrics.databaseVersion}">8.0.27</td>
+                            </tr>
+                            <tr>
+                                <td><strong>URL:</strong></td>
+                                <td class="text-truncate" th:text="${metrics.databaseUrl}" style="max-width: 300px;">jdbc:mysql://localhost:3306/gedavocat</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Connexions actives:</strong></td>
+                                <td th:text="${metrics.activeConnections}">5</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Connexions max:</strong></td>
+                                <td th:text="${metrics.maxConnections}">100</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Utilisation mémoire -->
+        <div class="row">
+            <div class="col-lg-6 mb-4">
+                <div class="card">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0"><i class="fas fa-memory"></i> Utilisation de la mémoire</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span>Mémoire utilisée</span>
+                                <span th:text="${usedMemoryFormatted} + ' / ' + ${maxMemoryFormatted}">512 MB / 2 GB</span>
+                            </div>
+                            <div class="progress progress-custom">
+                                <div class="progress-bar bg-warning" role="progressbar" 
+                                     th:style="'width: ' + ${(metrics.usedMemory * 100.0 / metrics.maxMemory)} + '%'"
+                                     th:text="${#numbers.formatDecimal((metrics.usedMemory * 100.0 / metrics.maxMemory), 1, 1)} + '%'">
+                                    25%
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stockage -->
+            <div class="col-lg-6 mb-4">
+                <div class="card">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="fas fa-hdd"></i> Stockage</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span>Espace utilisé</span>
+                                <span th:text="${storageUsedFormatted} + ' / ' + ${storageLimitFormatted}">1.2 GB / 10 GB</span>
+                            </div>
+                            <div class="progress progress-custom">
+                                <div class="progress-bar bg-success" role="progressbar" 
+                                     th:style="'width: ' + ${(metrics.storageUsed * 100.0 / metrics.storageLimit)} + '%'"
+                                     th:text="${#numbers.formatDecimal((metrics.storageUsed * 100.0 / metrics.storageLimit), 1, 1)} + '%'">
+                                    12%
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

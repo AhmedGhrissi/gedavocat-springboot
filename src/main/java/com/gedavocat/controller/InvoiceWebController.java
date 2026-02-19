@@ -1,0 +1,136 @@
+package com.gedavocat.controller;
+
+import com.gedavocat.service.InvoiceService;
+import com.gedavocat.service.ClientService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
+/**
+ * Contrôleur Web pour les pages de facturation
+ */
+@Controller
+@RequestMapping("/invoices")
+@RequiredArgsConstructor
+public class InvoiceWebController {
+
+    private final InvoiceService invoiceService;
+    private final ClientService clientService;
+
+    /**
+     * Affiche la liste des factures
+     */
+    @GetMapping
+    @PreAuthorize("hasRole('LAWYER')")
+    public String index(Model model, Authentication authentication,
+                       @RequestParam(required = false) String status,
+                       @RequestParam(required = false) String client) {
+        try {
+            String lawyerId = authentication.getName();
+            
+            // Récupérer toutes les factures de l'avocat
+            var invoices = invoiceService.getInvoicesByLawyer(lawyerId);
+            
+            // Calculer les statistiques
+            long paidCount = invoices.stream().filter(i -> "PAID".equals(i.getStatus().name())).count();
+            long pendingCount = invoices.stream().filter(i -> "SENT".equals(i.getStatus().name())).count();
+            long overdueCount = invoices.stream().filter(i -> i.isOverdue()).count();
+            double totalAmount = invoices.stream()
+                .filter(i -> "PAID".equals(i.getStatus().name()))
+                .mapToDouble(i -> i.getTotalTTC().doubleValue())
+                .sum();
+            
+            model.addAttribute("invoices", invoices);
+            model.addAttribute("paidCount", paidCount);
+            model.addAttribute("pendingCount", pendingCount);
+            model.addAttribute("overdueCount", overdueCount);
+            model.addAttribute("totalAmount", totalAmount);
+            
+            return "invoices/index";
+        } catch (Exception e) {
+            model.addAttribute("error", "Erreur lors du chargement des factures");
+            return "invoices/index";
+        }
+    }
+
+    /**
+     * Affiche le formulaire de création d'une facture
+     */
+    @GetMapping("/new")
+    @PreAuthorize("hasRole('LAWYER')")
+    public String newInvoice(Model model, Authentication authentication) {
+        try {
+            String lawyerId = authentication.getName();
+            
+            // Récupérer la liste des clients de l'avocat
+            var clients = clientService.getClientsByLawyer(lawyerId);
+            model.addAttribute("clients", clients);
+            
+            return "invoices/new";
+        } catch (Exception e) {
+            model.addAttribute("error", "Erreur lors du chargement du formulaire");
+            return "redirect:/invoices";
+        }
+    }
+
+    /**
+     * Affiche une facture spécifique
+     */
+    @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('LAWYER', 'CLIENT')")
+    public String show(@PathVariable String id, Model model) {
+        try {
+            var invoice = invoiceService.getInvoiceById(id);
+            model.addAttribute("invoice", invoice);
+            return "invoices/show";
+        } catch (Exception e) {
+            model.addAttribute("error", "Facture non trouvée");
+            return "redirect:/invoices";
+        }
+    }
+
+    /**
+     * Affiche le formulaire d'édition d'une facture
+     */
+    @GetMapping("/{id}/edit")
+    @PreAuthorize("hasRole('LAWYER')")
+    public String edit(@PathVariable String id, Model model, Authentication authentication) {
+        try {
+            String lawyerId = authentication.getName();
+            
+            var invoice = invoiceService.getInvoiceById(id);
+            var clients = clientService.getClientsByLawyer(lawyerId);
+            
+            model.addAttribute("invoice", invoice);
+            model.addAttribute("clients", clients);
+            
+            return "invoices/edit";
+        } catch (Exception e) {
+            model.addAttribute("error", "Facture non trouvée");
+            return "redirect:/invoices";
+        }
+    }
+
+    /**
+     * Page pour les clients - mes factures
+     */
+    @GetMapping("/my-invoices")
+    @PreAuthorize("hasRole('CLIENT')")
+    public String myInvoices(Model model, Authentication authentication) {
+        try {
+            // TODO: Récupérer l'ID du client depuis l'utilisateur connecté
+            // Pour l'instant, on retourne une page vide
+            model.addAttribute("invoices", java.util.Collections.emptyList());
+            return "invoices/my-invoices";
+        } catch (Exception e) {
+            model.addAttribute("error", "Erreur lors du chargement de vos factures");
+            return "invoices/my-invoices";
+        }
+    }
+}

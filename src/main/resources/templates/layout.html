@@ -183,18 +183,106 @@
         @media (max-width: 768px) {
             .sidebar {
                 transform: translateX(-100%);
+                transition: transform 0.3s ease;
             }
             .sidebar.open {
                 transform: translateX(0);
+                box-shadow: 2px 0 8px rgba(0,0,0,0.2);
             }
             .main-content {
                 margin-left: 0;
+            }
+            .header-search {
+                width: auto;
+                flex: 1;
+            }
+            .mobile-menu-btn {
+                display: flex !important;
+            }
+            .page-content {
+                padding: 16px;
+            }
+            .card {
+                border-radius: 8px;
+                margin-bottom: 16px;
+            }
+        }
+        
+        /* Bouton menu mobile */
+        .mobile-menu-btn {
+            display: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            border: none;
+            background: transparent;
+            color: #64748b;
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+        
+        .mobile-menu-btn:hover {
+            background: #f1f5f9;
+        }
+        
+        /* Overlay pour mobile */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar-overlay.active {
+                display: block;
+            }
+        }
+        
+        /* Responsive pour très petits écrans */
+        @media (max-width: 480px) {
+            .header {
+                padding: 0 12px;
+                height: 56px;
+            }
+            .header-search {
+                display: none; /* Masquer la recherche sur très petit écran */
+            }
+            .page-content {
+                padding: 12px;
+            }
+            .user-info {
+                gap: 8px;
+            }
+            .user-avatar {
+                width: 32px;
+                height: 32px;
+                font-size: 0.875rem;
+            }
+        }
+        
+        /* Tablette paysage */
+        @media (min-width: 769px) and (max-width: 1024px) {
+            :root {
+                --sidebar-width: 220px;
+            }
+            .header-search {
+                width: 300px;
             }
         }
     </style>
 </head>
 <body>
-    <aside class="sidebar">
+    <!-- Overlay pour mobile -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    
+    <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <h1>⚖️ GED Avocat</h1>
             <div class="subtitle">Gestion documentaire</div>
@@ -204,9 +292,29 @@
             <div class="nav-section-title">Navigation</div>
 
             <div sec:authorize="hasRole('ADMIN')">
-                <a href="/dashboard" class="nav-link">
+                <a href="/admin" class="nav-link">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>Administration</span>
+                </a>
+                <a href="/admin/system" class="nav-link">
+                    <i class="fas fa-server"></i>
+                    <span>Système</span>
+                </a>
+                <a href="/admin/database" class="nav-link">
                     <i class="fas fa-database"></i>
-                    <span>Supervision</span>
+                    <span>Base de données</span>
+                </a>
+                <a href="/admin/logs" class="nav-link">
+                    <i class="fas fa-file-alt"></i>
+                    <span>Logs</span>
+                </a>
+                <a href="/admin/users" class="nav-link">
+                    <i class="fas fa-users-cog"></i>
+                    <span>Utilisateurs</span>
+                </a>
+                <a href="/admin/settings" class="nav-link">
+                    <i class="fas fa-cogs"></i>
+                    <span>Paramètres</span>
                 </a>
             </div>
 
@@ -223,9 +331,17 @@
                     <i class="fas fa-users"></i>
                     <span>Mes clients</span>
                 </a>
+                <a href="/invoices" class="nav-link" sec:authorize="hasRole('LAWYER')">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                    <span>Facturation</span>
+                </a>
                 <a href="/documents" class="nav-link">
                     <i class="fas fa-file"></i>
                     <span>Documents</span>
+                </a>
+                <a href="/appointments" class="nav-link">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>Calendrier</span>
                 </a>
                 <a href="/signatures" class="nav-link">
                     <i class="fas fa-edit"></i>
@@ -250,7 +366,22 @@
                     <i class="fas fa-file"></i>
                     <span>Mes documents</span>
                 </a>
+                <a href="/invoices/my-invoices" class="nav-link">
+                    <i class="fas fa-file-invoice"></i>
+                    <span>Mes factures</span>
+                </a>
             </div>
+            
+            <!-- Section Légal pour tous les utilisateurs -->
+            <div class="nav-section-title">Informations légales</div>
+            <a href="/legal/terms" class="nav-link">
+                <i class="fas fa-file-contract"></i>
+                <span>CGU</span>
+            </a>
+            <a href="/legal/privacy" class="nav-link">
+                <i class="fas fa-shield-alt"></i>
+                <span>Confidentialité & RGPD</span>
+            </a>
         </nav>
 
         <div class="sidebar-footer">
@@ -278,9 +409,11 @@
                         </li>
                         <li><hr class="dropdown-divider"></li>
                         <li>
-                            <a class="dropdown-item text-danger" th:href="@{/logout}">
-                                <i class="fas fa-sign-out-alt"></i> Déconnexion
-                            </a>
+                            <form th:action="@{/logout}" method="post" style="margin: 0;">
+                                <button type="submit" class="dropdown-item text-danger" style="border: none; background: none; width: 100%; text-align: left; cursor: pointer;">
+                                    <i class="fas fa-sign-out-alt"></i> Déconnexion
+                                </button>
+                            </form>
                         </li>
                     </ul>
                 </div>
@@ -290,7 +423,12 @@
 
     <div class="main-content">
         <header class="header">
-            <div>
+            <div class="d-flex align-items-center gap-2">
+                <!-- Bouton menu mobile -->
+                <button class="mobile-menu-btn" id="mobileMenuBtn">
+                    <i class="fas fa-bars"></i>
+                </button>
+                
                 <form class="header-search d-none d-md-flex" action="/documents" method="get" sec:authorize="!hasRole('ADMIN')">
                     <i class="fas fa-search" style="color: #94a3b8;"></i>
                     <input type="text" placeholder="Rechercher..." name="q">
@@ -300,9 +438,11 @@
                 <button class="icon-btn" sec:authorize="!hasRole('ADMIN')">
                     <i class="fas fa-bell"></i>
                 </button>
-                <a href="/logout" class="icon-btn">
-                    <i class="fas fa-sign-out-alt"></i>
-                </a>
+                <form th:action="@{/logout}" method="post" style="margin: 0; display: inline;">
+                    <button type="submit" class="icon-btn" style="border: none; background: none; cursor: pointer;" title="Déconnexion">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </form>
             </div>
         </header>
 
@@ -665,6 +805,60 @@
         // Auto-focus sur le premier champ lors de l'ouverture du modal
         document.getElementById('settingsModal').addEventListener('shown.bs.modal', function () {
             document.getElementById('modalFirstName').focus();
+        });
+
+        // Gestion du menu mobile hamburger
+        document.addEventListener('DOMContentLoaded', function() {
+            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+            const sidebar = document.getElementById('sidebar');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+            
+            // Fonction pour ouvrir le menu
+            function openSidebar() {
+                sidebar.classList.add('open');
+                sidebarOverlay.classList.add('active');
+                document.body.style.overflow = 'hidden'; // Empêcher le scroll du body
+            }
+            
+            // Fonction pour fermer le menu
+            function closeSidebar() {
+                sidebar.classList.remove('open');
+                sidebarOverlay.classList.remove('active');
+                document.body.style.overflow = ''; // Réactiver le scroll
+            }
+            
+            // Ouvrir le menu au clic sur le bouton hamburger
+            if (mobileMenuBtn) {
+                mobileMenuBtn.addEventListener('click', function() {
+                    if (sidebar.classList.contains('open')) {
+                        closeSidebar();
+                    } else {
+                        openSidebar();
+                    }
+                });
+            }
+            
+            // Fermer le menu au clic sur l'overlay
+            if (sidebarOverlay) {
+                sidebarOverlay.addEventListener('click', closeSidebar);
+            }
+            
+            // Fermer le menu au clic sur un lien de navigation (sur mobile)
+            const navLinks = document.querySelectorAll('.sidebar .nav-link');
+            navLinks.forEach(link => {
+                link.addEventListener('click', function() {
+                    if (window.innerWidth <= 768) {
+                        closeSidebar();
+                    }
+                });
+            });
+            
+            // Fermer le menu si on redimensionne vers desktop
+            window.addEventListener('resize', function() {
+                if (window.innerWidth > 768) {
+                    closeSidebar();
+                }
+            });
         });
 
         // Intercepter les soumissions de formulaire pour utiliser AJAX

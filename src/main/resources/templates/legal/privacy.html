@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>Politique de confidentialité et RGPD</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="container py-5">
+        <h1 class="mb-4">Politique de confidentialité et RGPD</h1>
+
+        <div class="card mb-4">
+            <div class="card-body">
+                <h4 class="card-title mb-3">1. Responsable du traitement</h4>
+                <p>GED Avocat, éditeur de la plateforme de gestion électronique de documents pour cabinets d'avocats.</p>
+                <p><strong>Contact DPO :</strong> <a href="mailto:dpo@gedavocat.fr">dpo@gedavocat.fr</a></p>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-body">
+                <h4 class="card-title mb-3">2. Données collectées</h4>
+                <p>Dans le cadre de l'utilisation de notre service, nous collectons les données suivantes :</p>
+                <ul>
+                    <li><strong>Données d'identification :</strong> Nom, prénom, email, numéro de téléphone</li>
+                    <li><strong>Données professionnelles :</strong> Nom du cabinet, numéro au barreau, spécialité</li>
+                    <li><strong>Données de connexion :</strong> Adresse IP, logs de connexion, historique d'activité</li>
+                    <li><strong>Documents juridiques :</strong> Dossiers, pièces, conclusions téléversés par l'utilisateur</li>
+                    <li><strong>Données de facturation :</strong> Coordonnées bancaires (via prestataire certifié PCI-DSS)</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-body">
+                <h4 class="card-title mb-3">3. Finalités du traitement</h4>
+                <ul>
+                    <li>Gestion de votre compte utilisateur</li>
+                    <li>Fourniture du service de GED</li>
+                    <li>Facturation et gestion des abonnements</li>
+                    <li>Sécurité et prévention des fraudes</li>
+                    <li>Conformité légale (conservation des logs pendant 1 an)</li>
+                    <li>Amélioration du service (statistiques anonymisées)</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-body">
+                <h4 class="card-title mb-3">4. Base légale</h4>
+                <p>Le traitement de vos données repose sur :</p>
+                <ul>
+                    <li><strong>Exécution du contrat :</strong> fourniture du service</li>
+                    <li><strong>Obligation légale :</strong> conservation des logs, facturation</li>
+                    <li><strong>Intérêt légitime :</strong> sécurité, prévention des fraudes</li>
+                    <li><strong>Consentement :</strong> communications marketing (opt-in uniquement)</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-body">
+                <h4 class="card-title mb-3">5. Durée de conservation</h4>
+                <ul>
+                    <li><strong>Données de compte :</strong> Durée de l'abonnement + 3 ans (prescription)</li>
+                    <li><strong>Documents juridiques :</strong> Durée déterminée par l'avocat (droit à l'oubli sur demande)</li>
+                    <li><strong>Logs de connexion :</strong> 1 an (obligation légale LPM)</li>
+                    <li><strong>Données de facturation :</strong> 10 ans (obligation comptable)</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-body">
+                <h4 class="card-title mb-3">6. Sécurité des données</h4>
+                <p>Nous mettons en œuvre les mesures de sécurité suivantes :</p>
+                <ul>
+                    <li><strong>Chiffrement AES-256</strong> de tous les documents au repos</li>
+                    <li><strong>TLS 1.3</strong> pour toutes les communications</li>
+                    <li><strong>Authentification forte</strong> (JWT avec expiration)</li>
+                    <li><strong>Sauvegardes chiffrées</strong> quotidiennes</li>
+                    <li><strong>Hébergement en France</strong> (datacenter certifié ISO 27001)</li>
+                    <li><strong>Journalisation complète</strong> de tous les accès</li>
+                    <li><strong>Tests de sécurité</strong> réguliers (audit externe annuel)</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-body">
+                <h4 class="card-title mb-3">7. Vos droits (RGPD)</h4>
+                <p>Conformément au RGPD, vous disposez des droits suivants :</p>
+                <ul>
+                    <li><strong>Droit d'accès :</strong> obtenir une copie de vos données</li>
+                    <li><strong>Droit de rectification :</strong> corriger des données inexactes</li>
+                    <li><strong>Droit à l'effacement :</strong> supprimer vos données ("droit à l'oubli")</li>
+                    <li><strong>Droit à la limitation :</strong> restreindre le traitement</li>
+                    <li><strong>Droit à la portabilité :</strong> récupérer vos données dans un format structuré</li>
+                    <li><strong>Droit d'opposition :</strong> s'opposer au traitement pour motif légitime</li>
+                    <li><strong>Droit de retirer votre consentement</strong> à tout moment</li>
+                </ul>
+                <p class="mt-3">
+                    <strong>Pour exercer vos droits :</strong>
+                    <a href="mailto:dpo@gedavocat.fr">dpo@gedavocat.fr</a>
+                    (réponse sous 30 jours maximum)
+                </p>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-body">
+                <h4 class="card-title mb-3">8. Transferts de données</h4>
+                <p>Vos données sont hébergées exclusivement en <strong>France</strong> (datacenter à Paris).</p>
+                <p>Nous ne transférons aucune donnée hors Union Européenne, sauf :</p>
+                <ul>
+                    <li>Yousign (signature électronique) : France, certifié RGPD</li>
+                    <li>Prestataire de paiement (Stripe) : USA, clauses contractuelles types UE</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-body">
+                <h4 class="card-title mb-3">9. Cookies</h4>
+                <p>Nous utilisons uniquement des cookies strictement nécessaires au fonctionnement :</p>
+                <ul>
+                    <li><strong>Cookie de session (JWT) :</strong> authentification</li>
+                    <li><strong>Cookie CSRF :</strong> sécurité</li>
+                </ul>
+                <p>Aucun cookie publicitaire ou de tracking tiers n'est utilisé.</p>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-body">
+                <h4 class="card-title mb-3">10. Réclamation CNIL</h4>
+                <p>Si vous estimez que vos droits ne sont pas respectés, vous pouvez introduire une réclamation auprès de la CNIL :</p>
+                <p>
+                    <strong>Commission Nationale de l'Informatique et des Libertés (CNIL)</strong><br>
+                    3 Place de Fontenoy - TSA 80715<br>
+                    75334 PARIS CEDEX 07<br>
+                    Tél : 01 53 73 22 22<br>
+                    <a href="https://www.cnil.fr" target="_blank">www.cnil.fr</a>
+                </p>
+            </div>
+        </div>
+
+        <div class="card mb-4 border-warning">
+            <div class="card-body">
+                <h4 class="card-title mb-3"><i class="fas fa-balance-scale me-2"></i>11. Secret professionnel de l'avocat</h4>
+                <p class="mb-0">
+                    <strong>GED Avocat s'engage à respecter le secret professionnel de l'avocat</strong> (article 66-5 de la loi du 31 décembre 1971).
+                    Nous ne consultons jamais le contenu de vos documents, sauf en cas d'obligation légale (réquisition judiciaire).
+                    Tous les documents sont chiffrés et nos administrateurs n'y ont pas accès.
+                </p>
+            </div>
+        </div>
+
+        <p class="text-muted text-center mt-5">
+            Dernière mise à jour : 17 février 2026<br>
+            Version 1.0
+        </p>
+    </div>
+</div>
+</body>
+</html>

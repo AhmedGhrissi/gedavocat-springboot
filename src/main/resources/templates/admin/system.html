@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>Administration - Informations Système</title>
+    <style>
+        .metric-card {
+            transition: transform 0.2s;
+        }
+        .metric-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .progress-custom {
+            height: 10px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="container-fluid">
+        <!-- En-tête -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="mb-1">🖥️ Informations Système</h2>
+                <p class="text-muted">Détails techniques du serveur et de l'application</p>
+            </div>
+            <a href="/admin" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Retour au dashboard
+            </a>
+        </div>
+
+        <!-- Message d'erreur -->
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-triangle"></i> <span th:text="${error}">Erreur</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Navigation admin -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="btn-group" role="group">
+                    <a href="/admin" class="btn btn-outline-primary">
+                        <i class="fas fa-home"></i> Dashboard
+                    </a>
+                    <a href="/admin/system" class="btn btn-primary">
+                        <i class="fas fa-server"></i> Système
+                    </a>
+                    <a href="/admin/database" class="btn btn-outline-primary">
+                        <i class="fas fa-database"></i> Base de données
+                    </a>
+                    <a href="/admin/logs" class="btn btn-outline-primary">
+                        <i class="fas fa-file-alt"></i> Logs
+                    </a>
+                    <a href="/admin/users" class="btn btn-outline-primary">
+                        <i class="fas fa-users"></i> Utilisateurs
+                    </a>
+                    <a href="/admin/statistics" class="btn btn-outline-primary">
+                        <i class="fas fa-chart-line"></i> Statistiques
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Métriques système -->
+        <div class="row mb-4">
+            <!-- Uptime -->
+            <div class="col-md-3 mb-3">
+                <div class="card metric-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <p class="text-muted mb-1">Temps de fonctionnement</p>
+                                <h4 class="mb-0" th:text="${uptime}">N/A</h4>
+                            </div>
+                            <div class="text-primary">
+                                <i class="fas fa-clock fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CPU -->
+            <div class="col-md-3 mb-3">
+                <div class="card metric-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <p class="text-muted mb-1">CPU</p>
+                                <h4 class="mb-0">
+                                    <span th:text="${metrics != null ? #numbers.formatDecimal(metrics.cpuUsage, 1, 1) : '0.0'}">0.0</span>%
+                                </h4>
+                            </div>
+                            <div class="text-success">
+                                <i class="fas fa-microchip fa-2x"></i>
+                            </div>
+                        </div>
+                        <div class="progress progress-custom mt-2">
+                            <div class="progress-bar bg-success" 
+                                 th:style="${'width: ' + (metrics != null ? metrics.cpuUsage : 0) + '%'}">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Threads -->
+            <div class="col-md-3 mb-3">
+                <div class="card metric-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <p class="text-muted mb-1">Threads</p>
+                                <h4 class="mb-0">
+                                    <span th:text="${metrics != null ? metrics.threadCount : 0}">0</span>
+                                </h4>
+                            </div>
+                            <div class="text-info">
+                                <i class="fas fa-project-diagram fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Classes chargées -->
+            <div class="col-md-3 mb-3">
+                <div class="card metric-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <p class="text-muted mb-1">Classes chargées</p>
+                                <h4 class="mb-0">
+                                    <span th:text="${metrics != null ? #numbers.formatInteger(metrics.loadedClasses, 0, 'COMMA') : '0'}">0</span>
+                                </h4>
+                            </div>
+                            <div class="text-warning">
+                                <i class="fas fa-cubes fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Informations JVM -->
+        <div class="row mb-4">
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-coffee"></i> Informations JVM</h5>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-sm">
+                            <tr>
+                                <td style="width: 40%;"><strong>Version Java:</strong></td>
+                                <td th:text="${metrics != null ? metrics.javaVersion : 'N/A'}">Java 17</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Vendor:</strong></td>
+                                <td th:text="${metrics != null ? metrics.javaVendor : 'N/A'}">Oracle Corporation</td>
+                            </tr>
+                            <tr>
+                                <td><strong>JVM Name:</strong></td>
+                                <td th:text="${metrics != null ? metrics.jvmName : 'N/A'}">OpenJDK 64-Bit Server VM</td>
+                            </tr>
+                            <tr>
+                                <td><strong>JVM Version:</strong></td>
+                                <td th:text="${metrics != null ? metrics.jvmVersion : 'N/A'}">17.0.2+8</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Processeurs:</strong></td>
+                                <td th:text="${metrics != null ? metrics.availableProcessors : 'N/A'}">8</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="fas fa-server"></i> Système d'exploitation</h5>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-sm">
+                            <tr>
+                                <td style="width: 40%;"><strong>Système:</strong></td>
+                                <td th:text="${metrics != null ? metrics.osName : 'N/A'}">Linux</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Version:</strong></td>
+                                <td th:text="${metrics != null ? metrics.osVersion : 'N/A'}">5.15.0</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Architecture:</strong></td>
+                                <td th:text="${metrics != null ? metrics.osArch : 'N/A'}">amd64</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Répertoire de travail:</strong></td>
+                                <td class="text-break" th:text="${metrics != null ? metrics.workingDirectory : 'N/A'}">
+                                    /app
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>User:</strong></td>
+                                <td th:text="${metrics != null ? metrics.userName : 'N/A'}">app</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Utilisation mémoire détaillée -->
+        <div class="row mb-4">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0"><i class="fas fa-memory"></i> Utilisation de la mémoire</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <h6>Mémoire Heap</h6>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Utilisée:</span>
+                                    <strong th:text="${metrics != null ? metrics.usedMemoryFormatted : 'N/A'}">512 MB</strong>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Maximum:</span>
+                                    <strong th:text="${metrics != null ? metrics.maxMemoryFormatted : 'N/A'}">2 GB</strong>
+                                </div>
+                                <div class="progress" style="height: 20px;">
+                                    <div class="progress-bar" 
+                                         th:classappend="${metrics != null and metrics.memoryUsagePercent > 80} ? 'bg-danger' : (${metrics != null and metrics.memoryUsagePercent > 60} ? 'bg-warning' : 'bg-success')"
+                                         th:style="${'width: ' + (metrics != null ? metrics.memoryUsagePercent : 0) + '%'}"
+                                         th:text="${metrics != null ? #numbers.formatDecimal(metrics.memoryUsagePercent, 1, 1) + '%' : '0%'}">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <h6>Stockage Documents</h6>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Utilisé:</span>
+                                    <strong th:text="${metrics != null ? metrics.storageUsedFormatted : 'N/A'}">1.5 GB</strong>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Limite:</span>
+                                    <strong th:text="${metrics != null ? metrics.storageLimitFormatted : 'N/A'}">10 GB</strong>
+                                </div>
+                                <div class="progress" style="height: 20px;">
+                                    <div class="progress-bar bg-info" 
+                                         th:style="${'width: ' + (metrics != null ? metrics.storageUsagePercent : 0) + '%'}"
+                                         th:text="${metrics != null ? #numbers.formatDecimal(metrics.storageUsagePercent, 1, 1) + '%' : '0%'}">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <h6>Threads JVM</h6>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Actifs:</span>
+                                    <strong th:text="${metrics != null ? metrics.threadCount : 'N/A'}">42</strong>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Pic:</span>
+                                    <strong th:text="${metrics != null ? metrics.peakThreadCount : 'N/A'}">58</strong>
+                                </div>
+                                <div class="alert alert-info mb-0">
+                                    <i class="fas fa-info-circle"></i> 
+                                    <span th:text="${metrics != null ? metrics.threadCount : 0}">42</span> threads en cours d'exécution
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions système -->
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header bg-warning">
+                        <h5 class="mb-0"><i class="fas fa-tools"></i> Actions système</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-warning mb-3">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <strong>Attention:</strong> Ces actions peuvent affecter les performances du système.
+                        </div>
+                        
+                        <div class="btn-group" role="group">
+                            <button class="btn btn-outline-success" onclick="if(confirm('Forcer le garbage collector ?')) { alert('Fonction à implémenter'); }">
+                                <i class="fas fa-recycle"></i> Garbage Collector
+                            </button>
+                            <button class="btn btn-outline-info" onclick="window.location.reload()">
+                                <i class="fas fa-sync"></i> Actualiser les métriques
+                            </button>
+                            <button class="btn btn-outline-primary" onclick="alert('Export des métriques à implémenter')">
+                                <i class="fas fa-download"></i> Exporter les métriques
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>

@@ -158,12 +158,13 @@ class SecurityConfigTest {
     }
 
     @Test
-    @DisplayName("✓ Admin peut accéder au dashboard")
+    @DisplayName("✓ Admin redirigé vers /admin depuis /dashboard")
     @WithMockUser(username = "admin@test.com", roles = "ADMIN")
     @Transactional
     void adminCanAccessDashboard() throws Exception {
         mockMvc.perform(get("/dashboard"))
-            .andExpect(status().isOk());
+            .andExpect(status().is3xxRedirection())
+            .andExpect(redirectedUrl("/admin"));
     }
 
     @Test

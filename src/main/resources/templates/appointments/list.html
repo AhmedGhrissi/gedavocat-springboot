@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>Liste des rendez-vous</title>
+    <style>
+        .appointment-row {
+            transition: background-color 0.2s;
+            cursor: pointer;
+        }
+        .appointment-row:hover {
+            background-color: #f8f9fa;
+        }
+        .status-badge {
+            font-size: 0.8rem;
+            padding: 0.3rem 0.6rem;
+        }
+    </style>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="container-fluid">
+        
+        <!-- En-tête -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="mb-1">📋 Liste des rendez-vous</h2>
+                <p class="text-muted">Vue détaillée de tous vos rendez-vous</p>
+            </div>
+            <div>
+                <a href="/appointments" class="btn btn-outline-primary me-2">
+                    <i class="fas fa-calendar"></i> Vue calendrier
+                </a>
+                <a href="/appointments/new" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Nouveau rendez-vous
+                </a>
+            </div>
+        </div>
+
+        <!-- Messages -->
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle"></i> <span th:text="${success}">Succès</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Filtres -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="btn-group" role="group">
+                    <a th:href="@{/appointments/list}" 
+                       th:classappend="${filter == null ? 'active' : ''}"
+                       class="btn btn-outline-primary">
+                        <i class="fas fa-list"></i> Tous
+                    </a>
+                    <a th:href="@{/appointments/list(filter='today')}" 
+                       th:classappend="${filter == 'today' ? 'active' : ''}"
+                       class="btn btn-outline-primary">
+                        <i class="fas fa-calendar-day"></i> Aujourd'hui
+                    </a>
+                    <a th:href="@{/appointments/list(filter='upcoming')}" 
+                       th:classappend="${filter == 'upcoming' ? 'active' : ''}"
+                       class="btn btn-outline-primary">
+                        <i class="fas fa-calendar-alt"></i> À venir
+                    </a>
+                    <a th:href="@{/appointments/list(filter='court')}" 
+                       th:classappend="${filter == 'court' ? 'active' : ''}"
+                       class="btn btn-outline-danger">
+                        <i class="fas fa-gavel"></i> Audiences tribunal
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Liste -->
+        <div class="card">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Date & Heure</th>
+                                <th>Titre</th>
+                                <th>Type</th>
+                                <th>Client</th>
+                                <th>Lieu</th>
+                                <th>Statut</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:if="${appointments.empty}">
+                                <td colspan="7" class="text-center py-5">
+                                    <i class="fas fa-calendar fa-3x text-muted mb-3"></i>
+                                    <p class="text-muted mb-0">Aucun rendez-vous trouvé</p>
+                                </td>
+                            </tr>
+                            <tr th:each="appointment : ${appointments}" 
+                                class="appointment-row"
+                                th:onclick="'window.location.href=\'/appointments/' + ${appointment.id} + '/edit\''">
+                                <td>
+                                    <div>
+                                        <strong th:text="${#temporals.format(appointment.appointmentDate, 'dd/MM/yyyy')}">19/02/2026</strong>
+                                    </div>
+                                    <small class="text-muted" th:text="${#temporals.format(appointment.appointmentDate, 'HH:mm')}">10:00</small>
+                                </td>
+                                <td>
+                                    <strong th:text="${appointment.title}">Titre</strong>
+                                    <br>
+                                    <small class="text-muted" th:if="${appointment.relatedCase != null}">
+                                        <i class="fas fa-folder"></i>
+                                        <span th:text="${appointment.relatedCase.title}">Dossier</span>
+                                    </small>
+                                </td>
+                                <td>
+                                    <span class="badge status-badge" 
+                                          th:classappend="${appointment.type.name() == 'COURT_HEARING' ? 'bg-danger' : 
+                                                          (appointment.type.name() == 'CLIENT_MEETING' ? 'bg-primary' : 
+                                                          (appointment.type.name() == 'VIDEO_CONFERENCE' ? 'bg-info' : 'bg-secondary'))}"
+                                          th:text="${appointment.type.displayName}">Type</span>
+                                </td>
+                                <td>
+                                    <span th:if="${appointment.client != null}" th:text="${appointment.client.name}">Client</span>
+                                    <span th:unless="${appointment.client != null}" class="text-muted">-</span>
+                                </td>
+                                <td>
+                                    <span th:if="${appointment.location != null}" th:text="${appointment.location}">Lieu</span>
+                                    <span th:if="${appointment.courtName != null}">
+                                        <i class="fas fa-gavel text-danger"></i>
+                                        <span th:text="${appointment.courtName}">Tribunal</span>
+                                    </span>
+                                    <span th:if="${appointment.location == null and appointment.courtName == null}" class="text-muted">-</span>
+                                </td>
+                                <td>
+                                    <span class="badge status-badge" 
+                                          th:classappend="${appointment.status.name() == 'CONFIRMED' ? 'bg-success' : 
+                                                          (appointment.status.name() == 'CANCELLED' ? 'bg-danger' : 
+                                                          (appointment.status.name() == 'COMPLETED' ? 'bg-secondary' : 'bg-info'))}"
+                                          th:text="${appointment.status.displayName}">Statut</span>
+                                </td>
+                                <td onclick="event.stopPropagation()">
+                                    <div class="btn-group btn-group-sm">
+                                        <a th:href="@{/appointments/{id}/edit(id=${appointment.id})}" 
+                                           class="btn btn-outline-primary"
+                                           title="Modifier">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <form th:action="@{/appointments/{id}/confirm(id=${appointment.id})}" 
+                                              method="post" class="d-inline"
+                                              th:if="${appointment.status.name() != 'CONFIRMED' and appointment.status.name() != 'CANCELLED'}">
+                                            <button type="submit" class="btn btn-outline-success" title="Confirmer">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                        </form>
+                                        <form th:action="@{/appointments/{id}/cancel(id=${appointment.id})}" 
+                                              method="post" class="d-inline"
+                                              th:if="${appointment.status.name() != 'CANCELLED'}">
+                                            <button type="submit" class="btn btn-outline-danger" 
+                                                    title="Annuler"
+                                                    onclick="return confirm('Annuler ce rendez-vous ?')">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>

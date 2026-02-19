@@ -77,6 +77,9 @@ public class Client {
     @OneToMany(mappedBy = "client", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Case> cases = new HashSet<>();
     
+    @OneToMany(mappedBy = "client", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Invoice> invoices = new HashSet<>();
+    
     // Méthodes utilitaires
     public boolean hasActiveAccess() {
         return accessEndsAt == null || accessEndsAt.isAfter(LocalDateTime.now());

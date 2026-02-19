@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>Nouvelle facture</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="container-fluid">
+        <div class="mb-4">
+            <h2 class="mb-1">📄 Nouvelle facture</h2>
+            <p class="text-muted">Créez une nouvelle facture pour un client</p>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-body">
+                        <form id="invoiceForm">
+                            <!-- Informations de base -->
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <label class="form-label">Numéro de facture *</label>
+                                    <div class="input-group">
+                                        <input type="text" id="invoiceNumber" name="invoiceNumber" class="form-control" required>
+                                        <button type="button" class="btn btn-outline-secondary" onclick="generateInvoiceNumber()">
+                                            <i class="fas fa-sync"></i> Générer
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Client *</label>
+                                    <select id="clientId" name="clientId" class="form-select" required>
+                                        <option value="">Sélectionner un client</option>
+                                        <option th:each="client : ${clients}" th:value="${client.id}" th:text="${client.name}">Client</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="row mb-4">
+                                <div class="col-md-4">
+                                    <label class="form-label">Date de facture *</label>
+                                    <input type="date" id="invoiceDate" name="invoiceDate" class="form-control" required th:value="${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Date d'échéance</label>
+                                    <input type="date" id="dueDate" name="dueDate" class="form-control">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Statut</label>
+                                    <select id="status" name="status" class="form-select">
+                                        <option value="DRAFT">Brouillon</option>
+                                        <option value="SENT">Envoyée</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Lignes de facture -->
+                            <h5 class="mb-3">Prestations</h5>
+                            <div id="invoiceItems">
+                                <!-- Les lignes seront ajoutées ici -->
+                            </div>
+                            
+                            <button type="button" class="btn btn-outline-primary mb-4" onclick="addInvoiceItem()">
+                                <i class="fas fa-plus"></i> Ajouter une ligne
+                            </button>
+
+                            <!-- Notes -->
+                            <div class="mb-3">
+                                <label class="form-label">Notes / Mentions légales</label>
+                                <textarea id="notes" name="notes" class="form-control" rows="3" 
+                                          placeholder="Conditions de paiement, mentions légales...">Paiement sous 30 jours. Pénalités de retard : 3 fois le taux d'intérêt légal.</textarea>
+                            </div>
+
+                            <!-- Boutons d'action -->
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> Enregistrer
+                                </button>
+                                <button type="button" class="btn btn-success" onclick="saveAndSend()">
+                                    <i class="fas fa-paper-plane"></i> Enregistrer et envoyer
+                                </button>
+                                <a href="/invoices" class="btn btn-secondary">
+                                    <i class="fas fa-times"></i> Annuler
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Aperçu des totaux -->
+            <div class="col-lg-4">
+                <div class="card sticky-top" style="top: 80px;">
+                    <div class="card-body">
+                        <h5 class="card-title mb-3">Résumé</h5>
+                        
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Total HT :</span>
+                            <strong id="totalHT">0,00 €</strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>TVA (20%) :</span>
+                            <strong id="totalTVA">0,00 €</strong>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between">
+                            <strong>Total TTC :</strong>
+                            <strong class="text-primary fs-4" id="totalTTC">0,00 €</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let itemCounter = 0;
+
+        function addInvoiceItem() {
+            itemCounter++;
+            const itemHtml = `
+                <div class="card mb-3" id="item-${itemCounter}">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Description</label>
+                                <input type="text" class="form-control item-description" placeholder="Ex: Consultation juridique" required>
+                            </div>
+                            <div class="col-md-2 mb-3">
+                                <label class="form-label">Quantité</label>
+                                <input type="number" class="form-control item-quantity" value="1" min="0" step="0.01" required onchange="calculateTotals()">
+                            </div>
+                            <div class="col-md-2 mb-3">
+                                <label class="form-label">Prix unit. HT</label>
+                                <input type="number" class="form-control item-unitPrice" value="0" min="0" step="0.01" required onchange="calculateTotals()">
+                            </div>
+                            <div class="col-md-2 mb-3">
+                                <label class="form-label">TVA (%)</label>
+                                <input type="number" class="form-control item-tva" value="20" min="0" max="100" step="0.01" required onchange="calculateTotals()">
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeItem(${itemCounter})">
+                            <i class="fas fa-trash"></i> Supprimer
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.getElementById('invoiceItems').insertAdjacentHTML('beforeend', itemHtml);
+        }
+
+        function removeItem(id) {
+            document.getElementById('item-' + id).remove();
+            calculateTotals();
+        }
+
+        function calculateTotals() {
+            let totalHT = 0;
+            let totalTVA = 0;
+
+            document.querySelectorAll('#invoiceItems .card').forEach(card => {
+                const quantity = parseFloat(card.querySelector('.item-quantity').value) || 0;
+                const unitPrice = parseFloat(card.querySelector('.item-unitPrice').value) || 0;
+                const tvaRate = parseFloat(card.querySelector('.item-tva').value) || 0;
+
+                const lineHT = quantity * unitPrice;
+                const lineTVA = lineHT * (tvaRate / 100);
+
+                totalHT += lineHT;
+                totalTVA += lineTVA;
+            });
+
+            const totalTTC = totalHT + totalTVA;
+
+            document.getElementById('totalHT').textContent = totalHT.toFixed(2) + ' €';
+            document.getElementById('totalTVA').textContent = totalTVA.toFixed(2) + ' €';
+            document.getElementById('totalTTC').textContent = totalTTC.toFixed(2) + ' €';
+        }
+
+        function generateInvoiceNumber() {
+            fetch('/api/invoices/generate-number')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('invoiceNumber').value = data.invoiceNumber;
+                })
+                .catch(error => console.error('Erreur:', error));
+        }
+
+        function collectFormData() {
+            const items = [];
+            document.querySelectorAll('#invoiceItems .card').forEach((card, index) => {
+                items.push({
+                    description: card.querySelector('.item-description').value,
+                    quantity: parseFloat(card.querySelector('.item-quantity').value),
+                    unitPriceHT: parseFloat(card.querySelector('.item-unitPrice').value),
+                    tvaRate: parseFloat(card.querySelector('.item-tva').value),
+                    displayOrder: index + 1
+                });
+            });
+
+            return {
+                invoiceNumber: document.getElementById('invoiceNumber').value,
+                clientId: document.getElementById('clientId').value,
+                invoiceDate: document.getElementById('invoiceDate').value,
+                dueDate: document.getElementById('dueDate').value || null,
+                status: document.getElementById('status').value,
+                notes: document.getElementById('notes').value,
+                items: items
+            };
+        }
+
+        function saveAndSend() {
+            document.getElementById('status').value = 'SENT';
+            document.getElementById('invoiceForm').dispatchEvent(new Event('submit'));
+        }
+
+        document.getElementById('invoiceForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const data = collectFormData();
+
+            fetch('/api/invoices', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert('Facture créée avec succès !');
+                window.location.href = '/invoices';
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+                alert('Erreur lors de la création de la facture');
+            });
+        });
+
+        // Ajouter une première ligne par défaut
+        window.addEventListener('DOMContentLoaded', function() {
+            addInvoiceItem();
+            generateInvoiceNumber();
+        });
+    </script>
+</div>
+</body>
+</html>

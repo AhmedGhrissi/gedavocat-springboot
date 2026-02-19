@@ -103,7 +103,7 @@ class AuthControllerTest {
 
     @Test
     @DisplayName("✓ Page dashboard accessible avec un utilisateur authentifié")
-    @WithMockUser(username = "admin@gedavocat.com", roles = {"ADMIN"})
+    @WithMockUser(username = "jean.dupont@gedavocat.com", roles = {"LAWYER"})
     @Transactional
     void dashboardAccessibleWhenAuthenticated() throws Exception {
         mockMvc.perform(get("/dashboard"))

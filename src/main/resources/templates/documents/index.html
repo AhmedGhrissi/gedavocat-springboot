@@ -243,12 +243,20 @@
                         <!-- Liste des dossiers -->
                         <div th:if="${cases != null and !cases.empty}">
                             <div th:each="case : ${cases}" class="case-item" 
-                                 th:onclick="'window.location.href=\'/documents/case/' + ${case.id} + '\''">
+                                 th:data-case-id="${case.id}"
+                                 onclick="navigateToCase(this)">
                                 <i class="fas fa-folder" style="color: #667eea;"></i>
                                 <span th:text="${case.name}">Nom du dossier</span>
                                 <i class="fas fa-chevron-right ms-auto" style="color: #cbd5e1;"></i>
                             </div>
                         </div>
+                        
+                        <script>
+                        function navigateToCase(element) {
+                            const caseId = element.getAttribute('data-case-id');
+                            window.location.href = '/documents/case/' + caseId;
+                        }
+                        </script>
                         
                         <!-- Message si aucun dossier -->
                         <div th:if="${cases == null or cases.empty}" class="text-center py-4">

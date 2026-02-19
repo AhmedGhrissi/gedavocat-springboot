@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>Mes factures</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="container-fluid">
+        <!-- En-tête -->
+        <div class="mb-4">
+            <h2 class="mb-1">💰 Mes factures</h2>
+            <p class="text-muted">Consultez vos factures et leur statut de paiement</p>
+        </div>
+
+        <!-- Liste des factures -->
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>N° Facture</th>
+                                <th>Date</th>
+                                <th>Échéance</th>
+                                <th class="text-end">Montant TTC</th>
+                                <th>Statut</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:if="${invoices == null or invoices.empty}">
+                                <td colspan="6" class="text-center py-5">
+                                    <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                                    <p class="text-muted">Aucune facture pour le moment</p>
+                                </td>
+                            </tr>
+                            <tr th:each="invoice : ${invoices}">
+                                <td>
+                                    <strong th:text="${invoice.invoiceNumber}">FACT-2026-00001</strong>
+                                </td>
+                                <td th:text="${#temporals.format(invoice.invoiceDate, 'dd/MM/yyyy')}">01/01/2026</td>
+                                <td>
+                                    <span th:if="${invoice.dueDate != null}" 
+                                          th:text="${#temporals.format(invoice.dueDate, 'dd/MM/yyyy')}"
+                                          th:classappend="${invoice.overdue ? 'text-danger fw-bold' : ''}">
+                                        31/01/2026
+                                    </span>
+                                    <span th:unless="${invoice.dueDate != null}" class="text-muted">-</span>
+                                </td>
+                                <td class="text-end">
+                                    <strong th:text="${#numbers.formatDecimal(invoice.totalTTC, 0, 2) + ' €'}">1 200,00 €</strong>
+                                </td>
+                                <td>
+                                    <span th:switch="${invoice.status}" class="badge">
+                                        <span th:case="'DRAFT'" class="badge bg-secondary">Brouillon</span>
+                                        <span th:case="'SENT'" class="badge bg-warning">En attente de paiement</span>
+                                        <span th:case="'PAID'" class="badge bg-success">Payée</span>
+                                        <span th:case="'OVERDUE'" class="badge bg-danger">En retard</span>
+                                        <span th:case="'CANCELLED'" class="badge bg-dark">Annulée</span>
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a th:href="@{/invoices/{id}(id=${invoice.id})}" class="btn btn-outline-primary" title="Voir">
+                                            <i class="fas fa-eye"></i> Voir
+                                        </a>
+                                        <a th:href="@{/invoices/{id}/pdf(id=${invoice.id})}" class="btn btn-outline-info" title="Télécharger PDF" target="_blank">
+                                            <i class="fas fa-download"></i> PDF
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

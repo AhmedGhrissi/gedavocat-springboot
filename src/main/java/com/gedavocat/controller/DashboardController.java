@@ -47,7 +47,10 @@ public class DashboardController {
 
         model.addAttribute("user", user);
 
-        if (user.isLawyer() || user.isAdmin()) {
+        // Rediriger les admins vers leur panneau d'administration
+        if (user.isAdmin()) {
+            return "redirect:/admin";
+        } else if (user.isLawyer()) {
             buildLawyerDashboard(user, model);
         } else if (user.isClient()) {
             buildClientDashboard(user, model);

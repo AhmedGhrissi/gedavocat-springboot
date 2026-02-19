@@ -38,13 +38,18 @@ public class SecurityConfig {
 				.authorizeHttpRequests(auth -> auth
 						// Pages publiques
 						.requestMatchers("/", "/login", "/register", "/subscription/pricing", "/api/auth/**", "/css/**",
-								"/js/**", "/images/**", "/favicon.ico", "/subscription/webhook")
+								"/js/**", "/images/**", "/favicon.ico", "/subscription/webhook", "/legal/**")
 						.permitAll()
 
 						// Pages administrateur
-						.requestMatchers("/admin/**", "/api/admin/**").hasRole("ADMIN").requestMatchers("/payment/**")
-						.permitAll().requestMatchers("/api/webhooks/**").permitAll()
-						// Pages avocat
+						.requestMatchers("/admin/**", "/api/admin/**").hasRole("ADMIN")
+						
+						// Pages de paiement et webhooks
+						.requestMatchers("/payment/**").permitAll()
+						.requestMatchers("/api/webhooks/**").permitAll()
+						.requestMatchers("/invoices/**", "/api/invoices/**").hasAnyRole("LAWYER", "ADMIN")
+						
+						// Pages avocat et admin
 						.requestMatchers("/dashboard", "/clients/**", "/cases/**", "/documents/**", "/signatures/**",
 								"/rpva/**", "/permissions/**", "/api/clients/**", "/api/cases/**", "/api/documents/**")
 						.hasAnyRole("LAWYER", "ADMIN", "LAWYER_SECONDARY")
@@ -69,7 +74,9 @@ public class SecurityConfig {
 									.map(a -> a.getAuthority())
 									.orElse("");
 							
-							if (role.equals("ROLE_CLIENT")) {
+							if (role.equals("ROLE_ADMIN")) {
+								response.sendRedirect("/admin");
+							} else if (role.equals("ROLE_CLIENT")) {
 								response.sendRedirect("/my-cases");
 							} else {
 								response.sendRedirect("/dashboard");
