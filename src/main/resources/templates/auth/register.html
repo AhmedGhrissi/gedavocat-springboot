@@ -179,7 +179,15 @@
                     <label for="password">Mot de passe *</label>
                     <div class="invalid-feedback" th:if="${#fields.hasErrors('password')}" 
                          th:errors="*{password}"></div>
-                    <small class="text-muted">Au moins 8 caractères avec majuscules, minuscules et chiffres</small>
+                    <small class="text-muted">Au moins 6 caractères</small>
+                </div>
+
+                <div class="form-floating">
+                    <input type="password" id="confirmPassword" th:field="*{confirmPassword}" 
+                           class="form-control" placeholder="Confirmer le mot de passe" required>
+                    <label for="confirmPassword">Confirmer le mot de passe *</label>
+                    <div class="invalid-feedback" th:if="${#fields.hasErrors('confirmPassword')}" 
+                         th:errors="*{confirmPassword}"></div>
                 </div>
 
                 <div class="form-floating">
@@ -214,10 +222,17 @@
                 </div>
 
                 <div class="form-check mb-3">
-                    <input type="checkbox" id="acceptTerms" class="form-check-input" required>
-                    <label for="acceptTerms" class="form-check-label">
+                    <input type="checkbox" id="termsAccepted" th:field="*{termsAccepted}" class="form-check-input" required>
+                    <label for="termsAccepted" class="form-check-label">
                         J'accepte les <a href="#" class="text-decoration-none">conditions d'utilisation</a> 
                         et la <a href="#" class="text-decoration-none">politique de confidentialité</a> *
+                    </label>
+                </div>
+
+                <div class="form-check mb-3">
+                    <input type="checkbox" id="gdprConsent" th:field="*{gdprConsent}" class="form-check-input" required>
+                    <label for="gdprConsent" class="form-check-label">
+                        J'accepte le traitement de mes données personnelles conformément au RGPD *
                     </label>
                 </div>
 

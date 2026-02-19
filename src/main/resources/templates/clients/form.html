@@ -17,9 +17,18 @@
                 <div class="col-md-8">
                     <div class="card">
                         <div class="card-body">
-                            <form th:action="${client.id != null ? '/clients/' + client.id : '/clients'}" 
+                            <form th:action="@{${client.id != null ? '/clients/' + client.id : '/clients'}}" 
                                   method="post" 
                                   th:object="${client}">
+                                
+                                <!-- Token CSRF -->
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                
+                                <!-- Afficher les messages d'erreur globaux -->
+                                <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                                    <i class="fas fa-exclamation-circle"></i> <span th:text="${error}"></span>
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
                                 
                                 <div class="form-group mb-3">
                                     <label for="name" class="form-label">Nom *</label>

@@ -33,9 +33,13 @@ public class ClientService {
     /**
      * Récupère un client par ID
      */
+    @Transactional(readOnly = true)
     public Client getClientById(String clientId) {
-        return clientRepository.findById(clientId)
+        Client client = clientRepository.findById(clientId)
                 .orElseThrow(() -> new RuntimeException("Client non trouvé"));
+        // Initialiser les collections lazy pour éviter LazyInitializationException
+        client.getCases().size(); // Force le chargement des cases
+        return client;
     }
     
     /**

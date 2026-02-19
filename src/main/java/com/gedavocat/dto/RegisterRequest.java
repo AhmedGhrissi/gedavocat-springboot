@@ -20,8 +20,7 @@ public class RegisterRequest {
     @Size(min = 2, max = 100, message = "Le nom doit contenir entre 2 et 100 caractères")
     private String lastName;
     
-    @NotBlank(message = "Le nom est obligatoire")
-    @Size(min = 2, max = 100, message = "Le nom doit contenir entre 2 et 100 caractères")
+    // Nom complet construit à partir de firstName et lastName
     private String name;
     
     @NotBlank(message = "L'email est obligatoire")

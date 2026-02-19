@@ -39,19 +39,37 @@ public class AuthService {
             throw new RuntimeException("Les mots de passe ne correspondent pas");
         }
         
+        // Vérifier les conditions d'utilisation
+        if (!Boolean.TRUE.equals(request.getTermsAccepted())) {
+            throw new RuntimeException("Vous devez accepter les conditions d'utilisation");
+        }
+        
+        if (!Boolean.TRUE.equals(request.getGdprConsent())) {
+            throw new RuntimeException("Vous devez accepter le traitement de vos données personnelles");
+        }
+        
         // Créer le nouvel utilisateur
         User user = new User();
-        user.setName(request.getName());
+        
+        // Construire le nom complet à partir de firstName et lastName
+        String fullName = request.getName();
+        if (fullName == null || fullName.trim().isEmpty()) {
+            fullName = (request.getFirstName() + " " + request.getLastName()).trim();
+        }
+        user.setName(fullName);
+        
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setRole(User.UserRole.valueOf(request.getRole()));
         
-        if (Boolean.TRUE.equals(request.getTermsAccepted())) {
-            user.setTermsAcceptedAt(LocalDateTime.now());
+        // Définir le rôle (par défaut LAWYER si non spécifié)
+        String role = request.getRole();
+        if (role == null || role.trim().isEmpty()) {
+            role = "LAWYER";
         }
-        if (Boolean.TRUE.equals(request.getGdprConsent())) {
-            user.setGdprConsentAt(LocalDateTime.now());
-        }
+        user.setRole(User.UserRole.valueOf(role));
+        
+        user.setTermsAcceptedAt(LocalDateTime.now());
+        user.setGdprConsentAt(LocalDateTime.now());
         
         user = userRepository.save(user);
         

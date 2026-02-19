@@ -34,10 +34,6 @@ public class AdminController {
             SystemMetricsDTO metrics = metricsService.getSystemMetrics();
             model.addAttribute("metrics", metrics);
             model.addAttribute("uptime", metricsService.formatUptime(metrics.getUptime()));
-            model.addAttribute("usedMemoryFormatted", metricsService.formatBytes(metrics.getUsedMemory()));
-            model.addAttribute("maxMemoryFormatted", metricsService.formatBytes(metrics.getMaxMemory()));
-            model.addAttribute("storageUsedFormatted", metricsService.formatBytes(metrics.getStorageUsed()));
-            model.addAttribute("storageLimitFormatted", metricsService.formatBytes(metrics.getStorageLimit()));
             
             // Statistiques d'activité
             model.addAttribute("activityStats", metricsService.getActivityStats());

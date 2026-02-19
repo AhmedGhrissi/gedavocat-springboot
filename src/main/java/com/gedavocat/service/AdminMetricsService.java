@@ -40,17 +40,37 @@ public class AdminMetricsService {
      * Récupère toutes les métriques système
      */
     public SystemMetricsDTO getSystemMetrics() {
+        long totalMemory = Runtime.getRuntime().totalMemory();
+        long freeMemory = Runtime.getRuntime().freeMemory();
+        long usedMemory = totalMemory - freeMemory;
+        long maxMemory = Runtime.getRuntime().maxMemory();
+        double memoryUsagePercent = (maxMemory > 0) ? ((double) usedMemory / maxMemory) * 100 : 0;
+        
+        long storageUsed = getStorageUsed();
+        long storageLimit = 10737418240L; // 10 GB par défaut
+        double storageUsagePercent = (storageLimit > 0) ? ((double) storageUsed / storageLimit) * 100 : 0;
+        
         return SystemMetricsDTO.builder()
             .javaVersion(System.getProperty("java.version"))
+            .javaVendor(System.getProperty("java.vendor"))
+            .jvmName(System.getProperty("java.vm.name"))
+            .jvmVersion(System.getProperty("java.vm.version"))
             .osName(System.getProperty("os.name"))
             .osVersion(System.getProperty("os.version"))
-            .totalMemory(Runtime.getRuntime().totalMemory())
-            .freeMemory(Runtime.getRuntime().freeMemory())
-            .usedMemory(Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory())
-            .maxMemory(Runtime.getRuntime().maxMemory())
+            .osArch(System.getProperty("os.arch"))
+            .workingDirectory(System.getProperty("user.dir"))
+            .userName(System.getProperty("user.name"))
+            .totalMemory(totalMemory)
+            .freeMemory(freeMemory)
+            .usedMemory(usedMemory)
+            .maxMemory(maxMemory)
+            .memoryUsagePercent(memoryUsagePercent)
+            .usedMemoryFormatted(formatBytes(usedMemory))
+            .maxMemoryFormatted(formatBytes(maxMemory))
             .availableProcessors(Runtime.getRuntime().availableProcessors())
             .cpuUsage(getCpuUsage())
             .threadCount(Thread.activeCount())
+            .peakThreadCount(ManagementFactory.getThreadMXBean().getPeakThreadCount())
             .loadedClasses(ManagementFactory.getClassLoadingMXBean().getLoadedClassCount())
             .uptime(System.currentTimeMillis() - START_TIME)
             .startTime(LocalDateTime.ofInstant(Instant.ofEpochMilli(START_TIME), ZoneId.systemDefault()))
@@ -66,8 +86,11 @@ public class AdminMetricsService {
             .totalCases(caseRepository.count())
             .totalDocuments(documentRepository.count())
             .totalInvoices(invoiceRepository.count())
-            .storageUsed(getStorageUsed())
-            .storageLimit(10737418240L) // 10 GB par défaut
+            .storageUsed(storageUsed)
+            .storageLimit(storageLimit)
+            .storageUsagePercent(storageUsagePercent)
+            .storageUsedFormatted(formatBytes(storageUsed))
+            .storageLimitFormatted(formatBytes(storageLimit))
             .usersLastHour(0L) // À implémenter avec audit logs
             .usersLastDay(0L)
             .documentsUploadedToday(0L)
@@ -144,6 +167,16 @@ public class AdminMetricsService {
     private long getStorageUsed() {
         // À implémenter selon votre système de stockage
         return 0L; // Placeholder
+    }
+
+    /**
+     * Formate les bytes en une chaîne lisible (KB, MB, GB, etc.)
+     */
+    private String formatBytes(long bytes) {
+        if (bytes < 1024) return bytes + " B";
+        int exp = (int) (Math.log(bytes) / Math.log(1024));
+        String pre = "KMGTPE".charAt(exp - 1) + "B";
+        return String.format("%.2f %s", bytes / Math.pow(1024, exp), pre);
     }
 
     /**
@@ -244,15 +277,5 @@ public class AdminMetricsService {
         } else {
             return String.format("%d minutes", minutes);
         }
-    }
-
-    /**
-     * Formate la taille en bytes en format lisible
-     */
-    public String formatBytes(long bytes) {
-        if (bytes < 1024) return bytes + " B";
-        int exp = (int) (Math.log(bytes) / Math.log(1024));
-        String pre = "KMGTPE".charAt(exp - 1) + "";
-        return String.format("%.1f %sB", bytes / Math.pow(1024, exp), pre);
     }
 }

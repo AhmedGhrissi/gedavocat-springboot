@@ -19,15 +19,25 @@ public class SystemMetricsDTO {
     
     // Métriques système
     private String javaVersion;
+    private String javaVendor;
+    private String jvmName;
+    private String jvmVersion;
     private String osName;
     private String osVersion;
+    private String osArch;
+    private String workingDirectory;
+    private String userName;
     private long totalMemory;
     private long freeMemory;
     private long usedMemory;
     private long maxMemory;
+    private double memoryUsagePercent;
+    private String usedMemoryFormatted;
+    private String maxMemoryFormatted;
     private int availableProcessors;
     private double cpuUsage;
     private int threadCount;
+    private int peakThreadCount;
     private long loadedClasses;
     
     // Métriques application
@@ -51,6 +61,9 @@ public class SystemMetricsDTO {
     private long totalInvoices;
     private long storageUsed;
     private long storageLimit;
+    private double storageUsagePercent;
+    private String storageUsedFormatted;
+    private String storageLimitFormatted;
     
     // Activité récente
     private long usersLastHour;
