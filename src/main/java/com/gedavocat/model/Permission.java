@@ -16,9 +16,9 @@ import java.util.UUID;
 @Table(name = "permissions", 
     uniqueConstraints = @UniqueConstraint(columnNames = {"case_id", "lawyer_id"}),
     indexes = {
-        @Index(name = "idx_case_id", columnList = "case_id"),
-        @Index(name = "idx_lawyer_id", columnList = "lawyer_id"),
-        @Index(name = "idx_granted_by", columnList = "granted_by")
+        @Index(name = "idx_permission_case_id", columnList = "case_id"),
+        @Index(name = "idx_permission_lawyer_id", columnList = "lawyer_id"),
+        @Index(name = "idx_permission_granted_by", columnList = "granted_by")
     }
 )
 @Data

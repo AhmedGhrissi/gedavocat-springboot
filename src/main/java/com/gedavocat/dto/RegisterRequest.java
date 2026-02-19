@@ -12,6 +12,14 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class RegisterRequest {
     
+    @NotBlank(message = "Le prénom est obligatoire")
+    @Size(min = 2, max = 100, message = "Le prénom doit contenir entre 2 et 100 caractères")
+    private String firstName;
+    
+    @NotBlank(message = "Le nom est obligatoire")
+    @Size(min = 2, max = 100, message = "Le nom doit contenir entre 2 et 100 caractères")
+    private String lastName;
+    
     @NotBlank(message = "Le nom est obligatoire")
     @Size(min = 2, max = 100, message = "Le nom doit contenir entre 2 et 100 caractères")
     private String name;
@@ -26,6 +34,10 @@ public class RegisterRequest {
     
     @NotBlank(message = "La confirmation du mot de passe est obligatoire")
     private String confirmPassword;
+    
+    private String phone;
+    
+    private String barNumber;
     
     private String role = "LAWYER"; // Par défaut: avocat
     

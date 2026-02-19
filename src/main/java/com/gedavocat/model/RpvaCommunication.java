@@ -15,9 +15,9 @@ import java.util.UUID;
  */
 @Entity
 @Table(name = "rpva_communications", indexes = {
-    @Index(name = "idx_case", columnList = "case_id"),
-    @Index(name = "idx_status", columnList = "status"),
-    @Index(name = "idx_reference", columnList = "reference_number")
+    @Index(name = "idx_rpva_case", columnList = "case_id"),
+    @Index(name = "idx_rpva_status", columnList = "status"),
+    @Index(name = "idx_rpva_reference", columnList = "reference_number")
 })
 @Data
 @NoArgsConstructor

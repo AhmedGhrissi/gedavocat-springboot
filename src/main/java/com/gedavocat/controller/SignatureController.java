@@ -1,8 +1,10 @@
 package com.gedavocat.controller;
 
 import com.gedavocat.model.Document;
+import com.gedavocat.model.Signature;
 import com.gedavocat.model.User;
 import com.gedavocat.repository.DocumentRepository;
+import com.gedavocat.repository.SignatureRepository;
 import com.gedavocat.repository.UserRepository;
 import com.gedavocat.service.YousignService;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +30,7 @@ public class SignatureController {
     private final YousignService yousignService;
     private final DocumentRepository documentRepository;
     private final UserRepository userRepository;
+    private final SignatureRepository signatureRepository;
 
     /**
      * Page principale des signatures
@@ -40,9 +43,18 @@ public class SignatureController {
         model.addAttribute("user", user);
         model.addAttribute("isConfigured", yousignService.isConfigured());
 
-        // TODO: Récupérer les signatures en cours depuis la base
-        model.addAttribute("pendingSignatures", new ArrayList<>());
-        model.addAttribute("completedSignatures", new ArrayList<>());
+        // Récupérer les signatures en cours et terminées depuis la base
+        List<Signature> pendingSignatures = signatureRepository.findByRequestedById(user.getId())
+            .stream()
+            .filter(s -> s.getStatus() == Signature.SignatureStatus.PENDING)
+            .toList();
+        List<Signature> completedSignatures = signatureRepository.findByRequestedById(user.getId())
+            .stream()
+            .filter(s -> s.getStatus() == Signature.SignatureStatus.SIGNED)
+            .toList();
+        
+        model.addAttribute("pendingSignatures", pendingSignatures);
+        model.addAttribute("completedSignatures", completedSignatures);
 
         return "signatures/index";
     }
@@ -107,7 +119,17 @@ public class SignatureController {
 
             String signatureId = (String) result.get("id");
 
-            // TODO: Sauvegarder la demande de signature en base
+            // Sauvegarder la demande de signature en base
+            Signature signature = new Signature();
+            signature.setId(signatureId);
+            signature.setYousignSignatureRequestId(signatureId);
+            signature.setDocument(document);
+            signature.setDocumentName(document.getFilename());
+            signature.setSignerName(signerName);
+            signature.setSignerEmail(signerEmail);
+            signature.setStatus(Signature.SignatureStatus.PENDING);
+            signature.setRequestedBy(user);
+            signatureRepository.save(signature);
 
             redirectAttributes.addFlashAttribute("message",
                 "Demande de signature envoyée à " + signerEmail);
@@ -160,7 +182,13 @@ public class SignatureController {
         try {
             byte[] signedDocument = yousignService.downloadSignedDocument(signatureId);
 
-            // TODO: Sauvegarder le document signé et retourner le fichier
+            // Sauvegarder le document signé et mettre à jour le statut
+            Signature signature = signatureRepository.findByYousignSignatureRequestId(signatureId)
+                .orElseThrow(() -> new RuntimeException("Signature non trouvée"));
+            
+            signature.setStatus(Signature.SignatureStatus.SIGNED);
+            signature.setSignedAt(java.time.LocalDateTime.now());
+            signatureRepository.save(signature);
 
             redirectAttributes.addFlashAttribute("message", "Document signé téléchargé");
             return "redirect:/signatures/" + signatureId;

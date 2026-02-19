@@ -16,9 +16,9 @@ class JwtServiceTest {
 
     private JwtService jwtService;
 
-    // Clé secrète de test (min 256 bits pour HS256)
+    // Clé secrète de test (min 256 bits pour HS256) - valid base64
     private static final String SECRET =
-        "gedavocat-test-secret-key-minimum-256-bits-pour-hs256-2024-xxxxxxxxxxx";
+        "Z2VkYXZvY2F0dGVzdHNlY3JldGtleW1pbmltdW0yNTZiaXRzcG91cmhzMjU2MjAyNHh4eHh4eHh4eHg=";
     private static final long EXPIRATION = 86400000L; // 24h
 
     private UserDetails testUser;
@@ -81,7 +81,7 @@ class JwtServiceTest {
     @DisplayName("✓ Deux tokens générés sont différents (timestamp différent)")
     void twoGeneratedTokensAreDifferent() throws InterruptedException {
         String token1 = jwtService.generateToken(testUser);
-        Thread.sleep(10); // Délai pour que l'iat soit différent
+        Thread.sleep(1100); // Délai pour que l'iat soit différent (1 seconde minimum)
         String token2 = jwtService.generateToken(testUser);
 
         assertThat(token1).isNotEqualTo(token2);

@@ -21,8 +21,8 @@ import java.util.UUID;
  */
 @Entity
 @Table(name = "users", indexes = {
-    @Index(name = "idx_email", columnList = "email"),
-    @Index(name = "idx_role", columnList = "role")
+    @Index(name = "idx_user_email", columnList = "email"),
+    @Index(name = "idx_user_role", columnList = "role")
 })
 @Data
 @NoArgsConstructor
@@ -196,7 +196,8 @@ public class User {
         ACTIVE("Actif"),
         INACTIVE("Inactif"),
         CANCELLED("Annulé"),
-        TRIAL("Essai");
+        TRIAL("Essai"),
+        PAYMENT_FAILED("Paiement échoué");
 
         private final String displayName;
 

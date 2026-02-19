@@ -17,9 +17,9 @@ import java.util.UUID;
  */
 @Entity
 @Table(name = "payments", indexes = {
-    @Index(name = "idx_user", columnList = "user_id"),
-    @Index(name = "idx_status", columnList = "status"),
-    @Index(name = "idx_payplug", columnList = "payplug_payment_id")
+    @Index(name = "idx_payment_user", columnList = "user_id"),
+    @Index(name = "idx_payment_status", columnList = "status"),
+    @Index(name = "idx_payment_payplug", columnList = "payplug_payment_id")
 })
 @Data
 @NoArgsConstructor

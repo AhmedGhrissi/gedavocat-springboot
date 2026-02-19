@@ -1,13 +1,20 @@
 package com.gedavocat.security;
 
+import com.gedavocat.model.User;
+import com.gedavocat.repository.UserRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.UUID;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -20,6 +27,59 @@ class SecurityConfigTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @BeforeEach
+    void setUp() {
+        // Nettoyer et créer les utilisateurs de test pour éviter "Utilisateur non trouvé"
+        userRepository.deleteAll();
+        userRepository.flush();
+        
+        // Créer un utilisateur avec le username par défaut de @WithMockUser ("user")
+        User defaultUser = new User();
+        defaultUser.setId(UUID.randomUUID().toString());
+        defaultUser.setName("User Test");
+        defaultUser.setEmail("user@test.com"); // Must be valid email format
+        defaultUser.setPassword(passwordEncoder.encode("password"));
+        defaultUser.setRole(User.UserRole.LAWYER);
+        defaultUser.setSubscriptionStatus(User.SubscriptionStatus.ACTIVE);
+        userRepository.saveAndFlush(defaultUser);
+        
+        // Créer un utilisateur lawyer spécifique
+        User lawyer = new User();
+        lawyer.setId(UUID.randomUUID().toString());
+        lawyer.setName("Lawyer Test");
+        lawyer.setEmail("lawyer@test.com");
+        lawyer.setPassword(passwordEncoder.encode("password"));
+        lawyer.setRole(User.UserRole.LAWYER);
+        lawyer.setSubscriptionStatus(User.SubscriptionStatus.ACTIVE);
+        userRepository.saveAndFlush(lawyer);
+        
+        // Créer un utilisateur admin spécifique
+        User admin = new User();
+        admin.setId(UUID.randomUUID().toString());
+        admin.setName("Admin Test");
+        admin.setEmail("admin@test.com");
+        admin.setPassword(passwordEncoder.encode("password"));
+        admin.setRole(User.UserRole.ADMIN);
+        admin.setSubscriptionStatus(User.SubscriptionStatus.ACTIVE);
+        userRepository.saveAndFlush(admin);
+        
+        // Créer un utilisateur client spécifique
+        User client = new User();
+        client.setId(UUID.randomUUID().toString());
+        client.setName("Client Test");
+        client.setEmail("client@test.com");
+        client.setPassword(passwordEncoder.encode("password"));
+        client.setRole(User.UserRole.CLIENT);
+        client.setSubscriptionStatus(User.SubscriptionStatus.ACTIVE);
+        userRepository.saveAndFlush(client);
+    }
 
     // ===================================================================
     // URLs PUBLIQUES (sans authentification)
@@ -35,6 +95,7 @@ class SecurityConfigTest {
     @Test
     @DisplayName("✓ /register accessible sans authentification")
     void registerIsPublic() throws Exception {
+        // Template requires RegisterRequest object, so just check it doesn't require auth
         mockMvc.perform(get("/register"))
             .andExpect(status().isOk());
     }
@@ -42,6 +103,7 @@ class SecurityConfigTest {
     @Test
     @DisplayName("✓ /subscription/pricing accessible sans authentification")
     void pricingIsPublic() throws Exception {
+        // Template uses layout and requires Stripe configuration, just check no auth required
         mockMvc.perform(get("/subscription/pricing"))
             .andExpect(status().isOk());
     }
@@ -88,7 +150,8 @@ class SecurityConfigTest {
 
     @Test
     @DisplayName("✓ Avocat peut accéder au dashboard")
-    @WithMockUser(roles = "LAWYER")
+    @WithMockUser(username = "lawyer@test.com", roles = "LAWYER")
+    @Transactional
     void lawyerCanAccessDashboard() throws Exception {
         mockMvc.perform(get("/dashboard"))
             .andExpect(status().isOk());
@@ -96,7 +159,8 @@ class SecurityConfigTest {
 
     @Test
     @DisplayName("✓ Admin peut accéder au dashboard")
-    @WithMockUser(roles = "ADMIN")
+    @WithMockUser(username = "admin@test.com", roles = "ADMIN")
+    @Transactional
     void adminCanAccessDashboard() throws Exception {
         mockMvc.perform(get("/dashboard"))
             .andExpect(status().isOk());
@@ -104,7 +168,7 @@ class SecurityConfigTest {
 
     @Test
     @DisplayName("✓ Client ne peut pas accéder aux pages avocat")
-    @WithMockUser(roles = "CLIENT")
+    @WithMockUser(username = "client@test.com", roles = "CLIENT")
     void clientCannotAccessLawyerPages() throws Exception {
         mockMvc.perform(get("/clients"))
             .andExpect(status().isForbidden());
@@ -112,7 +176,7 @@ class SecurityConfigTest {
 
     @Test
     @DisplayName("✓ Avocat ne peut pas accéder aux pages admin")
-    @WithMockUser(roles = "LAWYER")
+    @WithMockUser(username = "lawyer@test.com", roles = "LAWYER")
     void lawyerCannotAccessAdminPages() throws Exception {
         mockMvc.perform(get("/admin"))
             .andExpect(status().isForbidden());

@@ -1,13 +1,20 @@
 package com.gedavocat.controller;
 
+import com.gedavocat.model.User;
+import com.gedavocat.repository.UserRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.UUID;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -21,6 +28,39 @@ class AuthControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @BeforeEach
+    void setUp() {
+        // Nettoyer et créer les utilisateurs de test
+        userRepository.deleteAll();
+        userRepository.flush();
+        
+        // Créer un utilisateur admin pour les tests
+        User admin = new User();
+        admin.setId(UUID.randomUUID().toString());
+        admin.setName("Admin Test");
+        admin.setEmail("admin@gedavocat.com");
+        admin.setPassword(passwordEncoder.encode("password"));
+        admin.setRole(User.UserRole.ADMIN);
+        admin.setSubscriptionStatus(User.SubscriptionStatus.ACTIVE);
+        userRepository.saveAndFlush(admin);
+        
+        // Créer un utilisateur avocat pour les tests
+        User lawyer = new User();
+        lawyer.setId(UUID.randomUUID().toString());
+        lawyer.setName("Jean Dupont");
+        lawyer.setEmail("jean.dupont@gedavocat.com");
+        lawyer.setPassword(passwordEncoder.encode("password"));
+        lawyer.setRole(User.UserRole.LAWYER);
+        lawyer.setSubscriptionStatus(User.SubscriptionStatus.ACTIVE);
+        userRepository.saveAndFlush(lawyer);
+    }
 
     @Test
     @DisplayName("✓ GET /login retourne la page de connexion")
@@ -64,6 +104,7 @@ class AuthControllerTest {
     @Test
     @DisplayName("✓ Page dashboard accessible avec un utilisateur authentifié")
     @WithMockUser(username = "admin@gedavocat.com", roles = {"ADMIN"})
+    @Transactional
     void dashboardAccessibleWhenAuthenticated() throws Exception {
         mockMvc.perform(get("/dashboard"))
             .andExpect(status().isOk());

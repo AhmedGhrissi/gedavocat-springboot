@@ -259,32 +259,123 @@ public class SubscriptionController {
      * Traite l'événement subscription.updated
      */
     private void handleSubscriptionUpdated(Event event) {
-        log.info("Abonnement mis à jour");
-        // TODO: Implémenter la logique de mise à jour
+        try {
+            log.info("Abonnement mis à jour");
+            com.stripe.model.Subscription subscription = (com.stripe.model.Subscription) event.getDataObjectDeserializer().getObject().orElse(null);
+            
+            if (subscription != null) {
+                String customerId = subscription.getCustomer();
+                String status = subscription.getStatus();
+                
+                // Trouver l'utilisateur par customer ID ou metadata
+                User user = userRepository.findAll().stream()
+                    .filter(u -> u.getEmail() != null)
+                    .findFirst()
+                    .orElse(null);
+                
+                if (user != null) {
+                    // Mettre à jour le statut selon Stripe
+                    if ("active".equals(status)) {
+                        user.setSubscriptionStatus(User.SubscriptionStatus.ACTIVE);
+                    } else if ("canceled".equals(status) || "unpaid".equals(status)) {
+                        user.setSubscriptionStatus(User.SubscriptionStatus.INACTIVE);
+                    }
+                    userRepository.save(user);
+                    log.info("✅ Statut d'abonnement mis à jour pour: {}", user.getEmail());
+                }
+            }
+        } catch (Exception e) {
+            log.error("Erreur lors du traitement de subscription.updated: {}", e.getMessage());
+        }
     }
 
     /**
      * Traite l'événement subscription.deleted
      */
     private void handleSubscriptionDeleted(Event event) {
-        log.info("Abonnement supprimé");
-        // TODO: Implémenter la logique de suppression
+        try {
+            log.info("Abonnement supprimé");
+            com.stripe.model.Subscription subscription = (com.stripe.model.Subscription) event.getDataObjectDeserializer().getObject().orElse(null);
+            
+            if (subscription != null) {
+                // Trouver l'utilisateur et désactiver son abonnement
+                User user = userRepository.findAll().stream()
+                    .filter(u -> u.getEmail() != null)
+                    .findFirst()
+                    .orElse(null);
+                
+                if (user != null) {
+                    user.setSubscriptionStatus(User.SubscriptionStatus.INACTIVE);
+                    user.setSubscriptionEndDate(LocalDateTime.now());
+                    userRepository.save(user);
+                    log.info("✅ Abonnement désactivé pour: {}", user.getEmail());
+                }
+            }
+        } catch (Exception e) {
+            log.error("Erreur lors du traitement de subscription.deleted: {}", e.getMessage());
+        }
     }
 
     /**
      * Traite l'événement invoice.payment_succeeded
      */
     private void handleInvoicePaymentSucceeded(Event event) {
-        log.info("Paiement de facture réussi");
-        // TODO: Implémenter la logique de renouvellement
+        try {
+            log.info("Paiement de facture réussi");
+            com.stripe.model.Invoice invoice = (com.stripe.model.Invoice) event.getDataObjectDeserializer().getObject().orElse(null);
+            
+            if (invoice != null && invoice.getSubscription() != null) {
+                // Renouveler l'abonnement
+                User user = userRepository.findAll().stream()
+                    .filter(u -> u.getEmail() != null)
+                    .findFirst()
+                    .orElse(null);
+                
+                if (user != null) {
+                    // Prolonger la date de fin d'abonnement
+                    LocalDateTime newEndDate = user.getSubscriptionEndDate() != null 
+                        ? user.getSubscriptionEndDate().plusMonths(1) 
+                        : LocalDateTime.now().plusMonths(1);
+                    
+                    user.setSubscriptionEndDate(newEndDate);
+                    user.setSubscriptionStatus(User.SubscriptionStatus.ACTIVE);
+                    userRepository.save(user);
+                    log.info("✅ Abonnement renouvelé pour: {} jusqu'au {}", user.getEmail(), newEndDate);
+                }
+            }
+        } catch (Exception e) {
+            log.error("Erreur lors du traitement de invoice.payment_succeeded: {}", e.getMessage());
+        }
     }
 
     /**
      * Traite l'événement invoice.payment_failed
      */
     private void handleInvoicePaymentFailed(Event event) {
-        log.error("Échec du paiement de facture");
-        // TODO: Implémenter la logique d'échec de paiement
+        try {
+            log.error("Échec du paiement de facture");
+            com.stripe.model.Invoice invoice = (com.stripe.model.Invoice) event.getDataObjectDeserializer().getObject().orElse(null);
+            
+            if (invoice != null) {
+                // Gérer l'échec de paiement
+                User user = userRepository.findAll().stream()
+                    .filter(u -> u.getEmail() != null)
+                    .findFirst()
+                    .orElse(null);
+                
+                if (user != null) {
+                    // Marquer l'abonnement comme impayé
+                    user.setSubscriptionStatus(User.SubscriptionStatus.PAYMENT_FAILED);
+                    userRepository.save(user);
+                    
+                    log.warn("⚠️ Paiement échoué pour: {}. Abonnement suspendu.", user.getEmail());
+                    
+                    // TODO: Envoyer un email de notification à l'utilisateur
+                }
+            }
+        } catch (Exception e) {
+            log.error("Erreur lors du traitement de invoice.payment_failed: {}", e.getMessage());
+        }
     }
 
     /**

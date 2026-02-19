@@ -17,9 +17,9 @@ import java.util.UUID;
  */
 @Entity
 @Table(name = "signatures", indexes = {
-    @Index(name = "idx_document", columnList = "document_id"),
-    @Index(name = "idx_status", columnList = "status"),
-    @Index(name = "idx_yousign", columnList = "yousign_signature_request_id")
+    @Index(name = "idx_signature_document", columnList = "document_id"),
+    @Index(name = "idx_signature_status", columnList = "status"),
+    @Index(name = "idx_signature_yousign", columnList = "yousign_signature_request_id")
 })
 @Data
 @NoArgsConstructor

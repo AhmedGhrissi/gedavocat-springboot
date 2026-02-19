@@ -365,7 +365,8 @@
                                     <div class="col-12">
                                         <div class="form-floating">
                                             <input type="email" id="modalEmail" 
-                                                   sec:authentication="principal.username" class="form-control" readonly>
+                                                   th:value="${#authentication != null && #authentication.principal != 'anonymousUser' ? #authentication.principal.username : ''}" 
+                                                   class="form-control" readonly>
                                             <label for="modalEmail">Email (non modifiable)</label>
                                         </div>
                                     </div>

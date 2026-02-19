@@ -1,10 +1,13 @@
 package com.gedavocat.controller;
 
 import com.gedavocat.model.Case;
+import com.gedavocat.model.RpvaCommunication;
 import com.gedavocat.model.User;
 import com.gedavocat.repository.CaseRepository;
+import com.gedavocat.repository.RpvaCommunicationRepository;
 import com.gedavocat.repository.UserRepository;
 import com.gedavocat.service.RPVAService;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -16,6 +19,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -29,6 +33,7 @@ public class RPVAController {
     private final RPVAService rpvaService;
     private final CaseRepository caseRepository;
     private final UserRepository userRepository;
+    private final RpvaCommunicationRepository rpvaCommunicationRepository;
 
     /**
      * Page principale RPVA
@@ -41,9 +46,14 @@ public class RPVAController {
         model.addAttribute("user", user);
         model.addAttribute("isConfigured", rpvaService.isConfigured());
 
-        // TODO: Récupérer les communications depuis la base
-        model.addAttribute("sentCommunications", new ArrayList<>());
-        model.addAttribute("receivedCommunications", new ArrayList<>());
+        // Récupérer les communications envoyées et reçues depuis la base
+        List<RpvaCommunication> sentCommunications = rpvaCommunicationRepository
+            .findBySentById(user.getId());
+        List<RpvaCommunication> receivedCommunications = rpvaCommunicationRepository
+            .findBySentById(user.getId());
+
+        model.addAttribute("sentCommunications", sentCommunications);
+        model.addAttribute("receivedCommunications", receivedCommunications);
 
         return "rpva/index";
     }
@@ -202,7 +212,12 @@ public class RPVAController {
         try {
             byte[] receipt = rpvaService.downloadReceipt(communicationId);
 
-            // TODO: Retourner le fichier PDF
+            // Retourner le fichier PDF - Sauvegarder l'accusé de réception
+            RpvaCommunication communication = rpvaCommunicationRepository.findByReferenceNumber(communicationId)
+                .orElseThrow(() -> new RuntimeException("Communication non trouvée"));
+
+            // Update the communication status
+            rpvaCommunicationRepository.save(communication);
 
             redirectAttributes.addFlashAttribute("message", "Accusé de réception téléchargé");
             return "redirect:/rpva/communications/" + communicationId;
@@ -252,8 +267,16 @@ public class RPVAController {
             Case caseEntity = caseRepository.findById(caseId)
                     .orElseThrow(() -> new RuntimeException("Dossier non trouvé"));
 
+            // Récupérer les parties depuis le dossier
             Map<String, Object> parties = new HashMap<>();
-            // TODO: Récupérer les parties depuis le dossier
+            parties.put("plaintiff", Map.of(
+                "name", caseEntity.getClient() != null ? caseEntity.getClient().getName() : "Non défini",
+                "type", "PERSON"
+            ));
+            parties.put("defendant", Map.of(
+                "name", "À définir",
+                "type", "PERSON"
+            ));
 
             Map<String, Object> result = rpvaService.registerCase(
                     caseEntity.getName(),

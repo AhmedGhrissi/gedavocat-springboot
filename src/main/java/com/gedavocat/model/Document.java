@@ -16,9 +16,9 @@ import java.util.UUID;
  */
 @Entity
 @Table(name = "documents", indexes = {
-    @Index(name = "idx_case_id", columnList = "case_id"),
-    @Index(name = "idx_uploaded_by", columnList = "uploaded_by"),
-    @Index(name = "idx_deleted_at", columnList = "deleted_at")
+    @Index(name = "idx_document_case_id", columnList = "case_id"),
+    @Index(name = "idx_document_uploaded_by", columnList = "uploaded_by"),
+    @Index(name = "idx_document_deleted_at", columnList = "deleted_at")
 })
 @Data
 @NoArgsConstructor
