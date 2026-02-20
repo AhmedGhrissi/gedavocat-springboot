@@ -14,9 +14,24 @@
                 <h2 class="mb-1">💰 Facturation</h2>
                 <p class="text-muted">Gérez vos factures clients</p>
             </div>
-            <a href="/invoices/new" class="btn btn-primary">
-                <i class="fas fa-plus"></i> Nouvelle facture
-            </a>
+            <div class="d-flex gap-2">
+                <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#importModal">
+                    <i class="fas fa-file-import"></i> Importer une facture
+                </button>
+                <a href="/invoices/new" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Nouvelle facture
+                </a>
+            </div>
+        </div>
+
+        <!-- Messages -->
+        <div th:if="${message}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle"></i> <span th:text="${message}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${importError}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle"></i> <span th:text="${importError}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
 
         <!-- Statistiques -->
@@ -197,6 +212,74 @@
                         </tbody>
                     </table>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal : Importer une facture PDF -->
+    <div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="importModalLabel">
+                        <i class="fas fa-file-import"></i> Importer une facture existante
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form th:action="@{/invoices/import}" method="post" enctype="multipart/form-data">
+                    <div class="modal-body">
+                        <p class="text-muted small">Importez un PDF de facture existante et enregistrez-la dans le système.</p>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Client <span class="text-danger">*</span></label>
+                                <select name="clientId" class="form-select" required>
+                                    <option value="">-- Sélectionner un client --</option>
+                                    <option th:each="c : ${clients}" th:value="${c.id}" th:text="${c.name}">Client</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">N° Facture <span class="text-danger">*</span></label>
+                                <input type="text" name="invoiceNumber" class="form-control" required
+                                       placeholder="Ex: FACT-2026-00001">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Date de facture <span class="text-danger">*</span></label>
+                                <input type="date" name="invoiceDate" class="form-control" required
+                                       th:value="${today}">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Date d'échéance</label>
+                                <input type="date" name="dueDate" class="form-control">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Montant HT (€) <span class="text-danger">*</span></label>
+                                <input type="number" name="totalHT" class="form-control" required
+                                       step="0.01" min="0.01" placeholder="1000.00">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Taux TVA (%)</label>
+                                <input type="number" name="tvaRate" class="form-control"
+                                       step="0.1" min="0" max="100" value="20" placeholder="20">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Joindre le PDF</label>
+                                <input type="file" name="file" class="form-control" accept=".pdf,.PDF">
+                                <small class="text-muted">Facultatif — max 50 Mo</small>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Notes</label>
+                                <textarea name="notes" class="form-control" rows="2"
+                                          placeholder="Notes internes sur la facture..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-file-import"></i> Importer
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

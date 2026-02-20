@@ -65,6 +65,9 @@ public class Client {
     @Column(name = "invitation_id", length = 36)
     private String invitationId;
 
+    @Column(name = "invited_at")
+    private LocalDateTime invitedAt;
+
     /**
      * Type de client : particulier ou professionnel
      */
@@ -107,6 +110,16 @@ public class Client {
     // Méthodes utilitaires
     public boolean hasActiveAccess() {
         return accessEndsAt == null || accessEndsAt.isAfter(LocalDateTime.now());
+    }
+
+    /**
+     * Retourne le statut de l'invitation : VALIDATED, PENDING, EXPIRED ou NOT_INVITED.
+     */
+    public String getInvitationStatus() {
+        if (clientUser != null) return "VALIDATED";
+        if (invitationId == null) return "NOT_INVITED";
+        if (invitedAt != null && LocalDateTime.now().isBefore(invitedAt.plusHours(72))) return "PENDING";
+        return "EXPIRED";
     }
     
     @PrePersist

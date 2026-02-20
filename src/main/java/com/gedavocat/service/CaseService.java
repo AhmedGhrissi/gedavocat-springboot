@@ -5,6 +5,7 @@ import com.gedavocat.model.Case.CaseStatus;
 import com.gedavocat.model.Client;
 import com.gedavocat.repository.AppointmentRepository;
 import com.gedavocat.repository.CaseRepository;
+import com.gedavocat.repository.CaseShareLinkRepository;
 import com.gedavocat.repository.ClientRepository;
 import com.gedavocat.repository.RpvaCommunicationRepository;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +28,7 @@ public class CaseService {
     private final AuditService auditService;
     private final AppointmentRepository appointmentRepository;
     private final RpvaCommunicationRepository rpvaCommunicationRepository;
+    private final CaseShareLinkRepository caseShareLinkRepository;
     
     /**
      * Récupère tous les dossiers d'un avocat
@@ -214,7 +216,8 @@ public class CaseService {
         }
         
         String caseName = caseEntity.getName();
-        // Supprimer les communications RPVA et les références FK avant suppression du dossier
+        // Supprimer toutes les références FK avant suppression du dossier
+        caseShareLinkRepository.deleteAllByCaseId(caseId);
         rpvaCommunicationRepository.deleteByCaseId(caseId);
         appointmentRepository.clearRelatedCaseByCaseId(caseId);
         caseRepository.delete(caseEntity);

@@ -54,14 +54,16 @@ public class ClientInvitationService {
      */
     public void sendInvitation(Client client, String lawyerFullName) {
         String token = UUID.randomUUID().toString();
+        LocalDateTime expiry = LocalDateTime.now().plusHours(TOKEN_EXPIRY_HOURS);
         pendingInvitations.put(token, new InvitationEntry(
             client.getId(),
             client.getEmail(),
-            LocalDateTime.now().plusHours(TOKEN_EXPIRY_HOURS)
+            expiry
         ));
 
-        // Stocker le token dans le client (pour référence)
+        // Stocker le token et la date d'envoi dans le client (pour référence et statut)
         client.setInvitationId(token);
+        client.setInvitedAt(LocalDateTime.now());
         clientRepository.save(client);
 
         sendInvitationEmail(client.getEmail(), client.getName(), lawyerFullName, token);
@@ -70,15 +72,29 @@ public class ClientInvitationService {
 
     /**
      * Vérifie si un token est valide.
+     * Cherche d'abord en mémoire, puis en base (après redémarrage serveur).
      */
     public Optional<InvitationEntry> validateToken(String token) {
+        // 1. Cherche en mémoire
         InvitationEntry entry = pendingInvitations.get(token);
-        if (entry == null) return Optional.empty();
-        if (LocalDateTime.now().isAfter(entry.expiry())) {
-            pendingInvitations.remove(token);
-            return Optional.empty();
+        if (entry != null) {
+            if (LocalDateTime.now().isAfter(entry.expiry())) {
+                pendingInvitations.remove(token);
+                return Optional.empty();
+            }
+            return Optional.of(entry);
         }
-        return Optional.of(entry);
+        // 2. Fallback DB après redémarrage
+        return clientRepository.findByInvitationId(token)
+            .filter(c -> c.getInvitedAt() != null
+                      && LocalDateTime.now().isBefore(c.getInvitedAt().plusHours(TOKEN_EXPIRY_HOURS))
+                      && c.getClientUser() == null)
+            .map(c -> {
+                InvitationEntry rebuilt = new InvitationEntry(
+                    c.getId(), c.getEmail(), c.getInvitedAt().plusHours(TOKEN_EXPIRY_HOURS));
+                pendingInvitations.put(token, rebuilt); // restaurer en mémoire
+                return rebuilt;
+            });
     }
 
     /**
@@ -86,9 +102,26 @@ public class ClientInvitationService {
      */
     @Transactional
     public User acceptInvitation(String token, String password) {
+        // 1. Cherche en mémoire
         InvitationEntry entry = pendingInvitations.get(token);
-        if (entry == null || LocalDateTime.now().isAfter(entry.expiry())) {
-            throw new RuntimeException("Token d'invitation invalide ou expiré");
+
+        // 2. Fallback DB si absent (après redémarrage)
+        if (entry == null) {
+            Client dbClient = clientRepository.findByInvitationId(token)
+                .orElseThrow(() -> new RuntimeException("Token d'invitation invalide ou expiré"));
+            if (dbClient.getInvitedAt() == null
+                    || LocalDateTime.now().isAfter(dbClient.getInvitedAt().plusHours(TOKEN_EXPIRY_HOURS))) {
+                throw new RuntimeException("Token d'invitation expiré");
+            }
+            if (dbClient.getClientUser() != null) {
+                throw new RuntimeException("Un compte existe déjà pour cet email");
+            }
+            entry = new InvitationEntry(dbClient.getId(), dbClient.getEmail(),
+                dbClient.getInvitedAt().plusHours(TOKEN_EXPIRY_HOURS));
+            pendingInvitations.put(token, entry);
+        } else if (LocalDateTime.now().isAfter(entry.expiry())) {
+            pendingInvitations.remove(token);
+            throw new RuntimeException("Token d'invitation expiré");
         }
 
         Client client = clientRepository.findById(entry.clientId())
