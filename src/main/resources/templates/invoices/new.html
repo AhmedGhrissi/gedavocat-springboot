@@ -220,6 +220,15 @@
             
             const data = collectFormData();
 
+            if (!data.clientId) {
+                alert('Veuillez sélectionner un client.');
+                return;
+            }
+            if (!data.items || data.items.length === 0) {
+                alert('Veuillez ajouter au moins une prestation.');
+                return;
+            }
+
             fetch('/api/invoices', {
                 method: 'POST',
                 headers: {
@@ -227,14 +236,21 @@
                 },
                 body: JSON.stringify(data)
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    return response.text().then(text => {
+                        throw new Error(text || 'Erreur ' + response.status);
+                    });
+                }
+                return response.json();
+            })
             .then(data => {
                 alert('Facture créée avec succès !');
                 window.location.href = '/invoices';
             })
             .catch(error => {
                 console.error('Erreur:', error);
-                alert('Erreur lors de la création de la facture');
+                alert('Erreur lors de la création de la facture : ' + error.message);
             });
         });
 

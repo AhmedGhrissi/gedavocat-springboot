@@ -29,6 +29,13 @@ public class ClientService {
     public List<Client> getClientsByLawyer(String lawyerId) {
         return clientRepository.findByLawyerId(lawyerId);
     }
+
+    /**
+     * Trouve le Client associé à un User CLIENT
+     */
+    public java.util.Optional<Client> findByClientUser(String userId) {
+        return clientRepository.findByClientUserId(userId);
+    }
     
     /**
      * Récupère un client par ID

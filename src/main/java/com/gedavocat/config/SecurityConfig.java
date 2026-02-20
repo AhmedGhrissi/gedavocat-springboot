@@ -42,7 +42,9 @@ public class SecurityConfig {
 						.requestMatchers("/", "/login", "/register", "/maintenance", "/subscription/pricing",
 							"/api/auth/**", "/css/**", "/js/**", "/images/**", "/favicon.ico",
 							"/subscription/webhook", "/legal/**",
-							"/forgot-password", "/reset-password", "/verify-email", "/verify-email/resend")
+							"/forgot-password", "/reset-password", "/verify-email", "/verify-email/resend",
+							"/clients/accept-invitation",
+							"/cases/shared", "/cases/shared-expired")
 						.permitAll()
 
 						// Pages administrateur

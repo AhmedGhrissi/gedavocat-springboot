@@ -1,5 +1,7 @@
 package com.gedavocat.controller;
 
+import com.gedavocat.model.User;
+import com.gedavocat.repository.UserRepository;
 import com.gedavocat.service.InvoiceService;
 import com.gedavocat.service.ClientService;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +24,15 @@ public class InvoiceWebController {
 
     private final InvoiceService invoiceService;
     private final ClientService clientService;
+    private final UserRepository userRepository;
+
+    /**
+     * Résout l'utilisateur courant depuis son email (principal name)
+     */
+    private User getCurrentUser(Authentication authentication) {
+        return userRepository.findByEmail(authentication.getName())
+                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+    }
 
     /**
      * Affiche la liste des factures
@@ -32,7 +43,7 @@ public class InvoiceWebController {
                        @RequestParam(required = false) String status,
                        @RequestParam(required = false) String client) {
         try {
-            String lawyerId = authentication.getName();
+            String lawyerId = getCurrentUser(authentication).getId();
             
             // Récupérer toutes les factures de l'avocat
             var invoices = invoiceService.getInvoicesByLawyer(lawyerId);
@@ -66,7 +77,7 @@ public class InvoiceWebController {
     @PreAuthorize("hasRole('LAWYER')")
     public String newInvoice(Model model, Authentication authentication) {
         try {
-            String lawyerId = authentication.getName();
+            String lawyerId = getCurrentUser(authentication).getId();
             
             // Récupérer la liste des clients de l'avocat
             var clients = clientService.getClientsByLawyer(lawyerId);
@@ -102,7 +113,7 @@ public class InvoiceWebController {
     @PreAuthorize("hasRole('LAWYER')")
     public String edit(@PathVariable String id, Model model, Authentication authentication) {
         try {
-            String lawyerId = authentication.getName();
+            String lawyerId = getCurrentUser(authentication).getId();
             
             var invoice = invoiceService.getInvoiceById(id);
             var clients = clientService.getClientsByLawyer(lawyerId);
@@ -124,9 +135,15 @@ public class InvoiceWebController {
     @PreAuthorize("hasRole('CLIENT')")
     public String myInvoices(Model model, Authentication authentication) {
         try {
-            // TODO: Récupérer l'ID du client depuis l'utilisateur connecté
-            // Pour l'instant, on retourne une page vide
-            model.addAttribute("invoices", java.util.Collections.emptyList());
+            User clientUser = getCurrentUser(authentication);
+            // Trouver le Client lié à ce User
+            var clientOpt = clientService.findByClientUser(clientUser.getId());
+            if (clientOpt.isPresent()) {
+                var invoices = invoiceService.getInvoicesByClient(clientOpt.get().getId());
+                model.addAttribute("invoices", invoices);
+            } else {
+                model.addAttribute("invoices", java.util.Collections.emptyList());
+            }
             return "invoices/my-invoices";
         } catch (Exception e) {
             model.addAttribute("error", "Erreur lors du chargement de vos factures");

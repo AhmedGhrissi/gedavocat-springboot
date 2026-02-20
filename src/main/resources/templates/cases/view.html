@@ -24,6 +24,9 @@
                     <a th:href="@{/cases/{id}/edit(id=${case.id})}" class="btn btn-warning">
                         <i class="fas fa-edit"></i> Modifier
                     </a>
+                    <a th:href="@{/cases/{id}/share(id=${case.id})}" class="btn btn-info text-white">
+                        <i class="fas fa-share-alt"></i> Partager
+                    </a>
                     <form th:if="${case.status.name() == 'OPEN'}" 
                           th:action="@{/cases/{id}/close(id=${case.id})}" 
                           method="post" style="display: inline;">

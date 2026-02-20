@@ -182,6 +182,7 @@ public class CaseController {
      * Formulaire d'édition
      */
     @GetMapping("/{id}/edit")
+    @Transactional(readOnly = true)
     public String editCaseForm(@PathVariable String id, Model model, Authentication authentication) {
         User user = getCurrentUser(authentication);
         Case caseEntity = caseService.getCaseById(id);

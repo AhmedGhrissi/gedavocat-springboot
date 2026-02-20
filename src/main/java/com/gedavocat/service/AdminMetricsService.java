@@ -99,7 +99,7 @@ public class AdminMetricsService {
             .totalUsers(userRepository.count())
             .totalClients(clientRepository.count())
             .totalCases(caseRepository.count())
-            .totalDocuments(documentRepository.count())
+            .totalDocuments(documentRepository.countNonDeleted())
             .totalInvoices(invoiceRepository.count())
             .storageUsed(storageUsed)
             .storageLimit(storageLimit)
@@ -108,7 +108,7 @@ public class AdminMetricsService {
             .storageLimitFormatted(formatBytes(storageLimit))
             .usersLastHour(countCreatedAfter(userRepository, LocalDateTime.now().minusHours(1)))
             .usersLastDay(countCreatedAfter(userRepository, LocalDateTime.now().minusDays(1)))
-            .documentsUploadedToday(documentRepository.countByCreatedAtAfter(LocalDateTime.now().withHour(0).withMinute(0).withSecond(0)))
+            .documentsUploadedToday(documentRepository.countNonDeletedCreatedAfter(LocalDateTime.now().withHour(0).withMinute(0).withSecond(0)))
             .status("UP")
             .healthDetails(getHealthDetails())
             .build();
@@ -326,7 +326,7 @@ public class AdminMetricsService {
         catch (Exception e) { stats.put("newClientsLast7Days", 0L); }
         try { stats.put("newCasesLast7Days", caseRepository.countByCreatedAtAfter(since7days)); }
         catch (Exception e) { stats.put("newCasesLast7Days", 0L); }
-        try { stats.put("newDocumentsLast7Days", documentRepository.countByCreatedAtAfter(since7days)); }
+        try { stats.put("newDocumentsLast7Days", documentRepository.countNonDeletedCreatedAfter(since7days)); }
         catch (Exception e) { stats.put("newDocumentsLast7Days", 0L); }
         try { stats.put("loginCountLast7Days", auditLogRepository.countByActionAndCreatedAtAfter("LOGIN", since7days)); }
         catch (Exception e) { stats.put("loginCountLast7Days", 0L); }

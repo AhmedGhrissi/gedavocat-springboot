@@ -67,7 +67,8 @@
                             • Ajouté le <span th:text="${#temporals.format(doc.createdAt, 'dd/MM/yyyy HH:mm')}"></span>
                         </small>
                     </div>
-                    <a th:href="@{/documents/{id}/download(id=${doc.id})}" 
+                    <!-- Route portail client : filigrane CONFIDENTIEL appliqué automatiquement -->
+                    <a th:href="@{/my-cases/documents/{id}/download(id=${doc.id})}" 
                        class="btn btn-primary">
                         <i class="fas fa-download"></i> Télécharger
                     </a>

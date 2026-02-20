@@ -76,12 +76,10 @@ public class DashboardController {
         // Dossiers actifs = OPEN + IN_PROGRESS
         long activeCases = openCases + inProgressCases;
 
-        // Taille totale des documents (en octets)
+        // Taille totale des documents (en octets) - exclut les documents supprimés
         long totalStorage = 0;
         try {
-            totalStorage = documentRepository.findAll().stream()
-                    .mapToLong(d -> d.getFileSize() != null ? d.getFileSize() : 0)
-                    .sum();
+            totalStorage = documentRepository.sumFileSizeNonDeleted();
         } catch (Exception ignored) {}
 
         // 5 dossiers les plus récents
@@ -97,7 +95,7 @@ public class DashboardController {
         // Variables pour le template dashboard
         model.addAttribute("clientsCount",     clients.size());
         model.addAttribute("casesCount",       cases.size());
-        model.addAttribute("documentsCount",   documentRepository.count());
+        model.addAttribute("documentsCount",   documentRepository.countNonDeleted());
         model.addAttribute("signaturesCount",  0); // À implémenter avec YouSign
         
         // Variables pour statistiques détaillées

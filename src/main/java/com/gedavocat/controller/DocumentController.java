@@ -5,7 +5,9 @@ import com.gedavocat.model.Document;
 import com.gedavocat.model.User;
 import com.gedavocat.repository.UserRepository;
 import com.gedavocat.service.DocumentService;
+import com.gedavocat.service.WatermarkService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpHeaders;
@@ -19,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -32,12 +35,13 @@ import java.util.stream.Collectors;
 @Controller
 @RequestMapping("/documents")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('LAWYER', 'ADMIN', 'LAWYER_SECONDARY')")
+@PreAuthorize("hasAnyRole('LAWYER', 'ADMIN', 'LAWYER_SECONDARY', 'CLIENT')")
 public class DocumentController {
 
     private final DocumentService documentService;
     private final UserRepository userRepository;
     private final com.gedavocat.service.CaseService caseService;
+    private final WatermarkService watermarkService;
 
     /**
      * Page d'accueil des documents - liste tous les documents de l'utilisateur
@@ -180,7 +184,9 @@ public class DocumentController {
     }
 
     /**
-     * Télécharger un document
+     * Télécharger un document.
+     * Si l'utilisateur a le rôle CLIENT, un filigrane "CONFIDENTIEL" est appliqué
+     * automatiquement sur les fichiers PDF avant l'envoi.
      */
     @GetMapping("/{id}/download")
     public ResponseEntity<Resource> downloadDocument(
@@ -192,7 +198,21 @@ public class DocumentController {
             Path filePath = documentService.downloadDocument(id, user.getId());
             Document document = documentService.getDocumentById(id);
 
-            Resource resource = new UrlResource(filePath.toUri());
+            boolean isClient = authentication.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_CLIENT"));
+
+            byte[] fileBytes = Files.readAllBytes(filePath);
+
+            if (isClient && watermarkService.isPdf(fileBytes)) {
+                byte[] watermarked = watermarkService.addWatermark(
+                        new java.io.ByteArrayInputStream(fileBytes),
+                        WatermarkService.WATERMARK_CONFIDENTIEL);
+                if (watermarked != null) {
+                    fileBytes = watermarked;
+                }
+            }
+
+            Resource resource = new ByteArrayResource(fileBytes);
 
             return ResponseEntity.ok()
                     .contentType(MediaType.parseMediaType(document.getMimetype()))

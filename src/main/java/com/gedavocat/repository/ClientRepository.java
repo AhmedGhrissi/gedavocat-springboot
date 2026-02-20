@@ -52,4 +52,9 @@ public interface ClientRepository extends JpaRepository<Client, String> {
     Optional<Client> findByClientUserId(String userId);
 
     long countByCreatedAtAfter(java.time.LocalDateTime date);
+
+    /**
+     * Clients sans compte utilisateur lié (client_user_id IS NULL)
+     */
+    List<Client> findByClientUserIsNull();
 }

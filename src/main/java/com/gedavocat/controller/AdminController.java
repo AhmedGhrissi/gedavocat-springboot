@@ -1,6 +1,7 @@
 package com.gedavocat.controller;
 
 import com.gedavocat.dto.SystemMetricsDTO;
+import com.gedavocat.repository.ClientRepository;
 import com.gedavocat.service.AdminMetricsService;
 import com.gedavocat.service.LogService;
 import com.gedavocat.service.MaintenanceService;
@@ -28,6 +29,7 @@ public class AdminController {
     private final LogService logService;
     private final UserService userService;
     private final MaintenanceService maintenanceService;
+    private final ClientRepository clientRepository;
 
     /**
      * Dashboard principal de l'admin
@@ -101,6 +103,8 @@ public class AdminController {
         try {
             model.addAttribute("users", userService.getAllUsers());
             model.addAttribute("activityStats", metricsService.getActivityStats());
+            // Clients créés par les avocats sans compte utilisateur lié
+            model.addAttribute("clientsWithoutAccount", clientRepository.findByClientUserIsNull());
             return "admin/users";
         } catch (Exception e) {
             model.addAttribute("error", "Erreur lors du chargement des utilisateurs");

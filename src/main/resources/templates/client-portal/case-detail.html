@@ -91,10 +91,49 @@
 
             <!-- Documents du dossier -->
             <div class="info-card">
-                <h4 class="mb-3">
-                    <i class="fas fa-file-pdf"></i> Documents 
-                    <span class="badge bg-secondary" th:text="${documents.size()}">0</span>
-                </h4>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="mb-0">
+                        <i class="fas fa-file-pdf"></i> Documents 
+                        <span class="badge bg-secondary" th:text="${documents.size()}">0</span>
+                    </h4>
+                    <!-- Bouton pour ouvrir le formulaire d'upload -->
+                    <button class="btn btn-success btn-sm" 
+                            type="button" 
+                            data-bs-toggle="collapse" 
+                            data-bs-target="#uploadForm">
+                        <i class="fas fa-upload"></i> Envoyer un document
+                    </button>
+                </div>
+
+                <!-- Formulaire d'upload (collapsible) -->
+                <div class="collapse mb-3" id="uploadForm">
+                    <div class="card card-body border-success">
+                        <p class="text-muted small mb-2">
+                            <i class="fas fa-info-circle"></i>
+                            Les fichiers PDF seront automatiquement marqués <strong>"COPIE"</strong>.
+                        </p>
+                        <form th:action="@{/my-cases/{caseId}/upload(caseId=${case.id})}"
+                              method="post" enctype="multipart/form-data">
+                            <div class="input-group">
+                                <input type="file" class="form-control" name="file" required
+                                       accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"/>
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-upload"></i> Envoyer
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Alertes flash -->
+                <div th:if="${message}" class="alert alert-success alert-dismissible fade show" role="alert">
+                    <span th:text="${message}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <span th:text="${error}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
                 
                 <div th:if="${documents != null and !documents.empty}">
                     <div th:each="doc : ${documents}" class="document-item">
@@ -108,7 +147,8 @@
                                 • Ajouté le <span th:text="${#temporals.format(doc.createdAt, 'dd/MM/yyyy')}"></span>
                             </small>
                         </div>
-                        <a th:href="@{/documents/{id}/download(id=${doc.id})}" 
+                        <!-- Route portail client : filigrane CONFIDENTIEL appliqué automatiquement -->
+                        <a th:href="@{/my-cases/documents/{id}/download(id=${doc.id})}" 
                            class="btn btn-sm btn-primary">
                             <i class="fas fa-download"></i> Télécharger
                         </a>
