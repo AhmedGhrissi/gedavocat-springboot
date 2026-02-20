@@ -3,6 +3,7 @@ package com.gedavocat.controller;
 import com.gedavocat.dto.SystemMetricsDTO;
 import com.gedavocat.service.AdminMetricsService;
 import com.gedavocat.service.LogService;
+import com.gedavocat.service.MaintenanceService;
 import com.gedavocat.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -24,6 +25,7 @@ public class AdminController {
     private final AdminMetricsService metricsService;
     private final LogService logService;
     private final UserService userService;
+    private final MaintenanceService maintenanceService;
 
     /**
      * Dashboard principal de l'admin
@@ -141,6 +143,7 @@ public class AdminController {
      */
     @GetMapping("/settings")
     public String settings(Model model) {
+        model.addAttribute("maintenanceEnabled", maintenanceService.isMaintenanceEnabled());
         return "admin/settings";
     }
 }

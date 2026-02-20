@@ -124,13 +124,13 @@
 
                 <!-- Onglets -->
                 <div class="settings-tabs">
-                    <button class="tab-btn active" onclick="switchTab('profile')">
+                    <button class="tab-btn active" onclick="switchTab('profile', this)">
                         <i class="fas fa-user"></i> Profil
                     </button>
-                    <button class="tab-btn" onclick="switchTab('yousign')">
+                    <button class="tab-btn" onclick="switchTab('yousign', this)">
                         <i class="fas fa-signature"></i> Yousign
                     </button>
-                    <button class="tab-btn" onclick="switchTab('security')">
+                    <button class="tab-btn" onclick="switchTab('security', this)">
                         <i class="fas fa-shield-alt"></i> Sécurité
                     </button>
                 </div>
@@ -260,36 +260,26 @@
         </div>
 
         <script>
-            function switchTab(tabName) {
-                // Masquer tous les onglets
+            function switchTab(tabName, btn) {
                 document.querySelectorAll('[id$="-tab"]').forEach(tab => {
                     tab.style.display = 'none';
                 });
-
-                // Désactiver tous les boutons
-                document.querySelectorAll('.tab-btn').forEach(btn => {
-                    btn.classList.remove('active');
+                document.querySelectorAll('.tab-btn').forEach(b => {
+                    b.classList.remove('active');
                 });
-
-                // Afficher l'onglet sélectionné et activer le bouton
-                document.getElementById(tabName + '-tab').style.display = 'block';
-                event.target.classList.add('active');
+                const tab = document.getElementById(tabName + '-tab');
+                if (tab) tab.style.display = 'block';
+                if (btn) btn.classList.add('active');
             }
 
             function testYousignConnection() {
                 fetch('/settings/yousign/test', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     credentials: 'same-origin'
                 })
-                .then(response => {
-                    window.location.reload(); // Rechargement pour voir le message
-                })
-                .catch(error => {
-                    alert('Erreur lors du test de connexion');
-                });
+                .then(() => window.location.reload())
+                .catch(() => alert('Erreur lors du test de connexion'));
             }
         </script>
     </div>

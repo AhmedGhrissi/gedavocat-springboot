@@ -37,7 +37,7 @@ public class SecurityConfig {
 				.csrf(csrf -> csrf.ignoringRequestMatchers("/api/**", "/subscription/webhook"))
 				.authorizeHttpRequests(auth -> auth
 						// Pages publiques
-						.requestMatchers("/", "/login", "/register", "/subscription/pricing", "/api/auth/**", "/css/**",
+						.requestMatchers("/", "/login", "/register", "/maintenance", "/subscription/pricing", "/api/auth/**", "/css/**",
 								"/js/**", "/images/**", "/favicon.ico", "/subscription/webhook", "/legal/**")
 						.permitAll()
 

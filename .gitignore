@@ -67,6 +67,15 @@ uploads/
 temp/
 logs/
 
+# Fichiers sensibles et utilitaires locaux
+gedavocat_dump.sql
+*.sql.bak
+deploiement-hetzner-o2switch.pdf
+generate_pdf.py
+
+# Config de production (contient les credentials)
+application-o2switch.properties
+
 # Environment files
 .env
 .env.local
