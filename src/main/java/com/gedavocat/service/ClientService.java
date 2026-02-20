@@ -31,6 +31,13 @@ public class ClientService {
     }
 
     /**
+     * Récupère tous les clients (usage admin)
+     */
+    public List<Client> getAllClients() {
+        return clientRepository.findAll();
+    }
+
+    /**
      * Trouve le Client associé à un User CLIENT
      */
     public java.util.Optional<Client> findByClientUser(String userId) {

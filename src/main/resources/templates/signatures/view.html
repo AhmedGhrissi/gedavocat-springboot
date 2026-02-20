@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>Détail de la signature</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="container-fluid">
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-file-signature"></i> Détail de la signature électronique</h2>
+            <a th:href="@{/signatures}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Retour
+            </a>
+        </div>
+
+        <!-- Messages flash -->
+        <div th:if="${message}" class="alert alert-success alert-dismissible fade show">
+            <i class="fas fa-check-circle"></i> <span th:text="${message}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+            <i class="fas fa-exclamation-circle"></i> <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <div th:if="${signature == null}" class="alert alert-warning">
+            <i class="fas fa-exclamation-triangle"></i> Signature introuvable.
+        </div>
+
+        <div th:if="${signature != null}" class="row">
+            <!-- Informations principales -->
+            <div class="col-md-8">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-info-circle"></i> Informations</h5>
+                        <span class="badge"
+                              th:classappend="${signature.status == 'COMPLETED'} ? 'bg-success' :
+                                             (${signature.status == 'FAILED'} ? 'bg-danger' :
+                                             (${signature.status == 'EXPIRED'} ? 'bg-warning text-dark' : 'bg-primary'))"
+                              th:text="${signature.status}">-</span>
+                    </div>
+                    <div class="card-body">
+                        <dl class="row">
+                            <dt class="col-sm-4">Titre / Document</dt>
+                            <dd class="col-sm-8" th:text="${signature.title ?: (signature.document?.originalFilename ?: signature.yousignDocumentId ?: '-')}">-</dd>
+
+                            <dt class="col-sm-4">Signataire</dt>
+                            <dd class="col-sm-8" th:text="${signature.signerName + ' &lt;' + signature.signerEmail + '&gt;'}">-</dd>
+
+                            <dt class="col-sm-4">Téléphone</dt>
+                            <dd class="col-sm-8" th:text="${signature.signerPhone ?: '-'}">-</dd>
+
+                            <dt class="col-sm-4">Niveau de signature</dt>
+                            <dd class="col-sm-8" th:text="${signature.level ?: 'Avancée (eIDAS)'}">-</dd>
+
+                            <dt class="col-sm-4">Dossier</dt>
+                            <dd class="col-sm-8">
+                                <a th:if="${signature.case != null}"
+                                   th:href="@{/cases/{id}(id=${signature.case.id})}"
+                                   th:text="${signature.case.title}">-</a>
+                                <span th:if="${signature.case == null}">Aucun</span>
+                            </dd>
+
+                            <dt class="col-sm-4">Créée le</dt>
+                            <dd class="col-sm-8" th:text="${signature.createdAt != null ? #temporals.format(signature.createdAt, 'dd/MM/yyyy HH:mm') : '-'}">-</dd>
+
+                            <dt class="col-sm-4">Signée le</dt>
+                            <dd class="col-sm-8" th:text="${signature.signedAt != null ? #temporals.format(signature.signedAt, 'dd/MM/yyyy HH:mm') : '-'}">-</dd>
+
+                            <dt class="col-sm-4">ID Yousign</dt>
+                            <dd class="col-sm-8">
+                                <code th:text="${signature.yousignSignatureRequestId ?: '-'}">-</code>
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="col-md-4">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0"><i class="fas fa-bolt"></i> Actions</h5>
+                    </div>
+                    <div class="card-body d-grid gap-2">
+
+                        <!-- Télécharger le document signé (si complété) -->
+                        <a th:if="${signature.status == 'COMPLETED'}"
+                           th:href="@{/signatures/{id}/download(id=${signature.id})}"
+                           class="btn btn-success">
+                            <i class="fas fa-download"></i> Télécharger le document signé
+                        </a>
+
+                        <!-- Relancer le signataire (si en attente) -->
+                        <form th:if="${signature.status == 'PENDING'}"
+                              th:action="@{/signatures/{id}/remind(id=${signature.id})}" method="post">
+                            <button type="submit" class="btn btn-warning w-100">
+                                <i class="fas fa-bell"></i> Relancer le signataire
+                            </button>
+                        </form>
+
+                        <!-- Lien de signature (si en attente) -->
+                        <a th:if="${signature.status == 'PENDING' and signature.signatureLink != null}"
+                           th:href="${signature.signatureLink}" target="_blank"
+                           class="btn btn-outline-primary">
+                            <i class="fas fa-external-link-alt"></i> Ouvrir le lien de signature
+                        </a>
+
+                        <a th:href="@{/signatures}" class="btn btn-outline-secondary">
+                            <i class="fas fa-list"></i> Toutes les signatures
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>

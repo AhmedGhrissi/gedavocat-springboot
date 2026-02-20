@@ -343,7 +343,7 @@
                                     <span th:text="${sig.signerEmail}">email@example.com</span>
                                 </div>
                                 <div class="mt-2">
-                                    <span class="badge" style="background: #e0e7ff; color: #4f46e5;" th:text="${sig.level}">Avancée</span>
+                                    <span class="badge" style="background: #e0e7ff; color: #4f46e5;" th:text="${sig.level != null ? sig.level : 'Avancée'}">Avancée</span>
                                 </div>
                             </div>
                         </div>
@@ -359,6 +359,7 @@
                                 <i class="fas fa-eye"></i> Voir
                             </a>
                             <form th:action="@{/signatures/{id}/remind(id=${sig.id})}" method="post" style="display:inline;">
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
                                 <button type="submit" class="btn-modern btn-remind">
                                     <i class="fas fa-bell"></i> Relancer
                                 </button>
@@ -389,7 +390,7 @@
                                     <span th:text="${sig.signerEmail}">email@example.com</span>
                                 </div>
                                 <div class="mt-2">
-                                    <span class="badge" style="background: #e0e7ff; color: #4f46e5;" th:text="${sig.level}">Avancée</span>
+                                    <span class="badge" style="background: #dcfce7; color: #16a34a;" th:text="${sig.level != null ? sig.level : 'Avancée'}">Avancée</span>
                                 </div>
                             </div>
                         </div>
@@ -400,7 +401,7 @@
                     <div class="signature-footer">
                         <div style="font-size: 13px; color: #64748b;">
                             <i class="fas fa-check"></i>
-                            Signé le <span th:text="${#temporals.format(sig.completedAt, 'dd/MM/yyyy à HH:mm')}">01/01/2024</span>
+                            Signé le <span th:text="${sig.signedAt != null ? #temporals.format(sig.signedAt, 'dd/MM/yyyy à HH:mm') : '-'}">01/01/2024</span>
                         </div>
                         <div class="signature-actions">
                             <a th:href="@{/signatures/{id}(id=${sig.id})}" class="btn-modern btn-view">

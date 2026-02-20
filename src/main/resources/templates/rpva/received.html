@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>RPVA – Communications reçues</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-inbox"></i> Communications reçues (RPVA)</h2>
+            <a th:href="@{/rpva}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Retour
+            </a>
+        </div>
+
+        <div class="alert alert-warning">
+            <i class="fas fa-exclamation-triangle"></i>
+            <strong>Service non disponible :</strong>
+            L'accès au réseau e-Barreau (RPVA) nécessite une infrastructure dédiée (token USB, middleware).
+            Cette fonctionnalité n'est pas disponible dans la version actuelle.
+        </div>
+
+        <!-- Tableau vide (structure prête pour intégration future) -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="fas fa-list"></i> Liste des communications</h5>
+            </div>
+            <div class="card-body">
+                <div th:if="${communications == null or #lists.isEmpty(communications)}" class="text-center text-muted py-5">
+                    <i class="fas fa-inbox fa-3x mb-3"></i>
+                    <p>Aucune communication reçue.</p>
+                </div>
+                <table th:if="${communications != null and not #lists.isEmpty(communications)}" class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Expéditeur</th>
+                            <th>Objet</th>
+                            <th>Juridiction</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="comm : ${communications}">
+                            <td th:text="${#temporals.format(comm.receivedAt, 'dd/MM/yyyy HH:mm')}">-</td>
+                            <td th:text="${comm.sender}">-</td>
+                            <td th:text="${comm.subject}">-</td>
+                            <td th:text="${comm.jurisdiction}">-</td>
+                            <td>
+                                <a th:href="@{/rpva/view/{id}(id=${comm.id})}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a th:href="@{/rpva/download-receipt/{id}(id=${comm.id})}" class="btn btn-sm btn-outline-secondary">
+                                    <i class="fas fa-download"></i> AR
+                                </a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

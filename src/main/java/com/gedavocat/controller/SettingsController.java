@@ -6,6 +6,7 @@ import com.gedavocat.service.SettingsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -24,12 +25,15 @@ public class SettingsController {
 
     private final UserRepository userRepository;
     private final SettingsService settingsService;
+    private final PasswordEncoder passwordEncoder;
 
     /**
      * Page des paramètres (garde pour compatibilité)
      */
     @GetMapping
-    public String settings(Model model, Authentication authentication) {
+    public String settings(Model model, Authentication authentication,
+                           @ModelAttribute("message") String message,
+                           @ModelAttribute("error") String error) {
         User user = getCurrentUser(authentication);
         
         model.addAttribute("user", user);
@@ -42,9 +46,28 @@ public class SettingsController {
     /**
      * Sauvegarder les paramètres Yousign (API pour modal)
      */
+    /** Sauvegarde Yousign via formulaire HTML standard → redirect */
     @PostMapping("/yousign")
+    public String saveYousignSettingsForm(
+            @RequestParam("apiKey") String apiKey,
+            @RequestParam(value = "sandbox", required = false, defaultValue = "false") boolean sandbox,
+            Authentication authentication,
+            RedirectAttributes redirectAttributes
+    ) {
+        try {
+            User user = getCurrentUser(authentication);
+            settingsService.saveYousignSettings(user.getId(), apiKey, sandbox);
+            redirectAttributes.addFlashAttribute("message", "Configuration Yousign sauvegardée avec succès");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Erreur lors de la sauvegarde : " + e.getMessage());
+        }
+        return "redirect:/settings";
+    }
+
+    /** Sauvegarde Yousign via AJAX (compatibilité JSON) */
+    @PostMapping(value = "/yousign", headers = "Accept=application/json")
     @ResponseBody
-    public ResponseEntity<?> saveYousignSettings(
+    public ResponseEntity<?> saveYousignSettingsAjax(
             @RequestParam("apiKey") String apiKey,
             @RequestParam(value = "sandbox", required = false, defaultValue = "false") boolean sandbox,
             Authentication authentication
@@ -96,9 +119,35 @@ public class SettingsController {
     /**
      * Mise à jour du profil utilisateur (API pour modal)
      */
+    /** Mise à jour profil via formulaire HTML standard → redirect */
     @PostMapping("/profile")
+    public String updateProfileForm(
+            @RequestParam("firstName") String firstName,
+            @RequestParam("lastName") String lastName,
+            @RequestParam(value = "phone", required = false) String phone,
+            @RequestParam(value = "barNumber", required = false) String barNumber,
+            Authentication authentication,
+            RedirectAttributes redirectAttributes
+    ) {
+        try {
+            User user = getCurrentUser(authentication);
+            user.setFirstName(firstName);
+            user.setLastName(lastName);
+            user.setPhone(phone);
+            user.setBarNumber(barNumber);
+            user.setName(firstName + " " + lastName);
+            userRepository.save(user);
+            redirectAttributes.addFlashAttribute("message", "Profil mis à jour avec succès");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Erreur lors de la mise à jour : " + e.getMessage());
+        }
+        return "redirect:/settings";
+    }
+
+    /** Mise à jour profil via AJAX */
+    @PostMapping(value = "/profile", headers = "Accept=application/json")
     @ResponseBody
-    public ResponseEntity<?> updateProfile(
+    public ResponseEntity<?> updateProfileAjax(
             @RequestParam("firstName") String firstName,
             @RequestParam("lastName") String lastName,
             @RequestParam(value = "phone", required = false) String phone,
@@ -127,6 +176,42 @@ public class SettingsController {
                 "message", "Erreur lors de la mise à jour: " + e.getMessage()
             ));
         }
+    }
+
+    /**
+     * Changement de mot de passe
+     */
+    @PostMapping("/password")
+    @Transactional
+    public String changePassword(
+            @RequestParam("currentPassword") String currentPassword,
+            @RequestParam("newPassword") String newPassword,
+            @RequestParam("confirmPassword") String confirmPassword,
+            Authentication authentication,
+            RedirectAttributes redirectAttributes
+    ) {
+        try {
+            User user = getCurrentUser(authentication);
+            
+            if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+                redirectAttributes.addFlashAttribute("error", "Mot de passe actuel incorrect.");
+                return "redirect:/settings";
+            }
+            if (!newPassword.equals(confirmPassword)) {
+                redirectAttributes.addFlashAttribute("error", "Les nouveaux mots de passe ne correspondent pas.");
+                return "redirect:/settings";
+            }
+            if (newPassword.length() < 8) {
+                redirectAttributes.addFlashAttribute("error", "Le nouveau mot de passe doit comporter au moins 8 caractères.");
+                return "redirect:/settings";
+            }
+            user.setPassword(passwordEncoder.encode(newPassword));
+            userRepository.save(user);
+            redirectAttributes.addFlashAttribute("message", "Mot de passe modifié avec succès.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Erreur : " + e.getMessage());
+        }
+        return "redirect:/settings";
     }
 
     /**

@@ -74,7 +74,7 @@ public class SecurityConfig {
 						.referrerPolicy(r -> r.policy(
 								ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
 						.permissionsPolicy(p -> p.policy(
-								"camera=(), microphone=(), geolocation=(), payment=()")
+								"camera=(self), microphone=(), geolocation=(), payment=()")
 						))
 				// Session avec état pour le formLogin (pas stateless)
 				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))

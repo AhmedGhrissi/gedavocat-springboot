@@ -49,14 +49,22 @@ public class ClientPortalController {
     /**
      * Liste des dossiers du client connecté
      */
+    /** Retourne la page d'attente si le lien client→user n'existe pas encore. */
+    private String notLinked(Model model) {
+        model.addAttribute("errorMessage",
+                "Votre profil client n'a pas encore été activé. Contactez votre avocat.");
+        return "client-portal/pending";
+    }
+
     @GetMapping
     public String listMyCases(Model model, Authentication authentication) {
         User user = getCurrentUser(authentication);
         
         // Récupérer le client associé à cet utilisateur
-        Client client = clientRepository.findByClientUserId(user.getId())
-                .orElseThrow(() -> new RuntimeException("Aucun profil client trouvé pour cet utilisateur"));
-        
+        java.util.Optional<Client> clientOpt = clientRepository.findByClientUserId(user.getId());
+        if (clientOpt.isEmpty()) return notLinked(model);
+        Client client = clientOpt.get();
+
         // Récupérer UNIQUEMENT les dossiers de ce client
         List<Case> myCases = caseService.getCasesByClient(client.getId());
         
@@ -79,15 +87,17 @@ public class ClientPortalController {
         User user = getCurrentUser(authentication);
         
         // Récupérer le client
-        Client client = clientRepository.findByClientUserId(user.getId())
-                .orElseThrow(() -> new RuntimeException("Aucun profil client trouvé"));
-        
+        java.util.Optional<Client> clientOpt = clientRepository.findByClientUserId(user.getId());
+        if (clientOpt.isEmpty()) return notLinked(model);
+        Client client = clientOpt.get();
+
         // Récupérer le dossier
         Case caseEntity = caseService.getCaseById(caseId);
         
         // SÉCURITÉ : Vérifier que ce dossier appartient bien à ce client
-        if (!caseEntity.getClient().getId().equals(client.getId())) {
-            throw new RuntimeException("Accès non autorisé à ce dossier");
+        if (caseEntity.getClient() == null || !caseEntity.getClient().getId().equals(client.getId())) {
+            model.addAttribute("errorMessage", "Vous n'avez pas accès à ce dossier.");
+            return "client-portal/pending";
         }
         
         // Récupérer les documents du dossier
@@ -113,15 +123,17 @@ public class ClientPortalController {
         User user = getCurrentUser(authentication);
         
         // Récupérer le client
-        Client client = clientRepository.findByClientUserId(user.getId())
-                .orElseThrow(() -> new RuntimeException("Aucun profil client trouvé"));
-        
+        java.util.Optional<Client> clientOpt = clientRepository.findByClientUserId(user.getId());
+        if (clientOpt.isEmpty()) return notLinked(model);
+        Client client = clientOpt.get();
+
         // Récupérer le dossier
         Case caseEntity = caseService.getCaseById(caseId);
         
         // SÉCURITÉ : Vérifier que ce dossier appartient bien à ce client
-        if (!caseEntity.getClient().getId().equals(client.getId())) {
-            throw new RuntimeException("Accès non autorisé à ce dossier");
+        if (caseEntity.getClient() == null || !caseEntity.getClient().getId().equals(client.getId())) {
+            model.addAttribute("errorMessage", "Vous n'avez pas accès à ce dossier.");
+            return "client-portal/pending";
         }
         
         // Récupérer les documents
@@ -148,12 +160,17 @@ public class ClientPortalController {
     ) {
         try {
             User user = getCurrentUser(authentication);
-            Client client = clientRepository.findByClientUserId(user.getId())
-                    .orElseThrow(() -> new RuntimeException("Aucun profil client trouvé"));
+            java.util.Optional<Client> clientOpt = clientRepository.findByClientUserId(user.getId());
+            if (clientOpt.isEmpty()) {
+                redirectAttributes.addFlashAttribute("error", "Votre profil client n'est pas encore activé.");
+                return "redirect:/my-cases";
+            }
+            Client client = clientOpt.get();
 
             Case caseEntity = caseService.getCaseById(caseId);
-            if (!caseEntity.getClient().getId().equals(client.getId())) {
-                throw new RuntimeException("Accès non autorisé à ce dossier");
+            if (caseEntity.getClient() == null || !caseEntity.getClient().getId().equals(client.getId())) {
+                redirectAttributes.addFlashAttribute("error", "Accès non autorisé à ce dossier.");
+                return "redirect:/my-cases";
             }
 
             MultipartFile fileToUpload = file;
@@ -193,12 +210,15 @@ public class ClientPortalController {
     ) {
         try {
             User user = getCurrentUser(authentication);
-            Client client = clientRepository.findByClientUserId(user.getId())
-                    .orElseThrow(() -> new RuntimeException("Aucun profil client trouvé"));
+            java.util.Optional<Client> clientOpt = clientRepository.findByClientUserId(user.getId());
+            if (clientOpt.isEmpty()) {
+                return ResponseEntity.ok(Map.of("success", false, "message", "Profil client non activé."));
+            }
+            Client client = clientOpt.get();
 
             Case caseEntity = caseService.getCaseById(caseId);
-            if (!caseEntity.getClient().getId().equals(client.getId())) {
-                throw new RuntimeException("Accès non autorisé à ce dossier");
+            if (caseEntity.getClient() == null || !caseEntity.getClient().getId().equals(client.getId())) {
+                return ResponseEntity.ok(Map.of("success", false, "message", "Accès non autorisé à ce dossier."));
             }
 
             MultipartFile fileToUpload = file;
@@ -234,13 +254,17 @@ public class ClientPortalController {
     ) {
         try {
             User user = getCurrentUser(authentication);
-            Client client = clientRepository.findByClientUserId(user.getId())
-                    .orElseThrow(() -> new RuntimeException("Aucun profil client trouvé"));
+            java.util.Optional<Client> clientOpt = clientRepository.findByClientUserId(user.getId());
+            if (clientOpt.isEmpty()) {
+                return ResponseEntity.status(403).build();
+            }
+            Client client = clientOpt.get();
 
             Document document = documentService.getDocumentById(documentId);
 
             // SÉCURITÉ : vérifier que le document appartient bien au dossier du client
-            if (!document.getCaseEntity().getClient().getId().equals(client.getId())) {
+            if (document.getCaseEntity().getClient() == null ||
+                    !document.getCaseEntity().getClient().getId().equals(client.getId())) {
                 throw new RuntimeException("Accès non autorisé à ce document");
             }
 

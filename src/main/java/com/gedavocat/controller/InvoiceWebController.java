@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import java.util.List;
 
 /**
  * Contrôleur Web pour les pages de facturation
@@ -37,8 +38,15 @@ public class InvoiceWebController {
     /**
      * Affiche la liste des factures
      */
+    /** Renvoie les clients selon le rôle : tous pour ADMIN, ou ceux de l'avocat. */
+    private List<com.gedavocat.model.Client> getClientsForUser(Authentication auth, String lawyerId) {
+        boolean isAdmin = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        return isAdmin ? clientService.getAllClients() : clientService.getClientsByLawyer(lawyerId);
+    }
+
     @GetMapping
-    @PreAuthorize("hasRole('LAWYER')")
+    @PreAuthorize("hasAnyRole('LAWYER', 'ADMIN')")
     public String index(Model model, Authentication authentication,
                        @RequestParam(required = false) String status,
                        @RequestParam(required = false) String client) {
@@ -74,13 +82,13 @@ public class InvoiceWebController {
      * Affiche le formulaire de création d'une facture
      */
     @GetMapping("/new")
-    @PreAuthorize("hasRole('LAWYER')")
+    @PreAuthorize("hasAnyRole('LAWYER', 'ADMIN')")
     public String newInvoice(Model model, Authentication authentication) {
         try {
             String lawyerId = getCurrentUser(authentication).getId();
             
-            // Récupérer la liste des clients de l'avocat
-            var clients = clientService.getClientsByLawyer(lawyerId);
+            // Récupérer la liste des clients (tous pour ADMIN, sinon ceux de l'avocat)
+            var clients = getClientsForUser(authentication, lawyerId);
             model.addAttribute("clients", clients);
             
             return "invoices/new";
@@ -110,13 +118,13 @@ public class InvoiceWebController {
      * Affiche le formulaire d'édition d'une facture
      */
     @GetMapping("/{id}/edit")
-    @PreAuthorize("hasRole('LAWYER')")
+    @PreAuthorize("hasAnyRole('LAWYER', 'ADMIN')")
     public String edit(@PathVariable String id, Model model, Authentication authentication) {
         try {
             String lawyerId = getCurrentUser(authentication).getId();
             
             var invoice = invoiceService.getInvoiceById(id);
-            var clients = clientService.getClientsByLawyer(lawyerId);
+            var clients = getClientsForUser(authentication, lawyerId);
             
             model.addAttribute("invoice", invoice);
             model.addAttribute("clients", clients);

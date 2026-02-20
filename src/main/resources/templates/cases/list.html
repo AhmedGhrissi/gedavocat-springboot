@@ -79,7 +79,7 @@
                                 </td>
                                 <td>
                                     <span class="badge" 
-                                          th:classappend="${case.status.name == 'OPEN' ? 'bg-success' : (case.status.name == 'IN_PROGRESS' ? 'bg-info' : (case.status.name == 'CLOSED' ? 'bg-warning' : 'bg-secondary'))}"
+                                          th:classappend="${case.status.name() == 'OPEN' ? 'bg-success' : (case.status.name() == 'IN_PROGRESS' ? 'bg-primary' : (case.status.name() == 'CLOSED' ? 'bg-warning text-dark' : (case.status.name() == 'ARCHIVED' ? 'bg-secondary' : 'bg-secondary')))}"
                                           th:text="${case.status.displayName}">Statut</span>
                                 </td>
                                 <td th:text="${case.createdAt != null ? #temporals.format(case.createdAt, 'dd/MM/yyyy') : '-'}">Date</td>

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>RPVA – Envoyer une communication</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-paper-plane"></i> Envoyer une communication (RPVA)</h2>
+            <a th:href="@{/rpva}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Retour
+            </a>
+        </div>
+
+        <div class="alert alert-warning">
+            <i class="fas fa-exclamation-triangle"></i>
+            <strong>Service non disponible :</strong>
+            L'envoi de communications via le réseau e-Barreau (RPVA) nécessite une infrastructure dédiée.
+            Cette fonctionnalité n'est pas disponible dans la version actuelle.
+        </div>
+
+        <!-- Formulaire (structure prête pour activation future) -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="fas fa-edit"></i> Nouvelle communication</h5>
+            </div>
+            <div class="card-body">
+                <form th:action="@{/rpva/send}" method="post" enctype="multipart/form-data">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Juridiction destinataire</label>
+                            <select name="jurisdictionCode" class="form-select" disabled>
+                                <option value="">-- Sélectionner une juridiction --</option>
+                                <option th:each="j : ${jurisdictions}" th:value="${j.code}" th:text="${j.name}">TJ Paris</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Dossier associé (optionnel)</label>
+                            <select name="caseReference" class="form-select" disabled>
+                                <option value="">Aucun dossier</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Objet</label>
+                        <input type="text" name="subject" class="form-control" placeholder="Objet de la communication" disabled>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Message</label>
+                        <textarea name="message" class="form-control" rows="6" placeholder="Contenu du message..." disabled></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Pièces jointes</label>
+                        <input type="file" name="attachments" class="form-control" multiple accept=".pdf" disabled>
+                        <small class="text-muted">Fichiers PDF uniquement</small>
+                    </div>
+                    <button type="submit" class="btn btn-primary" disabled>
+                        <i class="fas fa-paper-plane"></i> Envoyer
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

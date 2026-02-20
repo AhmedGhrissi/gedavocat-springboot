@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>Compte en attente d'activation</title>
+</head>
+<body>
+<div layout:fragment="content" class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-7 col-lg-6">
+            <div class="card shadow-sm border-0 text-center p-5">
+                <div class="mb-4">
+                    <span style="font-size:4rem;">⏳</span>
+                </div>
+                <h2 class="fw-bold mb-3">Compte en cours d'activation</h2>
+                <p class="text-muted mb-4">
+                    Votre compte est bien créé, mais il n'est pas encore lié à un dossier client.<br>
+                    Votre avocat doit vous envoyer une invitation par e-mail pour finaliser l'activation.
+                </p>
+                <div th:if="${errorMessage}" class="alert alert-warning mb-4" th:text="${errorMessage}"></div>
+                <hr class="my-4">
+                <p class="text-muted small">
+                    Si vous pensez qu'il s'agit d'une erreur, contactez votre avocat et demandez-lui
+                    de vous renvoyer l'invitation depuis l'onglet <strong>Clients</strong>.
+                </p>
+                <a href="/logout" class="btn btn-outline-secondary mt-3">Se déconnecter</a>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

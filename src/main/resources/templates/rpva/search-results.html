@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>RPVA – Résultats de recherche</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-search"></i> Résultats de recherche RPVA</h2>
+            <a th:href="@{/rpva}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Retour
+            </a>
+        </div>
+
+        <div th:if="${query}" class="alert alert-info">
+            <i class="fas fa-search"></i> Recherche pour : <strong th:text="${query}"></strong>
+        </div>
+
+        <div class="alert alert-warning">
+            <i class="fas fa-exclamation-triangle"></i>
+            <strong>Service non disponible :</strong>
+            La recherche dans le réseau e-Barreau (RPVA) nécessite une infrastructure dédiée.
+            Cette fonctionnalité n'est pas disponible dans la version actuelle.
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div th:if="${results == null or #lists.isEmpty(results)}" class="text-center text-muted py-5">
+                    <i class="fas fa-search fa-3x mb-3"></i>
+                    <p>Aucun résultat trouvé.</p>
+                </div>
+                <table th:if="${results != null and not #lists.isEmpty(results)}" class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Référence</th>
+                            <th>Parties</th>
+                            <th>Juridiction</th>
+                            <th>Date d'audience</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="result : ${results}">
+                            <td th:text="${result.reference}">-</td>
+                            <td th:text="${result.parties}">-</td>
+                            <td th:text="${result.jurisdiction}">-</td>
+                            <td th:text="${result.hearingDate != null ? #temporals.format(result.hearingDate, 'dd/MM/yyyy') : '-'}">-</td>
+                            <td>
+                                <a th:href="@{/rpva/view/{id}(id=${result.id})}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-eye"></i> Voir
+                                </a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

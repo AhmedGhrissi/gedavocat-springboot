@@ -76,7 +76,9 @@ public class CaseController {
     ) {
         System.out.println("=== DEBUG: newCaseForm appelé pour /cases/new ===");
         User user = getCurrentUser(authentication);
-        List<Client> clients = clientService.getClientsByLawyer(user.getId());
+        List<Client> clients = isAdmin(authentication)
+                ? clientService.getAllClients()
+                : clientService.getClientsByLawyer(user.getId());
 
         Case newCase = new Case();
         
@@ -161,8 +163,8 @@ public class CaseController {
         User user = getCurrentUser(authentication);
         Case caseEntity = caseService.getCaseById(id);
 
-        // Vérifier l'accès
-        if (!caseEntity.getLawyer().getId().equals(user.getId())) {
+        // Vérifier l'accès (ADMIN peut voir tous les dossiers)
+        if (!isAdmin(authentication) && !caseEntity.getLawyer().getId().equals(user.getId())) {
             throw new RuntimeException("Accès non autorisé");
         }
 
@@ -187,12 +189,29 @@ public class CaseController {
         User user = getCurrentUser(authentication);
         Case caseEntity = caseService.getCaseById(id);
 
-        if (!caseEntity.getLawyer().getId().equals(user.getId())) {
+        if (!isAdmin(authentication) && !caseEntity.getLawyer().getId().equals(user.getId())) {
             throw new RuntimeException("Accès non autorisé");
         }
 
+        // Utiliser le lawyerId du DOSSIER pour charger les bons clients
+        String lawyerId = caseEntity.getLawyer().getId();
+        List<Client> clients = isAdmin(authentication)
+                ? clientService.getAllClients()
+                : clientService.getClientsByLawyer(lawyerId);
+
+        // Garantir que le client actuellement lié au dossier figure toujours dans la liste
+        // (sécurité en cas de désynchronisation entre avocat et clients)
+        if (caseEntity.getClient() != null) {
+            final String currentClientId = caseEntity.getClient().getId();
+            boolean alreadyPresent = clients.stream().anyMatch(c -> c.getId().equals(currentClientId));
+            if (!alreadyPresent) {
+                clients = new java.util.ArrayList<>(clients);
+                clients.add(0, caseEntity.getClient());
+            }
+        }
+
         model.addAttribute("case", caseEntity);
-        model.addAttribute("clients", clientService.getClientsByLawyer(user.getId()));
+        model.addAttribute("clients", clients);
         model.addAttribute("isEdit", true);
         return "cases/form";
     }
@@ -220,7 +239,11 @@ public class CaseController {
         if (result.hasErrors()) {
             System.out.println("=== DEBUG updateCase: Erreurs de validation détectées");
             User user = getCurrentUser(authentication);
-            model.addAttribute("clients", clientService.getClientsByLawyer(user.getId()));
+            // ADMIN: charge tous les clients; sinon: ceux de l'avocat courant
+            List<Client> clients = isAdmin(authentication)
+                    ? clientService.getAllClients()
+                    : clientService.getClientsByLawyer(user.getId());
+            model.addAttribute("clients", clients);
             model.addAttribute("isEdit", true);
             return "cases/form";
         }
@@ -231,8 +254,15 @@ public class CaseController {
             Client client = clientService.getClientById(clientId);
             System.out.println("=== DEBUG updateCase: Client trouvé = " + client.getName());
             caseEntity.setClient(client);
-            
-            caseService.updateCase(id, caseEntity, user.getId());
+
+            // Pour ADMIN, passer l'ID du LAWYER propriétaire du dossier afin de
+            // contourner les vérifications d'appartenance dans le service.
+            String lawyerIdForService = user.getId();
+            if (isAdmin(authentication)) {
+                Case existing = caseService.getCaseById(id);
+                lawyerIdForService = existing.getLawyer().getId();
+            }
+            caseService.updateCase(id, caseEntity, lawyerIdForService);
             System.out.println("=== DEBUG updateCase: Dossier mis à jour avec succès");
             
             redirectAttributes.addFlashAttribute("message", "Dossier modifié avec succès");
@@ -241,7 +271,10 @@ public class CaseController {
             System.err.println("=== ERREUR updateCase: " + e.getMessage());
             e.printStackTrace();
             User user = getCurrentUser(authentication);
-            model.addAttribute("clients", clientService.getClientsByLawyer(user.getId()));
+            List<Client> clients = isAdmin(authentication)
+                    ? clientService.getAllClients()
+                    : clientService.getClientsByLawyer(user.getId());
+            model.addAttribute("clients", clients);
             model.addAttribute("isEdit", true);
             model.addAttribute("error", e.getMessage());
             return "cases/form";
@@ -309,5 +342,10 @@ public class CaseController {
         String email = authentication.getName();
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+    }
+
+    private boolean isAdmin(Authentication authentication) {
+        return authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
     }
 }

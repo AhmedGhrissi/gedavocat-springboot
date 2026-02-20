@@ -340,10 +340,15 @@
                             <div th:unless="${document != null}" class="document-selector" onclick="document.getElementById('documentSelect').click()">
                                 <i class="fas fa-cloud-upload-alt"></i>
                                 <h4>Sélectionner un document</h4>
-                                <p style="color: #64748b; margin: 0;">Cliquez pour choisir un document depuis vos dossiers</p>
+                                <p style="color: #64748b; margin: 0;">Choisissez un document PDF depuis vos dossiers</p>
                                 <select id="documentSelect" name="documentId" class="form-control mt-3" required style="max-width: 400px; margin: 20px auto 0;">
                                     <option value="">-- Choisir un document --</option>
-                                    <!-- TODO: Liste des documents disponibles -->
+                                    <option th:each="doc : ${documents}"
+                                            th:value="${doc.id}"
+                                            th:text="${doc.originalName}"
+                                            th:if="${doc.mimetype == 'application/pdf' or doc.filename.endsWith('.pdf')}">
+                                        Document.pdf
+                                    </option>
                                 </select>
                             </div>
                             <small class="form-text">

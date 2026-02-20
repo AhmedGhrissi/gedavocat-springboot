@@ -1,13 +1,17 @@
 package com.gedavocat.controller;
 
+import com.gedavocat.model.AuditLog;
 import com.gedavocat.model.Case;
 import com.gedavocat.model.Client;
 import com.gedavocat.model.User;
+import com.gedavocat.repository.AuditLogRepository;
 import com.gedavocat.repository.CaseRepository;
 import com.gedavocat.repository.ClientRepository;
 import com.gedavocat.repository.DocumentRepository;
+import com.gedavocat.repository.SignatureRepository;
 import com.gedavocat.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
@@ -27,6 +31,8 @@ public class DashboardController {
     private final ClientRepository   clientRepository;
     private final CaseRepository     caseRepository;
     private final DocumentRepository documentRepository;
+    private final SignatureRepository signatureRepository;
+    private final AuditLogRepository  auditLogRepository;
 
     @GetMapping("/")
     public String home() {
@@ -96,7 +102,7 @@ public class DashboardController {
         model.addAttribute("clientsCount",     clients.size());
         model.addAttribute("casesCount",       cases.size());
         model.addAttribute("documentsCount",   documentRepository.countNonDeleted());
-        model.addAttribute("signaturesCount",  0); // À implémenter avec YouSign
+        model.addAttribute("signaturesCount",  signatureRepository.countPendingByUserId(user.getId()));
         
         // Variables pour statistiques détaillées
         model.addAttribute("totalClients",   clients.size());
@@ -109,8 +115,8 @@ public class DashboardController {
         model.addAttribute("recentCases",    recentCases);
         model.addAttribute("recentClients",  recentClients);
         
-        // Activités récentes (mockées pour l'instant)
-        model.addAttribute("recentActivities", createMockActivities());
+        // Activités récentes depuis l'audit log
+        model.addAttribute("recentActivities", buildRecentActivities(user.getId()));
     }
 
     // ------------------------------------------------------------------
@@ -144,8 +150,8 @@ public class DashboardController {
         model.addAttribute("recentCases",    cases);
         model.addAttribute("recentClients",  new ArrayList<>());
         
-        // Activités récentes (mockées pour l'instant)
-        model.addAttribute("recentActivities", createMockActivities());
+        // Activités récentes depuis l'audit log
+        model.addAttribute("recentActivities", buildRecentActivities(user.getId()));
     }
 
     // ------------------------------------------------------------------
@@ -167,17 +173,46 @@ public class DashboardController {
         model.addAttribute("recentCases",    new ArrayList<>());
         model.addAttribute("recentClients",  new ArrayList<>());
         
-        // Activités récentes (vides)
+        // Activités récentes vides
         model.addAttribute("recentActivities", new ArrayList<>());
     }
     
     // ------------------------------------------------------------------
-    // Méthode pour créer des activités récentes mockées
+    /** Charge les 10 dernières entrées d'audit pour cet utilisateur */
+    private List<RecentActivity> buildRecentActivities(String userId) {
+        try {
+            List<AuditLog> logs = auditLogRepository
+                .findByUserId(userId, PageRequest.of(0, 10))
+                .getContent();
+            List<RecentActivity> activities = new ArrayList<>();
+            for (AuditLog log : logs) {
+                String icon = switch (log.getAction()) {
+                    case "CLIENT_CREATED"  -> "👤";
+                    case "CASE_CREATED"    -> "📂";
+                    case "CASE_UPDATED"   -> "✏️";
+                    case "DOCUMENT_UPLOAD" -> "📄";
+                    case "USER_LOGIN"      -> "🔐";
+                    default               -> "📋";
+                };
+                String time = log.getCreatedAt() != null
+                        ? log.getCreatedAt().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM HH:mm"))
+                        : "";
+                activities.add(new RecentActivity(
+                    icon + " " + log.getAction().replace("_", " "),
+                    log.getDetails() != null ? log.getDetails() : "",
+                    time
+                ));
+            }
+            return activities;
+        } catch (Exception e) {
+            return new ArrayList<>();
+        }
+    }
+
+    // ------------------------------------------------------------------
+    // Méthode gardée pour compatibilité
     private List<RecentActivity> createMockActivities() {
-        List<RecentActivity> activities = new ArrayList<>();
-        // Pour l'instant, on retourne une liste vide
-        // À implémenter avec de vraies activités
-        return activities;
+        return new ArrayList<>();
     }
     
     // Classe interne pour les activités récentes
