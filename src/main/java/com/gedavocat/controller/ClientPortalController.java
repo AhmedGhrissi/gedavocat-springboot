@@ -28,6 +28,7 @@ import java.io.ByteArrayInputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Contrôleur pour le portail client
@@ -176,6 +177,50 @@ public class ClientPortalController {
             redirectAttributes.addFlashAttribute("error", "Erreur lors de l'upload : " + e.getMessage());
         }
         return "redirect:/my-cases/" + caseId;
+    }
+
+    /**
+     * Upload AJAX (utilisé par le scanner).
+     * Même logique que l'upload standard — filigrane COPIE sur les PDF.
+     * Retourne JSON : {"success": true/false, "message": "..."}
+     */
+    @PostMapping("/{caseId}/upload-ajax")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> uploadDocumentAjax(
+            @PathVariable String caseId,
+            @RequestParam("file") MultipartFile file,
+            Authentication authentication
+    ) {
+        try {
+            User user = getCurrentUser(authentication);
+            Client client = clientRepository.findByClientUserId(user.getId())
+                    .orElseThrow(() -> new RuntimeException("Aucun profil client trouvé"));
+
+            Case caseEntity = caseService.getCaseById(caseId);
+            if (!caseEntity.getClient().getId().equals(client.getId())) {
+                throw new RuntimeException("Accès non autorisé à ce dossier");
+            }
+
+            MultipartFile fileToUpload = file;
+
+            if ("application/pdf".equalsIgnoreCase(file.getContentType())) {
+                byte[] watermarked = watermarkService.addWatermark(
+                        file.getInputStream(), WatermarkService.WATERMARK_COPIE);
+                if (watermarked != null) {
+                    fileToUpload = new ByteArrayMultipartFile(
+                            file.getName(),
+                            file.getOriginalFilename(),
+                            file.getContentType(),
+                            watermarked);
+                }
+            }
+
+            documentService.uploadDocument(caseId, fileToUpload, user.getId(), "CLIENT");
+            return ResponseEntity.ok(Map.of("success", true, "message", "Document scanné et enregistré."));
+
+        } catch (Exception e) {
+            return ResponseEntity.ok(Map.of("success", false, "message", e.getMessage()));
+        }
     }
 
     /**

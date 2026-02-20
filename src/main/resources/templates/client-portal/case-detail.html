@@ -96,13 +96,19 @@
                         <i class="fas fa-file-pdf"></i> Documents 
                         <span class="badge bg-secondary" th:text="${documents.size()}">0</span>
                     </h4>
-                    <!-- Bouton pour ouvrir le formulaire d'upload -->
-                    <button class="btn btn-success btn-sm" 
-                            type="button" 
-                            data-bs-toggle="collapse" 
-                            data-bs-target="#uploadForm">
-                        <i class="fas fa-upload"></i> Envoyer un document
-                    </button>
+                    <!-- Boutons upload et scan -->
+                    <div class="d-flex gap-2 flex-wrap">
+                        <button class="btn btn-success btn-sm" 
+                                type="button" 
+                                data-bs-toggle="collapse" 
+                                data-bs-target="#uploadForm">
+                            <i class="fas fa-upload"></i> Envoyer un document
+                        </button>
+                        <button class="btn btn-secondary btn-sm" type="button"
+                                th:onclick="|openScanner('/my-cases/${case.id}/upload-ajax', '/my-cases/${case.id}')|">
+                            <i class="fas fa-camera"></i> Scanner
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Formulaire d'upload (collapsible) -->
