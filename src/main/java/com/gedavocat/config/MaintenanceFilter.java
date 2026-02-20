@@ -41,8 +41,8 @@ public class MaintenanceFilter extends OncePerRequestFilter {
             return;
         }
 
-        // Bypass : utilisateurs admin authentifiés
-        if (isAdmin()) {
+        // Bypass : tout utilisateur authentifié (admin, avocat, client)
+        if (isAuthenticated()) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -62,11 +62,11 @@ public class MaintenanceFilter extends OncePerRequestFilter {
                 || path.equals("/logout");
     }
 
-    private boolean isAdmin() {
+    private boolean isAuthenticated() {
         var auth = org.springframework.security.core.context.SecurityContextHolder
                 .getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated()) return false;
-        return auth.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        // Exclure l'utilisateur anonyme
+        return !auth.getPrincipal().equals("anonymousUser");
     }
 }
