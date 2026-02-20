@@ -51,7 +51,7 @@
                                             <small class="text-muted d-block">Entreprise / Société</small>
                                         </div>
                                     </div>
-                                    <input type="hidden" id="clientTypeInput" th:field="*{clientType}" th:value="${client.clientType ?: 'INDIVIDUAL'}"/>
+                                    <input type="hidden" id="clientTypeInput" name="clientType" th:value="${client.clientType ?: 'INDIVIDUAL'}"/>
                                 </div>
 
                                 <!-- Champs communs -->
@@ -109,22 +109,13 @@
                                     <small class="form-text">Laissez vide pour un accès permanent</small>
                                 </div>
 
-                                <!-- Invitation par email (uniquement en création) -->
-                                <div id="inviteSection" class="card bg-light mb-4" th:if="${client.id == null}">
-                                    <div class="card-body">
-                                        <div class="form-check form-switch">
-                                            <input class="form-check-input" type="checkbox" 
-                                                   id="sendInvitation" name="sendInvitation" value="true">
-                                            <label class="form-check-label fw-bold" for="sendInvitation">
-                                                <i class="fas fa-envelope text-primary"></i>
-                                                Envoyer une invitation par email pour créer un compte client
-                                            </label>
-                                        </div>
-                                        <small class="text-muted">
-                                            Le client recevra un email avec un lien pour créer son mot de passe 
-                                            et accéder au portail client.
-                                        </small>
-                                    </div>
+                                <!-- Invitation automatique (création uniquement) -->
+                                <div th:if="${client.id == null}" class="alert alert-info mb-4">
+                                    <i class="fas fa-envelope"></i>
+                                    <strong>Email d'invitation automatique :</strong>
+                                    Le client recevra un email pour définir son mot de passe et accéder à son espace personnel,
+                                    où il pourra renseigner ses informations nécessaires au dossier.
+                                    <input type="hidden" name="sendInvitation" value="true"/>
                                 </div>
                                 
                                 <div class="mt-4">
@@ -156,7 +147,6 @@
                 </div>
             </div>
         </div>
-    </div>
 
     <script th:inline="javascript">
         const existingType = /*[[${client.clientType}]]*/ 'INDIVIDUAL';
@@ -186,3 +176,4 @@
             selectClientType(existingType || 'INDIVIDUAL');
         });
     </script>
+</div>

@@ -24,7 +24,7 @@
                                 <span th:text="${error}">Erreur</span>
                             </div>
                             
-                            <form th:action="${isEdit ? '/cases/' + case.id : '/cases'}" 
+<form th:action="${isEdit} ? @{/cases/{id}(id=${case.id})} : @{/cases}" 
                                   method="post" 
                                   th:object="${case}">
                                 

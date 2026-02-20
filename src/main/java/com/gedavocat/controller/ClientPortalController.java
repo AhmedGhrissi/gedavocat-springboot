@@ -297,4 +297,49 @@ public class ClientPortalController {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
     }
+
+    // =========================================================================
+    // Profil du client – informations personnelles
+    // =========================================================================
+
+    /** Affiche la page de profil du client connecté. */
+    @GetMapping("/profile")
+    public String viewProfile(Model model, Authentication authentication) {
+        User user = getCurrentUser(authentication);
+        java.util.Optional<Client> clientOpt = clientRepository.findByClientUserId(user.getId());
+        if (clientOpt.isEmpty()) return notLinked(model);
+        model.addAttribute("client", clientOpt.get());
+        model.addAttribute("user", user);
+        return "client-portal/profile";
+    }
+
+    /** Sauvegarde les informations personnelles du client. */
+    @PostMapping("/profile")
+    public String updateProfile(
+            @RequestParam(value = "phone", required = false) String phone,
+            @RequestParam(value = "address", required = false) String address,
+            @RequestParam(value = "companyName", required = false) String companyName,
+            @RequestParam(value = "siret", required = false) String siret,
+            @RequestParam(value = "birthDate", required = false) String birthDate,
+            @RequestParam(value = "nationality", required = false) String nationality,
+            Authentication authentication,
+            RedirectAttributes redirectAttributes
+    ) {
+        User user = getCurrentUser(authentication);
+        java.util.Optional<Client> clientOpt = clientRepository.findByClientUserId(user.getId());
+        if (clientOpt.isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "Profil client introuvable");
+            return "redirect:/my-cases";
+        }
+        Client client = clientOpt.get();
+        client.setPhone(phone);
+        client.setAddress(address);
+        if (client.getClientType() == Client.ClientType.PROFESSIONAL) {
+            client.setCompanyName(companyName);
+            client.setSiret(siret);
+        }
+        clientRepository.save(client);
+        redirectAttributes.addFlashAttribute("message", "Vos informations ont été mises à jour.");
+        return "redirect:/my-cases/profile";
+    }
 }

@@ -2,7 +2,9 @@ package com.gedavocat.service;
 
 import com.gedavocat.model.Client;
 import com.gedavocat.model.User;
+import com.gedavocat.repository.AppointmentRepository;
 import com.gedavocat.repository.ClientRepository;
+import com.gedavocat.repository.RpvaCommunicationRepository;
 import com.gedavocat.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -22,6 +24,8 @@ public class ClientService {
     private final ClientRepository clientRepository;
     private final UserRepository userRepository;
     private final AuditService auditService;
+    private final AppointmentRepository appointmentRepository;
+    private final RpvaCommunicationRepository rpvaCommunicationRepository;
     
     /**
      * Récupère tous les clients d'un avocat
@@ -160,6 +164,10 @@ public class ClientService {
     @Transactional
     public void deleteClient(String clientId) {
         Client client = getClientById(clientId);
+        // Supprimer les références FK dans les rendez-vous et RPVA avant suppression
+        rpvaCommunicationRepository.deleteAllByCaseEntityClientId(clientId);
+        appointmentRepository.clearClientByClientId(clientId);
+        appointmentRepository.clearRelatedCaseByClientId(clientId);
         clientRepository.delete(client);
     }
 
@@ -175,6 +183,10 @@ public class ClientService {
         }
 
         String clientName = client.getName();
+        // Supprimer les communications RPVA et les références FK avant suppression
+        rpvaCommunicationRepository.deleteAllByCaseEntityClientId(clientId);
+        appointmentRepository.clearClientByClientId(clientId);
+        appointmentRepository.clearRelatedCaseByClientId(clientId);
         clientRepository.delete(client);
 
         auditService.log("CLIENT_DELETED", "Client", clientId,
