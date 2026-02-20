@@ -1,9 +1,119 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GED Avocat - Gestion documentaire pour cabinets d'avocats</title>
+
+    <!-- ═══ SEO PRIMARY ═══════════════════════════════════════════════════════ -->
+    <title>GED Avocat | Logiciel de gestion documentaire pour cabinet d'avocat</title>
+    <meta name="description" content="docavocat.fr — Solution SaaS complète pour avocats : gestion des dossiers clients, documents juridiques, signatures électroniques Yousign et communications RPVA e-Barreau. Essai gratuit 14 jours, sans engagement.">
+    <meta name="keywords" content="logiciel avocat, GED avocat, gestion documentaire cabinet avocat, logiciel cabinet avocat, dossiers juridiques, signatures électroniques avocat, RPVA, e-Barreau, docavocat, logiciel juridique SaaS">
+    <meta name="author" content="GED Avocat — docavocat.fr">
+    <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+    <link rel="canonical" href="https://docavocat.fr/">
+
+    <!-- ═══ LANGUE & RÉGION ═══════════════════════════════════════════════════ -->
+    <meta http-equiv="content-language" content="fr">
+    <meta name="geo.region" content="FR">
+    <meta name="geo.placename" content="France">
+
+    <!-- ═══ OPEN GRAPH ════════════════════════════════════════════════════════ -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="GED Avocat">
+    <meta property="og:title" content="GED Avocat | Logiciel de gestion documentaire pour cabinet d'avocat">
+    <meta property="og:description" content="Solution SaaS pour avocats : gestion des dossiers, documents, signatures électroniques et RPVA. Essai gratuit 14 jours.">
+    <meta property="og:url" content="https://docavocat.fr/">
+    <meta property="og:image" content="https://docavocat.fr/img/og-gedavocat.svg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:type" content="image/svg+xml">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="GED Avocat — Interface de gestion documentaire pour avocat">
+    <meta property="og:locale" content="fr_FR">
+
+    <!-- ═══ TWITTER CARD ══════════════════════════════════════════════════════ -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="GED Avocat | Logiciel pour cabinet d'avocat">
+    <meta name="twitter:description" content="Gérez vos dossiers, documents et clients facilement. Signatures électroniques et RPVA intégrés.">
+    <meta name="twitter:image" content="https://docavocat.fr/img/og-gedavocat.svg">
+    <meta name="twitter:image:alt" content="GED Avocat — Interface de gestion">
+
+    <!-- ═══ TECHNIQUE ═════════════════════════════════════════════════════════ -->
+    <meta name="theme-color" content="#667eea">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="shortcut icon" href="/favicon.svg">
+    <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+
+    <!-- ═══ STRUCTURED DATA JSON-LD ═══════════════════════════════════════════ -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://docavocat.fr/#organization",
+          "name": "GED Avocat",
+          "url": "https://docavocat.fr",
+          "logo": { "@type": "ImageObject", "url": "https://docavocat.fr/favicon.svg", "width": 100, "height": 100 },
+          "contactPoint": { "@type": "ContactPoint", "contactType": "customer support", "email": "support@docavocat.fr", "availableLanguage": "French" },
+          "areaServed": "FR",
+          "knowsLanguage": "fr"
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://docavocat.fr/#website",
+          "url": "https://docavocat.fr",
+          "name": "GED Avocat",
+          "description": "Logiciel SaaS de gestion documentaire pour cabinets d'avocats",
+          "publisher": { "@id": "https://docavocat.fr/#organization" },
+          "inLanguage": "fr-FR"
+        },
+        {
+          "@type": "SoftwareApplication",
+          "name": "GED Avocat",
+          "applicationCategory": "BusinessApplication",
+          "applicationSubCategory": "Legal Software",
+          "operatingSystem": "Web Browser",
+          "url": "https://docavocat.fr",
+          "description": "Solution SaaS de gestion électronique de documents pour cabinets d'avocats. Gérez vos dossiers, clients, documents et communiquez via RPVA e-Barreau.",
+          "offers": [
+            { "@type": "Offer", "name": "Solo",       "price": "29.99",  "priceCurrency": "EUR", "description": "Jusqu'à 10 clients, stockage 5 GB, gestion documentaire",                          "url": "https://docavocat.fr/register?plan=SOLO" },
+            { "@type": "Offer", "name": "Cabinet",    "price": "99.99",  "priceCurrency": "EUR", "description": "Jusqu'à 100 clients, 50 GB, signatures électroniques, RPVA",               "url": "https://docavocat.fr/register?plan=CABINET" },
+            { "@type": "Offer", "name": "Enterprise", "price": "299.99", "priceCurrency": "EUR", "description": "Clients illimités, 500 GB, API complète, support 24/7, formation", "url": "https://docavocat.fr/register?plan=ENTERPRISE" }
+          ],
+          "featureList": [
+            "Gestion des dossiers juridiques",
+            "Gestion électronique de documents (GED)",
+            "Signatures électroniques Yousign conformes eIDAS",
+            "Communications RPVA e-Barreau",
+            "Portail client sécurisé",
+            "Partage de dossiers entre avocats",
+            "Filigranes PDF automatiques",
+            "Facturation électronique",
+            "Conformité RGPD",
+            "Scanner de documents via webcam"
+          ],
+          "publisher": { "@id": "https://docavocat.fr/#organization" },
+          "inLanguage": "fr-FR"
+        },
+        {
+          "@type": "FAQPage",
+          "mainEntity": [
+            { "@type": "Question", "name": "GED Avocat est-il conforme aux exigences du barreau ?",      "acceptedAnswer": { "@type": "Answer", "text": "Oui, GED Avocat intègre les communications RPVA (Réseau Privé Virtuel des Avocats) et est conçu pour répondre aux exigences de confidentialité et sécurité imposées par les barreaux français." } },
+            { "@type": "Question", "name": "Puis-je signer des documents électroniquement ?",           "acceptedAnswer": { "@type": "Answer", "text": "Oui, les formules Cabinet et Enterprise incluent la signature électronique qualifiée via Yousign, conforme au règlement eIDAS." } },
+            { "@type": "Question", "name": "Mes données sont-elles sécurisées ?",                       "acceptedAnswer": { "@type": "Answer", "text": "GED Avocat garantit la conformité RGPD, le chiffrement des données et l'hébergement en France. Vos données restent confidentielles et sous votre contrôle exclusif." } },
+            { "@type": "Question", "name": "Y a-t-il une période d'essai gratuite ?",                   "acceptedAnswer": { "@type": "Answer", "text": "Oui, chaque formule bénéficie de 14 jours d'essai gratuit sans engagement et sans carte bancaire requise." } },
+            { "@type": "Question", "name": "Puis-je importer mes anciens dossiers et documents ?",      "acceptedAnswer": { "@type": "Answer", "text": "Oui, GED Avocat permet l'import de documents PDF, Word et images. Notre équipe support vous accompagne lors de la migration." } }
+          ]
+        }
+      ]
+    }
+    </script>
+
+    <!-- CSS -->
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -307,7 +417,21 @@
 
     <!-- Footer -->
     <footer>
-        <p>&copy; 2026 GED Avocat - Solution de gestion documentaire pour avocats</p>
+        <div style="max-width:1200px;margin:0 auto;padding:0 1rem">
+            <p>&copy; 2026 GED Avocat &mdash; Solution de gestion documentaire pour avocats</p>
+            <nav aria-label="Liens légaux" style="margin-top:1rem;font-size:0.9rem;opacity:0.75">
+                <a th:href="@{/legal/terms}"   style="color:white;text-decoration:none;margin:0 0.6rem">Conditions d'utilisation</a>
+                <span aria-hidden="true">&middot;</span>
+                <a th:href="@{/legal/privacy}" style="color:white;text-decoration:none;margin:0 0.6rem">Politique de confidentialité</a>
+                <span aria-hidden="true">&middot;</span>
+                <a th:href="@{/login}"         style="color:white;text-decoration:none;margin:0 0.6rem">Connexion</a>
+                <span aria-hidden="true">&middot;</span>
+                <a href="/sitemap.xml" rel="noopener" target="_blank" style="color:white;text-decoration:none;margin:0 0.6rem">Plan du site</a>
+            </nav>
+            <p style="margin-top:0.5rem;font-size:0.8rem;opacity:0.45">
+                Hébergé en France &middot; Conforme RGPD &middot; Application SaaS pour cabinets d'avocats
+            </p>
+        </div>
     </footer>
 
 </body>

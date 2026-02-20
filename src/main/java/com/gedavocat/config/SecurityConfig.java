@@ -40,8 +40,8 @@ public class SecurityConfig {
 				.authorizeHttpRequests(auth -> auth
 						// Pages publiques
 						.requestMatchers("/", "/login", "/register", "/maintenance", "/subscription/pricing",
-							"/api/auth/**", "/css/**", "/js/**", "/images/**", "/favicon.ico",
-							"/subscription/webhook", "/legal/**",
+						"/api/auth/**", "/css/**", "/js/**", "/images/**", "/img/**", "/favicon.ico", "/favicon.svg",
+						"/robots.txt", "/sitemap.xml",
 							"/forgot-password", "/reset-password", "/verify-email", "/verify-email/resend",
 							"/clients/accept-invitation",
 							"/cases/shared", "/cases/shared-expired")
