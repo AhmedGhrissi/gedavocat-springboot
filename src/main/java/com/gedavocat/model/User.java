@@ -124,6 +124,12 @@ public class User {
     // AUTRES CHAMPS
     // ==========================================
 
+    @Column(name = "email_verified", nullable = false)
+    private boolean emailVerified = true; // true par défaut pour les utilisateurs existants
+
+    @Column(name = "account_enabled", nullable = false)
+    private boolean accountEnabled = true;
+
     @Column(name = "access_ends_at")
     private LocalDateTime accessEndsAt;
 

@@ -139,11 +139,6 @@
                 <span th:text="${error} ?: 'Email ou mot de passe incorrect'"></span>
             </div>
             
-            <div th:if="${param.logout}" class="alert alert-success">
-                <i class="fas fa-check-circle"></i>
-                <span>Vous avez été déconnecté avec succès</span>
-            </div>
-            
             <div th:if="${message}" class="alert alert-success">
                 <i class="fas fa-check-circle"></i>
                 <span th:text="${message}"></span>
@@ -192,7 +187,7 @@
             
             <div class="auth-links">
                 <p>
-                    <a href="#">Mot de passe oublié ?</a>
+                    <a th:href="@{/forgot-password}">Mot de passe oublié ?</a>
                 </p>
                 <p>
                     Pas encore de compte ? 

@@ -50,4 +50,6 @@ public interface ClientRepository extends JpaRepository<Client, String> {
      * Utilisé pour le portail client
      */
     Optional<Client> findByClientUserId(String userId);
+
+    long countByCreatedAtAfter(java.time.LocalDateTime date);
 }

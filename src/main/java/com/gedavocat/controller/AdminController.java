@@ -10,8 +10,10 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 /**
  * Contrôleur pour le panneau d'administration
@@ -98,6 +100,7 @@ public class AdminController {
     public String users(Model model) {
         try {
             model.addAttribute("users", userService.getAllUsers());
+            model.addAttribute("activityStats", metricsService.getActivityStats());
             return "admin/users";
         } catch (Exception e) {
             model.addAttribute("error", "Erreur lors du chargement des utilisateurs");
@@ -145,5 +148,17 @@ public class AdminController {
     public String settings(Model model) {
         model.addAttribute("maintenanceEnabled", maintenanceService.isMaintenanceEnabled());
         return "admin/settings";
+    }
+
+    /**
+     * Toggle maintenance via formulaire (CSRF-protected, fiable)
+     */
+    @PostMapping("/settings/toggle-maintenance")
+    public String toggleMaintenance(RedirectAttributes redirectAttributes) {
+        boolean newState = maintenanceService.toggle();
+        redirectAttributes.addFlashAttribute("maintenanceMsg",
+            newState ? "🔴 Mode maintenance activé — le site est inaccessible aux utilisateurs."
+                     : "🟢 Mode maintenance désactivé — le site est de nouveau accessible.");
+        return "redirect:/admin/settings";
     }
 }

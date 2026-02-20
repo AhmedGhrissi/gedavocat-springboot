@@ -64,4 +64,6 @@ public interface DocumentRepository extends JpaRepository<Document, String> {
            "AND d.deletedAt IS NULL " +
            "ORDER BY d.createdAt DESC")
     List<Document> findByLawyerIdWithCase(@Param("lawyerId") String lawyerId);
+
+    long countByCreatedAtAfter(java.time.LocalDateTime date);
 }

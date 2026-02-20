@@ -2,14 +2,21 @@ package com.gedavocat.service;
 
 import com.gedavocat.dto.SystemMetricsDTO;
 import com.gedavocat.repository.*;
+import com.zaxxer.hikari.HikariDataSource;
+import com.zaxxer.hikari.HikariPoolMXBean;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.stereotype.Service;
 
 import javax.sql.DataSource;
+import java.io.File;
 import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.time.Duration;
@@ -18,6 +25,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Stream;
 
 /**
  * Service pour les métriques et informations système de l'admin
@@ -33,7 +41,11 @@ public class AdminMetricsService {
     private final CaseRepository caseRepository;
     private final DocumentRepository documentRepository;
     private final InvoiceRepository invoiceRepository;
-    
+    private final AuditLogRepository auditLogRepository;
+
+    @Value("${app.upload.dir:./uploads/documents}")
+    private String uploadDir;
+
     private static final long START_TIME = System.currentTimeMillis();
 
     /**
@@ -47,8 +59,11 @@ public class AdminMetricsService {
         double memoryUsagePercent = (maxMemory > 0) ? ((double) usedMemory / maxMemory) * 100 : 0;
         
         long storageUsed = getStorageUsed();
-        long storageLimit = 10737418240L; // 10 GB par défaut
+        long storageLimit = getDiskTotalSpace();
         double storageUsagePercent = (storageLimit > 0) ? ((double) storageUsed / storageLimit) * 100 : 0;
+        
+        int activeConn = getActiveConnections();
+        int maxConn = getMaxConnections();
         
         return SystemMetricsDTO.builder()
             .javaVersion(System.getProperty("java.version"))
@@ -79,8 +94,8 @@ public class AdminMetricsService {
             .databaseProductName(getDatabaseProductName())
             .databaseVersion(getDatabaseVersion())
             .databaseUrl(getDatabaseUrl())
-            .activeConnections(getActiveConnections())
-            .maxConnections(100) // À configurer selon votre pool
+            .activeConnections(activeConn)
+            .maxConnections(maxConn)
             .totalUsers(userRepository.count())
             .totalClients(clientRepository.count())
             .totalCases(caseRepository.count())
@@ -91,9 +106,9 @@ public class AdminMetricsService {
             .storageUsagePercent(storageUsagePercent)
             .storageUsedFormatted(formatBytes(storageUsed))
             .storageLimitFormatted(formatBytes(storageLimit))
-            .usersLastHour(0L) // À implémenter avec audit logs
-            .usersLastDay(0L)
-            .documentsUploadedToday(0L)
+            .usersLastHour(countCreatedAfter(userRepository, LocalDateTime.now().minusHours(1)))
+            .usersLastDay(countCreatedAfter(userRepository, LocalDateTime.now().minusDays(1)))
+            .documentsUploadedToday(documentRepository.countByCreatedAtAfter(LocalDateTime.now().withHour(0).withMinute(0).withSecond(0)))
             .status("UP")
             .healthDetails(getHealthDetails())
             .build();
@@ -154,19 +169,73 @@ public class AdminMetricsService {
     }
 
     /**
-     * Récupère le nombre de connexions actives
+     * Récupère le nombre de connexions actives depuis HikariCP
      */
     private int getActiveConnections() {
-        // À implémenter selon votre pool de connexions (HikariCP, etc.)
-        return 5; // Placeholder
+        try {
+            if (dataSource instanceof HikariDataSource hikari) {
+                HikariPoolMXBean pool = hikari.getHikariPoolMXBean();
+                return pool != null ? pool.getActiveConnections() : 0;
+            }
+        } catch (Exception e) {
+            log.warn("Impossible de récupérer les connexions actives HikariCP", e);
+        }
+        return 0;
     }
 
     /**
-     * Récupère l'espace de stockage utilisé
+     * Récupère la taille max du pool HikariCP
+     */
+    private int getMaxConnections() {
+        try {
+            if (dataSource instanceof HikariDataSource hikari) {
+                return hikari.getMaximumPoolSize();
+            }
+        } catch (Exception e) {
+            log.warn("Impossible de récupérer la taille max du pool", e);
+        }
+        return 10;
+    }
+
+    /**
+     * Calcule la taille réelle du répertoire uploads
      */
     private long getStorageUsed() {
-        // À implémenter selon votre système de stockage
-        return 0L; // Placeholder
+        try {
+            Path p = Paths.get(uploadDir);
+            if (!Files.exists(p)) return 0L;
+            try (Stream<Path> walk = Files.walk(p)) {
+                return walk.filter(Files::isRegularFile)
+                           .mapToLong(f -> f.toFile().length())
+                           .sum();
+            }
+        } catch (Exception e) {
+            log.warn("Impossible de calculer l'espace utilisé", e);
+            return 0L;
+        }
+    }
+
+    /**
+     * Espace total du disque sur lequel tourne l'application
+     */
+    private long getDiskTotalSpace() {
+        try {
+            File root = new File(System.getProperty("user.dir"));
+            return root.getTotalSpace();
+        } catch (Exception e) {
+            return 0L;
+        }
+    }
+
+    /**
+     * Compte les entités créées après une date (User, Case, Client)
+     */
+    private long countCreatedAfter(UserRepository repo, LocalDateTime since) {
+        try {
+            return repo.countByCreatedAtAfter(since);
+        } catch (Exception e) {
+            return 0L;
+        }
     }
 
     /**
@@ -250,13 +319,17 @@ public class AdminMetricsService {
         stats.put("archivedCases", archivedCases);
         
         // Statistiques temporelles (7 derniers jours)
-        // Note: Ces statistiques nécessiteraient des timestamps appropriés dans les entités
-        // Pour l'instant, on retourne des valeurs par défaut
-        stats.put("newUsersLast7Days", 0L);
-        stats.put("newClientsLast7Days", 0L);
-        stats.put("newCasesLast7Days", 0L);
-        stats.put("newDocumentsLast7Days", 0L);
-        stats.put("loginCountLast7Days", 0L);
+        LocalDateTime since7days = LocalDateTime.now().minusDays(7);
+        try { stats.put("newUsersLast7Days", userRepository.countByCreatedAtAfter(since7days)); }
+        catch (Exception e) { stats.put("newUsersLast7Days", 0L); }
+        try { stats.put("newClientsLast7Days", clientRepository.countByCreatedAtAfter(since7days)); }
+        catch (Exception e) { stats.put("newClientsLast7Days", 0L); }
+        try { stats.put("newCasesLast7Days", caseRepository.countByCreatedAtAfter(since7days)); }
+        catch (Exception e) { stats.put("newCasesLast7Days", 0L); }
+        try { stats.put("newDocumentsLast7Days", documentRepository.countByCreatedAtAfter(since7days)); }
+        catch (Exception e) { stats.put("newDocumentsLast7Days", 0L); }
+        try { stats.put("loginCountLast7Days", auditLogRepository.countByActionAndCreatedAtAfter("LOGIN", since7days)); }
+        catch (Exception e) { stats.put("loginCountLast7Days", 0L); }
         
         return stats;
     }

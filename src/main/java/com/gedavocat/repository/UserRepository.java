@@ -76,4 +76,6 @@ public interface UserRepository extends JpaRepository<User, String> {
            "LOWER(u.lastName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
            "LOWER(u.email) LIKE LOWER(CONCAT('%', :keyword, '%'))")
     List<User> findByFirstNameContainingOrLastNameContainingOrEmailContaining(@Param("keyword") String keyword);
+
+    long countByCreatedAtAfter(LocalDateTime date);
 }
