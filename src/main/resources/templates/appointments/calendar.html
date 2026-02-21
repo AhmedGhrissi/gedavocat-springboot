@@ -268,7 +268,8 @@
                 }
             },
             dateClick: function(info) {
-                var dateTime = info.dateStr + 'T09:00:00';
+                // En vue mois, dateStr = "2026-02-21" ; en vue semaine/jour, dateStr inclut déjà l'heure
+                var dateTime = info.dateStr.includes('T') ? info.dateStr.split('+')[0] : info.dateStr + 'T09:00:00';
                 if (confirm('Créer un nouveau rendez-vous le ' + new Date(info.date).toLocaleDateString('fr-FR') + ' ?')) {
                     window.location.href = '/appointments/new?date=' + dateTime;
                 }

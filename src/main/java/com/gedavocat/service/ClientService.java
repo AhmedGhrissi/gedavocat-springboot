@@ -1,8 +1,10 @@
 package com.gedavocat.service;
 
+import com.gedavocat.model.Case;
 import com.gedavocat.model.Client;
 import com.gedavocat.model.User;
 import com.gedavocat.repository.AppointmentRepository;
+import com.gedavocat.repository.CaseRepository;
 import com.gedavocat.repository.ClientRepository;
 import com.gedavocat.repository.RpvaCommunicationRepository;
 import com.gedavocat.repository.UserRepository;
@@ -26,6 +28,8 @@ public class ClientService {
     private final AuditService auditService;
     private final AppointmentRepository appointmentRepository;
     private final RpvaCommunicationRepository rpvaCommunicationRepository;
+    private final CaseRepository caseRepository;
+    private final CaseService caseService;
     
     /**
      * Récupère tous les clients d'un avocat
@@ -164,10 +168,13 @@ public class ClientService {
     @Transactional
     public void deleteClient(String clientId) {
         Client client = getClientById(clientId);
-        // Supprimer les références FK dans les rendez-vous et RPVA avant suppression
-        rpvaCommunicationRepository.deleteAllByCaseEntityClientId(clientId);
+        // Supprimer les dossiers liés (dépendances FK cascade) via caseService
+        List<Case> cases = caseRepository.findByClientId(clientId);
+        for (Case c : cases) {
+            caseService.deleteCase(c.getId(), c.getLawyer().getId());
+        }
+        // Supprimer les références restantes dans les rendez-vous
         appointmentRepository.clearClientByClientId(clientId);
-        appointmentRepository.clearRelatedCaseByClientId(clientId);
         clientRepository.delete(client);
     }
 
@@ -183,10 +190,13 @@ public class ClientService {
         }
 
         String clientName = client.getName();
-        // Supprimer les communications RPVA et les références FK avant suppression
-        rpvaCommunicationRepository.deleteAllByCaseEntityClientId(clientId);
+        // Supprimer les dossiers liés (dépendances FK cascade) avant suppression du client
+        List<Case> cases = caseRepository.findByClientId(clientId);
+        for (Case c : cases) {
+            caseService.deleteCase(c.getId(), lawyerId);
+        }
+        // Supprimer les références restantes dans les rendez-vous
         appointmentRepository.clearClientByClientId(clientId);
-        appointmentRepository.clearRelatedCaseByClientId(clientId);
         clientRepository.delete(client);
 
         auditService.log("CLIENT_DELETED", "Client", clientId,

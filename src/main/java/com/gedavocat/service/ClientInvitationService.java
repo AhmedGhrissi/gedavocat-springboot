@@ -134,12 +134,14 @@ public class ClientInvitationService {
 
         // Créer le compte utilisateur
         User clientUser = new User();
+        clientUser.setId(java.util.UUID.randomUUID().toString());
         clientUser.setEmail(client.getEmail());
         clientUser.setPassword(passwordEncoder.encode(password));
         // Extraire prénom/nom depuis client.name (best effort)
         String[] parts = client.getName().trim().split("\\s+", 2);
         clientUser.setFirstName(parts[0]);
         clientUser.setLastName(parts.length > 1 ? parts[1] : "");
+        clientUser.setName(client.getName());
         clientUser.setRole(User.UserRole.CLIENT);
         clientUser.setEmailVerified(true);
         clientUser.setAccountEnabled(true);

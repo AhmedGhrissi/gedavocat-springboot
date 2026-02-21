@@ -51,10 +51,10 @@
                                             th:classappend="${#fields.hasErrors('client')} ? 'is-invalid' : ''"
                                             required>
                                         <option value="">Sélectionnez un client</option>
-                                        <option th:each="client : ${clients}" 
-                                                th:value="${client.id}" 
-                                                th:text="${client.name}"
-                                                th:selected="${case.client != null and case.client.id == client.id}">
+                                        <option th:each="c : ${clients}" 
+                                                th:value="${c.id}" 
+                                                th:text="${c.name}"
+                                                th:selected="${selectedClientId != null and c.id == selectedClientId}">
                                             Client
                                         </option>
                                     </select>

@@ -53,6 +53,7 @@ public class SecurityConfig {
 						// Pages de paiement et webhooks
 						.requestMatchers("/payment/**").permitAll()
 						.requestMatchers("/api/webhooks/**").permitAll()
+						.requestMatchers("/invoices/my-invoices").hasAnyRole("CLIENT", "LAWYER", "ADMIN")
 						.requestMatchers("/invoices/**", "/api/invoices/**").hasAnyRole("LAWYER", "ADMIN")
 						
 						// Pages avocat et admin
