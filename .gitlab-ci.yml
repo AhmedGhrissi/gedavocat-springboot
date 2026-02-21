@@ -266,8 +266,8 @@ deploy:
   script:
     #  Envoi des fichiers de configuration 
     - scp docker/docker-compose.yml root@$SERVER_HOST:$REMOTE_DIR/docker-compose.yml
-    - scp "$ENV_PROD" root@$SERVER_HOST:$REMOTE_DIR/.env
-    - ssh root@$SERVER_HOST "echo 'APP_IMAGE=$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA' >> $REMOTE_DIR/.env"
+    # On met a jour APP_IMAGE dans le .env existant (sans ecraser les autres variables)
+    - ssh root@$SERVER_HOST "sed -i '/^APP_IMAGE=/d' $REMOTE_DIR/.env && echo \"APP_IMAGE=$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA\" >> $REMOTE_DIR/.env"
 
     #  Envoi des configs Loki / Promtail / Grafana 
     - ssh root@$SERVER_HOST "mkdir -p $REMOTE_DIR/loki $REMOTE_DIR/promtail $REMOTE_DIR/grafana/provisioning/datasources $REMOTE_DIR/grafana/provisioning/dashboards"
