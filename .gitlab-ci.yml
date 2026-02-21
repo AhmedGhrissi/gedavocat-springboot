@@ -64,7 +64,8 @@ stages:
 # Utilise pour : build, test
 .discord_commit_notify: &discord_commit_notify
   - |
-    [ -z "${DISCORD_COMMIT_WEBHOOK:-}" ] && exit 0
+    WEBHOOK="${DISCORD_WEBHOOK:-${DISCORD_COMMIT_WEBHOOK:-}}"
+    [ -z "$WEBHOOK" ] && exit 0
     apk add --no-cache curl --quiet 2>/dev/null || true
     BRANCH="${CI_COMMIT_BRANCH:-MR}"
     AUTHOR="${GITLAB_USER_NAME:-CI}"
@@ -77,7 +78,7 @@ stages:
       "$CI_PROJECT_URL" "$CI_JOB_ID" \
       "$COLOR" \
       "$(date -u '+%Y-%m-%dT%H:%M:%SZ')")
-    RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${DISCORD_COMMIT_WEBHOOK}" \
+    RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$WEBHOOK" \
          -H "Content-Type: application/json" \
          -d "$PAYLOAD")
     echo "Discord commit notify: HTTP $RESPONSE"
@@ -115,7 +116,8 @@ build:
     - apk add --no-cache curl --quiet 2>/dev/null || true
     # Notification Discord : pipeline demarre
     - |
-      [ -z "${DISCORD_COMMIT_WEBHOOK:-}" ] && true || {
+      WEBHOOK="${DISCORD_WEBHOOK:-${DISCORD_COMMIT_WEBHOOK:-}}"
+      [ -z "$WEBHOOK" ] && true || {
         BRANCH="${CI_COMMIT_BRANCH:-MR}"
         AUTHOR="${GITLAB_USER_NAME:-CI}"
         SHA="${CI_COMMIT_SHORT_SHA:-????}"
@@ -128,7 +130,7 @@ build:
         fi
         PAYLOAD=$(printf '{"embeds":[{"title":"[START] Pipeline demarre","description":"**Branche :** `%s`\\n**Commit :** [`%s`](%s)\\n**Par :** %s\\n**Message :** %s\\n**Scope :** %s","color":16776960,"footer":{"text":"DocAvocat CI/CD"},"timestamp":"%s"}]}' \
           "$BRANCH" "$SHA" "$CI_PIPELINE_URL" "$AUTHOR" "$COMMIT_MSG" "$SCOPE" "$(date -u '+%Y-%m-%dT%H:%M:%SZ')")
-        RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${DISCORD_COMMIT_WEBHOOK}" \
+        RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$WEBHOOK" \
              -H "Content-Type: application/json" \
              -d "$PAYLOAD")
         echo "Discord pipeline-start: HTTP $RESPONSE"
