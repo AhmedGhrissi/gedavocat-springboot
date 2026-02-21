@@ -46,7 +46,7 @@
       "targets": [
         {
           "datasource": { "type": "loki", "uid": "loki" },
-          "expr": "sum(count_over_time({app=\"docavocat\", container=\"docavocat-app\"} |= \"ERROR\" [24h]))",
+          "expr": "sum(count_over_time({app=\"docavocat\", container=\"docavocat-app\"} | json | level=\"ERROR\" [24h]))",
           "legendFormat": "Erreurs",
           "refId": "A"
         }
@@ -76,7 +76,7 @@
       "targets": [
         {
           "datasource": { "type": "loki", "uid": "loki" },
-          "expr": "sum(count_over_time({app=\"docavocat\", container=\"docavocat-app\"} |= \" WARN \" [24h]))",
+          "expr": "sum(count_over_time({app=\"docavocat\", container=\"docavocat-app\"} | json | level=\"WARN\" [24h]))",
           "legendFormat": "Warnings",
           "refId": "A"
         }
@@ -161,7 +161,7 @@
       "targets": [
         {
           "datasource": { "type": "loki", "uid": "loki" },
-          "expr": "sum(count_over_time({app=\"docavocat\", container=\"docavocat-mysql\"} |= \"ERROR\" [24h]))",
+          "expr": "sum(count_over_time({app=\"docavocat\", container=\"docavocat-mysql\"} | json | level=\"ERROR\" [24h]))",
           "legendFormat": "MySQL Erreurs",
           "refId": "A"
         }
@@ -190,7 +190,7 @@
       "targets": [
         {
           "datasource": { "type": "loki", "uid": "loki" },
-          "expr": "sum(count_over_time({app=\"docavocat\", container=\"docavocat-app\"} |= \"Exception\" [24h]))",
+          "expr": "sum(count_over_time({app=\"docavocat\", container=\"docavocat-app\"} | json |= \"Exception\" [24h]))",
           "legendFormat": "Exceptions",
           "refId": "A"
         }
@@ -225,19 +225,19 @@
       "targets": [
         {
           "datasource": { "type": "loki", "uid": "loki" },
-          "expr": "sum(rate({app=\"docavocat\", container=\"docavocat-app\"} |= \" INFO \" [1m]))",
+          "expr": "sum(rate({app=\"docavocat\", container=\"docavocat-app\"} | json | level=\"INFO\" [1m]))",
           "legendFormat": "INFO",
           "refId": "A"
         },
         {
           "datasource": { "type": "loki", "uid": "loki" },
-          "expr": "sum(rate({app=\"docavocat\", container=\"docavocat-app\"} |= \" WARN \" [1m]))",
+          "expr": "sum(rate({app=\"docavocat\", container=\"docavocat-app\"} | json | level=\"WARN\" [1m]))",
           "legendFormat": "WARN",
           "refId": "B"
         },
         {
           "datasource": { "type": "loki", "uid": "loki" },
-          "expr": "sum(rate({app=\"docavocat\", container=\"docavocat-app\"} |= \"ERROR\" [1m]))",
+          "expr": "sum(rate({app=\"docavocat\", container=\"docavocat-app\"} | json | level=\"ERROR\" [1m]))",
           "legendFormat": "ERROR",
           "refId": "C"
         }
@@ -258,25 +258,25 @@
       "targets": [
         {
           "datasource": { "type": "loki", "uid": "loki" },
-          "expr": "sum(count_over_time({app=\"docavocat\", container=\"docavocat-app\"} |= \" INFO \" [$__range]))",
+          "expr": "sum(count_over_time({app=\"docavocat\", container=\"docavocat-app\"} | json | level=\"INFO\" [$__range]))",
           "legendFormat": "INFO",
           "refId": "A"
         },
         {
           "datasource": { "type": "loki", "uid": "loki" },
-          "expr": "sum(count_over_time({app=\"docavocat\", container=\"docavocat-app\"} |= \" WARN \" [$__range]))",
+          "expr": "sum(count_over_time({app=\"docavocat\", container=\"docavocat-app\"} | json | level=\"WARN\" [$__range]))",
           "legendFormat": "WARN",
           "refId": "B"
         },
         {
           "datasource": { "type": "loki", "uid": "loki" },
-          "expr": "sum(count_over_time({app=\"docavocat\", container=\"docavocat-app\"} |= \"ERROR\" [$__range]))",
+          "expr": "sum(count_over_time({app=\"docavocat\", container=\"docavocat-app\"} | json | level=\"ERROR\" [$__range]))",
           "legendFormat": "ERROR",
           "refId": "C"
         },
         {
           "datasource": { "type": "loki", "uid": "loki" },
-          "expr": "sum(count_over_time({app=\"docavocat\", container=\"docavocat-app\"} |= \"DEBUG\" [$__range]))",
+          "expr": "sum(count_over_time({app=\"docavocat\", container=\"docavocat-app\"} | json | level=\"DEBUG\" [$__range]))",
           "legendFormat": "DEBUG",
           "refId": "D"
         }

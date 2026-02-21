@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <!-- ================================================================
+         logback-spring.xml — Configuration des logs GedAvocat
+         Profil "prod"  → JSON structuré (Loki/Grafana)
+         Profil par défaut / dev → texte coloré sur la console
+    ================================================================ -->
+
+    <!-- ── Profil DEV (tout sauf "prod") ───────────────────────────── -->
+    <springProfile name="!prod">
+        <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+        <include resource="org/springframework/boot/logging/logback/console-appender.xml"/>
+
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+
+        <logger name="com.gedavocat"                     level="DEBUG"/>
+        <logger name="org.springframework.web"           level="DEBUG"/>
+        <logger name="org.hibernate.SQL"                 level="DEBUG"/>
+    </springProfile>
+
+    <!-- ── Profil PROD → JSON (logstash-logback-encoder) ───────────── -->
+    <springProfile name="prod">
+
+        <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+                <!-- Champs supplémentaires injectés dans chaque entrée JSON -->
+                <customFields>{"app":"docavocat","env":"production","service":"app"}</customFields>
+                <!-- Pas de stacktrace inline (trop verbeux pour Loki) -->
+                <throwableConverter class="net.logstash.logback.stacktrace.ShortenedThrowableConverter">
+                    <maxDepthPerCause>10</maxDepthPerCause>
+                    <shortenedClassNameLength>30</shortenedClassNameLength>
+                    <rootCauseFirst>true</rootCauseFirst>
+                </throwableConverter>
+            </encoder>
+        </appender>
+
+        <!-- Niveaux en production : INFO pour l'app, WARN pour les frameworks -->
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+
+        <logger name="com.gedavocat"                             level="INFO"/>
+        <logger name="org.springframework"                       level="WARN"/>
+        <logger name="org.springframework.security"              level="WARN"/>
+        <logger name="org.hibernate"                             level="WARN"/>
+        <logger name="com.zaxxer.hikari"                         level="WARN"/>
+        <logger name="org.apache.catalina"                       level="WARN"/>
+
+    </springProfile>
+
+</configuration>
