@@ -1,9 +1,19 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout}">
 <head>
-    <title>Paiement annulé</title>
+    
+    <style>
+        /* Dark theme overrides for this page */
+        :root { --bg:#080b14; --surface-1:#0f172a; --surface-2:#1e2d3d; --border:rgba(148,163,184,0.12); --text-primary:#f1f5f9; --text-secondary:#94a3b8; --primary:#667eea; --accent:#818cf8; }
+        h1,h2,h3,h4,h5,h6 { color: var(--text-primary) !important; }
+        p, label, span { color: inherit; }
+        .card { background: rgba(255,255,255,0.04) !important; border-color: var(--border) !important; }
+        .card-header { background: transparent !important; border-color: var(--border) !important; color: var(--text-primary) !important; }
+        .text-muted { color: var(--text-secondary) !important; }
+        a { color: var(--accent); }
+    </style><title>Paiement annulé</title>
     <style>
         @keyframes fadeInUp {
             from {
@@ -24,11 +34,11 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            background: rgba(245,158,11,0.06);
             border-radius: 20px;
         }
         .cancel-card {
-            background: white;
+            background: rgba(255,255,255,0.04);
             border-radius: 24px;
             padding: 60px 40px;
             max-width: 600px;
@@ -52,7 +62,7 @@
         .cancel-title {
             font-size: 36px;
             font-weight: 800;
-            color: #1e293b;
+            color: #f1f5f9;
             margin-bottom: 16px;
         }
         .cancel-subtitle {
@@ -61,7 +71,7 @@
             margin-bottom: 32px;
         }
         .info-box {
-            background: #f8fafc;
+            background: var(--bg, #080b14);
             border-left: 4px solid #f59e0b;
             padding: 20px;
             border-radius: 12px;
@@ -69,7 +79,7 @@
             margin-bottom: 32px;
         }
         .info-box h5 {
-            color: #1e293b;
+            color: #f1f5f9;
             margin-bottom: 12px;
             font-weight: 700;
         }
@@ -85,12 +95,12 @@
             margin-bottom: 32px;
         }
         .reason-card {
-            background: #f8fafc;
+            background: var(--bg, #080b14);
             padding: 20px;
             border-radius: 12px;
             text-align: left;
             transition: all 0.3s;
-            border: 2px solid #e2e8f0;
+            border: 1px solid rgba(148,163,184,0.12);
         }
         .reason-card:hover {
             border-color: #667eea;
@@ -110,7 +120,7 @@
         }
         .reason-title {
             font-weight: 700;
-            color: #1e293b;
+            color: #f1f5f9;
             margin-bottom: 8px;
         }
         .reason-text {
@@ -144,9 +154,9 @@
             color: white;
         }
         .btn-secondary-premium {
-            background: white;
+            background: rgba(255,255,255,0.04);
             color: #64748b;
-            border: 2px solid #e2e8f0;
+            border: 1px solid rgba(148,163,184,0.12);
         }
         .btn-secondary-premium:hover {
             border-color: #667eea;
@@ -193,7 +203,7 @@
                 </div>
 
                 <!-- Raisons communes -->
-                <h5 style="text-align: left; margin-bottom: 16px; color: #1e293b;">
+                <h5 style="text-align: left; margin-bottom: 16px; color: #f1f5f9;">
                     Pourquoi souscrire ?
                 </h5>
                 <div class="reasons-grid">
@@ -236,12 +246,12 @@
                 </div>
 
                 <!-- Contact -->
-                <div style="background: #f0f9ff; padding: 20px; border-radius: 12px; margin-bottom: 32px;">
-                    <p style="margin: 0; color: #0369a1;">
+                <div style="background: rgba(3,105,161,0.1); border: 1px solid rgba(56,189,248,0.2); padding: 20px; border-radius: 12px; margin-bottom: 32px;">
+                    <p style="margin: 0; color: #7dd3fc;">
                         <i class="fas fa-question-circle"></i>
                         <strong>Une question ?</strong>
                         Notre équipe est disponible à
-                        <a href="mailto:support@gedavocat.com" style="color: #0369a1; text-decoration: underline;">
+                        <a href="mailto:support@gedavocat.com" style="color: #38bdf8; text-decoration: underline;">
                             support@gedavocat.com
                         </a>
                     </p>

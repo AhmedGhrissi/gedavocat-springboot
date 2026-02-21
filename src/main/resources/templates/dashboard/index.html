@@ -1,90 +1,137 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
       layout:decorate="~{layout}">
 <head>
-    <title>Tableau de bord</title>
+    
     <style>
+        /* Dark theme overrides for this page */
+        :root { --bg:#080b14; --surface-1:#0f172a; --surface-2:#1e2d3d; --border:rgba(148,163,184,0.12); --text-primary:#f1f5f9; --text-secondary:#94a3b8; --primary:#667eea; --accent:#818cf8; }
+        h1,h2,h3,h4,h5,h6 { color: var(--text-primary) !important; }
+        p, label, span { color: inherit; }
+        .card { background: rgba(255,255,255,0.04) !important; border-color: var(--border) !important; }
+        .card-header { background: transparent !important; border-color: var(--border) !important; color: var(--text-primary) !important; }
+        .text-muted { color: var(--text-secondary) !important; }
+        a { color: var(--accent); }
+    </style><title>Tableau de bord</title>
+    <style>
+        /* ── Bento Stats Grid ── */
         .stat-card {
-            background: white;
-            border-radius: 12px;
+            background: rgba(255,255,255,0.04);
+            border-radius: 20px;
             padding: 24px;
-            border: 2px solid #e2e8f0;
-            transition: all 0.3s;
+            border: 1px solid rgba(148,163,184,0.1);
+            transition: all 0.3s ease;
             margin-bottom: 20px;
+            backdrop-filter: blur(12px);
+            position: relative;
+            overflow: hidden;
+        }
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0; right: 0;
+            width: 80px; height: 80px;
+            border-bottom-left-radius: 80px;
+            opacity: 0.06;
         }
         .stat-card:hover {
             transform: translateY(-4px);
-            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            border-color: rgba(102,126,234,0.25);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.3);
         }
         .stat-icon {
-            width: 56px;
-            height: 56px;
-            border-radius: 12px;
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
+            font-size: 22px;
             margin-bottom: 16px;
         }
-        .stat-icon.blue { background: #dbeafe; color: #1e40af; }
-        .stat-icon.green { background: #d1fae5; color: #065f46; }
-        .stat-icon.yellow { background: #fef3c7; color: #92400e; }
-        .stat-icon.purple { background: #e0e7ff; color: #4f46e5; }
+        .stat-icon.blue  { background: rgba(59,130,246,0.15); color: #60a5fa; }
+        .stat-icon.green { background: rgba(16,185,129,0.15); color: #34d399; }
+        .stat-icon.yellow{ background: rgba(245,158,11,0.15); color: #fbbf24; }
+        .stat-icon.purple{ background: rgba(139,92,246,0.15); color: #a78bfa; }
         .stat-value {
-            font-size: 32px;
-            font-weight: 700;
-            color: #1e293b;
+            font-size: 36px;
+            font-weight: 800;
+            color: #f1f5f9;
             margin-bottom: 4px;
+            line-height: 1;
         }
         .stat-label {
-            color: #64748b;
-            font-size: 14px;
+            color: #94a3b8;
+            font-size: 13px;
+            font-weight: 500;
         }
+        /* ── Quick actions ── */
         .quick-action {
             background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
-            border-radius: 12px;
-            padding: 20px;
+            border-radius: 16px;
+            padding: 18px 20px;
             display: flex;
             align-items: center;
             gap: 16px;
             text-decoration: none;
-            transition: all 0.3s;
+            transition: all 0.25s ease;
             margin-bottom: 16px;
+            border: 1px solid transparent;
         }
         .quick-action:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(102,126,234,0.35);
             color: white;
         }
         .action-icon {
-            width: 48px;
-            height: 48px;
-            background: rgba(255,255,255,0.2);
-            border-radius: 10px;
+            width: 44px;
+            height: 44px;
+            background: rgba(255,255,255,0.18);
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
+            font-size: 20px;
+            flex-shrink: 0;
         }
+        /* ── Subscription badges ── */
         .subscription-badge {
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            padding: 8px 16px;
+            padding: 7px 16px;
             border-radius: 20px;
             font-weight: 600;
             font-size: 13px;
         }
         .badge-active {
-            background: #d1fae5;
-            color: #065f46;
+            background: rgba(16,185,129,0.15);
+            color: #34d399;
+            border: 1px solid rgba(16,185,129,0.25);
         }
         .badge-inactive {
-            background: #fee2e2;
-            color: #991b1b;
+            background: rgba(239,68,68,0.15);
+            color: #fca5a5;
+            border: 1px solid rgba(239,68,68,0.25);
+        }
+        /* ── Activity feed ── */
+        .activity-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #667eea;
+            margin-top: 5px;
+            flex-shrink: 0;
+        }
+        /* ── Section title ── */
+        .section-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #f1f5f9;
+            margin-bottom: 16px;
         }
     </style>
 </head>
@@ -95,7 +142,7 @@
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <div>
                     <h1>Bonjour, <span th:text="${user.name}">Utilisateur</span> 👋</h1>
-                    <p class="text-muted" th:text="'Connecté en tant que ' + ${user.role.displayName}">
+                    <p style="color: #94a3b8;" th:text="'Connecté en tant que ' + ${user.role.displayName}">
                         Connecté en tant que client
                     </p>
                 </div>
@@ -195,7 +242,7 @@
             <!-- Actions rapides -->
             <div class="row">
                 <div class="col-md-8">
-                    <h3 class="mb-3">Actions rapides</h3>
+                    <h3 class="section-title">Actions rapides</h3>
                     <div class="row">
                         <div class="col-md-6">
                             <a th:href="@{/cases/new}" class="quick-action">
@@ -245,54 +292,53 @@
                 </div>
 
                 <div class="col-md-4">
-                    <h3 class="mb-3">Activité récente</h3>
+                    <h3 class="section-title">Activité récente</h3>
                     <div class="card" style="border-radius: 12px;">
                         <div class="card-body">
                             <div th:if="${recentActivities != null and !#lists.isEmpty(recentActivities)}">
                                 <div th:each="activity : ${recentActivities}" class="mb-3">
                                     <div class="d-flex align-items-start gap-2">
-                                        <i class="fas fa-circle" style="font-size: 8px; color: #667eea; margin-top: 8px;"></i>
+                                        <div class="activity-dot"></div>
                                         <div>
-                                            <div style="font-weight: 600; font-size: 14px;" th:text="${activity.title}">
+                                            <div style="font-weight: 600; font-size: 14px; color: #f1f5f9;" th:text="${activity.title}">
                                                 Nouveau document
                                             </div>
-                                            <div style="font-size: 12px; color: #64748b;" th:text="${activity.description}">
+                                            <div style="font-size: 12px; color: #94a3b8;" th:text="${activity.description}">
                                                 contrat.pdf ajouté
                                             </div>
-                                            <div style="font-size: 11px; color: #94a3b8;" th:text="${activity.time}">
+                                            <div style="font-size: 11px; color: #64748b;" th:text="${activity.time}">
                                                 Il y a 2 heures
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            <div th:if="${recentActivities == null or #lists.isEmpty(recentActivities)}"
-                                 class="text-center text-muted py-4">
-                                <i class="fas fa-inbox fa-2x mb-2"></i>
-                                <p>Aucune activité récente</p>
+                            <div class="text-center py-4">
+                                <i class="fas fa-inbox fa-2x mb-2" style="color: #4b5563;"></i>
+                                <p style="color: #64748b;">Aucune activité récente</p>
                             </div>
                         </div>
                     </div>
                     
                     <!-- Section dossiers récents (correction de l'erreur recentCases.empty) -->
                     <div class="mt-4">
-                        <h4 class="mb-3">Dossiers récents</h4>
+                        <h4 class="section-title">Dossiers récents</h4>
                         <div class="card" style="border-radius: 12px;">
                             <div class="card-body">
                                 <div th:if="${recentCases != null and !#lists.isEmpty(recentCases)}">
                                     <div th:each="case : ${recentCases}" class="mb-3">
                                         <div class="d-flex align-items-start gap-2">
-                                            <i class="fas fa-folder" style="font-size: 12px; color: #667eea; margin-top: 4px;"></i>
-                                            <div class="flex-grow-1">
-                                                <div style="font-weight: 600; font-size: 14px;">
-                                                    <a th:href="@{/cases/{id}(id=${case.id})}" th:text="${case.name}" class="text-decoration-none">
+                                            <i class="fas fa-folder" style="font-size: 12px; color: #818cf8; margin-top: 4px; flex-shrink: 0;"></i>
+                                            <div class="flex-grow-1" style="min-width: 0;">
+                                                <div style="font-weight: 600; font-size: 14px; color: #f1f5f9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                                    <a th:href="@{/cases/{id}(id=${case.id})}" th:text="${case.name}" class="text-decoration-none" style="color: #f1f5f9;">
                                                         Nom du dossier
                                                     </a>
                                                 </div>
-                                                <div style="font-size: 12px; color: #64748b;" th:text="${case.client != null ? case.client.name : 'Client inconnu'}">
+                                                <div style="font-size: 12px; color: #94a3b8;" th:text="${case.client != null ? case.client.name : 'Client inconnu'}">
                                                     Nom du client
                                                 </div>
-                                                <div style="font-size: 11px; color: #94a3b8;" th:text="${#temporals.format(case.createdAt, 'dd/MM/yyyy')}">
+                                                <div style="font-size: 11px; color: #64748b;" th:text="${#temporals.format(case.createdAt, 'dd/MM/yyyy')}">
                                                     Date de création
                                                 </div>
                                             </div>
@@ -305,9 +351,9 @@
                                     </div>
                                 </div>
                                 <div th:if="${recentCases == null or #lists.isEmpty(recentCases)}"
-                                     class="text-center text-muted py-4">
-                                    <i class="fas fa-folder fa-2x mb-2"></i>
-                                    <p>Aucun dossier récent</p>
+                                     class="text-center py-4">
+                                    <i class="fas fa-folder fa-2x mb-2" style="color: #4b5563;"></i>
+                                    <p style="color: #64748b;">Aucun dossier récent</p>
                                 </div>
                             </div>
                         </div>

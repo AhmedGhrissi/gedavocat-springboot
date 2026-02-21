@@ -1,32 +1,38 @@
 /* ===================================================================
    GED Avocat - Feuille de style principale
-   Design responsive pour PC, tablette et téléphone
+   Design Dark Glassmorphism — version 2.0
    =================================================================== */
 
 /* === Variables CSS === */
 :root {
-    --primary-color: #2c3e50;
-    --secondary-color: #3498db;
-    --success-color: #27ae60;
-    --danger-color: #e74c3c;
-    --warning-color: #f39c12;
-    --info-color: #16a085;
-    --light-color: #ecf0f1;
-    --dark-color: #2c3e50;
+    /* Dark theme tokens */
+    --bg: #080b14;
+    --surface-1: #0f172a;
+    --surface-2: #1e2d3d;
+    --border: rgba(148,163,184,0.12);
+    --text-primary: #f1f5f9;
+    --text-secondary: #94a3b8;
+    --primary: #667eea;
+    --primary-end: #764ba2;
+    --accent: #818cf8;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --info: #38bdf8;
+
+    /* Legacy aliases */
+    --primary-color: #667eea;
+    --secondary-color: #818cf8;
+    --success-color: #10b981;
+    --danger-color: #ef4444;
+    --warning-color: #f59e0b;
+    --info-color: #38bdf8;
+    --dark-color: #f1f5f9;
     --white: #ffffff;
-    --gray-100: #f8f9fa;
-    --gray-200: #e9ecef;
-    --gray-300: #dee2e6;
-    --gray-400: #ced4da;
-    --gray-500: #adb5bd;
-    --gray-600: #6c757d;
-    --gray-700: #495057;
-    --gray-800: #343a40;
-    --gray-900: #212529;
     
-    --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    --font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     --border-radius: 8px;
-    --box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    --box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
     --transition: all 0.3s ease;
 }
 
@@ -40,8 +46,8 @@
 body {
     font-family: var(--font-family);
     line-height: 1.6;
-    color: var(--dark-color);
-    background-color: var(--gray-100);
+    color: var(--text-primary);
+    background-color: var(--bg);
 }
 
 /* === Container === */
