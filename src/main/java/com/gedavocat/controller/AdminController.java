@@ -170,6 +170,29 @@ public class AdminController {
     }
 
     /**
+     * Crée un nouvel utilisateur (avocat ou client)
+     */
+    @PostMapping("/users/create")
+    public String createUser(
+            @RequestParam String firstName,
+            @RequestParam String lastName,
+            @RequestParam String email,
+            @RequestParam String password,
+            @RequestParam String role,
+            RedirectAttributes redirectAttributes) {
+        try {
+            userService.createUser(firstName, lastName, email, password, role);
+            String roleLabel = "LAWYER".equals(role) ? "Avocat" : "Client";
+            redirectAttributes.addFlashAttribute("success",
+                    roleLabel + " " + firstName + " " + lastName + " créé avec succès");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error",
+                    "Erreur lors de la création : " + e.getMessage());
+        }
+        return "redirect:/admin/users";
+    }
+
+    /**
      * Envoie une invitation de création de compte à un client sans compte
      */
     @PostMapping("/users/send-invitation")

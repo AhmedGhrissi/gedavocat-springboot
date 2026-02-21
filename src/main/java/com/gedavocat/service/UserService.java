@@ -1,12 +1,15 @@
 package com.gedavocat.service;
 
 import com.gedavocat.model.User;
+import com.gedavocat.model.User.UserRole;
 import com.gedavocat.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,6 +22,7 @@ import java.util.Optional;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     /**
      * Récupère tous les utilisateurs
@@ -98,5 +102,38 @@ public class UserService {
     @Transactional(readOnly = true)
     public boolean emailExists(String email) {
         return userRepository.findByEmail(email).isPresent();
+    }
+
+    /**
+     * Crée un nouvel utilisateur (admin)
+     */
+    @Transactional
+    public User createUser(String firstName, String lastName, String email, String password, String role) {
+        if (userRepository.findByEmail(email).isPresent()) {
+            throw new RuntimeException("Un utilisateur avec cet email existe déjà");
+        }
+
+        User user = new User();
+        user.setFirstName(firstName);
+        user.setLastName(lastName);
+        user.setName((firstName + " " + lastName).trim());
+        user.setEmail(email);
+        user.setPassword(passwordEncoder.encode(password));
+        user.setRole(UserRole.valueOf(role));
+        user.setEmailVerified(true);
+        user.setAccountEnabled(true);
+        user.setTermsAcceptedAt(LocalDateTime.now());
+        user.setGdprConsentAt(LocalDateTime.now());
+
+        // Pour les avocats, définir un abonnement par défaut
+        if (UserRole.valueOf(role) == UserRole.LAWYER) {
+            user.setSubscriptionPlan(User.SubscriptionPlan.SOLO);
+            user.setSubscriptionStatus(User.SubscriptionStatus.ACTIVE);
+            user.setMaxClients(10);
+            user.setSubscriptionStartDate(LocalDateTime.now());
+        }
+
+        log.info("Création utilisateur par admin: {} {} ({}), rôle: {}", firstName, lastName, email, role);
+        return userRepository.save(user);
     }
 }
