@@ -706,7 +706,7 @@
                     <i class="fas fa-home"></i>
                     <span>Tableau de bord</span>
                 </a>
-                <a href="/my-cases" class="nav-link">
+                <a href="/my-cases" class="nav-link" data-nav="dossiers">
                     <i class="fas fa-folder"></i>
                     <span>Mes dossiers</span>
                 </a>
@@ -750,7 +750,7 @@
                                 <i class="fas fa-cog me-2"></i> Paramètres
                             </a>
                         </li>
-                        <li>
+                        <li sec:authorize="!hasRole('CLIENT')">
                             <a class="dropdown-item" th:href="@{/payment/manage}">
                                 <i class="fas fa-credit-card me-2"></i> Mon abonnement
                             </a>
@@ -817,12 +817,12 @@
                                 <i class="fas fa-user"></i> Profil
                             </button>
                         </li>
-                        <li class="nav-item" role="presentation">
+                        <li class="nav-item" role="presentation" sec:authorize="!hasRole('CLIENT')">
                             <button class="nav-link" id="yousign-tab" data-bs-toggle="tab" data-bs-target="#yousign-pane" type="button" role="tab">
                                 <i class="fas fa-signature"></i> Yousign
                             </button>
                         </li>
-                        <li class="nav-item" role="presentation">
+                        <li class="nav-item" role="presentation" sec:authorize="!hasRole('CLIENT')">
                             <button class="nav-link" id="security-tab" data-bs-toggle="tab" data-bs-target="#security-pane" type="button" role="tab">
                                 <i class="fas fa-shield-alt"></i> Sécurité
                             </button>
@@ -865,7 +865,7 @@
                                             <label for="modalPhone">Téléphone</label>
                                         </div>
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-md-6" sec:authorize="!hasRole('CLIENT')">
                                         <div class="form-floating">
                                             <input type="text" id="modalBarNumber" name="barNumber" 
                                                    class="form-control" placeholder="Numéro au barreau">
@@ -1076,24 +1076,32 @@
                     document.getElementById('modalLastName').value = data.lastName || '';
                     document.getElementById('modalEmail').value = data.email || '';
                     document.getElementById('modalPhone').value = data.phone || '';
-                    document.getElementById('modalBarNumber').value = data.barNumber || '';
+                    var barEl = document.getElementById('modalBarNumber');
+                    if (barEl) barEl.value = data.barNumber || '';
                     
-                    // Remplir les champs Yousign
-                    document.getElementById('modalApiKey').value = data.yousignApiKey || '';
-                    
-                    // Mettre à jour le badge Yousign
-                    const badge = document.querySelector('#yousign-pane .badge');
-                    if (data.yousignConfigured) {
-                        badge.innerHTML = '<i class="fas fa-check-circle"></i> Configuré';
-                        badge.className = 'badge bg-success';
-                    } else {
-                        badge.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Non configuré';
-                        badge.className = 'badge bg-warning';
+                    // Remplir les champs Yousign (si l'onglet existe)
+                    var apiKeyEl = document.getElementById('modalApiKey');
+                    if (apiKeyEl) {
+                        apiKeyEl.value = data.yousignApiKey || '';
                     }
                     
-                    // Mettre à jour les infos d'abonnement
-                    document.querySelector('#security-pane .badge').textContent = data.subscriptionPlan;
-                    document.querySelector('#security-pane p').textContent = data.maxClients + ' clients maximum';
+                    // Mettre à jour le badge Yousign (si l'onglet existe)
+                    const badge = document.querySelector('#yousign-pane .badge');
+                    if (badge) {
+                        if (data.yousignConfigured) {
+                            badge.innerHTML = '<i class="fas fa-check-circle"></i> Configuré';
+                            badge.className = 'badge bg-success';
+                        } else {
+                            badge.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Non configuré';
+                            badge.className = 'badge bg-warning';
+                        }
+                    }
+                    
+                    // Mettre à jour les infos d'abonnement (si l'onglet existe)
+                    var secBadge = document.querySelector('#security-pane .badge');
+                    if (secBadge) secBadge.textContent = data.subscriptionPlan;
+                    var secP = document.querySelector('#security-pane p');
+                    if (secP) secP.textContent = data.maxClients + ' clients maximum';
                 }
             })
             .catch(error => {
@@ -1130,20 +1138,39 @@
         // Active state avec JavaScript (évite les problèmes Thymeleaf)
         document.addEventListener('DOMContentLoaded', function() {
             const currentPath = window.location.pathname;
-            document.querySelectorAll('.nav-link').forEach(link => {
+            let bestMatch = null;
+            let bestLen = 0;
+            document.querySelectorAll('.sidebar .nav-link').forEach(link => {
                 try {
-                    // Gérer les URLs relatives et absolues
                     const linkPath = link.getAttribute('href');
                     if (linkPath && linkPath.startsWith('/')) {
-                        if (currentPath === linkPath ||
-                            (linkPath !== '/dashboard' && currentPath.startsWith(linkPath))) {
-                            link.classList.add('active');
+                        // Exact match always wins
+                        if (currentPath === linkPath) {
+                            if (linkPath.length > bestLen) {
+                                bestMatch = link;
+                                bestLen = linkPath.length;
+                            }
+                        } else if (linkPath !== '/' && linkPath !== '/dashboard' && currentPath.startsWith(linkPath)) {
+                            if (linkPath.length > bestLen) {
+                                bestMatch = link;
+                                bestLen = linkPath.length;
+                            }
                         }
                     }
                 } catch (e) {
                     console.error('Erreur lors de la vérification du lien actif:', e);
                 }
             });
+            // For /invoices/my-invoices, highlight "Mes factures"
+            if (!bestMatch) {
+                document.querySelectorAll('.sidebar .nav-link').forEach(link => {
+                    const linkPath = link.getAttribute('href');
+                    if (linkPath && currentPath.startsWith(linkPath) && linkPath !== '/') {
+                        bestMatch = link;
+                    }
+                });
+            }
+            if (bestMatch) bestMatch.classList.add('active');
         });
 
         // Charger les données utilisateur lors de l'ouverture du modal

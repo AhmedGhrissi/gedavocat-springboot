@@ -2,6 +2,7 @@ package com.gedavocat.repository;
 
 import com.gedavocat.model.Document;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -84,4 +85,18 @@ public interface DocumentRepository extends JpaRepository<Document, String> {
      */
     @Query("SELECT COALESCE(SUM(d.fileSize), 0) FROM Document d WHERE d.deletedAt IS NULL")
     long sumFileSizeNonDeleted();
+
+    /**
+     * Efface les références parent_document_id pour les documents d'un dossier
+     */
+    @Modifying
+    @Query("UPDATE Document d SET d.parentDocument = NULL WHERE d.caseEntity.id = :caseId")
+    void clearParentReferencesByCaseId(@Param("caseId") String caseId);
+
+    /**
+     * Supprime tous les documents d'un dossier
+     */
+    @Modifying
+    @Query("DELETE FROM Document d WHERE d.caseEntity.id = :caseId")
+    void deleteAllByCaseEntityId(@Param("caseId") String caseId);
 }

@@ -327,7 +327,8 @@
                     <i class="fas fa-check-circle"></i> ${message}
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 `;
-                document.querySelector('.container-fluid').insertBefore(alertDiv, document.querySelector('.d-flex'));
+                const container = document.querySelector('.container-fluid');
+                container.insertBefore(alertDiv, container.querySelector('.d-flex'));
             }
 
             function showWarningMessage(message) {
@@ -337,7 +338,8 @@
                     <i class="fas fa-exclamation-triangle"></i> ${message}
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 `;
-                document.querySelector('.container-fluid').insertBefore(alertDiv, document.querySelector('.d-flex'));
+                const container = document.querySelector('.container-fluid');
+                container.insertBefore(alertDiv, container.querySelector('.d-flex'));
             }
 
             function showErrorMessage(message) {
@@ -347,7 +349,8 @@
                     <i class="fas fa-exclamation-circle"></i> ${message}
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 `;
-                document.querySelector('.container-fluid').insertBefore(alertDiv, document.querySelector('.d-flex'));
+                const container = document.querySelector('.container-fluid');
+                container.insertBefore(alertDiv, container.querySelector('.d-flex'));
             }
 
             function resetUploadZone() {

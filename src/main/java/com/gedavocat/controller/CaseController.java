@@ -125,6 +125,7 @@ public class CaseController {
             result.getAllErrors().forEach(error -> System.out.println("Erreur: " + error));
             User user = getCurrentUser(authentication);
             model.addAttribute("clients", clientService.getClientsByLawyer(user.getId()));
+            model.addAttribute("selectedClientId", clientId);
             model.addAttribute("isEdit", false);
             return "cases/form";
         }
@@ -148,6 +149,7 @@ public class CaseController {
             e.printStackTrace();
             User user = getCurrentUser(authentication);
             model.addAttribute("clients", clientService.getClientsByLawyer(user.getId()));
+            model.addAttribute("selectedClientId", clientId);
             model.addAttribute("isEdit", false);
             model.addAttribute("error", e.getMessage());
             return "cases/form";
@@ -212,6 +214,7 @@ public class CaseController {
 
         model.addAttribute("case", caseEntity);
         model.addAttribute("clients", clients);
+        model.addAttribute("selectedClientId", caseEntity.getClient() != null ? caseEntity.getClient().getId() : "");
         model.addAttribute("isEdit", true);
         return "cases/form";
     }
@@ -244,6 +247,7 @@ public class CaseController {
                     ? clientService.getAllClients()
                     : clientService.getClientsByLawyer(user.getId());
             model.addAttribute("clients", clients);
+            model.addAttribute("selectedClientId", clientId);
             model.addAttribute("isEdit", true);
             return "cases/form";
         }
@@ -275,6 +279,7 @@ public class CaseController {
                     ? clientService.getAllClients()
                     : clientService.getClientsByLawyer(user.getId());
             model.addAttribute("clients", clients);
+            model.addAttribute("selectedClientId", clientId);
             model.addAttribute("isEdit", true);
             model.addAttribute("error", e.getMessage());
             return "cases/form";

@@ -1,0 +1,17 @@
+﻿SET FOREIGN_KEY_CHECKS = 0;
+DELETE FROM signatures;
+DELETE FROM documents;
+DELETE FROM case_share_links;
+DELETE FROM rpva_communications;
+DELETE FROM appointments;
+DELETE FROM invoice_items;
+DELETE FROM invoices;
+DELETE FROM payments;
+DELETE FROM permissions;
+DELETE FROM cases;
+DELETE FROM clients;
+DELETE FROM audit_logs;
+DELETE FROM users WHERE role != 'ADMIN';
+SET FOREIGN_KEY_CHECKS = 1;
+SELECT 'Cleanup done' AS status;
+SELECT id, email, role FROM users;
