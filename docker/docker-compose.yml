@@ -141,7 +141,7 @@ services:
 
   # ── Promtail (collecte les logs Docker → Loki) ──────────────
   promtail:
-    image: grafana/promtail:2.9.8
+    image: grafana/promtail:3.3.2
     container_name: docavocat-promtail
     restart: unless-stopped
     command: -config.file=/etc/promtail/config.yaml
