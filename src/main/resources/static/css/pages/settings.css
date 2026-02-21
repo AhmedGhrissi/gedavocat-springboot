@@ -1,0 +1,68 @@
+/* ── Settings page styles ── */
+
+.settings-container { max-width: 900px; margin: 0 auto; }
+
+.settings-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 20px; padding: 40px;
+    color: white; margin-bottom: 30px; text-align: center;
+}
+.settings-header h1 { font-size: 32px; font-weight: 800; margin-bottom: 10px; }
+
+.settings-tabs {
+    display: flex; gap: 8px; margin-bottom: 30px;
+    background: var(--bg); padding: 8px; border-radius: 12px;
+}
+.tab-btn {
+    flex: 1; padding: 12px 24px;
+    border: none; background: transparent;
+    border-radius: 8px; cursor: pointer;
+    font-weight: 600; color: var(--text-secondary);
+    transition: all 0.3s;
+}
+.tab-btn.active {
+    background: rgba(255,255,255,0.06);
+    color: #667eea;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.settings-card {
+    background: rgba(255,255,255,0.06);
+    border-radius: 15px; padding: 30px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+    margin-bottom: 25px;
+}
+.settings-card h3 {
+    font-size: 20px; font-weight: 700; margin-bottom: 15px;
+    color: var(--text-primary);
+    display: flex; align-items: center; gap: 10px;
+}
+
+.form-floating { margin-bottom: 20px; }
+
+.btn-test {
+    background: rgba(2,132,199,0.15);
+    color: #38bdf8;
+    border: 1px solid rgba(56,189,248,0.3);
+}
+.btn-test:hover {
+    background: rgba(2,132,199,0.3);
+    color: #7dd3fc;
+}
+
+.status-indicator {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 8px 16px; border-radius: 20px;
+    font-size: 14px; font-weight: 600;
+}
+.status-success { background: rgba(16,185,129,0.15); color: #34d399; }
+.status-warning { background: rgba(245,158,11,0.15); color: #fbbf24; }
+
+.api-key-display {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px; padding: 12px;
+    font-family: monospace;
+    color: var(--text-secondary);
+    margin-bottom: 15px;
+}
