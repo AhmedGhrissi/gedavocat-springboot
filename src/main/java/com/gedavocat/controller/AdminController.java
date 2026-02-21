@@ -1,8 +1,10 @@
 package com.gedavocat.controller;
 
 import com.gedavocat.dto.SystemMetricsDTO;
+import com.gedavocat.model.Client;
 import com.gedavocat.repository.ClientRepository;
 import com.gedavocat.service.AdminMetricsService;
+import com.gedavocat.service.ClientInvitationService;
 import com.gedavocat.service.LogService;
 import com.gedavocat.service.MaintenanceService;
 import com.gedavocat.service.UserService;
@@ -30,6 +32,7 @@ public class AdminController {
     private final UserService userService;
     private final MaintenanceService maintenanceService;
     private final ClientRepository clientRepository;
+    private final ClientInvitationService invitationService;
 
     /**
      * Dashboard principal de l'admin
@@ -164,5 +167,23 @@ public class AdminController {
             newState ? "🔴 Mode maintenance activé — le site est inaccessible aux utilisateurs."
                      : "🟢 Mode maintenance désactivé — le site est de nouveau accessible.");
         return "redirect:/admin/settings";
+    }
+
+    /**
+     * Envoie une invitation de création de compte à un client sans compte
+     */
+    @PostMapping("/users/send-invitation")
+    public String sendInvitation(@RequestParam String clientId, RedirectAttributes redirectAttributes) {
+        try {
+            Client client = clientRepository.findById(clientId)
+                    .orElseThrow(() -> new RuntimeException("Client introuvable : " + clientId));
+            invitationService.sendInvitation(client, "Administrateur");
+            redirectAttributes.addFlashAttribute("success",
+                    "Invitation envoyée à " + client.getName() + " (" + client.getEmail() + ")");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error",
+                    "Erreur lors de l'envoi de l'invitation : " + e.getMessage());
+        }
+        return "redirect:/admin/users";
     }
 }

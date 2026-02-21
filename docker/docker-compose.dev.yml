@@ -1,0 +1,35 @@
+# ============================================================
+# DocAvocat — Docker Compose DEV (local)
+#
+# Lance uniquement MySQL en Docker.
+# L'application Spring Boot tourne via Maven :
+#   ./mvnw spring-boot:run
+#
+# Démarrage :
+#   docker compose -f docker/docker-compose.dev.yml up -d
+#
+# Arrêt :
+#   docker compose -f docker/docker-compose.dev.yml down
+# ============================================================
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: docavocat-mysql-dev
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: gedavocat
+      # En dev on se connecte en root — pas d'utilisateur dédié nécessaire
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_dev_data:/var/lib/mysql
+    command: >
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+      --default-time-zone=Europe/Paris
+
+volumes:
+  mysql_dev_data:
+    driver: local

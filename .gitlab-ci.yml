@@ -1,0 +1,215 @@
+﻿# ============================================================
+# DocAvocat  Pipeline CI/CD GitLab
+#
+# STAGES :
+#   build   - Compilation Maven         (toutes branches + MR)
+#   test    - Tests unitaires           (toutes branches + MR)
+#   package - Build image Docker ARM64  (main uniquement)
+#             + push GitLab Container Registry
+#   deploy  - Deploiement production    (main, DECLENCHEMENT MANUEL)
+#
+# VARIABLES GITLAB A CONFIGURER (Settings > CI/CD > Variables) :
+#   SSH_PRIVATE_KEY  (File, Protected)    - Cle privee SSH gedavocat_hetzner
+#   SSH_KNOWN_HOSTS  (Variable, Protected)- Fingerprints du serveur (ssh-keyscan)
+#   ENV_PROD         (File, Protected)    - Contenu du fichier .env.prod
+#   DISCORD_WEBHOOK  (Variable, Masked)   - URL du webhook Discord
+# ============================================================
+
+default:
+  tags:
+    - saas-linux-small-amd64
+
+variables:
+  MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
+  MAVEN_CLI_OPTS: "--batch-mode --no-transfer-progress -q"
+  SERVER_HOST: "88.198.163.251"
+  REMOTE_DIR: "/opt/gedavocat"
+
+stages:
+  - build
+  - test
+  - package
+  - deploy
+
+#  Notification Discord (YAML anchor - reutilise dans chaque job) 
+# Usage dans after_script : *discord_notify
+# Requiert les variables d'environnement : EMOJI, JOB_NAME, STATUS, COLOR (int)
+.discord_script: &discord_notify
+  - |
+    [ -z "${DISCORD_WEBHOOK:-}" ] && exit 0
+    BRANCH="${CI_COMMIT_BRANCH:-MR}"
+    AUTHOR="${GITLAB_USER_NAME:-CI}"
+    SHA="${CI_COMMIT_SHORT_SHA:-????}"
+    PIPELINE_URL="${CI_PIPELINE_URL}"
+    BODY="{
+      \"embeds\": [{
+        \"title\": \"${EMOJI} ${JOB_NAME}  ${STATUS}\",
+        \"description\": \"**Branche :** \`${BRANCH}\`\n**Commit :** [\`${SHA}\`](${PIPELINE_URL})\n**Par :** ${AUTHOR}\",
+        \"color\": ${COLOR},
+        \"footer\": { \"text\": \"DocAvocat CI/CD\" },
+        \"timestamp\": \"$(date -u '+%Y-%m-%dT%H:%M:%SZ')\"
+      }]
+    }"
+    curl -s -X POST "${DISCORD_WEBHOOK}" \
+         -H "Content-Type: application/json" \
+         -d "${BODY}" > /dev/null || true
+
+# 
+# STAGE 1 : BUILD
+# 
+build:
+  stage: build
+  image: maven:3.9-eclipse-temurin-17-alpine
+  script:
+    - mvn $MAVEN_CLI_OPTS compile
+  after_script:
+    - |
+      if [ "$CI_JOB_STATUS" = "success" ]; then
+        EMOJI="BUILD_OK"; STATUS="Build compile avec succes"; COLOR=3066993
+      else
+        EMOJI="BUILD_FAIL"; STATUS="ECHEC de compilation"; COLOR=15158332
+      fi
+      JOB_NAME="Build Maven"
+    - *discord_notify
+  cache:
+    key: "maven-$CI_COMMIT_REF_SLUG"
+    paths:
+      - .m2/repository/
+
+# 
+# STAGE 2 : TEST
+# 
+test:
+  stage: test
+  image: maven:3.9-eclipse-temurin-17-alpine
+  needs: [build]
+  script:
+    - mvn $MAVEN_CLI_OPTS test
+  after_script:
+    - |
+      if [ "$CI_JOB_STATUS" = "success" ]; then
+        EMOJI="TESTS_OK"; STATUS="Tests unitaires passes"; COLOR=3066993
+      else
+        EMOJI="TESTS_FAIL"; STATUS="TESTS ECHOUES - deploiement bloque !"; COLOR=15158332
+      fi
+      JOB_NAME="Tests unitaires"
+    - *discord_notify
+  cache:
+    key: "maven-$CI_COMMIT_REF_SLUG"
+    paths:
+      - .m2/repository/
+    policy: pull
+  artifacts:
+    when: always
+    reports:
+      junit: target/surefire-reports/TEST-*.xml
+    expire_in: 2 weeks
+
+# 
+# STAGE 3 : PACKAGE (main uniquement)
+# Build multi-arch ARM64 via QEMU + push registry GitLab
+# 
+package:
+  stage: package
+  image: docker:27-cli
+  needs: [test]
+  services:
+    - name: docker:27-dind
+      command: ["--experimental"]
+  variables:
+    DOCKER_BUILDKIT: "1"
+    DOCKER_TLS_CERTDIR: "/certs"
+  before_script:
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
+    - docker run --privileged --rm tonistiigi/binfmt --install arm64
+    - docker buildx create --use --name ci-builder --driver docker-container
+  script:
+    - |
+      docker buildx build \
+        --platform linux/arm64 \
+        --file docker/Dockerfile \
+        --tag "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA" \
+        --tag "$CI_REGISTRY_IMAGE:latest" \
+        --cache-from "type=registry,ref=$CI_REGISTRY_IMAGE:buildcache" \
+        --cache-to   "type=registry,ref=$CI_REGISTRY_IMAGE:buildcache,mode=max" \
+        --push \
+        .
+    - echo "Image poussee -> $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA"
+  after_script:
+    - |
+      if [ "$CI_JOB_STATUS" = "success" ]; then
+        EMOJI="DOCKER_OK"; STATUS="Image Docker ARM64 prete - deploiement disponible"; COLOR=3447003
+      else
+        EMOJI="DOCKER_FAIL"; STATUS="ECHEC build image Docker"; COLOR=15158332
+      fi
+      JOB_NAME="Package Docker"
+    - *discord_notify
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+
+# 
+# STAGE 4 : DEPLOY (MANUEL - cliquer sur le bouton play)
+# 
+deploy:
+  stage: deploy
+  image: alpine:3.19
+  needs: [package]
+  when: manual
+  allow_failure: false
+  before_script:
+    - apk add --no-cache openssh-client curl
+    - eval $(ssh-agent -s)
+    - chmod 600 "$SSH_PRIVATE_KEY"
+    - ssh-add "$SSH_PRIVATE_KEY"
+    - mkdir -p ~/.ssh && chmod 700 ~/.ssh
+    - echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+    # Notifier Discord que le deploiement commence
+    - |
+      [ -z "${DISCORD_WEBHOOK:-}" ] && true || \
+      curl -s -X POST "${DISCORD_WEBHOOK}" \
+        -H "Content-Type: application/json" \
+        -d "{\"embeds\":[{\"title\":\"DEPLOY_START Deploiement en cours...\",\"description\":\"**Branche :** \`${CI_COMMIT_BRANCH}\`\n**Commit :** \`${CI_COMMIT_SHORT_SHA}\`\n**Par :** ${GITLAB_USER_NAME}\",\"color\":16776960,\"footer\":{\"text\":\"DocAvocat CI/CD\"}}]}" \
+        > /dev/null || true
+  script:
+    # Envoi des fichiers de configuration
+    - scp docker/docker-compose.yml root@$SERVER_HOST:$REMOTE_DIR/docker-compose.yml
+    - scp "$ENV_PROD" root@$SERVER_HOST:$REMOTE_DIR/.env
+    - ssh root@$SERVER_HOST "echo 'APP_IMAGE=$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA' >> $REMOTE_DIR/.env"
+
+    # Deploiement sur le serveur
+    - |
+      ssh root@$SERVER_HOST "
+        set -e
+        cd $REMOTE_DIR
+        docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+        docker compose pull app
+        docker compose up -d --no-deps app
+        docker logout $CI_REGISTRY 2>/dev/null || true
+        docker ps --format 'table {{.Names}}\t{{.Status}}'
+      "
+
+    # Verification HTTP (Spring Boot demarre en ~45s)
+    - sleep 45
+    - |
+      HTTP=$(ssh root@$SERVER_HOST "curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8080/")
+      echo "HTTP: $HTTP"
+      [ "$HTTP" = "200" ] || [ "$HTTP" = "302" ] || { echo "ERREUR: site ne repond pas (HTTP $HTTP)"; exit 1; }
+      echo "Deploiement OK -> https://docavocat.fr"
+
+  after_script:
+    - |
+      if [ "$CI_JOB_STATUS" = "success" ]; then
+        EMOJI="DEPLOYED"; STATUS="DEPLOYE EN PRODUCTION ! https://docavocat.fr"; COLOR=3066993
+      else
+        EMOJI="DEPLOY_FAIL"; STATUS="ECHEC DU DEPLOIEMENT - verifier les logs !"; COLOR=15158332
+      fi
+      JOB_NAME="Deploiement Production"
+    - *discord_notify
+
+  environment:
+    name: production
+    url: https://docavocat.fr
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: manual

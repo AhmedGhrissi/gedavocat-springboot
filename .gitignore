@@ -73,6 +73,15 @@ gedavocat_dump.sql
 deploiement-hetzner-o2switch.pdf
 generate_pdf.py
 
+# Scripts et artefacts générés localement
+generate_docs.py
+*.pdf
+
+# Python virtual environment
+.venv/
+__pycache__/
+*.pyc
+
 # Config de production (contient les credentials)
 application-o2switch.properties
 
@@ -80,6 +89,10 @@ application-o2switch.properties
 .env
 .env.local
 .env.production
+.env.prod
+
+# Docker production artifacts (contiennent les credentials)
+Dockerfile.prod
 
 # Application properties (contains sensitive data)
 # Uncomment if you want to exclude it

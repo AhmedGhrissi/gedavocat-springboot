@@ -1,0 +1,121 @@
+# ============================================================
+# DocAvocat — Docker Compose Production
+#
+# L'image de l'app est récupérée depuis le GitLab Container Registry.
+# Elle est construite et poussée par la CI (stage "package").
+# La variable APP_IMAGE est injectée dans .env par le stage "deploy".
+#
+# Nginx reste sur le HOST (SSL Let's Encrypt géré par Certbot).
+# Ce compose gère : Spring Boot App + MySQL 8
+#
+# Utilisation :
+#   docker compose pull app
+#   docker compose up -d --no-deps app
+# ============================================================
+
+services:
+
+  # ── MySQL 8 ────────────────────────────────────────────────
+  mysql:
+    image: mysql:8.0
+    container_name: docavocat-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: gedavocat
+      MYSQL_USER: gedavocat
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - mysql_data:/var/lib/mysql
+      # Note : le script init/01-schema.sql n'est exécuté qu'une seule fois
+      # à la création du volume (fresh install). Décommenter si nécessaire.
+      # - ./init/01-schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    ports:
+      # Accessible uniquement en local (pour les backups manuels via mysqldump)
+      - "127.0.0.1:3307:3306"
+    networks:
+      - docavocat-net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "gedavocat", "-p${MYSQL_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    command: >
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+      --default-time-zone=Europe/Paris
+      --max_connections=200
+      --innodb_buffer_pool_size=256M
+
+  # ── Application Spring Boot ─────────────────────────────────
+  # L'image est définie par APP_IMAGE dans .env (injecté par la CI)
+  app:
+    image: ${APP_IMAGE}
+    container_name: docavocat-app
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    ports:
+      # Exposé uniquement sur localhost — nginx du host proxyfie vers ici
+      - "127.0.0.1:8080:8080"
+    environment:
+      SERVER_PORT: 8080
+
+      # Base de données
+      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/gedavocat?useSSL=false&serverTimezone=Europe/Paris&allowPublicKeyRetrieval=true&useUnicode=true&characterEncoding=UTF-8"
+      SPRING_DATASOURCE_USERNAME: gedavocat
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
+      SPRING_JPA_HIBERNATE_DDL-AUTO: update
+
+      # JWT
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION: 86400000
+      JWT_REFRESH-EXPIRATION: 604800000
+
+      # Email SMTP
+      SPRING_MAIL_HOST: ${MAIL_HOST}
+      SPRING_MAIL_PORT: ${MAIL_PORT}
+      SPRING_MAIL_USERNAME: ${MAIL_USERNAME}
+      SPRING_MAIL_PASSWORD: ${MAIL_PASSWORD}
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH: "true"
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: "true"
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_SSL_TRUST: ${MAIL_HOST}
+
+      # Application
+      APP_BASE-URL: https://docavocat.fr
+      APP_UPLOAD_DIR: /opt/gedavocat/uploads/documents
+      APP_SIGNATURE_DIR: /opt/gedavocat/uploads/signatures
+      APP_TEMP_DIR: /opt/gedavocat/temp
+      SPRING_PROFILES_ACTIVE: prod
+      MAINTENANCE_ENABLED: ${MAINTENANCE_ENABLED:-false}
+
+    volumes:
+      - /opt/gedavocat/uploads:/opt/gedavocat/uploads
+      - /opt/gedavocat/logs:/opt/gedavocat/logs
+      - /opt/gedavocat/temp:/opt/gedavocat/temp
+      - /opt/gedavocat/backups:/opt/gedavocat/backups
+      # Docker socket en lecture seule (métriques dashboard admin)
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    # Accès au groupe docker pour lire le socket (GID 988 sur Hetzner)
+    group_add:
+      - "${DOCKER_GID:-988}"
+    networks:
+      - docavocat-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+
+# ── Réseau interne ──────────────────────────────────────────
+networks:
+  docavocat-net:
+    driver: bridge
+
+# ── Volumes persistants ─────────────────────────────────────
+volumes:
+  mysql_data:
+    driver: local

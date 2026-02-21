@@ -1,5 +1,7 @@
 package com.gedavocat.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gedavocat.dto.SystemMetricsDTO;
 import com.gedavocat.repository.*;
 import com.zaxxer.hikari.HikariDataSource;
@@ -14,6 +16,7 @@ import javax.sql.DataSource;
 import java.io.File;
 import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -23,8 +26,8 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 /**
@@ -61,6 +64,13 @@ public class AdminMetricsService {
         long storageUsed = getStorageUsed();
         long storageLimit = getDiskTotalSpace();
         double storageUsagePercent = (storageLimit > 0) ? ((double) storageUsed / storageLimit) * 100 : 0;
+
+        // Docker
+        boolean inDocker = isRunningInDocker();
+        long containerMemLimit = inDocker ? getContainerMemoryLimit() : -1L;
+        long containerMemUsage = inDocker ? getContainerMemoryUsage() : -1L;
+        double containerMemPercent = (containerMemLimit > 0 && containerMemUsage >= 0)
+                ? (double) containerMemUsage / containerMemLimit * 100 : 0.0;
         
         int activeConn = getActiveConnections();
         int maxConn = getMaxConnections();
@@ -111,6 +121,13 @@ public class AdminMetricsService {
             .documentsUploadedToday(documentRepository.countNonDeletedCreatedAfter(LocalDateTime.now().withHour(0).withMinute(0).withSecond(0)))
             .status("UP")
             .healthDetails(getHealthDetails())
+            .runningInDocker(inDocker)
+            .containerMemoryLimit(containerMemLimit)
+            .containerMemoryUsage(containerMemUsage)
+            .containerMemoryPercent(containerMemPercent)
+            .containerMemoryLimitFormatted(containerMemLimit > 0 ? formatBytes(containerMemLimit) : "N/A")
+            .containerMemoryUsageFormatted(containerMemUsage >= 0 ? formatBytes(containerMemUsage) : "N/A")
+            .dockerContainers(getDockerContainers())
             .build();
     }
 
@@ -195,6 +212,91 @@ public class AdminMetricsService {
             log.warn("Impossible de récupérer la taille max du pool", e);
         }
         return 10;
+    }
+
+    /**
+     * Détecte si l'application tourne dans un conteneur Docker
+     */
+    private boolean isRunningInDocker() {
+        return new File("/.dockerenv").exists();
+    }
+
+    /**
+     * Lit une valeur longue depuis le système de fichiers cgroup (v1 ou v2)
+     */
+    private long readCgroupValue(String... paths) {
+        for (String path : paths) {
+            try {
+                String val = Files.readString(Paths.get(path)).trim();
+                if (!val.equals("max") && !val.isBlank()) return Long.parseLong(val);
+            } catch (Exception ignored) {}
+        }
+        return -1L;
+    }
+
+    /**
+     * Limite mémoire du conteneur Docker (depuis cgroup)
+     */
+    private long getContainerMemoryLimit() {
+        return readCgroupValue(
+            "/sys/fs/cgroup/memory.max",                          // cgroup v2
+            "/sys/fs/cgroup/memory/memory.limit_in_bytes"         // cgroup v1
+        );
+    }
+
+    /**
+     * Utilisation mémoire du conteneur Docker (depuis cgroup)
+     */
+    private long getContainerMemoryUsage() {
+        return readCgroupValue(
+            "/sys/fs/cgroup/memory.current",                      // cgroup v2
+            "/sys/fs/cgroup/memory/memory.usage_in_bytes"         // cgroup v1
+        );
+    }
+
+    /**
+     * Récupère la liste des conteneurs Docker via l'API Unix socket
+     * Retourne une liste vide si docker.sock n'est pas disponible
+     */
+    private List<Map<String, String>> getDockerContainers() {
+        if (!new File("/var/run/docker.sock").exists()) return List.of();
+        try {
+            ProcessBuilder pb = new ProcessBuilder(
+                "/usr/bin/curl", "-s", "--max-time", "3",
+                "--unix-socket", "/var/run/docker.sock",
+                "http://localhost/containers/json?all=1"
+            );
+            pb.redirectErrorStream(false);
+            Process proc = pb.start();
+            String json = new String(proc.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+            proc.waitFor(5, TimeUnit.SECONDS);
+            if (json.isBlank() || !json.startsWith("[")) return List.of();
+
+            ObjectMapper mapper = new ObjectMapper();
+            List<Map<String, Object>> containers = mapper.readValue(json, new TypeReference<>() {});
+            List<Map<String, String>> result = new ArrayList<>();
+            for (Map<String, Object> c : containers) {
+                Map<String, String> info = new LinkedHashMap<>();
+                @SuppressWarnings("unchecked")
+                List<String> names = (List<String>) c.getOrDefault("Names", List.of("/unknown"));
+                info.put("name", names.isEmpty() ? "unknown" : names.get(0).replaceFirst("^/", ""));
+                info.put("image", (String) c.getOrDefault("Image", "unknown"));
+                info.put("state", (String) c.getOrDefault("State", "unknown")); // running / exited
+                String status = (String) c.getOrDefault("Status", "unknown");
+                info.put("status", status);
+                // Badge de santé
+                if (status.contains("(healthy)"))        info.put("health", "healthy");
+                else if (status.contains("(unhealthy)")) info.put("health", "unhealthy");
+                else if (status.contains("(health:"))    info.put("health", "starting");
+                else if ("running".equals(info.get("state"))) info.put("health", "running");
+                else                                          info.put("health", info.get("state"));
+                result.add(info);
+            }
+            return result;
+        } catch (Exception e) {
+            log.debug("Docker API non disponible: {}", e.getMessage());
+            return List.of();
+        }
     }
 
     /**
