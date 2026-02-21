@@ -26,6 +26,7 @@ variables:
   REMOTE_DIR: "/opt/gedavocat"
 
 stages:
+  - notify
   - build
   - test
   - package
@@ -55,11 +56,39 @@ stages:
          -d "${BODY}" > /dev/null || true
 
 # 
+# STAGE 0 : NOTIFICATION DEMARRAGE PIPELINE
+# 
+pipeline-start:
+  stage: notify
+  image: alpine:3.19
+  before_script:
+    - apk add --no-cache curl
+  script:
+    - |
+      [ -z "${DISCORD_WEBHOOK:-}" ] && exit 0
+      BRANCH="${CI_COMMIT_BRANCH:-MR}"
+      AUTHOR="${GITLAB_USER_NAME:-CI}"
+      SHA="${CI_COMMIT_SHORT_SHA:-????}"
+      MSG="${CI_COMMIT_MESSAGE:-}"
+      curl -s -X POST "${DISCORD_WEBHOOK}" \
+        -H "Content-Type: application/json" \
+        -d "{
+          \"embeds\": [{
+            \"title\": \"PIPELINE Pipeline demarre\",
+            \"description\": \"**Branche :** \`${BRANCH}\`\n**Commit :** [\`${SHA}\`](${CI_PIPELINE_URL})\n**Par :** ${AUTHOR}\n**Message :** ${MSG}\n\n*Build en cours...*\",
+            \"color\": 16776960,
+            \"footer\": { \"text\": \"DocAvocat CI/CD\" },
+            \"timestamp\": \"$(date -u '+%Y-%m-%dT%H:%M:%SZ')\"
+          }]
+        }" > /dev/null || true
+
+# 
 # STAGE 1 : BUILD
 # 
 build:
   stage: build
   image: maven:3.9-eclipse-temurin-17-alpine
+  needs: [pipeline-start]
   script:
     - mvn $MAVEN_CLI_OPTS compile
   after_script:
@@ -177,6 +206,12 @@ deploy:
     - scp "$ENV_PROD" root@$SERVER_HOST:$REMOTE_DIR/.env
     - ssh root@$SERVER_HOST "echo 'APP_IMAGE=$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA' >> $REMOTE_DIR/.env"
 
+    # Envoi des configs Loki / Promtail / Grafana (si modifiées)
+    - ssh root@$SERVER_HOST "mkdir -p $REMOTE_DIR/loki $REMOTE_DIR/promtail $REMOTE_DIR/grafana/provisioning/datasources"
+    - scp docker/loki/local-config.yaml root@$SERVER_HOST:$REMOTE_DIR/loki/local-config.yaml
+    - scp docker/promtail/config.yaml root@$SERVER_HOST:$REMOTE_DIR/promtail/config.yaml
+    - scp docker/grafana/provisioning/datasources/loki.yaml root@$SERVER_HOST:$REMOTE_DIR/grafana/provisioning/datasources/loki.yaml
+
     # Deploiement sur le serveur
     - |
       ssh root@$SERVER_HOST "
@@ -185,6 +220,8 @@ deploy:
         docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
         docker compose pull app
         docker compose up -d --no-deps app
+        # Démarrer Loki/Promtail/Grafana s'ils ne tournent pas encore
+        docker compose up -d loki promtail grafana 2>/dev/null || true
         docker logout $CI_REGISTRY 2>/dev/null || true
         docker ps --format 'table {{.Names}}\t{{.Status}}'
       "

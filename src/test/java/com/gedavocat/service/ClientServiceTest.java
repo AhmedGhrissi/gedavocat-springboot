@@ -2,7 +2,9 @@ package com.gedavocat.service;
 
 import com.gedavocat.model.Client;
 import com.gedavocat.model.User;
+import com.gedavocat.repository.AppointmentRepository;
 import com.gedavocat.repository.ClientRepository;
+import com.gedavocat.repository.RpvaCommunicationRepository;
 import com.gedavocat.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -26,6 +28,8 @@ class ClientServiceTest {
     @Mock private ClientRepository clientRepository;
     @Mock private UserRepository userRepository;
     @Mock private AuditService auditService;
+    @Mock private RpvaCommunicationRepository rpvaCommunicationRepository;
+    @Mock private AppointmentRepository appointmentRepository;
 
     @InjectMocks
     private ClientService clientService;
@@ -97,10 +101,14 @@ class ClientServiceTest {
     @DisplayName("✓ Supprimer un client")
     void deleteClient() {
         when(clientRepository.findById("client-001")).thenReturn(Optional.of(client));
+        doNothing().when(rpvaCommunicationRepository).deleteAllByCaseEntityClientId("client-001");
+        doNothing().when(appointmentRepository).clearClientByClientId("client-001");
+        doNothing().when(appointmentRepository).clearRelatedCaseByClientId("client-001");
         doNothing().when(clientRepository).delete(client);
 
         clientService.deleteClient("client-001");
 
         verify(clientRepository).delete(client);
+        verify(rpvaCommunicationRepository).deleteAllByCaseEntityClientId("client-001");
     }
 }
