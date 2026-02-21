@@ -60,12 +60,37 @@ stages:
   - package
   - deploy
 
-#  Notification Discord (YAML anchor) 
-# Usage dans after_script :
-#   - export EMOJI="..." STATUS="..." COLOR=XXXXXX JOB_NAME="..."
-#   - *discord_notify
-# Inclus automatiquement : branche, commit, auteur, lien direct vers les logs du job
-.discord_notify: &discord_notify
+# Notification Discord — toutes branches (DISCORD_COMMIT_WEBHOOK, non-protege)
+# Utilise pour : build, test
+.discord_commit_notify: &discord_commit_notify
+  - |
+    [ -z "${DISCORD_COMMIT_WEBHOOK:-}" ] && exit 0
+    BRANCH="${CI_COMMIT_BRANCH:-MR}"
+    AUTHOR="${GITLAB_USER_NAME:-CI}"
+    SHA="${CI_COMMIT_SHORT_SHA:-????}"
+    TITLE="${CI_COMMIT_TITLE:-}"
+    COMMIT_MSG=$(printf '%s' "$TITLE" | head -c 80 | sed 's/\\/\\\\/g; s/"/\\"/g; s/	/ /g')
+    PAYLOAD=$(printf '{
+      "embeds": [{
+        "title": "%s %s",
+        "description": "**Branche :** `%s`\n**Commit :** [`%s`](%s)\n**Par :** %s\n**Message :** %s\n\n[Voir les logs du job ->](%s/-/jobs/%s)",
+        "color": %s,
+        "footer": { "text": "DocAvocat CI/CD" },
+        "timestamp": "%s"
+      }]
+    }' \
+      "$EMOJI" "$STATUS" \
+      "$BRANCH" "$SHA" "$CI_PIPELINE_URL" "$AUTHOR" "$COMMIT_MSG" \
+      "$CI_PROJECT_URL" "$CI_JOB_ID" \
+      "$COLOR" \
+      "$(date -u '+%Y-%m-%dT%H:%M:%SZ')")
+    curl -s -X POST "${DISCORD_COMMIT_WEBHOOK}" \
+         -H "Content-Type: application/json" \
+         -d "$PAYLOAD" > /dev/null || echo "Discord notification failed (non-bloquant)"
+
+# Notification Discord — main uniquement (DISCORD_WEBHOOK, protege)
+# Utilise pour : package, deploy
+.discord_deploy_notify: &discord_deploy_notify
   - |
     [ -z "${DISCORD_WEBHOOK:-}" ] && exit 0
     BRANCH="${CI_COMMIT_BRANCH:-MR}"
@@ -101,9 +126,9 @@ build:
   image: maven:3.9-eclipse-temurin-17-alpine
   before_script:
     - apk add --no-cache curl --quiet 2>/dev/null || true
-    #  Notification Discord : pipeline demarre 
+    # Notification Discord : pipeline demarre
     - |
-      [ -z "${DISCORD_WEBHOOK:-}" ] && true || {
+      [ -z "${DISCORD_COMMIT_WEBHOOK:-}" ] && true || {
         BRANCH="${CI_COMMIT_BRANCH:-MR}"
         AUTHOR="${GITLAB_USER_NAME:-CI}"
         SHA="${CI_COMMIT_SHORT_SHA:-????}"
@@ -123,7 +148,7 @@ build:
             "timestamp": "%s"
           }]
         }' "$BRANCH" "$SHA" "$CI_PIPELINE_URL" "$AUTHOR" "$COMMIT_MSG" "$SCOPE" "$(date -u '+%Y-%m-%dT%H:%M:%SZ')")
-        curl -s -X POST "${DISCORD_WEBHOOK}" \
+        curl -s -X POST "${DISCORD_COMMIT_WEBHOOK}" \
              -H "Content-Type: application/json" \
              -d "$PAYLOAD" > /dev/null || echo "Discord (pipeline-start) failed (non-bloquant)"
       }
@@ -137,7 +162,7 @@ build:
         EMOJI="[FAIL]"; STATUS="ECHEC de compilation - voir logs"; COLOR=15158332
       fi
       JOB_NAME="Build Maven"
-    - *discord_notify
+    - *discord_commit_notify
   cache:
     key: "maven-$CI_COMMIT_REF_SLUG"
     paths:
@@ -161,7 +186,7 @@ test:
         EMOJI="[FAIL]"; STATUS="TESTS ECHOUES - deploiement bloque !"; COLOR=15158332
       fi
       JOB_NAME="Tests unitaires"
-    - *discord_notify
+    - *discord_commit_notify
   cache:
     key: "maven-$CI_COMMIT_REF_SLUG"
     paths:
@@ -215,7 +240,7 @@ package:
         EMOJI="[FAIL]"; STATUS="ECHEC build image Docker"; COLOR=15158332
       fi
       JOB_NAME="Package Docker"
-    - *discord_notify
+    - *discord_deploy_notify
   rules:
     - if: $CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE == "web"
 
@@ -305,7 +330,7 @@ deploy:
         EMOJI="[FAIL]"; STATUS="ECHEC DU DEPLOIEMENT - voir logs"; COLOR=15158332
       fi
       JOB_NAME="Deploiement Production"
-    - *discord_notify
+    - *discord_deploy_notify
 
   environment:
     name: production
