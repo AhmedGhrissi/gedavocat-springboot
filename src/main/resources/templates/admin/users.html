@@ -270,6 +270,102 @@
             </div>
         </div>
     </div>
+
+    <!-- Modal Nouvel utilisateur -->
+    <div class="modal fade" id="newUserModal" tabindex="-1" aria-labelledby="newUserModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form th:action="@{/admin/users/create}" method="post">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="newUserModalLabel">
+                            <i class="fas fa-user-plus"></i> Nouvel utilisateur
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Type d'utilisateur -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Type d'utilisateur <span class="text-danger">*</span></label>
+                            <div class="d-flex gap-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="role" id="roleLawyer" value="LAWYER" checked onchange="toggleSubscriptionFields()">
+                                    <label class="form-check-label" for="roleLawyer">
+                                        <i class="fas fa-user-tie text-primary"></i> Avocat
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="role" id="roleClient" value="CLIENT" onchange="toggleSubscriptionFields()">
+                                    <label class="form-check-label" for="roleClient">
+                                        <i class="fas fa-user text-info"></i> Client
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <hr>
+                        <!-- Prénom -->
+                        <div class="mb-3">
+                            <label for="newFirstName" class="form-label">Prénom <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="newFirstName" name="firstName" required
+                                   placeholder="Jean">
+                        </div>
+                        <!-- Nom -->
+                        <div class="mb-3">
+                            <label for="newLastName" class="form-label">Nom <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="newLastName" name="lastName" required
+                                   placeholder="Dupont">
+                        </div>
+                        <!-- Email -->
+                        <div class="mb-3">
+                            <label for="newEmail" class="form-label">Email <span class="text-danger">*</span></label>
+                            <input type="email" class="form-control" id="newEmail" name="email" required
+                                   placeholder="jean.dupont@example.com">
+                        </div>
+                        <!-- Mot de passe -->
+                        <div class="mb-3">
+                            <label for="newPassword" class="form-label">Mot de passe <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="password" class="form-control" id="newPassword" name="password" required
+                                       minlength="6" placeholder="Minimum 6 caractères">
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility()">
+                                    <i class="fas fa-eye" id="togglePwdIcon"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <!-- Info abonnement (avocat uniquement) -->
+                        <div id="subscriptionInfo" class="alert alert-info mb-0">
+                            <i class="fas fa-info-circle"></i>
+                            L'avocat sera créé avec un abonnement <strong>SOLO</strong> actif (10 clients max).
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-check"></i> Créer l'utilisateur
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleSubscriptionFields() {
+            const isLawyer = document.getElementById('roleLawyer').checked;
+            document.getElementById('subscriptionInfo').style.display = isLawyer ? 'block' : 'none';
+        }
+
+        function togglePasswordVisibility() {
+            const pwdInput = document.getElementById('newPassword');
+            const icon = document.getElementById('togglePwdIcon');
+            if (pwdInput.type === 'password') {
+                pwdInput.type = 'text';
+                icon.classList.replace('fa-eye', 'fa-eye-slash');
+            } else {
+                pwdInput.type = 'password';
+                icon.classList.replace('fa-eye-slash', 'fa-eye');
+            }
+        }
+    </script>
 </div>
 </body>
 </html>
