@@ -72,11 +72,11 @@ stages:
     AUTHOR="${GITLAB_USER_NAME:-CI}"
     SHA="${CI_COMMIT_SHORT_SHA:-????}"
     TITLE="${CI_COMMIT_TITLE:-}"
-    COMMIT_MSG=$(printf '%s' "$TITLE" | head -c 80 | sed 's/\\/\\\\/g; s/"/\\"/g; s// /g')
+    COMMIT_MSG=$(printf '%s' "$TITLE" | head -c 80 | sed 's/\\/\\\\/g; s/"/\\"/g; s/	/ /g')
     PAYLOAD=$(printf '{
       "embeds": [{
-        "title": "%s  %s",
-        "description": "**Branche :** `%s`\n**Commit :** [`%s`](%s)\n**Par :** %s\n**Message :** %s\n\n[Voir les logs du job  ](%s/-/jobs/%s)",
+        "title": "%s %s",
+        "description": "**Branche :** `%s`\n**Commit :** [`%s`](%s)\n**Par :** %s\n**Message :** %s\n\n[Voir les logs du job ->](%s/-/jobs/%s)",
         "color": %s,
         "footer": { "text": "DocAvocat CI/CD" },
         "timestamp": "%s"
@@ -108,15 +108,15 @@ build:
         AUTHOR="${GITLAB_USER_NAME:-CI}"
         SHA="${CI_COMMIT_SHORT_SHA:-????}"
         TITLE="${CI_COMMIT_TITLE:-}"
-        COMMIT_MSG=$(printf '%s' "$TITLE" | head -c 80 | sed 's/\\/\\\\/g; s/"/\\"/g; s// /g')
+        COMMIT_MSG=$(printf '%s' "$TITLE" | head -c 80 | sed 's/\\/\\\\/g; s/"/\\"/g; s/	/ /g')
         if [ "$BRANCH" = "main" ]; then
-          SCOPE="branche main  pipeline complet (build  test  package  deploy)"
+          SCOPE="branche main - pipeline complet (build -> test -> package -> deploy)"
         else
-          SCOPE="branche feature  build + test uniquement"
+          SCOPE="branche feature - build + test uniquement"
         fi
         PAYLOAD=$(printf '{
           "embeds": [{
-            "title": "  Pipeline demarre",
+            "title": "[START] Pipeline demarre",
             "description": "**Branche :** `%s`\n**Commit :** [`%s`](%s)\n**Par :** %s\n**Message :** %s\n**Scope :** %s",
             "color": 16776960,
             "footer": { "text": "DocAvocat CI/CD" },
@@ -132,9 +132,9 @@ build:
   after_script:
     - |
       if [ "$CI_JOB_STATUS" = "success" ]; then
-        EMOJI=""; STATUS="Build compile avec succes"; COLOR=3066993
+        EMOJI="[OK]"; STATUS="Build compile avec succes"; COLOR=3066993
       else
-        EMOJI=""; STATUS="ECHEC de compilation  voir logs"; COLOR=15158332
+        EMOJI="[FAIL]"; STATUS="ECHEC de compilation - voir logs"; COLOR=15158332
       fi
       JOB_NAME="Build Maven"
     - *discord_notify
@@ -156,9 +156,9 @@ test:
   after_script:
     - |
       if [ "$CI_JOB_STATUS" = "success" ]; then
-        EMOJI=""; STATUS="Tests unitaires passes (39/39)"; COLOR=3066993
+        EMOJI="[OK]"; STATUS="Tests unitaires passes (39/39)"; COLOR=3066993
       else
-        EMOJI=""; STATUS="TESTS ECHOUES  deploiement bloque !"; COLOR=15158332
+        EMOJI="[FAIL]"; STATUS="TESTS ECHOUES - deploiement bloque !"; COLOR=15158332
       fi
       JOB_NAME="Tests unitaires"
     - *discord_notify
@@ -210,9 +210,9 @@ package:
     - apk add --no-cache curl --quiet 2>/dev/null || true
     - |
       if [ "$CI_JOB_STATUS" = "success" ]; then
-        EMOJI=""; STATUS="Image Docker ARM64 prete  cliquer Play sur deploy"; COLOR=3447003
+        EMOJI="[DOCKER]"; STATUS="Image Docker ARM64 prete - cliquer Play sur deploy"; COLOR=3447003
       else
-        EMOJI=""; STATUS="ECHEC build image Docker"; COLOR=15158332
+        EMOJI="[FAIL]"; STATUS="ECHEC build image Docker"; COLOR=15158332
       fi
       JOB_NAME="Package Docker"
     - *discord_notify
@@ -243,8 +243,8 @@ deploy:
       [ -z "${DISCORD_WEBHOOK:-}" ] && true || {
         PAYLOAD=$(printf '{
           "embeds": [{
-            "title": "  Deploiement en cours...",
-            "description": "**Branche :** `%s`\n**Commit :** [`%s`](%s)\n**Par :** %s\n\n*Envoi des fichiers  restart conteneur  verification HTTP...*\n\n[Voir les logs deploy ](%s/-/jobs/%s)",
+            "title": "[DEPLOY] Deploiement en cours...",
+            "description": "**Branche :** `%s`\n**Commit :** [`%s`](%s)\n**Par :** %s\n\n*Envoi des fichiers -> restart conteneur -> verification HTTP...*\n\n[Voir les logs deploy ->](%s/-/jobs/%s)",
             "color": 16776960,
             "footer": { "text": "DocAvocat CI/CD" },
             "timestamp": "%s"
@@ -300,9 +300,9 @@ deploy:
   after_script:
     - |
       if [ "$CI_JOB_STATUS" = "success" ]; then
-        EMOJI=""; STATUS="DEPLOYE EN PRODUCTION !  https://docavocat.fr"; COLOR=3066993
+        EMOJI="[PROD]"; STATUS="DEPLOYE EN PRODUCTION ! https://docavocat.fr"; COLOR=3066993
       else
-        EMOJI=""; STATUS="ECHEC DU DEPLOIEMENT  voir logs"; COLOR=15158332
+        EMOJI="[FAIL]"; STATUS="ECHEC DU DEPLOIEMENT - voir logs"; COLOR=15158332
       fi
       JOB_NAME="Deploiement Production"
     - *discord_notify
