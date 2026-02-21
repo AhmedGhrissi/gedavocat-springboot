@@ -64,6 +64,33 @@ public class Client {
     
     @Column(name = "invitation_id", length = 36)
     private String invitationId;
+
+    @Column(name = "invited_at")
+    private LocalDateTime invitedAt;
+
+    /**
+     * Type de client : particulier ou professionnel
+     */
+    public enum ClientType {
+        INDIVIDUAL("Particulier"),
+        PROFESSIONAL("Professionnel");
+        
+        private final String displayName;
+        ClientType(String displayName) { this.displayName = displayName; }
+        public String getDisplayName() { return displayName; }
+    }
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "client_type", length = 20)
+    private ClientType clientType = ClientType.INDIVIDUAL;
+
+    /** Raison sociale (pour les professionnels) */
+    @Column(name = "company_name", length = 200)
+    private String companyName;
+
+    /** SIRET (pour les professionnels) */
+    @Column(name = "siret", length = 20)
+    private String siret;
     
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -83,6 +110,16 @@ public class Client {
     // Méthodes utilitaires
     public boolean hasActiveAccess() {
         return accessEndsAt == null || accessEndsAt.isAfter(LocalDateTime.now());
+    }
+
+    /**
+     * Retourne le statut de l'invitation : VALIDATED, PENDING, EXPIRED ou NOT_INVITED.
+     */
+    public String getInvitationStatus() {
+        if (clientUser != null) return "VALIDATED";
+        if (invitationId == null) return "NOT_INVITED";
+        if (invitedAt != null && LocalDateTime.now().isBefore(invitedAt.plusHours(72))) return "PENDING";
+        return "EXPIRED";
     }
     
     @PrePersist

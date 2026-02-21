@@ -1,16 +1,22 @@
 package com.gedavocat.controller;
 
 import com.gedavocat.dto.SystemMetricsDTO;
+import com.gedavocat.model.Client;
+import com.gedavocat.repository.ClientRepository;
 import com.gedavocat.service.AdminMetricsService;
+import com.gedavocat.service.ClientInvitationService;
 import com.gedavocat.service.LogService;
+import com.gedavocat.service.MaintenanceService;
 import com.gedavocat.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 /**
  * Contrôleur pour le panneau d'administration
@@ -24,6 +30,9 @@ public class AdminController {
     private final AdminMetricsService metricsService;
     private final LogService logService;
     private final UserService userService;
+    private final MaintenanceService maintenanceService;
+    private final ClientRepository clientRepository;
+    private final ClientInvitationService invitationService;
 
     /**
      * Dashboard principal de l'admin
@@ -96,6 +105,9 @@ public class AdminController {
     public String users(Model model) {
         try {
             model.addAttribute("users", userService.getAllUsers());
+            model.addAttribute("activityStats", metricsService.getActivityStats());
+            // Clients créés par les avocats sans compte utilisateur lié
+            model.addAttribute("clientsWithoutAccount", clientRepository.findByClientUserIsNull());
             return "admin/users";
         } catch (Exception e) {
             model.addAttribute("error", "Erreur lors du chargement des utilisateurs");
@@ -141,6 +153,37 @@ public class AdminController {
      */
     @GetMapping("/settings")
     public String settings(Model model) {
+        model.addAttribute("maintenanceEnabled", maintenanceService.isMaintenanceEnabled());
         return "admin/settings";
+    }
+
+    /**
+     * Toggle maintenance via formulaire (CSRF-protected, fiable)
+     */
+    @PostMapping("/settings/toggle-maintenance")
+    public String toggleMaintenance(RedirectAttributes redirectAttributes) {
+        boolean newState = maintenanceService.toggle();
+        redirectAttributes.addFlashAttribute("maintenanceMsg",
+            newState ? "🔴 Mode maintenance activé — le site est inaccessible aux utilisateurs."
+                     : "🟢 Mode maintenance désactivé — le site est de nouveau accessible.");
+        return "redirect:/admin/settings";
+    }
+
+    /**
+     * Envoie une invitation de création de compte à un client sans compte
+     */
+    @PostMapping("/users/send-invitation")
+    public String sendInvitation(@RequestParam String clientId, RedirectAttributes redirectAttributes) {
+        try {
+            Client client = clientRepository.findById(clientId)
+                    .orElseThrow(() -> new RuntimeException("Client introuvable : " + clientId));
+            invitationService.sendInvitation(client, "Administrateur");
+            redirectAttributes.addFlashAttribute("success",
+                    "Invitation envoyée à " + client.getName() + " (" + client.getEmail() + ")");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error",
+                    "Erreur lors de l'envoi de l'invitation : " + e.getMessage());
+        }
+        return "redirect:/admin/users";
     }
 }

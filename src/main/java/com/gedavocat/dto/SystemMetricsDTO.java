@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -73,4 +74,13 @@ public class SystemMetricsDTO {
     // Santé système
     private String status;
     private Map<String, Object> healthDetails;
+
+    // Docker
+    private boolean runningInDocker;
+    private long containerMemoryLimit;      // bytes, -1 si non disponible
+    private long containerMemoryUsage;      // bytes, -1 si non disponible
+    private double containerMemoryPercent;
+    private String containerMemoryLimitFormatted;
+    private String containerMemoryUsageFormatted;
+    private List<Map<String, String>> dockerContainers; // liste des conteneurs
 }

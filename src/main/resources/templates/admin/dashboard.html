@@ -326,6 +326,80 @@
                 </div>
             </div>
         </div>
+        <!-- Docker -->
+        <div class="row">
+            <div class="col-12 mb-4">
+                <div class="card" th:classappend="${metrics.runningInDocker} ? '' : 'border-secondary'">
+                    <div class="card-header text-white" th:classappend="${metrics.runningInDocker} ? 'bg-dark' : 'bg-secondary'">
+                        <h5 class="mb-0">
+                            <i class="fab fa-docker"></i> Docker
+                            <span class="badge bg-success ms-2" th:if="${metrics.runningInDocker}">Actif</span>
+                            <span class="badge bg-secondary ms-2" th:unless="${metrics.runningInDocker}">Hors Docker</span>
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Pas en Docker-->
+                        <p class="text-muted" th:unless="${metrics.runningInDocker}">
+                            L'application ne tourne pas dans Docker (environnement local / dev).
+                        </p>
+                        <!-- En Docker -->
+                        <div th:if="${metrics.runningInDocker}">
+                            <!-- Mémoire conteneur -->
+                            <div class="row mb-3" th:if="${metrics.containerMemoryLimit > 0}">
+                                <div class="col-md-4">
+                                    <small class="text-muted">Mémoire conteneur (cgroup)</small>
+                                    <div class="d-flex justify-content-between mt-1">
+                                        <span th:text="${metrics.containerMemoryUsageFormatted}">256 MB</span>
+                                        <span class="text-muted" th:text="'/ ' + ${metrics.containerMemoryLimitFormatted}">/ 512 MB</span>
+                                    </div>
+                                    <div class="progress progress-custom mt-1">
+                                        <div class="progress-bar"
+                                             th:classappend="${metrics.containerMemoryPercent > 85 ? 'bg-danger' : (metrics.containerMemoryPercent > 65 ? 'bg-warning' : 'bg-info')}"
+                                             role="progressbar"
+                                             th:style="'width: ' + ${metrics.containerMemoryPercent} + '%'"
+                                             th:text="${#numbers.formatDecimal(metrics.containerMemoryPercent, 1, 1)} + '%'">40%</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Conteneurs -->
+                            <div th:if="${not #lists.isEmpty(metrics.dockerContainers)}">
+                                <h6 class="mb-2"><i class="fas fa-server"></i> Conteneurs</h6>
+                                <table class="table table-sm table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Nom</th>
+                                            <th>Image</th>
+                                            <th>Statut</th>
+                                            <th>Santé</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="c : ${metrics.dockerContainers}">
+                                            <td><code th:text="${c.name}">docavocat-app</code></td>
+                                            <td class="text-muted small" th:text="${c.image}">docavocat-app:latest</td>
+                                            <td class="small" th:text="${c.status}">Up 5 minutes</td>
+                                            <td>
+                                                <span class="badge bg-success"  th:if="${c.health == 'healthy'}">healthy ✔</span>
+                                                <span class="badge bg-primary"  th:if="${c.health == 'running'}">running</span>
+                                                <span class="badge bg-warning text-dark" th:if="${c.health == 'starting'}">démarrage…</span>
+                                                <span class="badge bg-danger"   th:if="${c.health == 'unhealthy'}">unhealthy ✘</span>
+                                                <span class="badge bg-secondary"
+                                                      th:if="${c.health != 'healthy' and c.health != 'running' and c.health != 'starting' and c.health != 'unhealthy'}"
+                                                      th:text="${c.health}">unknown</span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <p class="text-muted small mb-0" th:if="${#lists.isEmpty(metrics.dockerContainers)}">
+                                <i class="fas fa-info-circle"></i>
+                                Montez <code>/var/run/docker.sock</code> en lecture seule pour afficher les conteneurs.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 </body>

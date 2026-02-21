@@ -12,6 +12,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -205,27 +208,21 @@ public class RPVAController {
      * Télécharger l'accusé de réception
      */
     @GetMapping("/communications/{communicationId}/receipt")
-    public String downloadReceipt(
-            @PathVariable String communicationId,
-            RedirectAttributes redirectAttributes
+    public ResponseEntity<byte[]> downloadReceipt(
+            @PathVariable String communicationId
     ) {
         try {
             byte[] receipt = rpvaService.downloadReceipt(communicationId);
-
-            // Retourner le fichier PDF - Sauvegarder l'accusé de réception
-            RpvaCommunication communication = rpvaCommunicationRepository.findByReferenceNumber(communicationId)
-                .orElseThrow(() -> new RuntimeException("Communication non trouvée"));
-
-            // Update the communication status
-            rpvaCommunicationRepository.save(communication);
-
-            redirectAttributes.addFlashAttribute("message", "Accusé de réception téléchargé");
-            return "redirect:/rpva/communications/" + communicationId;
-
+            if (receipt == null || receipt.length == 0) {
+                return ResponseEntity.notFound().build();
+            }
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_PDF);
+            headers.setContentDispositionFormData("attachment", "accuse-reception-" + communicationId + ".pdf");
+            headers.setContentLength(receipt.length);
+            return ResponseEntity.ok().headers(headers).body(receipt);
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error",
-                "Erreur lors du téléchargement: " + e.getMessage());
-            return "redirect:/rpva/communications/" + communicationId;
+            return ResponseEntity.internalServerError().build();
         }
     }
 

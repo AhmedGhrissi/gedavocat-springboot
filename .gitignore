@@ -67,10 +67,32 @@ uploads/
 temp/
 logs/
 
+# Fichiers sensibles et utilitaires locaux
+gedavocat_dump.sql
+*.sql.bak
+deploiement-hetzner-o2switch.pdf
+generate_pdf.py
+
+# Scripts et artefacts générés localement
+generate_docs.py
+*.pdf
+
+# Python virtual environment
+.venv/
+__pycache__/
+*.pyc
+
+# Config de production (contient les credentials)
+application-o2switch.properties
+
 # Environment files
 .env
 .env.local
 .env.production
+.env.prod
+
+# Docker production artifacts (contiennent les credentials)
+Dockerfile.prod
 
 # Application properties (contains sensitive data)
 # Uncomment if you want to exclude it

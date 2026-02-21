@@ -8,6 +8,9 @@ import com.gedavocat.repository.SignatureRepository;
 import com.gedavocat.repository.UserRepository;
 import com.gedavocat.service.YousignService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
@@ -78,6 +81,10 @@ public class SignatureController {
 
         model.addAttribute("user", user);
 
+        // Tous les documents disponibles
+        List<Document> allDocuments = documentRepository.findAll();
+        model.addAttribute("documents", allDocuments);
+
         // Si un document est spécifié, le pré-remplir
         if (documentId != null) {
             Document document = documentRepository.findById(documentId).orElse(null);
@@ -99,6 +106,9 @@ public class SignatureController {
             @RequestParam String signerName,
             @RequestParam String signerEmail,
             @RequestParam(defaultValue = "advanced") String signatureLevel,
+            @RequestParam(required = false) String signerPhone,
+            @RequestParam(defaultValue = "7") int expirationDays,
+            @RequestParam(required = false) String message,
             @AuthenticationPrincipal UserDetails userDetails,
             RedirectAttributes redirectAttributes
     ) {
@@ -121,12 +131,13 @@ public class SignatureController {
 
             // Sauvegarder la demande de signature en base
             Signature signature = new Signature();
-            signature.setId(signatureId);
+            signature.setId(signatureId != null ? signatureId : java.util.UUID.randomUUID().toString());
             signature.setYousignSignatureRequestId(signatureId);
             signature.setDocument(document);
             signature.setDocumentName(document.getFilename());
             signature.setSignerName(signerName);
             signature.setSignerEmail(signerEmail);
+            signature.setLevel(signatureLevel);
             signature.setStatus(Signature.SignatureStatus.PENDING);
             signature.setRequestedBy(user);
             signatureRepository.save(signature);
@@ -134,7 +145,7 @@ public class SignatureController {
             redirectAttributes.addFlashAttribute("message",
                 "Demande de signature envoyée à " + signerEmail);
 
-            return "redirect:/signatures/" + signatureId;
+            return "redirect:/signatures/" + signature.getId();
 
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error",
@@ -150,53 +161,60 @@ public class SignatureController {
     public String viewSignature(
             @PathVariable String signatureId,
             @AuthenticationPrincipal UserDetails userDetails,
-            Model model
+            Model model,
+            RedirectAttributes redirectAttributes
     ) {
         try {
             User user = userRepository.findByEmail(userDetails.getUsername())
                     .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
 
-            // Récupérer le statut de la signature
-            Map<String, Object> signatureStatus = yousignService.getSignatureStatus(signatureId);
+            Signature signature = signatureRepository.findById(signatureId)
+                    .orElseThrow(() -> new RuntimeException("Signature introuvable"));
 
             model.addAttribute("user", user);
-            model.addAttribute("signature", signatureStatus);
-            model.addAttribute("signatureId", signatureId);
+            model.addAttribute("signature", signature);
 
             return "signatures/view";
 
         } catch (Exception e) {
-            model.addAttribute("error", "Erreur lors de la récupération de la signature");
+            redirectAttributes.addFlashAttribute("error", "Signature introuvable : " + e.getMessage());
             return "redirect:/signatures";
         }
     }
 
     /**
-     * Télécharger le document signé
+     * Télécharger le document signé — retourne le fichier directement
      */
     @GetMapping("/{signatureId}/download")
-    public String downloadSignedDocument(
+    public ResponseEntity<byte[]> downloadSignedDocument(
             @PathVariable String signatureId,
             RedirectAttributes redirectAttributes
     ) {
         try {
             byte[] signedDocument = yousignService.downloadSignedDocument(signatureId);
 
-            // Sauvegarder le document signé et mettre à jour le statut
-            Signature signature = signatureRepository.findByYousignSignatureRequestId(signatureId)
-                .orElseThrow(() -> new RuntimeException("Signature non trouvée"));
-            
-            signature.setStatus(Signature.SignatureStatus.SIGNED);
-            signature.setSignedAt(java.time.LocalDateTime.now());
-            signatureRepository.save(signature);
+            // Mettre à jour le statut en base si besoin
+            signatureRepository.findByYousignSignatureRequestId(signatureId).ifPresent(sig -> {
+                if (sig.getStatus() != Signature.SignatureStatus.SIGNED) {
+                    sig.setStatus(Signature.SignatureStatus.SIGNED);
+                    sig.setSignedAt(java.time.LocalDateTime.now());
+                    signatureRepository.save(sig);
+                }
+            });
 
-            redirectAttributes.addFlashAttribute("message", "Document signé téléchargé");
-            return "redirect:/signatures/" + signatureId;
+            // Trouver le nom du fichier
+            String filename = signatureRepository
+                .findByYousignSignatureRequestId(signatureId)
+                .map(s -> "signed_" + s.getDocumentName())
+                .orElse("document_signe.pdf");
+
+            return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+                .body(signedDocument);
 
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error",
-                "Erreur lors du téléchargement: " + e.getMessage());
-            return "redirect:/signatures/" + signatureId;
+            return ResponseEntity.internalServerError().build();
         }
     }
 
@@ -222,7 +240,25 @@ public class SignatureController {
     }
 
     /**
-     * Relancer un signataire
+     * Relancer un signataire — route simple sans signerId (utilisée depuis la liste)
+     */
+    @PostMapping("/{signatureId}/remind")
+    public String remindSignerSimple(
+            @PathVariable String signatureId,
+            RedirectAttributes redirectAttributes
+    ) {
+        try {
+            // Relancer sans signerId spécifique (tous les signataires en attente)
+            yousignService.remindSigner(signatureId, "");
+            redirectAttributes.addFlashAttribute("message", "Relance envoyée au signataire");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Erreur lors de la relance: " + e.getMessage());
+        }
+        return "redirect:/signatures";
+    }
+
+    /**
+     * Relancer un signataire — route avec signerId
      */
     @PostMapping("/{signatureId}/remind/{signerId}")
     public String remindSigner(

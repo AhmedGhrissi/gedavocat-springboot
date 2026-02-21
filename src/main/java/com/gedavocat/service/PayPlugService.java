@@ -15,7 +15,7 @@ import java.util.*;
 @Service
 public class PayPlugService {
 
-    @Value("${payplug.secret.key}")
+    @Value("${payplug.secret.key:}")
     private String secretKey;
 
     @Value("${payplug.api.url:https://api.payplug.com/v1}")

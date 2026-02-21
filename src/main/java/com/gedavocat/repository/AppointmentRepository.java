@@ -2,8 +2,10 @@ package com.gedavocat.repository;
 
 import com.gedavocat.model.Appointment;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
@@ -94,4 +96,28 @@ public interface AppointmentRepository extends JpaRepository<Appointment, String
         @Param("lawyerId") String lawyerId,
         @Param("now") LocalDateTime now
     );
+
+    /**
+     * Supprime la référence au dossier dans les rendez-vous (avant suppression du dossier)
+     */
+    @Modifying(clearAutomatically = true)
+    @Transactional
+    @Query("UPDATE Appointment a SET a.relatedCase = null WHERE a.relatedCase.id = :caseId")
+    void clearRelatedCaseByCaseId(@Param("caseId") String caseId);
+
+    /**
+     * Supprime la référence au client dans les rendez-vous (avant suppression du client)
+     */
+    @Modifying(clearAutomatically = true)
+    @Transactional
+    @Query("UPDATE Appointment a SET a.client = null WHERE a.client.id = :clientId")
+    void clearClientByClientId(@Param("clientId") String clientId);
+
+    /**
+     * Supprime les références aux dossiers d'un client donné (avant suppression du client)
+     */
+    @Modifying(clearAutomatically = true)
+    @Transactional
+    @Query("UPDATE Appointment a SET a.relatedCase = null WHERE a.relatedCase.id IN (SELECT c.id FROM Case c WHERE c.client.id = :clientId)")
+    void clearRelatedCaseByClientId(@Param("clientId") String clientId);
 }

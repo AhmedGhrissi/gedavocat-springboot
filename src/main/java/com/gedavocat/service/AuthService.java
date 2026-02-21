@@ -70,6 +70,7 @@ public class AuthService {
         
         user.setTermsAcceptedAt(LocalDateTime.now());
         user.setGdprConsentAt(LocalDateTime.now());
+        user.setEmailVerified(false);  // doit être vérifié par email avant connexion
         
         user = userRepository.save(user);
         

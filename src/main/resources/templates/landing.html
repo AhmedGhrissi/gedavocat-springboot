@@ -1,9 +1,119 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GED Avocat - Gestion documentaire pour cabinets d'avocats</title>
+
+    <!-- ═══ SEO PRIMARY ═══════════════════════════════════════════════════════ -->
+    <title>DocAvocat | Logiciel de gestion documentaire pour cabinet d'avocat</title>
+    <meta name="description" content="docavocat.fr — Solution SaaS complète pour avocats : gestion des dossiers clients, documents juridiques, signatures électroniques Yousign et communications RPVA e-Barreau. Essai gratuit 14 jours, sans engagement.">
+    <meta name="keywords" content="logiciel avocat, GED avocat, gestion documentaire cabinet avocat, logiciel cabinet avocat, dossiers juridiques, signatures électroniques avocat, RPVA, e-Barreau, docavocat, logiciel juridique SaaS">
+    <meta name="author" content="DocAvocat — docavocat.fr">
+    <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+    <link rel="canonical" href="https://docavocat.fr/">
+
+    <!-- ═══ LANGUE & RÉGION ═══════════════════════════════════════════════════ -->
+    <meta http-equiv="content-language" content="fr">
+    <meta name="geo.region" content="FR">
+    <meta name="geo.placename" content="France">
+
+    <!-- ═══ OPEN GRAPH ════════════════════════════════════════════════════════ -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="DocAvocat">
+    <meta property="og:title" content="DocAvocat | Logiciel de gestion documentaire pour cabinet d'avocat">
+    <meta property="og:description" content="Solution SaaS pour avocats : gestion des dossiers, documents, signatures électroniques et RPVA. Essai gratuit 14 jours.">
+    <meta property="og:url" content="https://docavocat.fr/">
+    <meta property="og:image" content="https://docavocat.fr/img/og-gedavocat.svg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:type" content="image/svg+xml">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="DocAvocat — Interface de gestion documentaire pour avocat">
+    <meta property="og:locale" content="fr_FR">
+
+    <!-- ═══ TWITTER CARD ══════════════════════════════════════════════════════ -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="DocAvocat | Logiciel pour cabinet d'avocat">
+    <meta name="twitter:description" content="Gérez vos dossiers, documents et clients facilement. Signatures électroniques et RPVA intégrés.">
+    <meta name="twitter:image" content="https://docavocat.fr/img/og-gedavocat.svg">
+    <meta name="twitter:image:alt" content="DocAvocat — Interface de gestion">
+
+    <!-- ═══ TECHNIQUE ═════════════════════════════════════════════════════════ -->
+    <meta name="theme-color" content="#667eea">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="shortcut icon" href="/favicon.svg">
+    <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+
+    <!-- ═══ STRUCTURED DATA JSON-LD ═══════════════════════════════════════════ -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://docavocat.fr/#organization",
+          "name": "DocAvocat",
+          "url": "https://docavocat.fr",
+          "logo": { "@type": "ImageObject", "url": "https://docavocat.fr/favicon.svg", "width": 100, "height": 100 },
+          "contactPoint": { "@type": "ContactPoint", "contactType": "customer support", "email": "support@docavocat.fr", "availableLanguage": "French" },
+          "areaServed": "FR",
+          "knowsLanguage": "fr"
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://docavocat.fr/#website",
+          "url": "https://docavocat.fr",
+          "name": "DocAvocat",
+          "description": "Logiciel SaaS de gestion documentaire pour cabinets d'avocats",
+          "publisher": { "@id": "https://docavocat.fr/#organization" },
+          "inLanguage": "fr-FR"
+        },
+        {
+          "@type": "SoftwareApplication",
+          "name": "DocAvocat",
+          "applicationCategory": "BusinessApplication",
+          "applicationSubCategory": "Legal Software",
+          "operatingSystem": "Web Browser",
+          "url": "https://docavocat.fr",
+          "description": "Solution SaaS de gestion électronique de documents pour cabinets d'avocats. Gérez vos dossiers, clients, documents et communiquez via RPVA e-Barreau.",
+          "offers": [
+            { "@type": "Offer", "name": "Solo",       "price": "29.99",  "priceCurrency": "EUR", "description": "Jusqu'à 10 clients, stockage 5 GB, gestion documentaire",                          "url": "https://docavocat.fr/register?plan=SOLO" },
+            { "@type": "Offer", "name": "Cabinet",    "price": "99.99",  "priceCurrency": "EUR", "description": "Jusqu'à 100 clients, 50 GB, signatures électroniques, RPVA",               "url": "https://docavocat.fr/register?plan=CABINET" },
+            { "@type": "Offer", "name": "Enterprise", "price": "299.99", "priceCurrency": "EUR", "description": "Clients illimités, 500 GB, API complète, support 24/7, formation", "url": "https://docavocat.fr/register?plan=ENTERPRISE" }
+          ],
+          "featureList": [
+            "Gestion des dossiers juridiques",
+            "Gestion électronique de documents (GED)",
+            "Signatures électroniques Yousign conformes eIDAS",
+            "Communications RPVA e-Barreau",
+            "Portail client sécurisé",
+            "Partage de dossiers entre avocats",
+            "Filigranes PDF automatiques",
+            "Facturation électronique",
+            "Conformité RGPD",
+            "Scanner de documents via webcam"
+          ],
+          "publisher": { "@id": "https://docavocat.fr/#organization" },
+          "inLanguage": "fr-FR"
+        },
+        {
+          "@type": "FAQPage",
+          "mainEntity": [
+            { "@type": "Question", "name": "DocAvocat est-il conforme aux exigences du barreau ?",      "acceptedAnswer": { "@type": "Answer", "text": "Oui, DocAvocat intègre les communications RPVA (Réseau Privé Virtuel des Avocats) et est conçu pour répondre aux exigences de confidentialité et sécurité imposées par les barreaux français." } },
+            { "@type": "Question", "name": "Puis-je signer des documents électroniquement ?",           "acceptedAnswer": { "@type": "Answer", "text": "Oui, les formules Cabinet et Enterprise incluent la signature électronique qualifiée via Yousign, conforme au règlement eIDAS." } },
+            { "@type": "Question", "name": "Mes données sont-elles sécurisées ?",                       "acceptedAnswer": { "@type": "Answer", "text": "DocAvocat garantit la conformité RGPD, le chiffrement des données et l'hébergement en France. Vos données restent confidentielles et sous votre contrôle exclusif." } },
+            { "@type": "Question", "name": "Y a-t-il une période d'essai gratuite ?",                   "acceptedAnswer": { "@type": "Answer", "text": "Oui, chaque formule bénéficie de 14 jours d'essai gratuit sans engagement et sans carte bancaire requise." } },
+            { "@type": "Question", "name": "Puis-je importer mes anciens dossiers et documents ?",      "acceptedAnswer": { "@type": "Answer", "text": "Oui, DocAvocat permet l'import de documents PDF, Word et images. Notre équipe support vous accompagne lors de la migration." } }
+          ]
+        }
+      ]
+    }
+    </script>
+
+    <!-- CSS -->
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -228,10 +338,10 @@
     <!-- Navigation -->
     <nav class="navbar">
         <div class="nav-container">
-            <a href="/" class="logo">⚖️ GED Avocat</a>
+            <a href="/" class="logo">⚖️ DocAvocat</a>
             <div class="nav-buttons">
                 <a th:href="@{/login}" class="btn btn-outline">Se connecter</a>
-                <a th:href="@{/register}" class="btn btn-primary">S'inscrire</a>
+                <a th:href="@{/subscription/pricing}" class="btn btn-primary">S'inscrire</a>
             </div>
         </div>
     </nav>
@@ -246,68 +356,115 @@
     <section class="pricing-section">
         <div class="pricing-container">
             <h2 class="section-title">Choisissez votre formule</h2>
+
+            <!-- Toggle mensuel / annuel -->
+            <div style="display:flex;justify-content:center;margin-bottom:2rem;">
+                <div style="display:flex;background:#e2e8f0;border-radius:10px;padding:4px;gap:4px;">
+                    <button id="btn-monthly" onclick="setLandingPeriod('monthly')"
+                            style="padding:8px 24px;border:none;border-radius:8px;font-weight:600;cursor:pointer;background:white;color:#667eea;box-shadow:0 2px 6px rgba(0,0,0,.1);">
+                        Mensuel
+                    </button>
+                    <button id="btn-yearly" onclick="setLandingPeriod('yearly')"
+                            style="padding:8px 24px;border:none;border-radius:8px;font-weight:600;cursor:pointer;background:transparent;color:#718096;">
+                        Annuel <span style="background:#10b981;color:white;padding:2px 7px;border-radius:10px;font-size:11px;font-weight:700;margin-left:4px;">-20%</span>
+                    </button>
+                </div>
+            </div>
             
             <div class="pricing-grid">
                 
                 <!-- Plan Solo -->
                 <div class="pricing-card">
                     <div class="plan-name">Solo</div>
-                    <div class="plan-price">29,99€<small>/mois</small></div>
+                    <div class="plan-price">
+                        <span class="lp-monthly">29€<small>/mois</small></span>
+                        <span class="lp-yearly" style="display:none;">23€<small>/mois</small> <small style="text-decoration:line-through;color:#a0aec0;font-size:1rem;">29€</small></span>
+                    </div>
                     <ul class="plan-features">
-                        <li>Jusqu'à 10 clients</li>
+                        <li>Jusqu'à 5 clients</li>
                         <li>Stockage 5 GB</li>
                         <li>Gestion documentaire</li>
                         <li>Support email</li>
                     </ul>
-                    <form th:action="@{/register}" method="get">
-                        <input type="hidden" name="plan" value="SOLO">
-                        <button type="submit" class="btn-select">Choisir Solo</button>
-                    </form>
+                    <a href="/subscription/pricing?plan=SOLO" class="btn-select">Choisir Solo</a>
                 </div>
 
                 <!-- Plan Cabinet (Popular) -->
                 <div class="pricing-card popular">
                     <span class="popular-badge">⭐ Populaire</span>
                     <div class="plan-name">Cabinet</div>
-                    <div class="plan-price">99,99€<small>/mois</small></div>
+                    <div class="plan-price">
+                        <span class="lp-monthly">99€<small>/mois</small></span>
+                        <span class="lp-yearly" style="display:none;">79€<small>/mois</small> <small style="text-decoration:line-through;color:#a0aec0;font-size:1rem;">99€</small></span>
+                    </div>
                     <ul class="plan-features">
-                        <li>Jusqu'à 100 clients</li>
-                        <li>Stockage 50 GB</li>
+                        <li>Jusqu'à 50 clients</li>
+                        <li>Stockage 100 GB</li>
                         <li>Signatures électroniques (Yousign)</li>
                         <li>Communications RPVA</li>
                         <li>Support prioritaire</li>
                     </ul>
-                    <form th:action="@{/register}" method="get">
-                        <input type="hidden" name="plan" value="CABINET">
-                        <button type="submit" class="btn-select">Choisir Cabinet</button>
-                    </form>
+                    <a href="/subscription/pricing?plan=CABINET" class="btn-select">Choisir Cabinet</a>
                 </div>
 
                 <!-- Plan Enterprise -->
                 <div class="pricing-card">
-                    <div class="plan-name">Enterprise</div>
-                    <div class="plan-price">299,99€<small>/mois</small></div>
+                    <div class="plan-name">Entreprise</div>
+                    <div class="plan-price">
+                        <span class="lp-monthly">299€<small>/mois</small></span>
+                        <span class="lp-yearly" style="display:none;">239€<small>/mois</small> <small style="text-decoration:line-through;color:#a0aec0;font-size:1rem;">299€</small></span>
+                    </div>
                     <ul class="plan-features">
                         <li>Clients illimités</li>
-                        <li>Stockage 500 GB</li>
+                        <li>Stockage 1 TB</li>
                         <li>Toutes les fonctionnalités</li>
                         <li>API complète</li>
                         <li>Support dédié 24/7</li>
                         <li>Formation personnalisée</li>
                     </ul>
-                    <form th:action="@{/register}" method="get">
-                        <input type="hidden" name="plan" value="ENTERPRISE">
-                        <button type="submit" class="btn-select">Choisir Enterprise</button>
-                    </form>
+                    <a href="/subscription/pricing?plan=ENTERPRISE" class="btn-select">Choisir Entreprise</a>
                 </div>
 
             </div>
         </div>
     </section>
 
+    <script>
+    function setLandingPeriod(period) {
+        document.querySelectorAll('.lp-monthly').forEach(el => el.style.display = period === 'monthly' ? '' : 'none');
+        document.querySelectorAll('.lp-yearly').forEach(el => el.style.display = period === 'yearly' ? '' : 'none');
+        document.getElementById('btn-monthly').style.background = period === 'monthly' ? 'white' : 'transparent';
+        document.getElementById('btn-monthly').style.color = period === 'monthly' ? '#667eea' : '#718096';
+        document.getElementById('btn-monthly').style.boxShadow = period === 'monthly' ? '0 2px 6px rgba(0,0,0,.1)' : 'none';
+        document.getElementById('btn-yearly').style.background = period === 'yearly' ? 'white' : 'transparent';
+        document.getElementById('btn-yearly').style.color = period === 'yearly' ? '#667eea' : '#718096';
+        document.getElementById('btn-yearly').style.boxShadow = period === 'yearly' ? '0 2px 6px rgba(0,0,0,.1)' : 'none';
+        // Mettre à jour les liens des boutons avec la période sélectionnée
+        document.querySelectorAll('.btn-select[href*="/subscription/pricing"]').forEach(btn => {
+            const url = new URL(btn.href);
+            url.searchParams.set('billing', period);
+            btn.href = url.toString();
+        });
+    }
+    </script>
+
     <!-- Footer -->
     <footer>
-        <p>&copy; 2026 GED Avocat - Solution de gestion documentaire pour avocats</p>
+        <div style="max-width:1200px;margin:0 auto;padding:0 1rem">
+            <p>&copy; 2026 DocAvocat &mdash; Solution de gestion documentaire pour avocats</p>
+            <nav aria-label="Liens légaux" style="margin-top:1rem;font-size:0.9rem;opacity:0.75">
+                <a th:href="@{/legal/terms}"   style="color:white;text-decoration:none;margin:0 0.6rem">Conditions d'utilisation</a>
+                <span aria-hidden="true">&middot;</span>
+                <a th:href="@{/legal/privacy}" style="color:white;text-decoration:none;margin:0 0.6rem">Politique de confidentialité</a>
+                <span aria-hidden="true">&middot;</span>
+                <a th:href="@{/login}"         style="color:white;text-decoration:none;margin:0 0.6rem">Connexion</a>
+                <span aria-hidden="true">&middot;</span>
+                <a href="/sitemap.xml" rel="noopener" target="_blank" style="color:white;text-decoration:none;margin:0 0.6rem">Plan du site</a>
+            </nav>
+            <p style="margin-top:0.5rem;font-size:0.8rem;opacity:0.45">
+                Hébergé en France &middot; Conforme RGPD &middot; Application SaaS pour cabinets d'avocats
+            </p>
+        </div>
     </footer>
 
 </body>

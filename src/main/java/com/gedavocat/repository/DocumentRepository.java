@@ -64,4 +64,24 @@ public interface DocumentRepository extends JpaRepository<Document, String> {
            "AND d.deletedAt IS NULL " +
            "ORDER BY d.createdAt DESC")
     List<Document> findByLawyerIdWithCase(@Param("lawyerId") String lawyerId);
+
+    long countByCreatedAtAfter(java.time.LocalDateTime date);
+
+    /**
+     * Compte uniquement les documents NON supprimés (soft delete)
+     */
+    @Query("SELECT COUNT(d) FROM Document d WHERE d.deletedAt IS NULL")
+    long countNonDeleted();
+
+    /**
+     * Compte les documents créés après une date donnée, non supprimés
+     */
+    @Query("SELECT COUNT(d) FROM Document d WHERE d.deletedAt IS NULL AND d.createdAt > :date")
+    long countNonDeletedCreatedAfter(@Param("date") java.time.LocalDateTime date);
+
+    /**
+     * Calcule la taille totale de stockage des documents non supprimés
+     */
+    @Query("SELECT COALESCE(SUM(d.fileSize), 0) FROM Document d WHERE d.deletedAt IS NULL")
+    long sumFileSizeNonDeleted();
 }

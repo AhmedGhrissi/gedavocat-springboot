@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -20,6 +21,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.security.web.firewall.HttpFirewall;
 import org.springframework.security.web.firewall.StrictHttpFirewall;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
+import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
 
 @Configuration
 @EnableWebSecurity
@@ -37,8 +39,12 @@ public class SecurityConfig {
 				.csrf(csrf -> csrf.ignoringRequestMatchers("/api/**", "/subscription/webhook"))
 				.authorizeHttpRequests(auth -> auth
 						// Pages publiques
-						.requestMatchers("/", "/login", "/register", "/subscription/pricing", "/api/auth/**", "/css/**",
-								"/js/**", "/images/**", "/favicon.ico", "/subscription/webhook", "/legal/**")
+						.requestMatchers("/", "/login", "/register", "/maintenance", "/subscription/pricing",
+						"/api/auth/**", "/css/**", "/js/**", "/images/**", "/img/**", "/favicon.ico", "/favicon.svg",
+						"/robots.txt", "/sitemap.xml",
+							"/forgot-password", "/reset-password", "/verify-email", "/verify-email/resend",
+							"/clients/accept-invitation",
+							"/cases/shared", "/cases/shared-expired")
 						.permitAll()
 
 						// Pages administrateur
@@ -57,7 +63,19 @@ public class SecurityConfig {
 						// Pages client
 						.requestMatchers("/my-cases/**", "/my-documents/**").hasAnyRole("CLIENT", "LAWYER", "ADMIN")
 
-						.anyRequest().authenticated())
+					.anyRequest().authenticated())
+				// En-têtes de sécurité ANSSI/OWASP
+				.headers(h -> h
+						.frameOptions(f -> f.deny())
+						.contentTypeOptions(Customizer.withDefaults())
+						.httpStrictTransportSecurity(hsts -> hsts
+								.includeSubDomains(true)
+								.maxAgeInSeconds(31536000))
+						.referrerPolicy(r -> r.policy(
+								ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
+						.permissionsPolicy(p -> p.policy(
+								"camera=(self), microphone=(), geolocation=(), payment=()")
+						))
 				// Session avec état pour le formLogin (pas stateless)
 				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
 				.authenticationProvider(authenticationProvider())

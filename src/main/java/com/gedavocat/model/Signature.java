@@ -69,6 +69,9 @@ public class Signature {
     @Column(name = "signed_at")
     private LocalDateTime signedAt;
     
+    @Column(name = "signature_level", length = 32)
+    private String level; // simple, advanced, qualified
+    
     // Énumération des statuts de signature
     public enum SignatureStatus {
         DRAFT("Brouillon"),

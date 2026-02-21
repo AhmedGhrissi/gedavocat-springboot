@@ -10,6 +10,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import org.springframework.format.annotation.DateTimeFormat;
 
 /**
  * Entité Appointment - Rendez-vous avec les clients ou audiences au tribunal
@@ -39,9 +40,11 @@ public class Appointment {
     private String description;
 
     @NotNull(message = "La date du rendez-vous est obligatoire")
+    @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
     @Column(name = "appointment_date", nullable = false)
     private LocalDateTime appointmentDate;
 
+    @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
     @Column(name = "end_date")
     private LocalDateTime endDate;
 

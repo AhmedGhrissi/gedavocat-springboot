@@ -30,9 +30,15 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                     "Utilisateur non trouvé avec l'email: " + email
                 ));
         
+        boolean enabled = user.isAccountEnabled() && user.isEmailVerified();
+
         return new org.springframework.security.core.userdetails.User(
             user.getEmail(),
             user.getPassword(),
+            enabled,          // account enabled
+            true,             // accountNonExpired
+            true,             // credentialsNonExpired
+            true,             // accountNonLocked
             getAuthorities(user)
         );
     }

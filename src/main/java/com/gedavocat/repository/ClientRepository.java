@@ -50,4 +50,16 @@ public interface ClientRepository extends JpaRepository<Client, String> {
      * Utilisé pour le portail client
      */
     Optional<Client> findByClientUserId(String userId);
+
+    long countByCreatedAtAfter(java.time.LocalDateTime date);
+
+    /**
+     * Clients sans compte utilisateur lié (client_user_id IS NULL)
+     */
+    List<Client> findByClientUserIsNull();
+
+    /**
+     * Trouve un client par son token d'invitation
+     */
+    Optional<Client> findByInvitationId(String invitationId);
 }

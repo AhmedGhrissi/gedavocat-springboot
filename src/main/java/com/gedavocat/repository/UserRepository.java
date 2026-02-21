@@ -21,6 +21,8 @@ public interface UserRepository extends JpaRepository<User, String> {
      * Trouve un utilisateur par email
      */
     Optional<User> findByEmail(String email);
+
+    Optional<User> findByResetToken(String resetToken);
     
     /**
      * Vérifie si un email existe déjà
@@ -76,4 +78,6 @@ public interface UserRepository extends JpaRepository<User, String> {
            "LOWER(u.lastName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
            "LOWER(u.email) LIKE LOWER(CONCAT('%', :keyword, '%'))")
     List<User> findByFirstNameContainingOrLastNameContainingOrEmailContaining(@Param("keyword") String keyword);
+
+    long countByCreatedAtAfter(LocalDateTime date);
 }

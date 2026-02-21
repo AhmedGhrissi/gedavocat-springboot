@@ -1,0 +1,132 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs>
+    <!-- Background gradient -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+    </linearGradient>
+    <!-- Card gradient -->
+    <linearGradient id="cardGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.12" />
+      <stop offset="100%" style="stop-color:#ffffff;stop-opacity:0.04" />
+    </linearGradient>
+    <!-- Icon glow -->
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="8" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <!-- Drop shadow for text -->
+    <filter id="textShadow" x="-5%" y="-5%" width="110%" height="130%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="rgba(0,0,0,0.25)"/>
+    </filter>
+    <!-- Soft blur for decorative circles -->
+    <filter id="softBlur">
+      <feGaussianBlur stdDeviation="40"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bgGrad)"/>
+
+  <!-- Decorative blurred circles -->
+  <circle cx="980" cy="80" r="200" fill="#ffffff" opacity="0.06" filter="url(#softBlur)"/>
+  <circle cx="120" cy="550" r="180" fill="#ffffff" opacity="0.05" filter="url(#softBlur)"/>
+  <circle cx="1100" cy="480" r="150" fill="#a78bfa" opacity="0.15" filter="url(#softBlur)"/>
+
+  <!-- Subtle grid pattern overlay -->
+  <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse">
+    <path d="M 60 0 L 0 0 0 60" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+  </pattern>
+  <rect width="1200" height="630" fill="url(#grid)"/>
+
+  <!-- Glass card background -->
+  <rect x="60" y="60" width="1080" height="510" rx="24" ry="24" fill="url(#cardGrad)" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"/>
+
+  <!-- ====== LEFT SIDE: Scales of Justice Icon ====== -->
+  <g transform="translate(120, 145)" filter="url(#glow)">
+    <!-- Icon circle background -->
+    <circle cx="130" cy="155" r="120" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.2)" stroke-width="2"/>
+
+    <!-- Pillar top bar -->
+    <rect x="70" y="60" width="120" height="12" rx="6" fill="white" opacity="0.95"/>
+
+    <!-- Center pillar -->
+    <rect x="124" y="72" width="12" height="155" rx="6" fill="white" opacity="0.95"/>
+
+    <!-- Base platform -->
+    <rect x="80" y="224" width="100" height="10" rx="5" fill="white" opacity="0.95"/>
+    <rect x="95" y="234" width="70" height="8" rx="4" fill="white" opacity="0.85"/>
+
+    <!-- Beam (horizontal arm) -->
+    <rect x="75" y="98" width="110" height="8" rx="4" fill="white" opacity="0.95"/>
+
+    <!-- Left chain -->
+    <line x1="92" y1="106" x2="92" y2="148" stroke="white" stroke-width="3.5" stroke-dasharray="4,3" opacity="0.9"/>
+    <!-- Right chain -->
+    <line x1="168" y1="106" x2="168" y2="132" stroke="white" stroke-width="3.5" stroke-dasharray="4,3" opacity="0.9"/>
+
+    <!-- Left pan (lower — justice tilted) -->
+    <ellipse cx="92" cy="155" rx="32" ry="10" fill="rgba(255,255,255,0.15)" stroke="white" stroke-width="2.5" opacity="0.95"/>
+    <path d="M 60 148 Q 92 162 124 148" fill="none" stroke="white" stroke-width="2.5" opacity="0.9"/>
+
+    <!-- Right pan (higher) -->
+    <ellipse cx="168" cy="138" rx="32" ry="10" fill="rgba(255,255,255,0.15)" stroke="white" stroke-width="2.5" opacity="0.95"/>
+    <path d="M 136 132 Q 168 144 200 132" fill="none" stroke="white" stroke-width="2.5" opacity="0.9"/>
+
+    <!-- Star/sparkle accent -->
+    <circle cx="130" cy="56" r="8" fill="white" opacity="0.9"/>
+    <circle cx="130" cy="56" r="5" fill="#f9a8d4" opacity="0.8"/>
+  </g>
+
+  <!-- Vertical divider -->
+  <line x1="380" y1="110" x2="380" y2="520" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>
+
+  <!-- ====== RIGHT SIDE: Text content ====== -->
+
+  <!-- Badge: "Logiciel juridique" -->
+  <rect x="420" y="118" width="220" height="36" rx="18" fill="rgba(255,255,255,0.15)" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+  <text x="530" y="142" font-family="'Segoe UI', Arial, sans-serif" font-size="16" font-weight="600" fill="rgba(255,255,255,0.9)" text-anchor="middle" letter-spacing="2">LOGICIEL JURIDIQUE</text>
+
+  <!-- Main brand name -->
+  <text x="420" y="240" font-family="'Segoe UI', Arial, sans-serif" font-size="88" font-weight="800" fill="white" filter="url(#textShadow)" letter-spacing="-2">Doc</text>
+  <text x="626" y="240" font-family="'Segoe UI', Arial, sans-serif" font-size="88" font-weight="300" fill="rgba(255,255,255,0.85)" letter-spacing="-2">Avocat</text>
+
+  <!-- Accent line under brand -->
+  <rect x="420" y="258" width="280" height="4" rx="2" fill="rgba(255,255,255,0.5)"/>
+  <rect x="420" y="258" width="100" height="4" rx="2" fill="white"/>
+
+  <!-- Tagline -->
+  <text x="420" y="315" font-family="'Segoe UI', Arial, sans-serif" font-size="26" font-weight="400" fill="rgba(255,255,255,0.9)" letter-spacing="0.3">Gérez vos dossiers, clients et documents</text>
+  <text x="420" y="350" font-family="'Segoe UI', Arial, sans-serif" font-size="26" font-weight="400" fill="rgba(255,255,255,0.9)" letter-spacing="0.3">en toute sécurité depuis votre cabinet.</text>
+
+  <!-- Feature pills -->
+  <g transform="translate(420, 390)">
+    <!-- Pill 1 -->
+    <rect x="0" y="0" width="165" height="38" rx="19" fill="rgba(255,255,255,0.15)" stroke="rgba(255,255,255,0.25)" stroke-width="1"/>
+    <text x="82" y="25" font-family="'Segoe UI', Arial, sans-serif" font-size="15" font-weight="500" fill="white" text-anchor="middle">📁 GED Documentaire</text>
+
+    <!-- Pill 2 -->
+    <rect x="180" y="0" width="150" height="38" rx="19" fill="rgba(255,255,255,0.15)" stroke="rgba(255,255,255,0.25)" stroke-width="1"/>
+    <text x="255" y="25" font-family="'Segoe UI', Arial, sans-serif" font-size="15" font-weight="500" fill="white" text-anchor="middle">⚖️ Suivi affaires</text>
+
+    <!-- Pill 3 -->
+    <rect x="345" y="0" width="170" height="38" rx="19" fill="rgba(255,255,255,0.15)" stroke="rgba(255,255,255,0.25)" stroke-width="1"/>
+    <text x="430" y="25" font-family="'Segoe UI', Arial, sans-serif" font-size="15" font-weight="500" fill="white" text-anchor="middle">🔐 RGPD conforme</text>
+  </g>
+
+  <!-- URL / domain at bottom right -->
+  <text x="1120" y="548" font-family="'Segoe UI', Arial, sans-serif" font-size="22" font-weight="600" fill="rgba(255,255,255,0.7)" text-anchor="end" letter-spacing="1">docavocat.fr</text>
+
+  <!-- Bottom accent bar -->
+  <rect x="60" y="548" width="1080" height="3" rx="1.5" fill="rgba(255,255,255,0.15)"/>
+  <rect x="60" y="548" width="300" height="3" rx="1.5" fill="rgba(255,255,255,0.4)"/>
+
+  <!-- Small decorative dots top-right -->
+  <circle cx="1050" cy="120" r="4" fill="rgba(255,255,255,0.3)"/>
+  <circle cx="1075" cy="108" r="3" fill="rgba(255,255,255,0.2)"/>
+  <circle cx="1095" cy="128" r="5" fill="rgba(255,255,255,0.2)"/>
+  <circle cx="1060" cy="148" r="3" fill="rgba(255,255,255,0.15)"/>
+</svg>

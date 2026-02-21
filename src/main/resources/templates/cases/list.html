@@ -79,7 +79,7 @@
                                 </td>
                                 <td>
                                     <span class="badge" 
-                                          th:classappend="${case.status.name == 'OPEN' ? 'bg-success' : (case.status.name == 'IN_PROGRESS' ? 'bg-info' : (case.status.name == 'CLOSED' ? 'bg-warning' : 'bg-secondary'))}"
+                                          th:classappend="${case.status.name() == 'OPEN' ? 'bg-success' : (case.status.name() == 'IN_PROGRESS' ? 'bg-primary' : (case.status.name() == 'CLOSED' ? 'bg-warning text-dark' : (case.status.name() == 'ARCHIVED' ? 'bg-secondary' : 'bg-secondary')))}"
                                           th:text="${case.status.displayName}">Statut</span>
                                 </td>
                                 <td th:text="${case.createdAt != null ? #temporals.format(case.createdAt, 'dd/MM/yyyy') : '-'}">Date</td>
@@ -94,6 +94,12 @@
                                         <a th:href="@{/documents/case/{id}(id=${case.id})}" class="btn btn-sm btn-outline-primary" title="Documents">
                                             <i class="fas fa-file"></i>
                                         </a>
+                                        <form th:action="@{/cases/{id}/delete(id=${case.id})}" method="post" style="display: inline;">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Supprimer"
+                                                    onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce dossier ?')">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
                                     </div>
                                 </td>
                             </tr>

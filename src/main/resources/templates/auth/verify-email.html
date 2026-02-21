@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vérification email - DocAvocat</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .auth-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+        }
+        .auth-box {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 15px 50px rgba(0,0,0,.3);
+            padding: 40px;
+            width: 100%;
+            max-width: 480px;
+        }
+        .auth-header { text-align: center; margin-bottom: 30px; }
+        .auth-header h2 { color: #333; font-weight: 700; }
+        .brand-icon { font-size: 48px; color: #667eea; margin-bottom: 15px; }
+        .btn-primary { background: linear-gradient(135deg, #667eea, #764ba2); border: none; }
+        .btn-primary:hover { background: linear-gradient(135deg, #5a6fd8, #6a3f92); }
+
+        /* Zones de chiffres */
+        .code-inputs { display: flex; gap: 10px; justify-content: center; }
+        .code-inputs input {
+            width: 50px; height: 60px;
+            text-align: center; font-size: 28px; font-weight: 700;
+            border: 2px solid #dee2e6; border-radius: 10px;
+            transition: border-color .2s;
+        }
+        .code-inputs input:focus { border-color: #667eea; outline: none; box-shadow: 0 0 0 3px rgba(102,126,234,.25); }
+    </style>
+</head>
+<body>
+<div class="auth-container">
+    <div class="auth-box">
+        <div class="auth-header">
+            <div class="brand-icon"><i class="fas fa-envelope-open-text"></i></div>
+            <h2>Vérification de votre email</h2>
+            <p class="text-muted">
+                Entrez le code à 6 chiffres envoyé à<br>
+                <strong th:text="${email}">votre@email.fr</strong>
+            </p>
+        </div>
+
+        <!-- Alertes -->
+        <div th:if="${info}" class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>
+            <span th:text="${info}"></span>
+        </div>
+        <div th:if="${error}" class="alert alert-danger">
+            <i class="fas fa-exclamation-circle me-2"></i>
+            <span th:text="${error}"></span>
+        </div>
+
+        <!-- Formulaire de saisie du code -->
+        <form th:action="@{/verify-email}" method="post" id="verifyForm">
+            <input type="hidden" name="email" th:value="${email}">
+            <!-- Six champs visuels + champ caché qui reçoit le code concaténé -->
+            <input type="hidden" name="code" id="hiddenCode">
+
+            <div class="code-inputs mb-4" id="codeBoxes">
+                <input type="text" inputmode="numeric" maxlength="1" class="digit" autofocus>
+                <input type="text" inputmode="numeric" maxlength="1" class="digit">
+                <input type="text" inputmode="numeric" maxlength="1" class="digit">
+                <input type="text" inputmode="numeric" maxlength="1" class="digit">
+                <input type="text" inputmode="numeric" maxlength="1" class="digit">
+                <input type="text" inputmode="numeric" maxlength="1" class="digit">
+            </div>
+
+            <div class="d-grid mb-3">
+                <button type="submit" class="btn btn-primary btn-lg" id="submitBtn" disabled>
+                    <i class="fas fa-check me-2"></i> Vérifier
+                </button>
+            </div>
+        </form>
+
+        <!-- Renvoi du code -->
+        <div class="text-center mb-3">
+            <span class="text-muted small">Vous n'avez pas reçu le code ?</span><br>
+            <form th:action="@{/verify-email/resend}" method="post" class="d-inline">
+                <input type="hidden" name="email" th:value="${email}">
+                <button type="submit" class="btn btn-link btn-sm p-0">Renvoyer un code</button>
+            </form>
+        </div>
+
+        <div class="text-center">
+            <a th:href="@{/login}" class="text-muted text-decoration-none small">
+                <i class="fas fa-arrow-left me-1"></i> Retour à la connexion
+            </a>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// Navigation automatique entre les champs + activation du bouton
+const digits = document.querySelectorAll('.digit');
+const submitBtn = document.getElementById('submitBtn');
+const hiddenCode = document.getElementById('hiddenCode');
+
+digits.forEach((input, idx) => {
+    input.addEventListener('input', () => {
+        input.value = input.value.replace(/\D/, '');
+        if (input.value && idx < digits.length - 1) digits[idx + 1].focus();
+        updateCode();
+    });
+    input.addEventListener('keydown', e => {
+        if (e.key === 'Backspace' && !input.value && idx > 0) digits[idx - 1].focus();
+    });
+    input.addEventListener('paste', e => {
+        e.preventDefault();
+        const pasted = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '');
+        [...pasted.slice(0, 6)].forEach((ch, i) => { if (digits[i]) digits[i].value = ch; });
+        updateCode();
+        const last = Math.min(pasted.length, 5);
+        digits[last].focus();
+    });
+});
+
+function updateCode() {
+    const code = [...digits].map(d => d.value).join('');
+    hiddenCode.value = code;
+    submitBtn.disabled = code.length < 6;
+}
+</script>
+</body>
+</html>

@@ -1,88 +1,88 @@
-#!/bin/bash
+﻿#!/bin/bash
+# ============================================================
+# DocAvocat  Script de sauvegarde (serveur Docker)
+#
+# Sauvegarde :
+#   1. Base de donnees MySQL (via conteneur Docker)
+#   2. Fichiers uploades (documents, signatures, factures)
+#
+# Usage :
+#   bash scripts/backup.sh
+#
+# Planification automatique (crontab sur le serveur) :
+#   0 3 * * * bash /opt/gedavocat/scripts/backup.sh >> /opt/gedavocat/logs/backup.log 2>&1
+# ============================================================
+set -euo pipefail
 
-# ===================================================================
-# Script de sauvegarde GED Avocat pour O2Switch
-# ===================================================================
-
-# Configuration
-APP_DIR="$HOME/gedavocat"
-BACKUP_DIR="$HOME/backups/gedavocat"
+#  Configuration 
+REMOTE_DIR="/opt/gedavocat"
+BACKUP_DIR="$REMOTE_DIR/backups"
 DATE=$(date +%Y%m%d_%H%M%S)
+RETENTION_DAYS=30
 
-# À CONFIGURER: Informations MySQL
-DB_USER="VOTRE_UTILISATEUR_MYSQL"
-DB_PASSWORD="VOTRE_MOT_DE_PASSE_MYSQL"
-DB_NAME="VOTRE_BASE_DE_DONNEES"
+#  Variables MySQL (lues depuis .env) 
+if [ -f "$REMOTE_DIR/.env" ]; then
+    source <(grep -E '^(MYSQL_PASSWORD|MYSQL_ROOT_PASSWORD)=' "$REMOTE_DIR/.env")
+fi
+MYSQL_PASSWORD="${MYSQL_PASSWORD:-}"
 
-# Couleurs
-GREEN='\033[0;32m'
-RED='\033[0;31m'
-YELLOW='\033[1;33m'
-NC='\033[0m'
+#  Couleurs 
+GREEN='\033[0;32m'; RED='\033[0;31m'; YELLOW='\033[1;33m'; NC='\033[0m'
+log()  { echo -e "${GREEN}[$(date +%T)] OK $*${NC}"; }
+warn() { echo -e "${YELLOW}[$(date +%T)] WARN $*${NC}"; }
+err()  { echo -e "${RED}[$(date +%T)] ERR $*${NC}"; }
 
-echo "====================================================================="
-echo "   GED Avocat - Sauvegarde automatique"
-echo "====================================================================="
+echo "============================================================"
+echo "  DocAvocat - Sauvegarde $(date '+%d/%m/%Y %H:%M:%S')"
+echo "============================================================"
 
-# Créer le répertoire de backup s'il n'existe pas
-mkdir -p $BACKUP_DIR
+mkdir -p "$BACKUP_DIR"
 
-echo -e "${GREEN}Date de sauvegarde: $(date)${NC}"
-echo "Répertoire de sauvegarde: $BACKUP_DIR"
+#  1. Base de donnees 
 echo ""
+echo "[1/3] Sauvegarde MySQL via conteneur Docker..."
 
-# 1. Sauvegarde de la base de données
-echo -e "${YELLOW}[1/3] Sauvegarde de la base de données MySQL...${NC}"
-mysqldump -u $DB_USER -p"$DB_PASSWORD" $DB_NAME > $BACKUP_DIR/db_$DATE.sql
+DB_FILE="$BACKUP_DIR/db_$DATE.sql.gz"
 
-if [ $? -eq 0 ]; then
-    echo -e "${GREEN}✓ Base de données sauvegardée: db_$DATE.sql${NC}"
-    # Compresser le dump SQL
-    gzip $BACKUP_DIR/db_$DATE.sql
-    echo -e "${GREEN}✓ Fichier compressé: db_$DATE.sql.gz${NC}"
+if docker exec docavocat-mysql mysqldump \
+    -u gedavocat -p"$MYSQL_PASSWORD" \
+    --single-transaction --routines --triggers \
+    gedavocat 2>/dev/null | gzip > "$DB_FILE"; then
+    SIZE=$(du -sh "$DB_FILE" | cut -f1)
+    log "Base de donnees : $DB_FILE ($SIZE)"
 else
-    echo -e "${RED}✗ Erreur lors de la sauvegarde de la base de données${NC}"
+    err "Echec de la sauvegarde MySQL"
 fi
 
-# 2. Sauvegarde des fichiers uploadés
+#  2. Fichiers uploades 
 echo ""
-echo -e "${YELLOW}[2/3] Sauvegarde des fichiers uploadés...${NC}"
-if [ -d "$HOME/uploads" ]; then
-    tar -czf $BACKUP_DIR/files_$DATE.tar.gz -C $HOME uploads
-    if [ $? -eq 0 ]; then
-        echo -e "${GREEN}✓ Fichiers sauvegardés: files_$DATE.tar.gz${NC}"
+echo "[2/3] Sauvegarde des fichiers uploades..."
+
+UPLOADS_DIR="$REMOTE_DIR/uploads"
+FILES_FILE="$BACKUP_DIR/uploads_$DATE.tar.gz"
+
+if [ -d "$UPLOADS_DIR" ] && [ "$(ls -A "$UPLOADS_DIR" 2>/dev/null)" ]; then
+    if tar -czf "$FILES_FILE" -C "$REMOTE_DIR" uploads 2>/dev/null; then
+        SIZE=$(du -sh "$FILES_FILE" | cut -f1)
+        log "Fichiers uploades : $FILES_FILE ($SIZE)"
     else
-        echo -e "${RED}✗ Erreur lors de la sauvegarde des fichiers${NC}"
+        err "Echec de la sauvegarde des fichiers"
     fi
 else
-    echo -e "${YELLOW}  Répertoire uploads non trouvé, ignoré${NC}"
+    warn "Repertoire uploads vide ou inexistant, ignore."
 fi
 
-# 3. Sauvegarde de la configuration
+#  3. Nettoyage des anciennes sauvegardes 
 echo ""
-echo -e "${YELLOW}[3/3] Sauvegarde de la configuration...${NC}"
-if [ -f "$APP_DIR/application.properties" ]; then
-    cp $APP_DIR/application.properties $BACKUP_DIR/config_$DATE.properties
-    echo -e "${GREEN}✓ Configuration sauvegardée: config_$DATE.properties${NC}"
-else
-    echo -e "${YELLOW}  Fichier de configuration non trouvé${NC}"
-fi
+echo "[3/3] Nettoyage des sauvegardes > ${RETENTION_DAYS} jours..."
 
-# 4. Nettoyer les anciennes sauvegardes (> 30 jours)
-echo ""
-echo -e "${YELLOW}Nettoyage des anciennes sauvegardes (> 30 jours)...${NC}"
-find $BACKUP_DIR -type f -mtime +30 -delete
-DELETED_COUNT=$(find $BACKUP_DIR -type f -mtime +30 | wc -l)
-echo -e "${GREEN}✓ Nettoyage terminé ($DELETED_COUNT fichiers supprimés)${NC}"
+DELETED=$(find "$BACKUP_DIR" -type f \( -name "db_*.sql.gz" -o -name "uploads_*.tar.gz" \) -mtime +"$RETENTION_DAYS" -print -delete | wc -l)
+log "$DELETED fichier(s) supprime(s)."
 
-# 5. Afficher le résumé
+#  Resume 
 echo ""
-echo "====================================================================="
-echo "   Résumé de la sauvegarde"
-echo "====================================================================="
-echo "Emplacement: $BACKUP_DIR"
-echo ""
-ls -lh $BACKUP_DIR/*_$DATE.*
-echo ""
-echo -e "${GREEN}✓ Sauvegarde terminée avec succès !${NC}"
-echo "====================================================================="
+echo "============================================================"
+log "Sauvegarde terminee."
+echo "  Repertoire : $BACKUP_DIR"
+ls -lh "$BACKUP_DIR"/*.gz 2>/dev/null || echo "  (aucun fichier)"
+echo "============================================================"

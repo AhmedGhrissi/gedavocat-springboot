@@ -3,6 +3,7 @@ package com.gedavocat.controller;
 import com.gedavocat.model.Client;
 import com.gedavocat.model.User;
 import com.gedavocat.repository.UserRepository;
+import com.gedavocat.service.ClientInvitationService;
 import com.gedavocat.service.ClientService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +26,7 @@ public class ClientController {
 
     private final ClientService clientService;
     private final UserRepository userRepository;
+    private final ClientInvitationService invitationService;
 
     /**
      * Liste des clients
@@ -68,6 +70,7 @@ public class ClientController {
     public String createClient(
             @Valid @ModelAttribute Client client,
             BindingResult result,
+            @RequestParam(value = "sendInvitation", required = false) boolean sendInvitation,
             Authentication authentication,
             RedirectAttributes redirectAttributes,
             Model model
@@ -88,8 +91,14 @@ public class ClientController {
             
             Client savedClient = clientService.createClient(client, user.getId());
             System.out.println("=== DEBUG createClient: Client créé avec ID = " + savedClient.getId());
-            
-            redirectAttributes.addFlashAttribute("message", "Client créé avec succès");
+
+            if (sendInvitation) {
+                String lawyerFullName = user.getFirstName() + " " + user.getLastName();
+                invitationService.sendInvitation(savedClient, lawyerFullName);
+                redirectAttributes.addFlashAttribute("message", "Client créé avec succès. Une invitation a été envoyée à " + savedClient.getEmail() + ".");
+            } else {
+                redirectAttributes.addFlashAttribute("message", "Client créé avec succès");
+            }
             return "redirect:/clients";
         } catch (Exception e) {
             System.err.println("=== ERREUR createClient: " + e.getMessage());
@@ -198,5 +207,56 @@ public class ClientController {
         String email = authentication.getName();
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+    }
+
+    // ===================================================================
+    // Gestion des invitations clients (accès public)
+    // ===================================================================
+
+    /**
+     * Affiche le formulaire d'acceptation d'invitation
+     */
+    @GetMapping("/accept-invitation")
+    public String acceptInvitationForm(@RequestParam String token, Model model) {
+        var entry = invitationService.validateToken(token);
+        if (entry.isEmpty()) {
+            model.addAttribute("error", "Ce lien d'invitation est invalide ou a expiré.");
+            return "clients/invitation-expired";
+        }
+        model.addAttribute("token", token);
+        model.addAttribute("email", entry.get().email());
+        return "clients/accept-invitation";
+    }
+
+    /**
+     * Traite l'acceptation de l'invitation (création du compte)
+     */
+    @PostMapping("/accept-invitation")
+    public String processAcceptInvitation(
+            @RequestParam String token,
+            @RequestParam String password,
+            @RequestParam String confirmPassword,
+            RedirectAttributes redirectAttributes,
+            Model model
+    ) {
+        if (!password.equals(confirmPassword)) {
+            model.addAttribute("token", token);
+            model.addAttribute("error", "Les mots de passe ne correspondent pas.");
+            return "clients/accept-invitation";
+        }
+        if (password.length() < 8) {
+            model.addAttribute("token", token);
+            model.addAttribute("error", "Le mot de passe doit contenir au moins 8 caractères.");
+            return "clients/accept-invitation";
+        }
+        try {
+            invitationService.acceptInvitation(token, password);
+            redirectAttributes.addFlashAttribute("message", "Compte créé avec succès ! Connectez-vous avec votre email.");
+            return "redirect:/login";
+        } catch (Exception e) {
+            model.addAttribute("token", token);
+            model.addAttribute("error", "Erreur : " + e.getMessage());
+            return "clients/accept-invitation";
+        }
     }
 }

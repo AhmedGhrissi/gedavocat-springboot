@@ -47,6 +47,7 @@
                                 <th>Email</th>
                                 <th>Téléphone</th>
                                 <th>Date création</th>
+                                <th>Portail client</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -58,6 +59,20 @@
                                 <td th:text="${client.email}">Email</td>
                                 <td th:text="${client.phone ?: '-'}">Téléphone</td>
                                 <td th:text="${#temporals.format(client.createdAt, 'dd/MM/yyyy')}">Date</td>
+                                <td>
+                                    <span th:if="${client.invitationStatus == 'VALIDATED'}" class="badge bg-success">
+                                        <i class="fas fa-check-circle"></i> Validé
+                                    </span>
+                                    <span th:if="${client.invitationStatus == 'PENDING'}" class="badge bg-warning text-dark">
+                                        <i class="fas fa-clock"></i> En attente
+                                    </span>
+                                    <span th:if="${client.invitationStatus == 'EXPIRED'}" class="badge bg-danger">
+                                        <i class="fas fa-times-circle"></i> Expiré
+                                    </span>
+                                    <span th:if="${client.invitationStatus == 'NOT_INVITED'}" class="badge bg-secondary">
+                                        <i class="fas fa-minus-circle"></i> Non invité
+                                    </span>
+                                </td>
                                 <td>
                                     <a th:href="@{/clients/{id}(id=${client.id})}" class="btn btn-sm btn-info">
                                         <i class="fas fa-eye"></i> Voir

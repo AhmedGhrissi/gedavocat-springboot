@@ -368,7 +368,7 @@
                             <span style="color: #cbd5e1;">RPVA / e-Barreau</span>
                         </li>
                     </ul>
-                    <a th:href="@{/payment/checkout(plan=SOLO)}" class="cta-button cta-secondary">
+                    <a href="/register?plan=SOLO&billing=monthly" class="cta-button cta-secondary cta-plan">
                         Commencer gratuitement
                     </a>
                 </div>
@@ -420,7 +420,7 @@
                             <span>Support prioritaire</span>
                         </li>
                     </ul>
-                    <a th:href="@{/payment/checkout(plan=CABINET)}" class="cta-button cta-primary">
+                    <a href="/register?plan=CABINET&billing=monthly" class="cta-button cta-primary cta-plan">
                         Démarrer maintenant
                     </a>
                 </div>
@@ -471,8 +471,8 @@
                             <span>Support dédié 24/7</span>
                         </li>
                     </ul>
-                    <a th:href="@{/contact}" class="cta-button cta-secondary">
-                        Nous contacter
+                    <a href="/register?plan=ENTERPRISE&billing=monthly" class="cta-button cta-secondary cta-plan">
+                        Commencer à la demande
                     </a>
                 </div>
             </div>
@@ -570,10 +570,23 @@
         </div>
 
         <script>
+            // Lire la période depuis l'URL si passée depuis la landing page
+            (function() {
+                const params = new URLSearchParams(window.location.search);
+                const billingParam = params.get('billing');
+                if (billingParam === 'yearly') {
+                    document.addEventListener('DOMContentLoaded', function() { togglePeriod('yearly'); });
+                }
+            })();
+
             function togglePeriod(period) {
                 // Toggle buttons
                 document.querySelectorAll('.period-btn').forEach(btn => btn.classList.remove('active'));
-                event.target.classList.add('active');
+                if (event && event.target) event.target.classList.add('active');
+                else {
+                    const btn = period === 'yearly' ? document.querySelectorAll('.period-btn')[1] : document.querySelectorAll('.period-btn')[0];
+                    if (btn) btn.classList.add('active');
+                }
 
                 // Toggle prices
                 if (period === 'yearly') {
@@ -583,6 +596,13 @@
                     document.querySelectorAll('.monthly-price').forEach(el => el.style.display = 'inline');
                     document.querySelectorAll('.yearly-price').forEach(el => el.style.display = 'none');
                 }
+
+                // Mettre à jour les liens des boutons CTA avec la période
+                document.querySelectorAll('.cta-plan').forEach(btn => {
+                    const url = new URL(btn.href, window.location.origin);
+                    url.searchParams.set('billing', period);
+                    btn.href = url.pathname + url.search;
+                });
             }
         </script>
     </div>

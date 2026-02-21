@@ -52,8 +52,13 @@
                             <tr>
                                 <td><strong>Statut:</strong></td>
                                 <td>
-                                    <span class="badge bg-success">
+                                    <span th:if="${metrics != null and metrics.healthDetails != null and metrics.healthDetails['database'] == 'UP'}" 
+                                          class="badge bg-success">
                                         <i class="fas fa-circle"></i> Connecté
+                                    </span>
+                                    <span th:unless="${metrics != null and metrics.healthDetails != null and metrics.healthDetails['database'] == 'UP'}" 
+                                          class="badge bg-danger">
+                                        <i class="fas fa-times-circle"></i> Erreur connexion
                                     </span>
                                 </td>
                             </tr>
@@ -113,11 +118,11 @@
                             <div class="col-md-4">
                                 <div class="card h-100">
                                     <div class="card-body text-center">
-                                        <i class="fas fa-database fa-3x text-primary mb-3"></i>
-                                        <h6>Optimiser les tables</h6>
-                                        <p class="text-muted small">Optimise toutes les tables de la base de données</p>
-                                        <button class="btn btn-sm btn-primary" onclick="alert('Fonctionnalité à implémenter')">
-                                            <i class="fas fa-cog"></i> Optimiser
+                                        <i class="fas fa-recycle fa-3x text-success mb-3"></i>
+                                        <h6>Garbage Collector JVM</h6>
+                                        <p class="text-muted small">Libère la mémoire non utilisée par la JVM</p>
+                                        <button class="btn btn-sm btn-success" onclick="runGc(this)">
+                                            <i class="fas fa-recycle"></i> Lancer GC
                                         </button>
                                     </div>
                                 </div>
@@ -126,10 +131,10 @@
                             <div class="col-md-4">
                                 <div class="card h-100">
                                     <div class="card-body text-center">
-                                        <i class="fas fa-download fa-3x text-success mb-3"></i>
-                                        <h6>Sauvegarde complète</h6>
-                                        <p class="text-muted small">Crée une sauvegarde complète de la BDD</p>
-                                        <button class="btn btn-sm btn-success" onclick="alert('Sauvegarde en cours...')">
+                                        <i class="fas fa-download fa-3x text-primary mb-3"></i>
+                                        <h6>Sauvegarde mysqldump</h6>
+                                        <p class="text-muted small">Lance un dump complet de la base MySQL</p>
+                                        <button class="btn btn-sm btn-primary" onclick="runBackup(this)">
                                             <i class="fas fa-download"></i> Sauvegarder
                                         </button>
                                     </div>
@@ -140,9 +145,9 @@
                                 <div class="card h-100">
                                     <div class="card-body text-center">
                                         <i class="fas fa-broom fa-3x text-warning mb-3"></i>
-                                        <h6>Nettoyer les logs</h6>
-                                        <p class="text-muted small">Supprime les anciens logs d'audit</p>
-                                        <button class="btn btn-sm btn-warning" onclick="alert('Nettoyage...')">
+                                        <h6>Nettoyer les logs d'audit</h6>
+                                        <p class="text-muted small">Supprime les audit logs de plus de 90 jours</p>
+                                        <button class="btn btn-sm btn-warning" onclick="runCleanLogs(this)">
                                             <i class="fas fa-broom"></i> Nettoyer
                                         </button>
                                     </div>
@@ -163,42 +168,50 @@
                     </div>
                     <div class="card-body">
                         <div class="list-group">
-                            <a href="https://www.o2switch.fr/manager/index.php?module=phpmyadmin" 
-                               target="_blank" 
-                               class="list-group-item list-group-item-action">
+                            <div class="list-group-item">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
-                                        <i class="fas fa-external-link-alt me-2 text-primary"></i>
-                                        <strong>phpMyAdmin</strong>
-                                        <p class="mb-0 text-muted small">Interface web de gestion MySQL</p>
+                                        <i class="fas fa-server me-2 text-primary"></i>
+                                        <strong>Serveur VPS Hetzner</strong>
+                                        <p class="mb-0 text-muted small">IP : 88.198.163.251 &nbsp;|&nbsp; MySQL local sur port 3306</p>
                                     </div>
-                                    <i class="fas fa-chevron-right text-muted"></i>
+                                    <span class="badge bg-success"><i class="fas fa-circle"></i> Hetzner CAX11</span>
                                 </div>
-                            </a>
-                            
-                            <a href="https://www.o2switch.fr/manager/" 
-                               target="_blank" 
-                               class="list-group-item list-group-item-action">
+                            </div>
+
+                            <div class="list-group-item">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
-                                        <i class="fas fa-external-link-alt me-2 text-success"></i>
-                                        <strong>cPanel O2Switch</strong>
-                                        <p class="mb-0 text-muted small">Gestion des bases de données et utilisateurs</p>
+                                        <i class="fas fa-terminal me-2 text-dark"></i>
+                                        <strong>Connexion SSH</strong>
+                                        <p class="mb-0 text-muted small"><code>ssh -i ~/.ssh/gedavocat_hetzner root@88.198.163.251</code></p>
                                     </div>
-                                    <i class="fas fa-chevron-right text-muted"></i>
                                 </div>
-                            </a>
+                            </div>
 
                             <div class="list-group-item">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
                                         <i class="fas fa-download me-2 text-info"></i>
-                                        <strong>Dernière sauvegarde</strong>
-                                        <p class="mb-0 text-muted small">18/02/2026 à 03:00 (automatique)</p>
+                                        <strong>Sauvegarde automatique</strong>
+                                        <p class="mb-0 text-muted small">Script <code>/opt/gedavocat/scripts/backup.sh</code> — logs dans <code>/opt/gedavocat/logs/</code></p>
                                     </div>
-                                    <button class="btn btn-sm btn-outline-info" onclick="alert('Téléchargement...')">
-                                        <i class="fas fa-download"></i> Télécharger
+                                    <button class="btn btn-sm btn-outline-info" onclick="runBackup(this)">
+                                        <i class="fas fa-play"></i> Lancer
                                     </button>
+                                </div>
+                            </div>
+
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <i class="fas fa-database me-2 text-success"></i>
+                                        <strong>Base de données</strong>
+                                        <p class="mb-0 text-muted small">
+                                            DB : <code th:text="${metrics != null ? metrics.databaseProductName : 'MySQL'}">MySQL</code> 
+                                            &nbsp;|&nbsp; URL : <code th:text="${metrics != null ? metrics.databaseUrl : 'N/A'}">...</code>
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -207,6 +220,44 @@
             </div>
         </div>
     </div>
+
+    <!-- Toast de résultat pour les actions de maintenance -->
+    <div id="action-toast" class="position-fixed bottom-0 end-0 p-3" style="z-index:9999; display:none;">
+        <div id="action-toast-inner" class="toast show align-items-center border-0" role="alert">
+            <div class="d-flex">
+                <div class="toast-body" id="action-toast-body"></div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" onclick="document.getElementById('action-toast').style.display='none'"></button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    function showToast(msg, success) {
+        const wrap = document.getElementById('action-toast');
+        const inner = document.getElementById('action-toast-inner');
+        const body  = document.getElementById('action-toast-body');
+        body.textContent = msg;
+        inner.className = 'toast show align-items-center text-white border-0 bg-' + (success ? 'success' : 'danger');
+        wrap.style.display = 'block';
+        setTimeout(() => { wrap.style.display = 'none'; }, 5000);
+    }
+
+    function runWithProgress(btnEl, endpoint, confirmMsg) {
+        if (!confirm(confirmMsg)) return;
+        const originalHtml = btnEl.innerHTML;
+        btnEl.disabled = true;
+        btnEl.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> En cours...';
+        fetch(endpoint, { method: 'POST', credentials: 'same-origin' })
+            .then(r => r.json())
+            .then(d => showToast(d.message || 'Terminé', d.success !== false))
+            .catch(() => showToast('Erreur réseau', false))
+            .finally(() => { btnEl.disabled = false; btnEl.innerHTML = originalHtml; });
+    }
+
+    function runGc(btn)        { runWithProgress(btn, '/api/admin/gc',               'Forcer le Garbage Collector JVM ?'); }
+    function runBackup(btn)    { runWithProgress(btn, '/api/admin/backup',            'Lancer la sauvegarde mysqldump ? Cela peut prendre quelques secondes.'); }
+    function runCleanLogs(btn) { runWithProgress(btn, '/api/admin/clean-audit-logs',  'Supprimer les logs d\'audit de plus de 90 jours ?'); }
+    </script>
 </div>
 </body>
 </html>

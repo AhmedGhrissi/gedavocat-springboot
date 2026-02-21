@@ -24,7 +24,10 @@
                     <a th:href="@{/cases/{id}/edit(id=${case.id})}" class="btn btn-warning">
                         <i class="fas fa-edit"></i> Modifier
                     </a>
-                    <form th:if="${case.status.name() == 'OPEN'}" 
+                    <a th:href="@{/cases/{id}/share(id=${case.id})}" class="btn btn-info text-white">
+                        <i class="fas fa-share-alt"></i> Partager
+                    </a>
+                    <form th:if="${case.status.name() == 'OPEN' or case.status.name() == 'IN_PROGRESS'}" 
                           th:action="@{/cases/{id}/close(id=${case.id})}" 
                           method="post" style="display: inline;">
                         <button type="submit" class="btn btn-success">
@@ -72,7 +75,7 @@
                                     <th>Statut :</th>
                                     <td>
                                         <span class="badge" 
-                                              th:classappend="${case.status.name() == 'OPEN' ? 'bg-success' : (case.status.name() == 'CLOSED' ? 'bg-warning' : 'bg-secondary')}"
+                                              th:classappend="${case.status.name() == 'OPEN' ? 'bg-success' : (case.status.name() == 'IN_PROGRESS' ? 'bg-primary' : (case.status.name() == 'CLOSED' ? 'bg-warning text-dark' : 'bg-secondary'))}"
                                               th:text="${case.status.displayName}">Statut</span>
                                     </td>
                                 </tr>
@@ -110,12 +113,15 @@
                 <div class="card-header">
                     <div class="d-flex justify-content-between align-items-center">
                         <h5><i class="fas fa-file-alt"></i> Documents</h5>
-                        <div class="btn-group" role="group">
+                        <div class="d-flex flex-wrap gap-2">
                             <a th:href="@{/documents/case/{id}(id=${case.id})}" class="btn btn-outline-primary btn-sm">
-                                <i class="fas fa-list"></i> Voir tous les documents
+                                <i class="fas fa-list"></i> Voir tous
                             </a>
                             <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#uploadModal">
-                                <i class="fas fa-upload"></i> Uploader un document
+                                <i class="fas fa-upload"></i> Uploader
+                            </button>
+                            <button type="button" class="btn btn-secondary btn-sm"
+                                    th:onclick="|openScanner('/documents/case/${case.id}/upload-ajax', '/cases/${case.id}')|">                                <i class="fas fa-camera me-1"></i>Scanner / Importer
                             </button>
                         </div>
                     </div>
@@ -156,9 +162,15 @@
                     <div th:if="${documents == null or documents.empty}" class="text-center p-3">
                         <i class="fas fa-file-plus fa-3x text-muted mb-3"></i>
                         <p class="text-muted">Aucun document pour ce dossier</p>
-                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal">
-                            <i class="fas fa-upload"></i> Uploader votre premier document
-                        </button>
+                        <div class="d-flex gap-2 justify-content-center flex-wrap">
+                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal">
+                                <i class="fas fa-upload"></i> Uploader votre premier document
+                            </button>
+                            <button type="button" class="btn btn-secondary"
+                                    th:onclick="|openScanner('/documents/case/${case.id}/upload-ajax', '/cases/${case.id}')|">
+                                <i class="fas fa-camera me-1"></i>Scanner / Importer
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>

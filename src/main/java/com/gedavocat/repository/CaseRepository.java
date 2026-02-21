@@ -77,4 +77,5 @@ public interface CaseRepository extends JpaRepository<Case, String> {
            "LOWER(c.description) LIKE LOWER(CONCAT('%', :search, '%')))")
     List<Case> searchByLawyerAndNameOrDescriptionWithClient(@Param("lawyerId") String lawyerId, @Param("search") String search);
 
-    }
+    long countByCreatedAtAfter(java.time.LocalDateTime date);
+}

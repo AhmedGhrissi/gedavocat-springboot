@@ -244,13 +244,13 @@
                             </div>
 
                             <div class="col-md-4 mb-3">
-                                <h6>Stockage Documents</h6>
+                                <h6>Uploads (documents)</h6>
                                 <div class="d-flex justify-content-between mb-2">
                                     <span>Utilisé:</span>
                                     <strong th:text="${metrics != null ? metrics.storageUsedFormatted : 'N/A'}">1.5 GB</strong>
                                 </div>
                                 <div class="d-flex justify-content-between mb-2">
-                                    <span>Limite:</span>
+                                    <span>Disque total:</span>
                                     <strong th:text="${metrics != null ? metrics.storageLimitFormatted : 'N/A'}">10 GB</strong>
                                 </div>
                                 <div class="progress" style="height: 20px;">
@@ -296,14 +296,11 @@
                         </div>
                         
                         <div class="btn-group" role="group">
-                            <button class="btn btn-outline-success" onclick="if(confirm('Forcer le garbage collector ?')) { alert('Fonction à implémenter'); }">
+                            <button class="btn btn-outline-success" onclick="runGc(this)">
                                 <i class="fas fa-recycle"></i> Garbage Collector
                             </button>
                             <button class="btn btn-outline-info" onclick="window.location.reload()">
                                 <i class="fas fa-sync"></i> Actualiser les métriques
-                            </button>
-                            <button class="btn btn-outline-primary" onclick="alert('Export des métriques à implémenter')">
-                                <i class="fas fa-download"></i> Exporter les métriques
                             </button>
                         </div>
                     </div>
@@ -312,6 +309,36 @@
         </div>
 
     </div>
+</div>
+
+    <script>
+    function showToastSys(msg, success) {
+        const div = document.getElementById('sys-toast');
+        if (!div) {
+            const t = document.createElement('div');
+            t.id = 'sys-toast';
+            t.style = 'position:fixed;bottom:20px;right:20px;z-index:9999;min-width:280px;';
+            document.body.appendChild(t);
+        }
+        const d = document.getElementById('sys-toast');
+        d.className = 'alert ' + (success ? 'alert-success' : 'alert-danger') + ' shadow';
+        d.innerHTML = '<i class="fas fa-' + (success ? 'check-circle' : 'exclamation-circle') + ' me-2"></i>' + msg;
+        d.style.display = 'block';
+        setTimeout(() => { d.style.display = 'none'; }, 5000);
+    }
+
+    function runGc(btn) {
+        if (!confirm('Forcer le Garbage Collector JVM ?')) return;
+        const orig = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> En cours...';
+        fetch('/api/admin/gc', { method: 'POST', credentials: 'same-origin' })
+            .then(r => r.json())
+            .then(d => { showToastSys(d.message || 'GC terminé', true); window.location.reload(); })
+            .catch(() => showToastSys('Erreur lors du GC', false))
+            .finally(() => { btn.disabled = false; btn.innerHTML = orig; });
+    }
+    </script>
 </div>
 </body>
 </html>

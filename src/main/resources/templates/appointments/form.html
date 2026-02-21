@@ -35,18 +35,20 @@
                             <div class="row mb-3">
                                 <div class="col-md-6">
                                     <label class="form-label">Type de rendez-vous <span class="text-danger">*</span></label>
-                                    <select name="type" class="form-select" th:field="*{appointment.type}" required>
+                                    <select name="type" class="form-select" required>
                                         <option th:each="type : ${appointmentTypes}" 
                                                 th:value="${type}" 
-                                                th:text="${type.displayName}">Type</option>
+                                                th:text="${type.displayName}"
+                                                th:selected="${appointment.type != null and appointment.type == type}">Type</option>
                                     </select>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Statut</label>
-                                    <select name="status" class="form-select" th:field="*{appointment.status}">
+                                    <select name="status" class="form-select">
                                         <option th:each="status : ${appointmentStatuses}" 
                                                 th:value="${status}" 
-                                                th:text="${status.displayName}">Statut</option>
+                                                th:text="${status.displayName}"
+                                                th:selected="${appointment.status != null and appointment.status == status}">Statut</option>
                                     </select>
                                 </div>
                             </div>

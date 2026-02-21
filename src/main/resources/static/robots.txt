@@ -1,0 +1,47 @@
+User-agent: *
+
+# Pages publiques - indexation autorisée
+Allow: /$
+Allow: /landing
+Allow: /home
+Allow: /login
+Allow: /register
+Allow: /subscription/pricing
+Allow: /legal/
+Allow: /clients/accept-invitation
+Allow: /cases/shared
+Allow: /cases/shared-expired
+Allow: /css/
+Allow: /js/
+Allow: /images/
+Allow: /favicon.svg
+Allow: /sitemap.xml
+
+# Pages privées de l'application - exclure de l'index
+Disallow: /dashboard
+Disallow: /cases/
+Disallow: /clients/
+Disallow: /documents/
+Disallow: /admin/
+Disallow: /settings/
+Disallow: /my-cases/
+Disallow: /my-documents/
+Disallow: /rpva/
+Disallow: /signatures/
+Disallow: /invoices/
+Disallow: /api/
+Disallow: /payement/
+Disallow: /subscription/
+Disallow: /payment/
+
+# Interdire les crawlers de scraping agressif
+User-agent: AhrefsBot
+Crawl-delay: 10
+
+User-agent: SemrushBot
+Crawl-delay: 10
+
+User-agent: MJ12bot
+Disallow: /
+
+Sitemap: https://docavocat.fr/sitemap.xml

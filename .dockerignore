@@ -1,0 +1,51 @@
+# ─── Build outputs ─────────────────────────────────────────
+target/
+
+# ─── Docker (le Dockerfile et les composes ne font pas partie du contexte) ──
+docker/
+*.dockerfile
+Dockerfile*
+
+# ─── CI/CD ─────────────────────────────────────────────────
+.gitlab-ci.yml
+
+# ─── Secrets et config locaux ──────────────────────────────
+.env
+.env.prod
+.env.example
+*.env
+.htaccess
+
+# ─── IDE / éditeurs ────────────────────────────────────────
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+
+# ─── Git ───────────────────────────────────────────────────
+.git/
+.gitignore
+.gitattributes
+
+# ─── Python (venv local) ───────────────────────────────────
+.venv/
+__pycache__/
+*.pyc
+*.py
+
+# ─── OS ────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ─── Documentation et scripts de déploiement ───────────────
+*.md
+*.pdf
+*.sh
+scripts/
+
+# ─── Tests ─────────────────────────────────────────────────
+src/test/
+
+# ─── SQL (migrations one-time, pas nécessaires dans l'image) ─
+*.sql

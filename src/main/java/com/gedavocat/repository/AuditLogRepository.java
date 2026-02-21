@@ -57,4 +57,10 @@ public interface AuditLogRepository extends JpaRepository<AuditLog, String> {
            "LOWER(a.details) LIKE LOWER(CONCAT('%', :search, '%')) " +
            "ORDER BY a.createdAt DESC")
     Page<AuditLog> searchAuditLogs(@Param("search") String search, Pageable pageable);
+
+    void deleteByCreatedAtBefore(LocalDateTime date);
+
+    long countByCreatedAtBefore(LocalDateTime date);
+
+    long countByActionAndCreatedAtAfter(String action, LocalDateTime date);
 }

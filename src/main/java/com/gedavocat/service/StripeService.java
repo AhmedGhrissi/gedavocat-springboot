@@ -22,13 +22,13 @@ import java.util.Map;
 @Slf4j
 public class StripeService {
 
-    @Value("${stripe.api.key}")
+    @Value("${stripe.api.key:}")
     private String stripeSecretKey;
 
-    @Value("${stripe.publishable.key}")
+    @Value("${stripe.publishable.key:}")
     private String stripePublishableKey;
 
-    @Value("${stripe.webhook.secret}")
+    @Value("${stripe.webhook.secret:}")
     private String webhookSecret;
 
     @Value("${server.port:8081}")

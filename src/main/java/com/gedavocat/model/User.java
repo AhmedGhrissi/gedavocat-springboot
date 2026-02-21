@@ -124,11 +124,24 @@ public class User {
     // AUTRES CHAMPS
     // ==========================================
 
+    @Column(name = "email_verified", nullable = false)
+    private boolean emailVerified = true; // true par défaut pour les utilisateurs existants
+
+    @Column(name = "account_enabled", nullable = false)
+    private boolean accountEnabled = true;
+
     @Column(name = "access_ends_at")
     private LocalDateTime accessEndsAt;
 
     @Column(name = "invitation_id", length = 36)
     private String invitationId;
+
+    // Réinitialisation du mot de passe (persisté en base, résiste aux redémarrages)
+    @Column(name = "reset_token", length = 36)
+    private String resetToken;
+
+    @Column(name = "reset_token_expiry")
+    private LocalDateTime resetTokenExpiry;
 
     // ==========================================
     // RELATIONS

@@ -1,9 +1,16 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Connexion - GED Avocat</title>
+    <title>Connexion — DocAvocat</title>
+    <meta name="description" content="Connectez-vous à votre espace GED Avocat pour gérer vos dossiers, documents et clients juridiques en toute sécurité.">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="canonical" href="https://docavocat.fr/login">
+    <meta name="theme-color" content="#667eea">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="shortcut icon" href="/favicon.svg">
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
     <link rel="stylesheet" th:href="@{/css/main.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -130,18 +137,13 @@
         <div class="auth-box">
             <div class="auth-header">
                 <i class="fas fa-balance-scale"></i>
-                <h1>GED Avocat</h1>
+                <h1>DocAvocat</h1>
                 <p>Connectez-vous à votre espace</p>
             </div>
             
             <div th:if="${param.error}" class="alert alert-danger">
                 <i class="fas fa-exclamation-circle"></i>
                 <span th:text="${error} ?: 'Email ou mot de passe incorrect'"></span>
-            </div>
-            
-            <div th:if="${param.logout}" class="alert alert-success">
-                <i class="fas fa-check-circle"></i>
-                <span>Vous avez été déconnecté avec succès</span>
             </div>
             
             <div th:if="${message}" class="alert alert-success">
@@ -192,7 +194,7 @@
             
             <div class="auth-links">
                 <p>
-                    <a href="#">Mot de passe oublié ?</a>
+                    <a th:href="@{/forgot-password}">Mot de passe oublié ?</a>
                 </p>
                 <p>
                     Pas encore de compte ? 

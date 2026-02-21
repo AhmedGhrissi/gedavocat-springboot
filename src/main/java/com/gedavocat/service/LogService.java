@@ -2,6 +2,7 @@ package com.gedavocat.service;
 
 import com.gedavocat.dto.LogEntryDTO;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
@@ -24,7 +25,8 @@ import java.util.regex.Pattern;
 @Service
 public class LogService {
 
-    private static final String LOG_FILE_PATH = "logs/application.log";
+    @Value("${logging.file.name:logs/application.log}")
+    private String LOG_FILE_PATH;
     private static final Pattern LOG_PATTERN = Pattern.compile(
         "^(\\d{4}-\\d{2}-\\d{2}\\s\\d{2}:\\d{2}:\\d{2}\\.\\d{3})\\s+(INFO|WARN|ERROR|DEBUG|TRACE)\\s+\\d+\\s+---\\s+\\[([^\\]]+)\\]\\s+([^:]+)\\s*:\\s*(.*)$"
     );
