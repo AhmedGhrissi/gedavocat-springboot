@@ -1,0 +1,19 @@
+/* ── Cases list page styles ── */
+
+.page-title { font-size: 22px; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 10px; }
+
+.table a.text-decoration-none { color: #c7d2fe; font-weight: 500; }
+.table a.text-decoration-none:hover { color: #a5b4fc; }
+
+.btn-group .btn-sm { border-radius: 8px !important; padding: 5px 9px; }
+
+.empty-state { text-align: center; padding: 60px 20px; }
+.empty-state i  { color: var(--text-secondary); }
+.empty-state h4 { color: var(--text-secondary); margin: 16px 0 8px; }
+.empty-state p  { color: var(--text-secondary); opacity: 0.7; }
+
+.filter-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+}

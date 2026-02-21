@@ -1,0 +1,152 @@
+/* ── Pricing / Subscription page styles ── */
+
+/* Hero */
+.pricing-hero {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 20px; padding: 60px 40px;
+    text-align: center; color: white; margin-bottom: 48px;
+    position: relative; overflow: hidden;
+}
+.pricing-hero::before {
+    content: '💳'; position: absolute;
+    font-size: 200px; opacity: 0.1; right: -30px; top: -40px;
+}
+.pricing-hero h1 { font-size: 42px; font-weight: 800; margin-bottom: 16px; position: relative; }
+.pricing-hero p  { font-size: 18px; opacity: 0.95; max-width: 600px; margin: 0 auto; position: relative; }
+
+/* Period Toggle */
+.period-toggle {
+    display: flex; justify-content: center; gap: 8px;
+    margin-bottom: 48px;
+    background: var(--bg); padding: 8px; border-radius: 12px;
+    max-width: 300px; margin-left: auto; margin-right: auto;
+}
+.period-btn {
+    flex: 1; padding: 12px 24px;
+    border: none; background: transparent;
+    border-radius: 8px; cursor: pointer;
+    font-weight: 600; color: var(--text-secondary); transition: all 0.3s;
+}
+.period-btn.active {
+    background: rgba(255,255,255,0.06);
+    color: #667eea; box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+.save-badge {
+    background: #10b981; color: white;
+    padding: 2px 8px; border-radius: 12px;
+    font-size: 11px; font-weight: 700; margin-left: 4px;
+}
+
+/* Pricing Grid */
+.pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 32px; max-width: 1200px; margin: 0 auto 48px;
+}
+.pricing-card {
+    background: rgba(255,255,255,0.06);
+    border-radius: 20px; padding: 40px 32px;
+    border: 3px solid var(--border);
+    position: relative; transition: all 0.3s;
+}
+.pricing-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(102,126,234,0.2);
+}
+/* Featured card — dark gradient, NOT white */
+.pricing-card.featured {
+    border-color: #667eea;
+    background: linear-gradient(135deg, rgba(102,126,234,0.14), rgba(118,75,162,0.10));
+}
+
+.featured-badge {
+    position: absolute; top: -16px; left: 50%; transform: translateX(-50%);
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white; padding: 8px 24px; border-radius: 20px;
+    font-size: 13px; font-weight: 700;
+    box-shadow: 0 4px 12px rgba(102,126,234,0.4);
+}
+.plan-name { font-size: 24px; font-weight: 700; color: var(--text-primary); margin-bottom: 12px; }
+.plan-description { color: var(--text-secondary); font-size: 14px; margin-bottom: 24px; line-height: 1.6; }
+.price-container { margin-bottom: 32px; }
+.price {
+    font-size: 48px; font-weight: 800;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    display: inline-block;
+}
+.price-period { color: var(--text-secondary); font-size: 16px; font-weight: 500; }
+.old-price { text-decoration: line-through; color: #94a3b8; font-size: 20px; margin-left: 8px; }
+
+/* Features list */
+.features-list { list-style: none; padding: 0; margin: 0 0 32px 0; }
+.feature-item {
+    display: flex; align-items: start; gap: 12px;
+    margin-bottom: 16px; font-size: 15px;
+    color: var(--text-secondary);
+}
+.feature-icon {
+    width: 24px; height: 24px; border-radius: 50%;
+    background: rgba(16,185,129,0.15); color: #34d399;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; font-size: 12px;
+}
+.feature-icon.disabled { background: rgba(255,255,255,0.06); color: var(--text-secondary); }
+
+/* CTA Buttons */
+.cta-button {
+    width: 100%; padding: 16px; border-radius: 12px; border: none;
+    font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.3s;
+    text-decoration: none; display: block; text-align: center;
+}
+.cta-primary {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white; box-shadow: 0 4px 12px rgba(102,126,234,0.3);
+}
+.cta-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(102,126,234,0.4); color: white; }
+.cta-secondary { background: rgba(255,255,255,0.06); color: #667eea; border: 2px solid #667eea; }
+.cta-secondary:hover { background: #667eea; color: white; }
+
+/* Payment Methods */
+.payment-methods {
+    background: rgba(255,255,255,0.06);
+    border-radius: 20px; padding: 40px;
+    border: 1px solid var(--border);
+    max-width: 800px; margin: 0 auto 48px;
+}
+.payment-methods h3 { text-align: center; margin-bottom: 32px; color: var(--text-primary); }
+.methods-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 16px;
+}
+.method-card {
+    background: var(--bg);
+    border-radius: 12px; padding: 20px; text-align: center;
+    border: 1px solid var(--border); transition: all 0.3s;
+}
+.method-card:hover { border-color: #667eea; transform: translateY(-4px); }
+.method-icon { font-size: 32px; margin-bottom: 8px; }
+.method-name { font-size: 13px; font-weight: 600; color: var(--text-secondary); }
+
+/* Trust badges */
+.trust-section {
+    text-align: center; padding: 40px 20px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 16px; margin-bottom: 48px;
+}
+.trust-badges {
+    display: flex; justify-content: center; gap: 40px; flex-wrap: wrap; margin-top: 24px;
+}
+.trust-badge { display: flex; align-items: center; gap: 12px; color: var(--text-secondary); }
+.trust-badge i { font-size: 24px; color: #10b981; }
+
+/* FAQ */
+.faq-section { max-width: 800px; margin: 0 auto; }
+.faq-item {
+    background: rgba(255,255,255,0.06);
+    border-radius: 12px; padding: 24px; margin-bottom: 16px;
+    border: 1px solid var(--border);
+}
+.faq-question { font-weight: 700; color: var(--text-primary); margin-bottom: 8px; }
+.faq-answer   { color: var(--text-secondary); line-height: 1.6; }

@@ -1,0 +1,143 @@
+/* ── Landing page styles (standalone) ── */
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    line-height: 1.6;
+    color: #f1f5f9;
+    background: #0d1117;
+}
+
+/* ── Navbar ── */
+.navbar {
+    background: rgba(8,11,20,0.92);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    padding: 1rem 2rem;
+    border-bottom: 1px solid rgba(148,163,184,0.1);
+    position: sticky; top: 0; z-index: 100;
+}
+.nav-container { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+.logo {
+    font-size: 1.5rem; font-weight: 800; text-decoration: none;
+    background: linear-gradient(135deg, #667eea, #a78bfa);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.nav-buttons { display: flex; gap: 1rem; }
+
+.btn {
+    padding: 0.65rem 1.4rem; border-radius: 10px; text-decoration: none;
+    font-weight: 600; transition: all 0.25s; border: none; cursor: pointer;
+    font-size: 0.9rem; font-family: 'Inter', sans-serif;
+}
+.btn-outline {
+    background: transparent; color: #94a3b8;
+    border: 1px solid rgba(148,163,184,0.2);
+}
+.btn-outline:hover { background: rgba(255,255,255,0.05); color: #f1f5f9; border-color: rgba(148,163,184,0.4); }
+.btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(102,126,234,0.4); color: white; }
+
+/* ── Hero ── */
+.hero {
+    background: linear-gradient(135deg, #080b14 0%, #0f172a 50%, #0a0f2e 100%);
+    color: white; padding: 7rem 2rem 6rem;
+    text-align: center; position: relative; overflow: hidden;
+}
+.hero::before {
+    content: ''; position: absolute; top: -200px; left: 50%; transform: translateX(-50%);
+    width: 800px; height: 800px;
+    background: radial-gradient(circle, rgba(102,126,234,0.15) 0%, transparent 65%);
+    pointer-events: none;
+}
+.hero h1 {
+    font-size: clamp(2rem, 5vw, 3.5rem); margin-bottom: 1.2rem; font-weight: 800;
+    background: linear-gradient(135deg, #f1f5f9 0%, #94a3b8 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    position: relative;
+}
+.hero p { font-size: clamp(1rem, 2vw, 1.2rem); color: #64748b; max-width: 680px; margin: 0 auto 2.5rem; position: relative; }
+.hero-cta { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; position: relative; }
+.hero-cta .btn { padding: 0.85rem 2rem; font-size: 1rem; }
+
+/* ── Pricing section ── */
+.pricing-section { padding: 5rem 2rem; background: #080b14; }
+.pricing-container { max-width: 1200px; margin: 0 auto; }
+.section-title { text-align: center; font-size: clamp(1.8rem, 4vw, 2.4rem); margin-bottom: 1rem; color: #f1f5f9; font-weight: 800; }
+.section-subtitle { text-align: center; color: #64748b; margin-bottom: 3rem; font-size: 1.05rem; }
+
+/* Period toggle */
+.period-toggle { display: flex; justify-content: center; margin-bottom: 2.5rem; }
+.period-toggle-inner {
+    display: flex;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(148,163,184,0.12);
+    border-radius: 12px; padding: 4px; gap: 4px;
+}
+.period-toggle-inner button {
+    padding: 8px 24px; border: none; border-radius: 9px;
+    font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif;
+    font-size: 14px; transition: all 0.2s;
+}
+.period-toggle-inner button.active {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white; box-shadow: 0 2px 8px rgba(102,126,234,0.3);
+}
+.period-toggle-inner button:not(.active) { background: transparent; color: #64748b; }
+
+/* Pricing cards */
+.pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem; max-width: 1100px; margin: 0 auto;
+}
+.pricing-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(148,163,184,0.1);
+    border-radius: 20px; padding: 2rem;
+    backdrop-filter: blur(12px); transition: all 0.3s; position: relative;
+}
+.pricing-card:hover { transform: translateY(-6px); border-color: rgba(102,126,234,0.3); box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
+.pricing-card.popular { border-color: rgba(102,126,234,0.4); box-shadow: 0 0 0 1px rgba(102,126,234,0.2), 0 8px 30px rgba(102,126,234,0.15); }
+.popular-badge {
+    position: absolute; top: -14px; right: 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white; padding: 0.35rem 1rem; border-radius: 20px;
+    font-size: 0.8rem; font-weight: 700;
+}
+.plan-name { font-size: 1.3rem; font-weight: 700; margin-bottom: 0.75rem; color: #f1f5f9; }
+.plan-price {
+    font-size: 2.8rem; font-weight: 800;
+    background: linear-gradient(135deg, #667eea, #a78bfa);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    margin-bottom: 0.4rem;
+}
+.plan-price small { font-size: 1.1rem; color: #94a3b8; font-weight: 400; -webkit-text-fill-color: #94a3b8; }
+.plan-features { list-style: none; margin: 1.5rem 0; padding: 0; }
+.plan-features li { padding: 0.6rem 0; border-bottom: 1px solid rgba(148,163,184,0.08); color: #94a3b8; font-size: 14px; }
+.plan-features li:before { content: '✓'; color: #10b981; font-weight: 700; margin-right: 0.75rem; }
+
+.btn-select {
+    display: block; width: 100%; padding: 0.85rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white; border: none; border-radius: 12px;
+    font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.25s;
+    text-decoration: none; text-align: center; font-family: 'Inter', sans-serif;
+}
+.btn-select:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(102,126,234,0.35); color: white; }
+
+/* ── Footer ── */
+footer {
+    background: #0a0f1e; color: #64748b;
+    text-align: center; padding: 2rem; margin-top: 4rem;
+    border-top: 1px solid rgba(148,163,184,0.1);
+}
+footer a { color: #818cf8; text-decoration: none; }
+footer a:hover { color: #a5b4fc; }
+
+@media (max-width: 768px) {
+    .hero { padding: 4rem 1.5rem 3rem; }
+    .pricing-grid { grid-template-columns: 1fr; }
+    .hero-cta { flex-direction: column; align-items: center; }
+}

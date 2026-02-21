@@ -101,7 +101,7 @@ public class SecurityConfig {
 							}
 						})
 						.failureUrl("/login?error=true").permitAll())
-				.logout(logout -> logout.logoutUrl("/logout").logoutSuccessUrl("/login?logout=true")
+				.logout(logout -> logout.logoutUrl("/logout").logoutSuccessUrl("/login")
 						.deleteCookies("JSESSIONID").invalidateHttpSession(true).permitAll());
 
 		return http.build();

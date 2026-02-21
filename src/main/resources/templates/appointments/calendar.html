@@ -3,92 +3,10 @@
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout}">
 <head>
-    
-    <style>
-        /* Dark theme overrides for this page */
-        :root { --bg:#080b14; --surface-1:#0f172a; --surface-2:#1e2d3d; --border:rgba(148,163,184,0.12); --text-primary:#f1f5f9; --text-secondary:#94a3b8; --primary:#667eea; --accent:#818cf8; }
-        h1,h2,h3,h4,h5,h6 { color: var(--text-primary) !important; }
-        p, label, span { color: inherit; }
-        .card { background: rgba(255,255,255,0.04) !important; border-color: var(--border) !important; }
-        .card-header { background: transparent !important; border-color: var(--border) !important; color: var(--text-primary) !important; }
-        .text-muted { color: var(--text-secondary) !important; }
-        a { color: var(--accent); }
-    </style><title>Calendrier et Rendez-vous</title>
+    <link rel="stylesheet" th:href="@{/css/pages/appointments.css}">
+<title>Calendrier et Rendez-vous</title>
     <!-- FullCalendar CSS -->
     <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/main.min.css" rel="stylesheet">
-    <style>
-        .appointment-card {
-            transition: transform 0.2s;
-            cursor: pointer;
-        }
-        .appointment-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        }
-        .appointment-type-badge {
-            font-size: 0.75rem;
-            padding: 0.25rem 0.5rem;
-        }
-        #calendar {
-            max-width: 100%;
-            margin: 0 auto;
-            background: rgba(255,255,255,0.04);
-            padding: 20px;
-            border-radius: 8px;
-            min-height: 600px;
-        }
-        .fc {
-            font-family: inherit;
-        }
-        .fc-event {
-            cursor: pointer;
-            border-radius: 4px;
-            padding: 2px 4px;
-            font-size: 0.85em;
-        }
-        .fc-event:hover {
-            opacity: 0.85;
-            transform: scale(1.02);
-        }
-        .fc-daygrid-day-number {
-            padding: 8px;
-            font-weight: 500;
-            font-size: 0.9em;
-        }
-        .fc-col-header-cell {
-            background-color: #f8f9fa;
-            font-weight: 600;
-            padding: 12px 5px;
-            text-transform: uppercase;
-            font-size: 0.75em;
-            letter-spacing: 0.5px;
-        }
-        .fc-day-today {
-            background-color: #fff3cd !important;
-        }
-        .fc-daygrid-day:hover {
-            background-color: #f1f3f5;
-        }
-        .fc-button {
-            text-transform: capitalize;
-            padding: 0.4em 0.8em;
-            font-size: 0.9em;
-        }
-        .fc-toolbar-title {
-            font-size: 1.5em !important;
-            font-weight: 600;
-        }
-        .fc-daygrid-day-frame {
-            min-height: 100px;
-        }
-        .stat-card {
-            border-left: 4px solid;
-        }
-        .stat-card.scheduled { border-color: #17a2b8; }
-        .stat-card.confirmed { border-color: #28a745; }
-        .stat-card.completed { border-color: #6c757d; }
-        .stat-card.cancelled { border-color: #dc3545; }
-    </style>
 </head>
 <body>
 <div layout:fragment="content">

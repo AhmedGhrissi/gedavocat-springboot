@@ -116,7 +116,7 @@ class AuthControllerTest {
     void logoutRedirectsToLogin() throws Exception {
         mockMvc.perform(post("/logout").with(csrf()))
             .andExpect(status().is3xxRedirection())
-            .andExpect(redirectedUrl("/login?logout=true"));
+            .andExpect(redirectedUrl("/login"));
     }
 
     @Test

@@ -3,38 +3,8 @@
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout}">
 <head>
-    
-    <style>
-        /* Dark theme overrides for this page */
-        :root { --bg:#080b14; --surface-1:#0f172a; --surface-2:#1e2d3d; --border:rgba(148,163,184,0.12); --text-primary:#f1f5f9; --text-secondary:#94a3b8; --primary:#667eea; --accent:#818cf8; }
-        h1,h2,h3,h4,h5,h6 { color: var(--text-primary) !important; }
-        p, label, span { color: inherit; }
-        .card { background: rgba(255,255,255,0.04) !important; border-color: var(--border) !important; }
-        .card-header { background: transparent !important; border-color: var(--border) !important; color: var(--text-primary) !important; }
-        .text-muted { color: var(--text-secondary) !important; }
-        a { color: var(--accent); }
-    </style><title>Administration - Dashboard</title>
-    <style>
-        .metric-card {
-            transition: transform 0.2s;
-        }
-        .metric-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        }
-        .metric-icon {
-            font-size: 2.5rem;
-            opacity: 0.8;
-        }
-        .progress-custom {
-            height: 10px;
-            border-radius: 5px;
-        }
-        .status-badge {
-            font-size: 0.75rem;
-            padding: 0.35rem 0.65rem;
-        }
-    </style>
+    <link rel="stylesheet" th:href="@{/css/pages/admin.css}">
+<title>Administration - Dashboard</title>
 </head>
 <body>
 <div layout:fragment="content">

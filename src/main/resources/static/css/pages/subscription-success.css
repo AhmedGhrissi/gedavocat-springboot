@@ -1,0 +1,48 @@
+/* ── Subscription success page styles ── */
+
+@keyframes successPop {
+    0%   { transform: scale(0); }
+    50%  { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+.success-page { max-width: 900px; margin: 3rem auto; text-align: center; }
+.success-icon {
+    font-size: 6rem; color: #27ae60;
+    margin-bottom: 2rem; animation: successPop 0.5s ease-out;
+}
+.success-page h1   { color: var(--text-primary); margin-bottom: 1rem; }
+.success-message   { font-size: 1.2rem; color: var(--text-secondary); margin-bottom: 2rem; }
+
+.steps { display: flex; flex-direction: column; gap: 2rem; text-align: left; }
+.step  { display: flex; gap: 1.5rem; align-items: start; }
+.step-number {
+    flex-shrink: 0; width: 50px; height: 50px;
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    color: white; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.5rem; font-weight: bold;
+}
+.step-content h4 { margin-top: 0; margin-bottom: 0.5rem; color: var(--text-primary); }
+.step-content p  { margin-bottom: 1rem; color: var(--text-secondary); }
+
+.benefits {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem; text-align: center;
+}
+.benefit i  { font-size: 3rem; color: #3498db; margin-bottom: 1rem; }
+.benefit h4 { color: var(--text-primary); margin-bottom: 0.5rem; }
+.benefit p  { color: var(--text-secondary); font-size: 0.9rem; }
+
+.help-card        { background: rgba(255,255,255,0.06); border: none; }
+.help-card h4     { color: var(--text-primary); margin-bottom: 1rem; }
+.help-actions     { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+
+@media (max-width: 768px) {
+    .success-icon { font-size: 4rem; }
+    .steps        { gap: 1.5rem; }
+    .step         { flex-direction: column; text-align: center; }
+    .step-number  { margin: 0 auto; }
+    .benefits     { grid-template-columns: 1fr; }
+}
