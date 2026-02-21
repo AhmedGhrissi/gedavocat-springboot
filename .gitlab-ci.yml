@@ -243,9 +243,11 @@ deploy:
   before_script:
     - apk add --no-cache openssh-client curl
     - eval $(ssh-agent -s)
-    - sed -i 's/\r//' "$SSH_PRIVATE_KEY"
-    - chmod 600 "$SSH_PRIVATE_KEY"
-    - ssh-add "$SSH_PRIVATE_KEY"
+    - tr -d '\r' < "$SSH_PRIVATE_KEY" > /tmp/id_rsa
+    - echo "" >> /tmp/id_rsa
+    - chmod 600 /tmp/id_rsa
+    - ssh-keygen -l -f /tmp/id_rsa 2>&1 || (echo "CLE INVALIDE - voir debug:"; head -1 /tmp/id_rsa; tail -1 /tmp/id_rsa | cat -A; wc -l /tmp/id_rsa; exit 1)
+    - ssh-add /tmp/id_rsa
     - mkdir -p ~/.ssh && chmod 700 ~/.ssh
     - echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
     - chmod 644 ~/.ssh/known_hosts
