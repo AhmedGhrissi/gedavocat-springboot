@@ -1,9 +1,19 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout}">
 <head>
-    <title>Administration - Paramètres</title>
+    
+    <style>
+        /* Dark theme overrides for this page */
+        :root { --bg:#080b14; --surface-1:#0f172a; --surface-2:#1e2d3d; --border:rgba(148,163,184,0.12); --text-primary:#f1f5f9; --text-secondary:#94a3b8; --primary:#667eea; --accent:#818cf8; }
+        h1,h2,h3,h4,h5,h6 { color: var(--text-primary) !important; }
+        p, label, span { color: inherit; }
+        .card { background: rgba(255,255,255,0.04) !important; border-color: var(--border) !important; }
+        .card-header { background: transparent !important; border-color: var(--border) !important; color: var(--text-primary) !important; }
+        .text-muted { color: var(--text-secondary) !important; }
+        a { color: var(--accent); }
+    </style><title>Administration - Paramètres</title>
 </head>
 <body>
 <div layout:fragment="content">
@@ -280,7 +290,7 @@
 
                         <div class="d-flex align-items-center gap-4 p-4 rounded-3"
                              id="maintenance-row"
-                             th:style="${maintenanceEnabled} ? 'background:#fef2f2; border:2px solid #fca5a5;' : 'background:#f8fafc; border:2px solid #e2e8f0;'">
+                             th:style="${maintenanceEnabled} ? 'background:rgba(239,68,68,0.1); border:2px solid rgba(239,68,68,0.3);' : 'background:rgba(16,185,129,0.08); border:2px solid rgba(16,185,129,0.2);'">
 
                             <div class="flex-grow-1">
                                 <h5 class="mb-1">Statut actuel :

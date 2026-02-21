@@ -1,9 +1,19 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout}">
 <head>
-    <title>Tous mes documents</title>
+    
+    <style>
+        /* Dark theme overrides for this page */
+        :root { --bg:#080b14; --surface-1:#0f172a; --surface-2:#1e2d3d; --border:rgba(148,163,184,0.12); --text-primary:#f1f5f9; --text-secondary:#94a3b8; --primary:#667eea; --accent:#818cf8; }
+        h1,h2,h3,h4,h5,h6 { color: var(--text-primary) !important; }
+        p, label, span { color: inherit; }
+        .card { background: rgba(255,255,255,0.04) !important; border-color: var(--border) !important; }
+        .card-header { background: transparent !important; border-color: var(--border) !important; color: var(--text-primary) !important; }
+        .text-muted { color: var(--text-secondary) !important; }
+        a { color: var(--accent); }
+    </style><title>Tous mes documents</title>
     <style>
         .documents-header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -19,7 +29,7 @@
             margin-bottom: 10px;
         }
         .case-section {
-            background: white;
+            background: rgba(255,255,255,0.04);
             border-radius: 15px;
             padding: 25px;
             margin-bottom: 25px;
@@ -28,7 +38,7 @@
         .case-title {
             font-size: 20px;
             font-weight: 700;
-            color: #1e293b;
+            color: #f1f5f9;
             margin-bottom: 15px;
             display: flex;
             align-items: center;
@@ -38,11 +48,11 @@
             color: #667eea;
         }
         .file-card {
-            background: #f8fafc;
+            background: var(--bg, #080b14);
             border-radius: 12px;
             padding: 16px;
             margin-bottom: 12px;
-            border: 1px solid #e2e8f0;
+            border: 1px solid rgba(148,163,184,0.12);
             transition: all 0.2s;
             display: flex;
             align-items: center;
@@ -51,7 +61,7 @@
         .file-card:hover {
             transform: translateY(-1px);
             box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            background: white;
+            background: rgba(255,255,255,0.04);
         }
         .file-icon {
             width: 40px;
@@ -63,17 +73,17 @@
             font-size: 20px;
             flex-shrink: 0;
         }
-        .file-icon.pdf { background: #fee; color: #dc2626; }
-        .file-icon.doc { background: #eff6ff; color: #2563eb; }
-        .file-icon.img { background: #fef3c7; color: #f59e0b; }
-        .file-icon.default { background: #f1f5f9; color: #64748b; }
+        .file-icon.pdf { background: rgba(220,38,38,0.15); color: #f87171; }
+        .file-icon.doc { background: rgba(37,99,235,0.15); color: #60a5fa; }
+        .file-icon.img { background: rgba(245,158,11,0.15); color: #fbbf24; }
+        .file-icon.default { background: rgba(255,255,255,0.04); color: #64748b; }
         .file-info {
             flex: 1;
             min-width: 0;
         }
         .file-name {
             font-weight: 600;
-            color: #1e293b;
+            color: #f1f5f9;
             margin-bottom: 2px;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -98,9 +108,9 @@
             cursor: pointer;
             transition: all 0.2s;
         }
-        .btn-view { background: #e0f2fe; color: #0284c7; }
+        .btn-view { background: rgba(2,132,199,0.15); color: #38bdf8; }
         .btn-view:hover { background: #0284c7; color: white; }
-        .btn-download { background: #dcfce7; color: #16a34a; }
+        .btn-download { background: rgba(16,185,129,0.15); color: #34d399; }
         .btn-download:hover { background: #16a34a; color: white; }
         .empty-state {
             text-align: center;
@@ -119,7 +129,7 @@
             margin-bottom: 30px;
         }
         .stat-card {
-            background: white;
+            background: rgba(255,255,255,0.04);
             border-radius: 12px;
             padding: 20px;
             text-align: center;
@@ -277,7 +287,7 @@
         <style>
             .case-item {
                 padding: 15px;
-                border: 1px solid #e2e8f0;
+                border: 1px solid rgba(148,163,184,0.12);
                 border-radius: 10px;
                 margin-bottom: 10px;
                 cursor: pointer;
@@ -287,7 +297,7 @@
                 gap: 12px;
             }
             .case-item:hover {
-                background: #f8fafc;
+                background: var(--bg, #080b14);
                 border-color: #667eea;
                 transform: translateX(5px);
             }
@@ -297,7 +307,7 @@
             .case-item span {
                 flex: 1;
                 font-weight: 600;
-                color: #1e293b;
+                color: #f1f5f9;
             }
         </style>
     </div>

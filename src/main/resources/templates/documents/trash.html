@@ -1,9 +1,19 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout}">
 <head>
-    <title>Corbeille - Documents supprimés</title>
+    
+    <style>
+        /* Dark theme overrides for this page */
+        :root { --bg:#080b14; --surface-1:#0f172a; --surface-2:#1e2d3d; --border:rgba(148,163,184,0.12); --text-primary:#f1f5f9; --text-secondary:#94a3b8; --primary:#667eea; --accent:#818cf8; }
+        h1,h2,h3,h4,h5,h6 { color: var(--text-primary) !important; }
+        p, label, span { color: inherit; }
+        .card { background: rgba(255,255,255,0.04) !important; border-color: var(--border) !important; }
+        .card-header { background: transparent !important; border-color: var(--border) !important; color: var(--text-primary) !important; }
+        .text-muted { color: var(--text-secondary) !important; }
+        a { color: var(--accent); }
+    </style><title>Corbeille - Documents supprimés</title>
     <style>
         .trash-header {
             background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
@@ -19,11 +29,11 @@
             margin-bottom: 10px;
         }
         .file-card {
-            background: white;
+            background: rgba(255,255,255,0.04);
             border-radius: 12px;
             padding: 20px;
             margin-bottom: 16px;
-            border: 1px solid #e2e8f0;
+            border: 1px solid rgba(148,163,184,0.12);
             transition: all 0.2s;
             display: flex;
             align-items: center;
@@ -45,17 +55,17 @@
             font-size: 24px;
             flex-shrink: 0;
         }
-        .file-icon.pdf { background: #fee; color: #dc2626; }
-        .file-icon.doc { background: #eff6ff; color: #2563eb; }
-        .file-icon.img { background: #fef3c7; color: #f59e0b; }
-        .file-icon.default { background: #f1f5f9; color: #64748b; }
+        .file-icon.pdf { background: rgba(220,38,38,0.15); color: #f87171; }
+        .file-icon.doc { background: rgba(37,99,235,0.15); color: #60a5fa; }
+        .file-icon.img { background: rgba(245,158,11,0.15); color: #fbbf24; }
+        .file-icon.default { background: rgba(255,255,255,0.04); color: #64748b; }
         .file-info {
             flex: 1;
             min-width: 0;
         }
         .file-name {
             font-weight: 600;
-            color: #1e293b;
+            color: #f1f5f9;
             margin-bottom: 4px;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -80,9 +90,9 @@
             cursor: pointer;
             transition: all 0.2s;
         }
-        .btn-restore { background: #dcfce7; color: #16a34a; }
+        .btn-restore { background: rgba(16,185,129,0.15); color: #34d399; }
         .btn-restore:hover { background: #16a34a; color: white; }
-        .btn-delete { background: #fee; color: #dc2626; }
+        .btn-delete { background: rgba(220,38,38,0.15); color: #f87171; }
         .btn-delete:hover { background: #dc2626; color: white; }
         .empty-state {
             text-align: center;
@@ -95,8 +105,8 @@
             margin-bottom: 16px;
         }
         .deleted-badge {
-            background: #fee;
-            color: #dc2626;
+            background: rgba(220,38,38,0.15);
+            color: #f87171;
             padding: 4px 12px;
             border-radius: 12px;
             font-size: 12px;

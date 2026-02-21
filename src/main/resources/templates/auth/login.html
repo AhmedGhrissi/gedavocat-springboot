@@ -1,206 +1,380 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Connexion — DocAvocat</title>
+    <title>Connexion â€” DocAvocat</title>
     <meta name="description" content="Connectez-vous à votre espace GED Avocat pour gérer vos dossiers, documents et clients juridiques en toute sécurité.">
     <meta name="robots" content="noindex, nofollow">
     <link rel="canonical" href="https://docavocat.fr/login">
     <meta name="theme-color" content="#667eea">
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <link rel="shortcut icon" href="/favicon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
-    <link rel="stylesheet" th:href="@{/css/main.css}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        .auth-container {
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #080b14;
+            color: #f1f5f9;
             min-height: 100vh;
             display: flex;
-            align-items: center;
+        }
+
+        /* â”€â”€ Left panel â”€â”€ */
+        .auth-left {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
             justify-content: center;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 20px;
+            align-items: flex-start;
+            padding: 60px;
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(135deg, #0a0f1e 0%, #12183a 50%, #0f0f2e 100%);
         }
-        
-        .auth-box {
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-            padding: 40px;
-            width: 100%;
-            max-width: 450px;
+
+        .auth-left::before {
+            content: '';
+            position: absolute;
+            top: -120px; left: -120px;
+            width: 500px; height: 500px;
+            background: radial-gradient(circle, rgba(102,126,234,0.25) 0%, transparent 65%);
+            pointer-events: none;
         }
-        
-        .auth-header {
-            text-align: center;
-            margin-bottom: 30px;
+
+        .auth-left::after {
+            content: '';
+            position: absolute;
+            bottom: -100px; right: -80px;
+            width: 400px; height: 400px;
+            background: radial-gradient(circle, rgba(118,75,162,0.2) 0%, transparent 65%);
+            pointer-events: none;
         }
-        
-        .auth-header i {
-            font-size: 3rem;
-            color: #667eea;
-            margin-bottom: 10px;
+
+        .brand-logo {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 60px;
+            position: relative;
+            z-index: 1;
         }
-        
-        .auth-header h1 {
-            color: #2c3e50;
-            margin-bottom: 10px;
+
+        .brand-icon {
+            width: 52px; height: 52px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px;
+            color: white;
         }
-        
-        .auth-header p {
-            color: #7f8c8d;
+
+        .brand-name {
+            font-size: 22px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
-        
+
+        .auth-left-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .auth-left-content h2 {
+            font-size: 40px;
+            font-weight: 800;
+            line-height: 1.2;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #f1f5f9 0%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .auth-left-content p {
+            color: #64748b;
+            font-size: 16px;
+            line-height: 1.7;
+            max-width: 380px;
+            margin-bottom: 40px;
+        }
+
+        .features-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .features-list li {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #94a3b8;
+            font-size: 15px;
+        }
+
+        .feature-icon {
+            width: 32px; height: 32px;
+            background: rgba(102,126,234,0.15);
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            color: #818cf8;
+            font-size: 13px;
+            flex-shrink: 0;
+        }
+
+        /* â”€â”€ Right panel â”€â”€ */
+        .auth-right {
+            width: 480px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 60px 50px;
+            background: #0a0f1e;
+            border-left: 1px solid rgba(148,163,184,0.1);
+        }
+
+        .auth-right h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #f1f5f9;
+        }
+
+        .auth-right .subtitle {
+            color: #64748b;
+            font-size: 15px;
+            margin-bottom: 36px;
+        }
+
+        /* â”€â”€ Form styles â”€â”€ */
         .form-group {
             margin-bottom: 20px;
         }
-        
+
         .form-label {
             display: block;
             margin-bottom: 8px;
-            color: #2c3e50;
+            color: #94a3b8;
+            font-size: 13px;
             font-weight: 500;
         }
-        
-        .input-group {
+
+        .input-wrapper {
             position: relative;
         }
-        
-        .input-group i {
+
+        .input-wrapper .input-icon {
             position: absolute;
-            left: 15px;
+            left: 14px;
             top: 50%;
             transform: translateY(-50%);
-            color: #7f8c8d;
+            color: #4b5563;
+            font-size: 14px;
+            pointer-events: none;
         }
-        
-        .input-group .form-control {
-            padding-left: 45px;
-        }
-        
+
         .form-control {
             width: 100%;
-            padding: 12px 15px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
+            padding: 12px 14px 12px 42px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(148,163,184,0.12);
+            border-radius: 10px;
             font-size: 14px;
-            transition: all 0.3s ease;
+            color: #f1f5f9;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.2s;
         }
-        
+
+        .form-control::placeholder { color: #4b5563; }
+
         .form-control:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: rgba(102,126,234,0.5);
+            background: rgba(102,126,234,0.05);
+            box-shadow: 0 0 0 3px rgba(102,126,234,0.12);
         }
-        
+
         .btn-login {
             width: 100%;
-            padding: 14px;
+            padding: 13px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
-            border-radius: 8px;
-            font-size: 16px;
+            border-radius: 10px;
+            font-size: 15px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.25s ease;
+            font-family: 'Inter', sans-serif;
+            letter-spacing: 0.02em;
         }
-        
+
         .btn-login:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 8px 25px rgba(102,126,234,0.4);
         }
-        
+
+        .btn-login:active { transform: translateY(0); }
+
         .auth-links {
             text-align: center;
-            margin-top: 20px;
+            margin-top: 24px;
+            color: #64748b;
+            font-size: 14px;
         }
-        
+
         .auth-links a {
-            color: #667eea;
+            color: #818cf8;
             text-decoration: none;
+            font-weight: 500;
         }
-        
-        .auth-links a:hover {
-            text-decoration: underline;
+
+        .auth-links a:hover { color: #a5b4fc; text-decoration: underline; }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 24px 0;
+            color: #374151;
+            font-size: 13px;
         }
-        
-        @media (max-width: 480px) {
-            .auth-box {
-                padding: 30px 20px;
+        .divider::before, .divider::after {
+            content: ''; flex: 1;
+            height: 1px; background: rgba(148,163,184,0.1);
+        }
+
+        /* â”€â”€ Alerts â”€â”€ */
+        .alert {
+            padding: 12px 16px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .alert-danger {
+            background: rgba(239,68,68,0.12);
+            border: 1px solid rgba(239,68,68,0.25);
+            color: #fca5a5;
+        }
+        .alert-success {
+            background: rgba(16,185,129,0.12);
+            border: 1px solid rgba(16,185,129,0.25);
+            color: #6ee7b7;
+        }
+
+        /* â”€â”€ Responsive â”€â”€ */
+        @media (max-width: 900px) {
+            .auth-left { display: none; }
+            .auth-right {
+                width: 100%;
+                padding: 40px 30px;
             }
+        }
+
+        @media (max-width: 480px) {
+            .auth-right { padding: 32px 20px; }
         }
     </style>
 </head>
 <body>
-    <div class="auth-container">
-        <div class="auth-box">
-            <div class="auth-header">
-                <i class="fas fa-balance-scale"></i>
-                <h1>DocAvocat</h1>
-                <p>Connectez-vous à votre espace</p>
-            </div>
-            
-            <div th:if="${param.error}" class="alert alert-danger">
-                <i class="fas fa-exclamation-circle"></i>
-                <span th:text="${error} ?: 'Email ou mot de passe incorrect'"></span>
-            </div>
-            
-            <div th:if="${message}" class="alert alert-success">
-                <i class="fas fa-check-circle"></i>
-                <span th:text="${message}"></span>
-            </div>
-            
-            <form th:action="@{/login}" method="post" th:object="${authRequest}">
-                <div class="form-group">
-                    <label class="form-label" for="email">
-                        <i class="fas fa-envelope"></i> Email
-                    </label>
-                    <div class="input-group">
-                        <i class="fas fa-envelope"></i>
-                        <input type="email" 
-                               id="email" 
-                               name="email"
-                               th:field="*{email}"
-                               class="form-control" 
-                               placeholder="votre@email.com" 
-                               required
-                               autofocus>
-                    </div>
+    <div class="auth-left">
+        <div class="brand-logo">
+            <div class="brand-icon"><i class="fas fa-scale-balanced"></i></div>
+            <span class="brand-name">DocAvocat</span>
+        </div>
+        <div class="auth-left-content">
+            <h2>Gérez votre<br>cabinet simplement</h2>
+            <p>La plateforme tout-en-un pour les avocats. Dossiers, documents, clients et signatures au même endroit.</p>
+            <ul class="features-list">
+                <li>
+                    <div class="feature-icon"><i class="fas fa-folder"></i></div>
+                    Gestion centralisée des dossiers
+                </li>
+                <li>
+                    <div class="feature-icon"><i class="fas fa-file-signature"></i></div>
+                    Signatures électroniques Yousign
+                </li>
+                <li>
+                    <div class="feature-icon"><i class="fas fa-shield-alt"></i></div>
+                    Sécurité et conformité RGPD
+                </li>
+                <li>
+                    <div class="feature-icon"><i class="fas fa-envelope"></i></div>
+                    Intégration RPVA / e-Barreau
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="auth-right">
+        <h1>Bon retour 👋</h1>
+        <p class="subtitle">Connectez-vous à votre espace DocAvocat</p>
+
+        <div th:if="${param.error}" class="alert alert-danger">
+            <i class="fas fa-exclamation-circle"></i>
+            <span th:text="${error} ?: 'Email ou mot de passe incorrect'"></span>
+        </div>
+
+        <div th:if="${message}" class="alert alert-success">
+            <i class="fas fa-check-circle"></i>
+            <span th:text="${message}"></span>
+        </div>
+
+        <form th:action="@{/login}" method="post" th:object="${authRequest}">
+            <div class="form-group">
+                <label class="form-label" for="email">Adresse e-mail</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-envelope input-icon"></i>
+                    <input type="email"
+                           id="email"
+                           name="email"
+                           th:field="*{email}"
+                           class="form-control"
+                           placeholder="votre@email.com"
+                           required
+                           autofocus>
                 </div>
-                
-                <div class="form-group">
-                    <label class="form-label" for="password">
-                        <i class="fas fa-lock"></i> Mot de passe
-                    </label>
-                    <div class="input-group">
-                        <i class="fas fa-lock"></i>
-                        <input type="password" 
-                               id="password" 
-                               name="password"
-                               th:field="*{password}"
-                               class="form-control" 
-                               placeholder="••••••••" 
-                               required>
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <button type="submit" class="btn-login">
-                        <i class="fas fa-sign-in-alt"></i> Se connecter
-                    </button>
-                </div>
-            </form>
-            
-            <div class="auth-links">
-                <p>
-                    <a th:href="@{/forgot-password}">Mot de passe oublié ?</a>
-                </p>
-                <p>
-                    Pas encore de compte ? 
-                    <a th:href="@{/register}">S'inscrire</a>
-                </p>
             </div>
+
+            <div class="form-group">
+                <label class="form-label" for="password">Mot de passe</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-lock input-icon"></i>
+                    <input type="password"
+                           id="password"
+                           name="password"
+                           th:field="*{password}"
+                           class="form-control"
+                           placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                           required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <button type="submit" class="btn-login">
+                    <i class="fas fa-sign-in-alt"></i>&nbsp; Se connecter
+                </button>
+            </div>
+        </form>
+
+        <div class="auth-links">
+            <p><a th:href="@{/forgot-password}">Mot de passe oublié ?</a></p>
+            <div class="divider">ou</div>
+            <p>Pas encore de compte ? <a th:href="@{/register}">Créer un compte</a></p>
+            <p style="margin-top: 12px;"><a th:href="@{/}">← Retour à l'accueil</a></p>
         </div>
     </div>
 </body>

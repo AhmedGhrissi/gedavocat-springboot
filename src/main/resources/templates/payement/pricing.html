@@ -1,9 +1,19 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout}">
 <head>
-    <title>Choisir votre abonnement</title>
+    
+    <style>
+        /* Dark theme overrides for this page */
+        :root { --bg:#080b14; --surface-1:#0f172a; --surface-2:#1e2d3d; --border:rgba(148,163,184,0.12); --text-primary:#f1f5f9; --text-secondary:#94a3b8; --primary:#667eea; --accent:#818cf8; }
+        h1,h2,h3,h4,h5,h6 { color: var(--text-primary) !important; }
+        p, label, span { color: inherit; }
+        .card { background: rgba(255,255,255,0.04) !important; border-color: var(--border) !important; }
+        .card-header { background: transparent !important; border-color: var(--border) !important; color: var(--text-primary) !important; }
+        .text-muted { color: var(--text-secondary) !important; }
+        a { color: var(--accent); }
+    </style><title>Choisir votre abonnement</title>
     <style>
         /* Hero Premium */
         .pricing-hero {
@@ -44,7 +54,7 @@
             justify-content: center;
             gap: 8px;
             margin-bottom: 48px;
-            background: #f8fafc;
+            background: var(--bg, #080b14);
             padding: 8px;
             border-radius: 12px;
             max-width: 300px;
@@ -63,7 +73,7 @@
             transition: all 0.3s;
         }
         .period-btn.active {
-            background: white;
+            background: rgba(255,255,255,0.04);
             color: #667eea;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
@@ -86,7 +96,7 @@
             margin: 0 auto 48px;
         }
         .pricing-card {
-            background: white;
+            background: rgba(255,255,255,0.04);
             border-radius: 20px;
             padding: 40px 32px;
             border: 3px solid #e2e8f0;
@@ -117,7 +127,7 @@
         .plan-name {
             font-size: 24px;
             font-weight: 700;
-            color: #1e293b;
+            color: #f1f5f9;
             margin-bottom: 12px;
         }
         .plan-description {
@@ -161,14 +171,14 @@
             gap: 12px;
             margin-bottom: 16px;
             font-size: 15px;
-            color: #475569;
+            color: #94a3b8;
         }
         .feature-icon {
             width: 24px;
             height: 24px;
             border-radius: 50%;
-            background: #d1fae5;
-            color: #065f46;
+            background: rgba(16,185,129,0.15);
+            color: #34d399;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -176,7 +186,7 @@
             font-size: 12px;
         }
         .feature-icon.disabled {
-            background: #f1f5f9;
+            background: rgba(255,255,255,0.04);
             color: #cbd5e1;
         }
 
@@ -205,7 +215,7 @@
             color: white;
         }
         .cta-secondary {
-            background: white;
+            background: rgba(255,255,255,0.04);
             color: #667eea;
             border: 2px solid #667eea;
         }
@@ -216,17 +226,17 @@
 
         /* Payment Methods */
         .payment-methods {
-            background: white;
+            background: rgba(255,255,255,0.04);
             border-radius: 20px;
             padding: 40px;
-            border: 2px solid #e2e8f0;
+            border: 1px solid rgba(148,163,184,0.12);
             max-width: 800px;
             margin: 0 auto 48px;
         }
         .payment-methods h3 {
             text-align: center;
             margin-bottom: 32px;
-            color: #1e293b;
+            color: #f1f5f9;
         }
         .methods-grid {
             display: grid;
@@ -234,11 +244,11 @@
             gap: 16px;
         }
         .method-card {
-            background: #f8fafc;
+            background: var(--bg, #080b14);
             border-radius: 12px;
             padding: 20px;
             text-align: center;
-            border: 2px solid #e2e8f0;
+            border: 1px solid rgba(148,163,184,0.12);
             transition: all 0.3s;
         }
         .method-card:hover {
@@ -259,7 +269,7 @@
         .trust-section {
             text-align: center;
             padding: 40px 20px;
-            background: #f8fafc;
+            background: var(--bg, #080b14);
             border-radius: 16px;
             margin-bottom: 48px;
         }
@@ -287,15 +297,15 @@
             margin: 0 auto;
         }
         .faq-item {
-            background: white;
+            background: rgba(255,255,255,0.04);
             border-radius: 12px;
             padding: 24px;
             margin-bottom: 16px;
-            border: 2px solid #e2e8f0;
+            border: 1px solid rgba(148,163,184,0.12);
         }
         .faq-question {
             font-weight: 700;
-            color: #1e293b;
+            color: #f1f5f9;
             margin-bottom: 8px;
         }
         .faq-answer {
@@ -506,7 +516,7 @@
 
             <!-- Trust Section -->
             <div class="trust-section">
-                <h3 style="margin-bottom: 8px; color: #1e293b;">Paiement 100% sécurisé 🔒</h3>
+                <h3 style="margin-bottom: 8px; color: #f1f5f9;">Paiement 100% sécurisé 🔒</h3>
                 <p style="color: #64748b; margin-bottom: 0;">Powered by Stripe - Leader mondial des paiements en ligne</p>
                 <div class="trust-badges">
                     <div class="trust-badge">

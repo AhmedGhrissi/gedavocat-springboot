@@ -1,9 +1,19 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout}">
 <head>
-    <title th:text="${case.name}">Détail du dossier</title>
+    
+    <style>
+        /* Dark theme overrides for this page */
+        :root { --bg:#080b14; --surface-1:#0f172a; --surface-2:#1e2d3d; --border:rgba(148,163,184,0.12); --text-primary:#f1f5f9; --text-secondary:#94a3b8; --primary:#667eea; --accent:#818cf8; }
+        h1,h2,h3,h4,h5,h6 { color: var(--text-primary) !important; }
+        p, label, span { color: inherit; }
+        .card { background: rgba(255,255,255,0.04) !important; border-color: var(--border) !important; }
+        .card-header { background: transparent !important; border-color: var(--border) !important; color: var(--text-primary) !important; }
+        .text-muted { color: var(--text-secondary) !important; }
+        a { color: var(--accent); }
+    </style><title th:text="${case.name}">Détail du dossier</title>
     <style>
         .case-header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -14,7 +24,7 @@
         }
         
         .info-card {
-            background: white;
+            background: rgba(255,255,255,0.04);
             border-radius: 15px;
             padding: 25px;
             margin-bottom: 20px;
@@ -23,7 +33,7 @@
         
         .document-item {
             padding: 15px;
-            border: 1px solid #e2e8f0;
+            border: 1px solid rgba(148,163,184,0.12);
             border-radius: 10px;
             margin-bottom: 10px;
             display: flex;
