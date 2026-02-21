@@ -40,9 +40,7 @@ public class AuthController {
         if (error != null) {
             model.addAttribute("error", "Email ou mot de passe incorrect");
         }
-        if (logout != null) {
-            model.addAttribute("message", "Vous avez été déconnecté avec succès");
-        }
+        // logout param kept for backward compat but logoutSuccessUrl now redirects to /login directly
         model.addAttribute("authRequest", new AuthRequest());
         return "auth/login";
     }
