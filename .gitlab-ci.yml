@@ -65,28 +65,22 @@ stages:
 .discord_commit_notify: &discord_commit_notify
   - |
     [ -z "${DISCORD_COMMIT_WEBHOOK:-}" ] && exit 0
+    apk add --no-cache curl --quiet 2>/dev/null || true
     BRANCH="${CI_COMMIT_BRANCH:-MR}"
     AUTHOR="${GITLAB_USER_NAME:-CI}"
     SHA="${CI_COMMIT_SHORT_SHA:-????}"
     TITLE="${CI_COMMIT_TITLE:-}"
     COMMIT_MSG=$(printf '%s' "$TITLE" | head -c 80 | sed 's/\\/\\\\/g; s/"/\\"/g; s/	/ /g')
-    PAYLOAD=$(printf '{
-      "embeds": [{
-        "title": "%s %s",
-        "description": "**Branche :** `%s`\n**Commit :** [`%s`](%s)\n**Par :** %s\n**Message :** %s\n\n[Voir les logs du job ->](%s/-/jobs/%s)",
-        "color": %s,
-        "footer": { "text": "DocAvocat CI/CD" },
-        "timestamp": "%s"
-      }]
-    }' \
+    PAYLOAD=$(printf '{"embeds":[{"title":"%s %s","description":"**Branche :** `%s`\\n**Commit :** [`%s`](%s)\\n**Par :** %s\\n**Message :** %s\\n\\n[Logs job ->](%s/-/jobs/%s)","color":%s,"footer":{"text":"DocAvocat CI/CD"},"timestamp":"%s"}]}' \
       "$EMOJI" "$STATUS" \
       "$BRANCH" "$SHA" "$CI_PIPELINE_URL" "$AUTHOR" "$COMMIT_MSG" \
       "$CI_PROJECT_URL" "$CI_JOB_ID" \
       "$COLOR" \
       "$(date -u '+%Y-%m-%dT%H:%M:%SZ')")
-    curl -s -X POST "${DISCORD_COMMIT_WEBHOOK}" \
+    RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${DISCORD_COMMIT_WEBHOOK}" \
          -H "Content-Type: application/json" \
-         -d "$PAYLOAD" > /dev/null || echo "Discord notification failed (non-bloquant)"
+         -d "$PAYLOAD")
+    echo "Discord commit notify: HTTP $RESPONSE"
 
 # Notification Discord — main uniquement (DISCORD_WEBHOOK, protege)
 # Utilise pour : package, deploy
@@ -98,23 +92,16 @@ stages:
     SHA="${CI_COMMIT_SHORT_SHA:-????}"
     TITLE="${CI_COMMIT_TITLE:-}"
     COMMIT_MSG=$(printf '%s' "$TITLE" | head -c 80 | sed 's/\\/\\\\/g; s/"/\\"/g; s/	/ /g')
-    PAYLOAD=$(printf '{
-      "embeds": [{
-        "title": "%s %s",
-        "description": "**Branche :** `%s`\n**Commit :** [`%s`](%s)\n**Par :** %s\n**Message :** %s\n\n[Voir les logs du job ->](%s/-/jobs/%s)",
-        "color": %s,
-        "footer": { "text": "DocAvocat CI/CD" },
-        "timestamp": "%s"
-      }]
-    }' \
+    PAYLOAD=$(printf '{"embeds":[{"title":"%s %s","description":"**Branche :** `%s`\\n**Commit :** [`%s`](%s)\\n**Par :** %s\\n**Message :** %s\\n\\n[Logs job ->](%s/-/jobs/%s)","color":%s,"footer":{"text":"DocAvocat CI/CD"},"timestamp":"%s"}]}' \
       "$EMOJI" "$STATUS" \
       "$BRANCH" "$SHA" "$CI_PIPELINE_URL" "$AUTHOR" "$COMMIT_MSG" \
       "$CI_PROJECT_URL" "$CI_JOB_ID" \
       "$COLOR" \
       "$(date -u '+%Y-%m-%dT%H:%M:%SZ')")
-    curl -s -X POST "${DISCORD_WEBHOOK}" \
+    RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${DISCORD_WEBHOOK}" \
          -H "Content-Type: application/json" \
-         -d "$PAYLOAD" > /dev/null || echo "Discord notification failed (non-bloquant)"
+         -d "$PAYLOAD")
+    echo "Discord deploy notify: HTTP $RESPONSE"
 
 # 
 # STAGE 1 : BUILD
@@ -139,18 +126,12 @@ build:
         else
           SCOPE="branche feature - build + test uniquement"
         fi
-        PAYLOAD=$(printf '{
-          "embeds": [{
-            "title": "[START] Pipeline demarre",
-            "description": "**Branche :** `%s`\n**Commit :** [`%s`](%s)\n**Par :** %s\n**Message :** %s\n**Scope :** %s",
-            "color": 16776960,
-            "footer": { "text": "DocAvocat CI/CD" },
-            "timestamp": "%s"
-          }]
-        }' "$BRANCH" "$SHA" "$CI_PIPELINE_URL" "$AUTHOR" "$COMMIT_MSG" "$SCOPE" "$(date -u '+%Y-%m-%dT%H:%M:%SZ')")
-        curl -s -X POST "${DISCORD_COMMIT_WEBHOOK}" \
+        PAYLOAD=$(printf '{"embeds":[{"title":"[START] Pipeline demarre","description":"**Branche :** `%s`\\n**Commit :** [`%s`](%s)\\n**Par :** %s\\n**Message :** %s\\n**Scope :** %s","color":16776960,"footer":{"text":"DocAvocat CI/CD"},"timestamp":"%s"}]}' \
+          "$BRANCH" "$SHA" "$CI_PIPELINE_URL" "$AUTHOR" "$COMMIT_MSG" "$SCOPE" "$(date -u '+%Y-%m-%dT%H:%M:%SZ')")
+        RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${DISCORD_COMMIT_WEBHOOK}" \
              -H "Content-Type: application/json" \
-             -d "$PAYLOAD" > /dev/null || echo "Discord (pipeline-start) failed (non-bloquant)"
+             -d "$PAYLOAD")
+        echo "Discord pipeline-start: HTTP $RESPONSE"
       }
   script:
     - mvn $MAVEN_CLI_OPTS compile
@@ -176,6 +157,8 @@ test:
   stage: test
   image: maven:3.9-eclipse-temurin-17-alpine
   needs: [build]
+  before_script:
+    - apk add --no-cache curl --quiet 2>/dev/null || true
   script:
     - mvn $MAVEN_CLI_OPTS test
   after_script:
@@ -266,21 +249,14 @@ deploy:
     # Notification Discord : deploiement en cours
     - |
       [ -z "${DISCORD_WEBHOOK:-}" ] && true || {
-        PAYLOAD=$(printf '{
-          "embeds": [{
-            "title": "[DEPLOY] Deploiement en cours...",
-            "description": "**Branche :** `%s`\n**Commit :** [`%s`](%s)\n**Par :** %s\n\n*Envoi des fichiers -> restart conteneur -> verification HTTP...*\n\n[Voir les logs deploy ->](%s/-/jobs/%s)",
-            "color": 16776960,
-            "footer": { "text": "DocAvocat CI/CD" },
-            "timestamp": "%s"
-          }]
-        }' \
+        PAYLOAD=$(printf '{"embeds":[{"title":"[DEPLOY] Deploiement en cours...","description":"**Branche :** `%s`\\n**Commit :** [`%s`](%s)\\n**Par :** %s\\n\\n*Envoi fichiers -> restart -> check HTTP...*\\n\\n[Logs deploy ->](%s/-/jobs/%s)","color":16776960,"footer":{"text":"DocAvocat CI/CD"},"timestamp":"%s"}]}' \
           "$CI_COMMIT_BRANCH" "$CI_COMMIT_SHORT_SHA" "$CI_PIPELINE_URL" \
           "$GITLAB_USER_NAME" "$CI_PROJECT_URL" "$CI_JOB_ID" \
           "$(date -u '+%Y-%m-%dT%H:%M:%SZ')")
-        curl -s -X POST "${DISCORD_WEBHOOK}" \
+        RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${DISCORD_WEBHOOK}" \
              -H "Content-Type: application/json" \
-             -d "$PAYLOAD" > /dev/null || true
+             -d "$PAYLOAD")
+        echo "Discord deploy-start: HTTP $RESPONSE"
       }
   script:
     #  Envoi des fichiers de configuration 
