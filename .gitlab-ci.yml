@@ -196,15 +196,14 @@ package:
   needs: [test]
   services:
     - name: docker:27-dind
-      command: ["--experimental"]
   variables:
     DOCKER_BUILDKIT: "1"
-    DOCKER_TLS_CERTDIR: "/certs"
+    DOCKER_TLS_CERTDIR: ""
+    DOCKER_HOST: "tcp://docker:2375"
   before_script:
     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
     - docker run --privileged --rm tonistiigi/binfmt --install arm64
-    - docker context create builder-ctx
-    - docker buildx create --use --name ci-builder --driver docker-container builder-ctx
+    - docker buildx create --use --name ci-builder --driver docker-container
   script:
     - |
       docker buildx build \
