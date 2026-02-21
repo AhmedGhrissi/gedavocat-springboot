@@ -44,9 +44,10 @@
 
         <logger name="com.gedavocat"                             level="INFO"/>
         <logger name="org.springframework"                       level="WARN"/>
-        <!-- DispatcherServlet à INFO : conserve les "Completed 200/404/500 OK"
-             nécessaires pour les panels Trafic HTTP de Grafana -->
-        <logger name="org.springframework.web.servlet.DispatcherServlet" level="INFO"/>
+        <!-- DispatcherServlet à DEBUG : conserve les "Completed 200/404/500 OK"
+             nécessaires pour les panels Trafic HTTP de Grafana
+             (ces messages Spring sont nativement au niveau DEBUG) -->
+        <logger name="org.springframework.web.servlet.DispatcherServlet" level="DEBUG"/>
         <logger name="org.springframework.security"              level="WARN"/>
         <logger name="org.hibernate"                             level="WARN"/>
         <logger name="com.zaxxer.hikari"                         level="WARN"/>
