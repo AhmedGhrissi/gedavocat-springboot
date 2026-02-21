@@ -130,13 +130,13 @@ public class CaseShareService {
             SimpleMailMessage msg = new SimpleMailMessage();
             msg.setFrom(fromEmail);
             msg.setTo(to);
-            msg.setSubject("Dossier partagé par " + lawyerName + " — GedAvocat");
+            msg.setSubject("Dossier partagé par " + lawyerName + " — DocAvocat");
             msg.setText(
                 "Bonjour,\n\n" +
                 "Maître " + lawyerName + " vous partage l'accès au dossier « " + caseEntity.getName() + " ».\n\n" +
                 (description != null && !description.isBlank() ? "Note : " + description + "\n\n" : "") +
                 "Accédez au dossier en cliquant sur ce lien :\n" + link + "\n\n" +
-                "L'équipe GedAvocat\n" + baseUrl
+                "L'équipe DocAvocat\n" + baseUrl
             );
             mailSender.send(msg);
         } catch (Exception e) {

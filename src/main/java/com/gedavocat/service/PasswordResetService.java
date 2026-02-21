@@ -12,13 +12,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Service de réinitialisation de mot de passe par lien tokenisé.
+ * Les tokens sont persistés en base (résistent aux redémarrages serveur).
  * Les tokens expirent après 1 heure.
  */
 @Slf4j
@@ -36,9 +35,6 @@ public class PasswordResetService {
     @Value("${app.base-url:https://docavocat.fr}")
     private String baseUrl;
 
-    /** Map token → ResetEntry */
-    private final Map<String, ResetEntry> pendingTokens = new ConcurrentHashMap<>();
-
     private static final int TOKEN_EXPIRY_HOURS = 1;
 
     // =========================================================================
@@ -46,35 +42,36 @@ public class PasswordResetService {
     // =========================================================================
 
     /**
-     * Crée un token de réinitialisation et envoie un email avec le lien.
+     * Crée un token de réinitialisation (persisté en base) et envoie un email.
      * Ne révèle pas si l'email existe (sécurité).
      */
+    @Transactional
     public void requestReset(String email) {
         Optional<User> userOpt = userRepository.findByEmail(email.toLowerCase());
         if (userOpt.isEmpty()) {
-            // Ne pas révéler si l'email existe
             log.warn("[PasswordReset] Tentative pour email inexistant : {}", email);
             return;
         }
+        User user = userOpt.get();
         String token = UUID.randomUUID().toString();
-        pendingTokens.put(token, new ResetEntry(email.toLowerCase(), LocalDateTime.now().plusHours(TOKEN_EXPIRY_HOURS)));
+        user.setResetToken(token);
+        user.setResetTokenExpiry(LocalDateTime.now().plusHours(TOKEN_EXPIRY_HOURS));
+        userRepository.save(user);
         sendResetEmail(email, token);
-        log.info("[PasswordReset] Token créé pour {}", email);
+        log.info("[PasswordReset] Token créé (DB) pour {}", email);
     }
 
     /**
-     * Valide un token de réinitialisation.
+     * Valide un token de réinitialisation (recherche en base).
      * @return l'email associé, ou null si invalide/expiré
      */
     public String validateToken(String token) {
         if (token == null) return null;
-        ResetEntry entry = pendingTokens.get(token);
-        if (entry == null) return null;
-        if (LocalDateTime.now().isAfter(entry.expiry())) {
-            pendingTokens.remove(token);
-            return null;
-        }
-        return entry.email();
+        return userRepository.findByResetToken(token)
+                .filter(u -> u.getResetTokenExpiry() != null
+                          && LocalDateTime.now().isBefore(u.getResetTokenExpiry()))
+                .map(User::getEmail)
+                .orElse(null);
     }
 
     /**
@@ -83,17 +80,22 @@ public class PasswordResetService {
      */
     @Transactional
     public boolean resetPassword(String token, String newPassword) {
-        String email = validateToken(token);
-        if (email == null) return false;
-
-        userRepository.findByEmail(email).ifPresent(user -> {
-            user.setPassword(passwordEncoder.encode(newPassword));
-            user.setEmailVerified(true); // Réinitialiser le mot de passe implique la vérification de l'email
+        Optional<User> userOpt = userRepository.findByResetToken(token);
+        if (userOpt.isEmpty()) return false;
+        User user = userOpt.get();
+        if (user.getResetTokenExpiry() == null || LocalDateTime.now().isAfter(user.getResetTokenExpiry())) {
+            // Token expiré — nettoyer
+            user.setResetToken(null);
+            user.setResetTokenExpiry(null);
             userRepository.save(user);
-            log.info("[PasswordReset] Mot de passe réinitialisé pour {}", email);
-        });
-
-        pendingTokens.remove(token);
+            return false;
+        }
+        user.setPassword(passwordEncoder.encode(newPassword));
+        user.setEmailVerified(true);
+        user.setResetToken(null);
+        user.setResetTokenExpiry(null);
+        userRepository.save(user);
+        log.info("[PasswordReset] Mot de passe réinitialisé pour {}", user.getEmail());
         return true;
     }
 
@@ -107,15 +109,15 @@ public class PasswordResetService {
             SimpleMailMessage msg = new SimpleMailMessage();
             msg.setFrom(fromEmail);
             msg.setTo(to);
-            msg.setSubject("Réinitialisation de votre mot de passe GedAvocat");
+            msg.setSubject("Réinitialisation de votre mot de passe — DocAvocat");
             msg.setText(
                 "Bonjour,\n\n" +
-                "Vous avez demandé à réinitialiser votre mot de passe sur GedAvocat.\n\n" +
+                "Vous avez demandé à réinitialiser votre mot de passe sur DocAvocat.\n\n" +
                 "Cliquez sur ce lien pour créer un nouveau mot de passe :\n\n" +
                 "    " + link + "\n\n" +
                 "Ce lien est valable " + TOKEN_EXPIRY_HOURS + " heure(s).\n\n" +
                 "Si vous n'êtes pas à l'origine de cette demande, ignorez cet email.\n\n" +
-                "L'équipe GedAvocat\n" + baseUrl
+                "L'équipe DocAvocat\n" + baseUrl
             );
             mailSender.send(msg);
             log.info("[PasswordReset] Email envoyé à {}", to);
@@ -123,10 +125,4 @@ public class PasswordResetService {
             log.warn("[PasswordReset] Impossible d'envoyer l'email à {} : {}", to, e.getMessage());
         }
     }
-
-    // =========================================================================
-    // Classe interne
-    // =========================================================================
-
-    private record ResetEntry(String email, LocalDateTime expiry) {}
 }

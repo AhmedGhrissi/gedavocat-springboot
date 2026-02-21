@@ -51,13 +51,17 @@ public class AuthController {
      * Page d'inscription
      */
     @GetMapping("/register")
-    public String registerPage(@RequestParam(required = false) String plan, Model model) {
+    public String registerPage(
+            @RequestParam(required = false) String plan,
+            @RequestParam(required = false) String billing,
+            Model model) {
         RegisterRequest request = new RegisterRequest();
         if (plan != null) {
             request.setSubscriptionPlan(plan);
         }
         model.addAttribute("registerRequest", request);
         model.addAttribute("selectedPlan", plan);
+        model.addAttribute("selectedBilling", billing != null ? billing : "monthly");
         return "auth/register";
     }
 

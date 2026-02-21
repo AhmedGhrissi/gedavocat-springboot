@@ -167,15 +167,15 @@ public class ClientInvitationService {
             SimpleMailMessage msg = new SimpleMailMessage();
             msg.setFrom(fromEmail);
             msg.setTo(to);
-            msg.setSubject("Votre invitation au portail GedAvocat");
+            msg.setSubject("Votre invitation au portail DocAvocat");
             msg.setText(
                 "Bonjour " + clientName + ",\n\n" +
-                "Votre avocat " + lawyerName + " vous invite à accéder au portail client GedAvocat " +
+                "Votre avocat " + lawyerName + " vous invite à accéder au portail client DocAvocat " +
                 "pour consulter vos dossiers et documents.\n\n" +
                 "Cliquez sur le lien ci-dessous pour créer votre mot de passe :\n\n" +
                 link + "\n\n" +
                 "Ce lien est valable " + TOKEN_EXPIRY_HOURS + " heures.\n\n" +
-                "L'équipe GedAvocat\n" + baseUrl
+                "L'équipe DocAvocat\n" + baseUrl
             );
             mailSender.send(msg);
         } catch (Exception e) {

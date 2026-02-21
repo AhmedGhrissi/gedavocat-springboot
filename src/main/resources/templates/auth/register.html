@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inscription — GED Avocat | Créer votre compte cabinet d'avocat</title>
+    <title>Inscription — DocAvocat | Créer votre compte cabinet d'avocat</title>
     <meta name="description" content="Créez votre compte GED Avocat et commencez à gérer vos dossiers, documents et clients juridiques. Essai gratuit 14 jours, sans engagement, sans carte bancaire.">
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="https://docavocat.fr/register">
@@ -132,9 +132,11 @@
             <div class="auth-header">
                 <i class="fas fa-user-plus"></i>
                 <h1>Créer un compte</h1>
-                <p>Rejoignez GED Avocat pour gérer vos dossiers</p>
+                <p>Rejoignez DocAvocat pour gérer vos dossiers</p>
                 <div th:if="${selectedPlan != null}" class="plan-badge">
-                    Plan sélectionné: <span th:text="${selectedPlan}">STARTER</span>
+                    Plan sélectionné : <span th:text="${selectedPlan}">STARTER</span>
+                    <span th:if="${selectedBilling == 'yearly'}"> — Annuel (-20%)</span>
+                    <span th:if="${selectedBilling == 'monthly'}"> — Mensuel</span>
                 </div>
             </div>
 

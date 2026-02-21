@@ -81,14 +81,14 @@ public class EmailVerificationService {
             SimpleMailMessage msg = new SimpleMailMessage();
             msg.setFrom(fromEmail);
             msg.setTo(to);
-            msg.setSubject("Confirmation de votre compte GedAvocat - Code " + code);
+            msg.setSubject("Confirmation de votre compte DocAvocat - Code " + code);
             msg.setText(
                 "Bonjour,\n\n" +
-                "Votre code de vérification pour GedAvocat est :\n\n" +
+                "Votre code de vérification pour DocAvocat est :\n\n" +
                 "    " + code + "\n\n" +
                 "Ce code est valable " + CODE_EXPIRY_MINUTES + " minutes.\n\n" +
                 "Si vous n'avez pas créé de compte sur docavocat.fr, ignorez cet email.\n\n" +
-                "L'équipe GedAvocat\n" + baseUrl
+                "L'équipe DocAvocat\n" + baseUrl
             );
             mailSender.send(msg);
             log.info("[EmailVerification] Email envoyé à {}", to);
