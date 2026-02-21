@@ -1,38 +1,38 @@
 /* ===================================================================
    GED Avocat - Feuille de style principale
-   Design Dark Glassmorphism — version 2.0
+   Design Light Modern — version 3.0
    =================================================================== */
 
 /* === Variables CSS === */
 :root {
-    /* Dark theme tokens */
-    --bg: #080b14;
-    --surface-1: #0f172a;
-    --surface-2: #1e2d3d;
-    --border: rgba(148,163,184,0.12);
-    --text-primary: #f1f5f9;
-    --text-secondary: #94a3b8;
+    /* Light theme tokens */
+    --bg: #f1f5f9;
+    --surface-1: #ffffff;
+    --surface-2: #f8fafc;
+    --border: #e2e8f0;
+    --text-primary: #1e293b;
+    --text-secondary: #64748b;
     --primary: #667eea;
     --primary-end: #764ba2;
-    --accent: #818cf8;
+    --accent: #6366f1;
     --success: #10b981;
     --warning: #f59e0b;
     --danger: #ef4444;
-    --info: #38bdf8;
+    --info: #0ea5e9;
 
     /* Legacy aliases */
     --primary-color: #667eea;
-    --secondary-color: #818cf8;
+    --secondary-color: #6366f1;
     --success-color: #10b981;
     --danger-color: #ef4444;
     --warning-color: #f59e0b;
-    --info-color: #38bdf8;
-    --dark-color: #f1f5f9;
+    --info-color: #0ea5e9;
+    --dark-color: #1e293b;
     --white: #ffffff;
     
     --font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     --border-radius: 8px;
-    --box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    --box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
     --transition: all 0.3s ease;
 }
 

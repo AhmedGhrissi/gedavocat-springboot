@@ -18,18 +18,18 @@
 .period-toggle {
     display: flex; justify-content: center; gap: 8px;
     margin-bottom: 48px;
-    background: var(--bg); padding: 8px; border-radius: 12px;
+    background: #f1f5f9; padding: 8px; border-radius: 12px;
     max-width: 300px; margin-left: auto; margin-right: auto;
 }
 .period-btn {
     flex: 1; padding: 12px 24px;
     border: none; background: transparent;
     border-radius: 8px; cursor: pointer;
-    font-weight: 600; color: var(--text-secondary); transition: all 0.3s;
+    font-weight: 600; color: #64748b; transition: all 0.3s;
 }
 .period-btn.active {
-    background: rgba(255,255,255,0.06);
-    color: #667eea; box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    background: #ffffff;
+    color: #667eea; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
 }
 .save-badge {
     background: #10b981; color: white;
@@ -44,19 +44,19 @@
     gap: 32px; max-width: 1200px; margin: 0 auto 48px;
 }
 .pricing-card {
-    background: rgba(255,255,255,0.06);
+    background: #ffffff;
     border-radius: 20px; padding: 40px 32px;
-    border: 3px solid var(--border);
+    border: 2px solid #e2e8f0;
     position: relative; transition: all 0.3s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
 }
 .pricing-card:hover {
     transform: translateY(-8px);
-    box-shadow: 0 20px 40px rgba(102,126,234,0.2);
+    box-shadow: 0 20px 40px rgba(102,126,234,0.1);
 }
-/* Featured card — dark gradient, NOT white */
 .pricing-card.featured {
     border-color: #667eea;
-    background: linear-gradient(135deg, rgba(102,126,234,0.14), rgba(118,75,162,0.10));
+    background: linear-gradient(135deg, rgba(102,126,234,0.04), rgba(118,75,162,0.03));
 }
 
 .featured-badge {
@@ -66,8 +66,8 @@
     font-size: 13px; font-weight: 700;
     box-shadow: 0 4px 12px rgba(102,126,234,0.4);
 }
-.plan-name { font-size: 24px; font-weight: 700; color: var(--text-primary); margin-bottom: 12px; }
-.plan-description { color: var(--text-secondary); font-size: 14px; margin-bottom: 24px; line-height: 1.6; }
+.plan-name { font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 12px; }
+.plan-description { color: #64748b; font-size: 14px; margin-bottom: 24px; line-height: 1.6; }
 .price-container { margin-bottom: 32px; }
 .price {
     font-size: 48px; font-weight: 800;
@@ -75,7 +75,7 @@
     -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     display: inline-block;
 }
-.price-period { color: var(--text-secondary); font-size: 16px; font-weight: 500; }
+.price-period { color: #64748b; font-size: 16px; font-weight: 500; }
 .old-price { text-decoration: line-through; color: #94a3b8; font-size: 20px; margin-left: 8px; }
 
 /* Features list */
@@ -83,15 +83,15 @@
 .feature-item {
     display: flex; align-items: start; gap: 12px;
     margin-bottom: 16px; font-size: 15px;
-    color: var(--text-secondary);
+    color: #64748b;
 }
 .feature-icon {
     width: 24px; height: 24px; border-radius: 50%;
-    background: rgba(16,185,129,0.15); color: #34d399;
+    background: #ecfdf5; color: #059669;
     display: flex; align-items: center; justify-content: center;
     flex-shrink: 0; font-size: 12px;
 }
-.feature-icon.disabled { background: rgba(255,255,255,0.06); color: var(--text-secondary); }
+.feature-icon.disabled { background: #f1f5f9; color: #94a3b8; }
 
 /* CTA Buttons */
 .cta-button {
@@ -104,49 +104,52 @@
     color: white; box-shadow: 0 4px 12px rgba(102,126,234,0.3);
 }
 .cta-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(102,126,234,0.4); color: white; }
-.cta-secondary { background: rgba(255,255,255,0.06); color: #667eea; border: 2px solid #667eea; }
+.cta-secondary { background: #f8fafc; color: #667eea; border: 2px solid #667eea; }
 .cta-secondary:hover { background: #667eea; color: white; }
 
 /* Payment Methods */
 .payment-methods {
-    background: rgba(255,255,255,0.06);
+    background: #ffffff;
     border-radius: 20px; padding: 40px;
-    border: 1px solid var(--border);
+    border: 1px solid #e2e8f0;
     max-width: 800px; margin: 0 auto 48px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
 }
-.payment-methods h3 { text-align: center; margin-bottom: 32px; color: var(--text-primary); }
+.payment-methods h3 { text-align: center; margin-bottom: 32px; color: #1e293b; }
 .methods-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
     gap: 16px;
 }
 .method-card {
-    background: var(--bg);
+    background: #f8fafc;
     border-radius: 12px; padding: 20px; text-align: center;
-    border: 1px solid var(--border); transition: all 0.3s;
+    border: 1px solid #e2e8f0; transition: all 0.3s;
 }
 .method-card:hover { border-color: #667eea; transform: translateY(-4px); }
 .method-icon { font-size: 32px; margin-bottom: 8px; }
-.method-name { font-size: 13px; font-weight: 600; color: var(--text-secondary); }
+.method-name { font-size: 13px; font-weight: 600; color: #64748b; }
 
 /* Trust badges */
 .trust-section {
     text-align: center; padding: 40px 20px;
-    background: rgba(255,255,255,0.03);
+    background: #f8fafc;
     border-radius: 16px; margin-bottom: 48px;
+    border: 1px solid #e2e8f0;
 }
 .trust-badges {
     display: flex; justify-content: center; gap: 40px; flex-wrap: wrap; margin-top: 24px;
 }
-.trust-badge { display: flex; align-items: center; gap: 12px; color: var(--text-secondary); }
+.trust-badge { display: flex; align-items: center; gap: 12px; color: #64748b; }
 .trust-badge i { font-size: 24px; color: #10b981; }
 
 /* FAQ */
 .faq-section { max-width: 800px; margin: 0 auto; }
 .faq-item {
-    background: rgba(255,255,255,0.06);
+    background: #ffffff;
     border-radius: 12px; padding: 24px; margin-bottom: 16px;
-    border: 1px solid var(--border);
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
 }
-.faq-question { font-weight: 700; color: var(--text-primary); margin-bottom: 8px; }
-.faq-answer   { color: var(--text-secondary); line-height: 1.6; }
+.faq-question { font-weight: 700; color: #1e293b; margin-bottom: 8px; }
+.faq-answer   { color: #64748b; line-height: 1.6; }

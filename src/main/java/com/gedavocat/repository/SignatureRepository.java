@@ -3,6 +3,7 @@ package com.gedavocat.repository;
 import com.gedavocat.model.Signature;
 import com.gedavocat.model.Signature.SignatureStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -38,6 +39,13 @@ public interface SignatureRepository extends JpaRepository<Signature, String> {
      */
     @Query("SELECT s FROM Signature s WHERE s.document.caseEntity.id = :caseId")
     List<Signature> findByCaseId(@Param("caseId") String caseId);
+
+    /**
+     * Supprime toutes les signatures d'un dossier (via document)
+     */
+    @Modifying
+    @Query("DELETE FROM Signature s WHERE s.document.caseEntity.id = :caseId")
+    void deleteAllByCaseId(@Param("caseId") String caseId);
     
     /**
      * Compte les signatures en attente pour un utilisateur

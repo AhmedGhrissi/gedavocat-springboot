@@ -35,7 +35,7 @@
 .benefit h4 { color: var(--text-primary); margin-bottom: 0.5rem; }
 .benefit p  { color: var(--text-secondary); font-size: 0.9rem; }
 
-.help-card        { background: rgba(255,255,255,0.06); border: none; }
+.help-card        { background: #ffffff; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
 .help-card h4     { color: var(--text-primary); margin-bottom: 1rem; }
 .help-actions     { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
 
