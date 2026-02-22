@@ -2,6 +2,7 @@ package com.gedavocat.controller;
 
 import com.gedavocat.dto.SystemMetricsDTO;
 import com.gedavocat.model.Client;
+import com.gedavocat.model.User;
 import com.gedavocat.repository.ClientRepository;
 import com.gedavocat.service.AdminMetricsService;
 import com.gedavocat.service.ClientInvitationService;
@@ -9,14 +10,20 @@ import com.gedavocat.service.LogService;
 import com.gedavocat.service.MaintenanceService;
 import com.gedavocat.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import java.time.format.DateTimeFormatter;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * Contrôleur pour le panneau d'administration
@@ -99,20 +106,117 @@ public class AdminController {
     }
 
     /**
-     * Page de gestion des utilisateurs
+     * Page de gestion des utilisateurs avec filtres
      */
     @GetMapping("/users")
-    public String users(Model model) {
+    public String users(Model model,
+                        @RequestParam(required = false) String search,
+                        @RequestParam(required = false) String role,
+                        @RequestParam(required = false) String status) {
         try {
-            model.addAttribute("users", userService.getAllUsers());
+            boolean hasFilter = (search != null && !search.isBlank())
+                             || (role != null && !role.isBlank())
+                             || (status != null && !status.isBlank());
+            if (hasFilter) {
+                model.addAttribute("users", userService.findWithFilters(search, role, status));
+            } else {
+                model.addAttribute("users", userService.getAllUsers());
+            }
             model.addAttribute("activityStats", metricsService.getActivityStats());
-            // Clients créés par les avocats sans compte utilisateur lié
             model.addAttribute("clientsWithoutAccount", clientRepository.findByClientUserIsNull());
+            // Pour pré-remplir les filtres après soumission
+            model.addAttribute("filterSearch", search != null ? search : "");
+            model.addAttribute("filterRole",   role   != null ? role   : "");
+            model.addAttribute("filterStatus", status != null ? status : "");
             return "admin/users";
         } catch (Exception e) {
-            model.addAttribute("error", "Erreur lors du chargement des utilisateurs");
+            model.addAttribute("error", "Erreur lors du chargement des utilisateurs : " + e.getMessage());
             return "admin/users";
         }
+    }
+
+    /**
+     * Retourne les infos d'un utilisateur en JSON (pour la modale de détail)
+     */
+    @GetMapping("/users/{id}")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> getUserJson(@PathVariable String id) {
+        return userService.getUserById(id).map(u -> {
+            Map<String, Object> data = new LinkedHashMap<>();
+            data.put("id",               u.getId());
+            data.put("firstName",        u.getFirstName());
+            data.put("lastName",         u.getLastName());
+            data.put("email",            u.getEmail());
+            data.put("role",             u.getRole() != null ? u.getRole().name() : "");
+            data.put("roleLabel",        u.getRole() != null ? u.getRole().getDisplayName() : "");
+            data.put("accountEnabled",   u.isAccountEnabled());
+            data.put("subscriptionPlan", u.getSubscriptionPlan() != null ? u.getSubscriptionPlan().name() : "");
+            data.put("subscriptionStatus", u.getSubscriptionStatus() != null ? u.getSubscriptionStatus().name() : "");
+            data.put("maxClients",       u.getMaxClients());
+            data.put("phone",            u.getPhone() != null ? u.getPhone() : "");
+            data.put("barNumber",        u.getBarNumber() != null ? u.getBarNumber() : "");
+            DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+            data.put("createdAt",  u.getCreatedAt()  != null ? u.getCreatedAt().format(fmt)  : "");
+            data.put("updatedAt",  u.getUpdatedAt()  != null ? u.getUpdatedAt().format(fmt)  : "");
+            data.put("accessEndsAt", u.getAccessEndsAt() != null ? u.getAccessEndsAt().format(fmt) : "");
+            return ResponseEntity.ok(data);
+        }).orElse(ResponseEntity.notFound().build());
+    }
+
+    /**
+     * Modifie les infos d'un utilisateur (admin)
+     */
+    @PostMapping("/users/{id}/edit")
+    public String editUser(@PathVariable String id,
+                           @RequestParam String firstName,
+                           @RequestParam String lastName,
+                           @RequestParam String email,
+                           @RequestParam String role,
+                           @RequestParam(defaultValue = "false") boolean accountEnabled,
+                           RedirectAttributes redirectAttributes) {
+        try {
+            User updated = userService.updateUserAdmin(id, firstName, lastName, email, role, accountEnabled);
+            redirectAttributes.addFlashAttribute("success",
+                "Utilisateur " + updated.getFirstName() + " " + updated.getLastName() + " mis à jour");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Erreur modification : " + e.getMessage());
+        }
+        return "redirect:/admin/users";
+    }
+
+    /**
+     * Supprime un utilisateur
+     */
+    @PostMapping("/users/{id}/delete")
+    public String deleteUser(@PathVariable String id, RedirectAttributes redirectAttributes) {
+        try {
+            userService.getUserById(id).ifPresentOrElse(u -> {
+                String name = u.getFirstName() + " " + u.getLastName();
+                userService.deleteUser(id);
+                redirectAttributes.addFlashAttribute("success", "Utilisateur " + name + " supprimé");
+            }, () -> redirectAttributes.addFlashAttribute("error", "Utilisateur introuvable"));
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Erreur suppression : " + e.getMessage());
+        }
+        return "redirect:/admin/users";
+    }
+
+    /**
+     * Bloque ou débloque un utilisateur
+     */
+    @PostMapping("/users/{id}/toggle-block")
+    public String toggleBlock(@PathVariable String id,
+                              @RequestParam boolean block,
+                              RedirectAttributes redirectAttributes) {
+        try {
+            User u = userService.blockUser(id, block);
+            String action = block ? "bloqué" : "débloqué";
+            redirectAttributes.addFlashAttribute("success",
+                "Utilisateur " + u.getFirstName() + " " + u.getLastName() + " " + action + " avec succès");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Erreur : " + e.getMessage());
+        }
+        return "redirect:/admin/users";
     }
 
     /**

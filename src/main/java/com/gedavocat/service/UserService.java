@@ -83,17 +83,57 @@ public class UserService {
     }
 
     /**
-     * Active ou désactive un utilisateur
+     * Active ou bloque un utilisateur (accountEnabled)
      */
     @Transactional
     public User toggleUserStatus(String id, boolean enabled) {
-        Optional<User> userOpt = userRepository.findById(id);
-        if (userOpt.isPresent()) {
-            User user = userOpt.get();
-            // À implémenter : ajouter un champ 'enabled' dans User si nécessaire
-            return userRepository.save(user);
-        }
-        throw new RuntimeException("Utilisateur non trouvé");
+        User user = userRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+        user.setAccountEnabled(enabled);
+        return userRepository.save(user);
+    }
+
+    /**
+     * Bloque ou débloque un utilisateur
+     */
+    @Transactional
+    public User blockUser(String id, boolean block) {
+        User user = userRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé : " + id));
+        user.setAccountEnabled(!block);
+        log.info("Utilisateur {} : accountEnabled={}", id, !block);
+        return userRepository.save(user);
+    }
+
+    /**
+     * Filtre les utilisateurs (admin) par recherche, rôle, statut
+     */
+    @Transactional(readOnly = true)
+    public List<User> findWithFilters(String search, String role, String status) {
+        UserRole userRole = (role != null && !role.isBlank()) ? UserRole.valueOf(role) : null;
+        Boolean accountEnabled = null;
+        if ("active".equals(status))   accountEnabled = true;
+        if ("inactive".equals(status)) accountEnabled = false;
+        String searchParam = (search != null && !search.isBlank()) ? search : null;
+        return userRepository.findWithFilters(searchParam, userRole, accountEnabled);
+    }
+
+    /**
+     * Met à jour les informations d'un utilisateur depuis l'interface admin
+     */
+    @Transactional
+    public User updateUserAdmin(String id, String firstName, String lastName, String email,
+                                String role, boolean accountEnabled) {
+        User user = userRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé : " + id));
+        user.setFirstName(firstName);
+        user.setLastName(lastName);
+        user.setName((firstName + " " + lastName).trim());
+        user.setEmail(email);
+        user.setRole(UserRole.valueOf(role));
+        user.setAccountEnabled(accountEnabled);
+        log.info("Admin mise à jour utilisateur {} : {} {}, rôle={}, enabled={}", id, firstName, lastName, role, accountEnabled);
+        return userRepository.save(user);
     }
 
     /**
