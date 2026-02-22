@@ -138,7 +138,7 @@ public class AdminController {
     /**
      * Retourne les infos d'un utilisateur en JSON (pour la modale de détail)
      */
-    @GetMapping("/users/{id}")
+    @GetMapping(value = "/users/{id}", produces = "application/json")
     @ResponseBody
     public ResponseEntity<Map<String, Object>> getUserJson(@PathVariable String id) {
         return userService.getUserById(id).map(u -> {

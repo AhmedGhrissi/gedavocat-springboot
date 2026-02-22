@@ -364,6 +364,7 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <form id="editUserForm" method="post">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
                     <div class="modal-header">
                         <h5 class="modal-title" id="editUserModalLabel"><i class="fas fa-user-edit"></i> Modifier l'utilisateur</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
@@ -429,7 +430,7 @@
 
     <!-- Formulaire caché pour suppression (POST) -->
     <form id="deleteUserForm" method="post" style="display:none">
-        <input type="hidden" name="_method" value="delete">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
     </form>
 
     <!-- Modal Nouvel utilisateur -->
@@ -564,7 +565,7 @@
                 document.getElementById('editUserSpinner').style.display = 'block';
             }
 
-            fetch('/admin/users/' + userId)
+            fetch('/admin/users/' + userId, { headers: { 'Accept': 'application/json' } })
                 .then(r => r.json())
                 .then(u => {
                     if (mode === 'view') {
