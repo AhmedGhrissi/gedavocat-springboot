@@ -228,6 +228,22 @@
                 return;
             }
 
+            // Validation des items
+            for (let i = 0; i < data.items.length; i++) {
+                if (!data.items[i].description || data.items[i].description.trim() === '') {
+                    alert('Veuillez renseigner la description de la prestation n°' + (i + 1) + '.');
+                    return;
+                }
+                if (isNaN(data.items[i].quantity) || data.items[i].quantity <= 0) {
+                    alert('La quantité de la prestation n°' + (i + 1) + ' doit être supérieure à 0.');
+                    return;
+                }
+                if (isNaN(data.items[i].unitPriceHT) || data.items[i].unitPriceHT < 0) {
+                    alert('Le prix unitaire HT de la prestation n°' + (i + 1) + ' est invalide.');
+                    return;
+                }
+            }
+
             fetch('/api/invoices', {
                 method: 'POST',
                 headers: {
