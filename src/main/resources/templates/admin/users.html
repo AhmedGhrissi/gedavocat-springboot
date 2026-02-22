@@ -531,7 +531,7 @@
         document.querySelectorAll('.btn-view-user').forEach(btn => {
             btn.addEventListener('click', function () {
                 const userId = this.dataset.userId;
-                loadUserData(userId, 'view');
+                adminLoadUser(userId, 'view');
             });
         });
 
@@ -539,7 +539,7 @@
         document.querySelectorAll('.btn-edit-user').forEach(btn => {
             btn.addEventListener('click', function () {
                 const userId = this.dataset.userId;
-                loadUserData(userId, 'edit');
+                adminLoadUser(userId, 'edit');
             });
         });
 
@@ -548,13 +548,13 @@
         document.getElementById('viewToEditBtn').addEventListener('click', function () {
             if (currentUserId) {
                 bootstrap.Modal.getInstance(document.getElementById('viewUserModal')).hide();
-                loadUserData(currentUserId, 'edit');
+                adminLoadUser(currentUserId, 'edit');
                 new bootstrap.Modal(document.getElementById('editUserModal')).show();
             }
         });
 
         /* ===================== Fetch utilisateur ===================== */
-        function loadUserData(userId, mode) {
+        function adminLoadUser(userId, mode) {
             currentUserId = userId;
             if (mode === 'view') {
                 document.getElementById('viewUserContent').style.display = 'none';
