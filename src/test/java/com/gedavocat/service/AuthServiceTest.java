@@ -136,17 +136,19 @@ class AuthServiceTest {
         when(userRepository.existsByEmail("nouveau@gedavocat.com")).thenReturn(false);
         when(passwordEncoder.encode("password123")).thenReturn("$2a$10$hashed");
         when(userRepository.save(any(User.class))).thenReturn(testUser);
-        when(userDetailsService.loadUserByUsername(anyString())).thenReturn(userDetails);
-        when(jwtService.generateToken(userDetails)).thenReturn("jwt.token.nouveau");
 
         // When
         AuthResponse response = authService.register(request);
 
-        // Then
+        // Then — après le fix sécurité, le token n'est PAS émis avant vérification email
         assertThat(response).isNotNull();
-        assertThat(response.getToken()).isNotBlank();
+        assertThat(response.getToken()).isNull();
+        assertThat(response.getMessage()).isEqualTo("Veuillez vérifier votre email avant de vous connecter");
+        assertThat(response.getEmail()).isEqualTo("jean.dupont@gedavocat.com");
         verify(userRepository).save(any(User.class));
         verify(passwordEncoder).encode("password123");
+        // Le JWT ne doit PAS être généré à l'inscription
+        verify(jwtService, never()).generateToken(any());
     }
 
     @Test
