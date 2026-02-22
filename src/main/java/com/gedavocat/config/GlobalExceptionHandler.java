@@ -64,7 +64,10 @@ public class GlobalExceptionHandler {
     private boolean isApiRequest(HttpServletRequest request) {
         String uri = request.getRequestURI();
         String accept = request.getHeader("Accept");
-        return uri.startsWith("/api/") || (accept != null && accept.contains("application/json"));
+        String xRequestedWith = request.getHeader("X-Requested-With");
+        return uri.startsWith("/api/") || uri.contains("/api/")
+                || (accept != null && accept.contains("application/json"))
+                || "XMLHttpRequest".equals(xRequestedWith);
     }
 
     private String getClientIp(HttpServletRequest request) {
