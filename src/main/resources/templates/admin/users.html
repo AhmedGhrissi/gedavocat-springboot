@@ -4,6 +4,8 @@
       layout:decorate="~{layout}">
 <head>
     <link rel="stylesheet" th:href="@{/css/pages/admin.css}">
+    <meta id="_csrf_token"  th:content="${_csrf.token}">
+    <meta id="_csrf_header" th:content="${_csrf.headerName}">
 <title>Administration - Gestion des utilisateurs</title>
 </head>
 <body>
@@ -428,10 +430,7 @@
         </div>
     </div>
 
-    <!-- Formulaire caché pour suppression (POST) -->
-    <form id="deleteUserForm" method="post" style="display:none">
-        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-    </form>
+    <!-- (formulaire caché supprimé — delete via fetch avec X-CSRF-TOKEN) -->
 
     <!-- Modal Nouvel utilisateur -->
     <div class="modal fade" id="newUserModal" tabindex="-1" aria-labelledby="newUserModalLabel" aria-hidden="true">
@@ -565,8 +564,8 @@
                 document.getElementById('editUserSpinner').style.display = 'block';
             }
 
-            fetch('/admin/users/' + userId, { headers: { 'Accept': 'application/json' } })
-                .then(r => r.json())
+            fetch('/admin/users/' + userId, { credentials: 'same-origin', headers: { 'Accept': 'application/json' } })
+                .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
                 .then(u => {
                     if (mode === 'view') {
                         document.getElementById('vu-firstName').textContent        = u.firstName || '-';
@@ -602,7 +601,16 @@
                         document.getElementById('editUserContent').style.display  = 'block';
                     }
                 })
-                .catch(() => alert('Erreur lors du chargement des données utilisateur'));
+                .catch(err => {
+                    alert('Erreur lors du chargement : ' + err.message);
+                    if (mode === 'view') {
+                        document.getElementById('viewUserSpinner').innerHTML =
+                            '<div class="alert alert-danger">Erreur de chargement</div>';
+                    } else {
+                        document.getElementById('editUserSpinner').innerHTML =
+                            '<div class="alert alert-danger">Erreur de chargement</div>';
+                    }
+                });
         }
 
         /* Mise à jour de l'avertissement de blocage en temps réel */
@@ -629,9 +637,21 @@
 
         function confirmDelete(userId, userName) {
             if (confirm('Supprimer définitivement l\'utilisateur ' + userName + ' ?\n⚠️ Cette action est irréversible.')) {
-                const form = document.getElementById('deleteUserForm');
-                form.action = '/admin/users/' + userId + '/delete';
-                form.submit();
+                const csrfToken  = document.getElementById('_csrf_token').content;
+                const csrfHeader = document.getElementById('_csrf_header').content;
+                fetch('/admin/users/' + userId + '/delete', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: { [csrfHeader]: csrfToken }
+                })
+                .then(r => {
+                    if (r.ok || r.redirected) {
+                        window.location = '/admin/users';
+                    } else {
+                        alert('Erreur suppression : HTTP ' + r.status);
+                    }
+                })
+                .catch(err => alert('Erreur réseau : ' + err.message));
             }
         }
     </script>
