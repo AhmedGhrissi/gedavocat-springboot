@@ -135,6 +135,15 @@ public class InvoiceWebController {
             Client client = clientRepository.findById(clientId)
                 .orElseThrow(() -> new RuntimeException("Client introuvable"));
 
+            // Ownership check: verify the client belongs to the authenticated lawyer
+            User user = getCurrentUser(authentication);
+            boolean isAdmin = authentication.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+            if (!isAdmin && (client.getLawyer() == null || !client.getLawyer().getId().equals(user.getId()))) {
+                redirectAttributes.addFlashAttribute("importError", "Accès non autorisé à ce client.");
+                return "redirect:/invoices";
+            }
+
             // Vérifier unicité du numéro de facture
             if (invoiceRepository.existsByInvoiceNumber(invoiceNumber)) {
                 redirectAttributes.addFlashAttribute("importError", "Le numéro de facture " + invoiceNumber + " existe déjà.");
@@ -198,9 +207,33 @@ public class InvoiceWebController {
      */
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('LAWYER', 'CLIENT')")
-    public String show(@PathVariable String id, Model model) {
+    public String show(@PathVariable String id, Model model, Authentication authentication) {
         try {
+            User user = getCurrentUser(authentication);
             var invoice = invoiceService.getInvoiceById(id);
+
+            // Ownership check: lawyer must own the invoice, client must be the invoice's client
+            boolean isAdmin = authentication.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+            boolean isClient = authentication.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_CLIENT"));
+
+            if (!isAdmin) {
+                if (isClient) {
+                    var clientOpt = clientService.findByClientUser(user.getId());
+                    if (clientOpt.isEmpty() || !clientOpt.get().getId().equals(invoice.getClientId())) {
+                        model.addAttribute("error", "Accès non autorisé");
+                        return "redirect:/invoices";
+                    }
+                } else {
+                    // Lawyer: verify ownership via lawyerId
+                    if (invoice.getLawyerId() == null || !invoice.getLawyerId().equals(user.getId())) {
+                        model.addAttribute("error", "Accès non autorisé");
+                        return "redirect:/invoices";
+                    }
+                }
+            }
+
             model.addAttribute("invoice", invoice);
             return "invoices/show";
         } catch (Exception e) {
@@ -218,6 +251,15 @@ public class InvoiceWebController {
         try {
             String lawyerId = getCurrentUser(authentication).getId();
             var invoice = invoiceService.getInvoiceById(id);
+
+            // Ownership check: only the owning lawyer (or admin) can edit
+            boolean isAdmin = authentication.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+            if (!isAdmin && (invoice.getLawyerId() == null || !invoice.getLawyerId().equals(lawyerId))) {
+                model.addAttribute("error", "Accès non autorisé");
+                return "redirect:/invoices";
+            }
+
             var clients = getClientsForUser(authentication, lawyerId);
             model.addAttribute("invoice", invoice);
             model.addAttribute("clients", clients);

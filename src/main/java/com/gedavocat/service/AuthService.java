@@ -61,12 +61,8 @@ public class AuthService {
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         
-        // Définir le rôle (par défaut LAWYER si non spécifié)
-        String role = request.getRole();
-        if (role == null || role.trim().isEmpty()) {
-            role = "LAWYER";
-        }
-        user.setRole(User.UserRole.valueOf(role));
+        // SÉCURITÉ : forcer le rôle LAWYER — interdire l'escalade de privilèges
+        user.setRole(User.UserRole.LAWYER);
         
         user.setTermsAcceptedAt(LocalDateTime.now());
         user.setGdprConsentAt(LocalDateTime.now());
@@ -74,16 +70,15 @@ public class AuthService {
         
         user = userRepository.save(user);
         
-        // Générer le token JWT
-        UserDetails userDetails = userDetailsService.loadUserByUsername(user.getEmail());
-        String token = jwtService.generateToken(userDetails);
-        
+        // SÉCURITÉ : ne PAS générer de JWT avant la vérification email
+        // L'utilisateur doit d'abord vérifier son email via /verify-email
         return AuthResponse.builder()
-                .token(token)
+                .token(null)
                 .userId(user.getId())
                 .email(user.getEmail())
                 .name(user.getName())
                 .role(user.getRole().name())
+                .message("Veuillez vérifier votre email avant de vous connecter")
                 .build();
     }
     

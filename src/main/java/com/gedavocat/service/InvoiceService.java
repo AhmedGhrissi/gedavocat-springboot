@@ -206,6 +206,10 @@ public class InvoiceService {
         response.setClientId(invoice.getClient().getId());
         response.setClientName(invoice.getClient().getName());
         response.setClientEmail(invoice.getClient().getEmail());
+        // SÉCURITÉ : exposer le lawyerId via le client propriétaire
+        if (invoice.getClient().getLawyer() != null) {
+            response.setLawyerId(invoice.getClient().getLawyer().getId());
+        }
         response.setInvoiceDate(invoice.getInvoiceDate());
         response.setDueDate(invoice.getDueDate());
         response.setPaidDate(invoice.getPaidDate());
