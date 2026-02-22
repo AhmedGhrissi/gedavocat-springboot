@@ -300,7 +300,7 @@ public class ClientPortalController {
             return ResponseEntity.ok()
                     .contentType(MediaType.parseMediaType(document.getMimetype()))
                     .header(HttpHeaders.CONTENT_DISPOSITION,
-                            "attachment; filename=\"" + document.getOriginalName() + "\"")
+                            "attachment; filename=\"" + sanitizeFilename(document.getOriginalName()) + "\"")
                     .body(new ByteArrayResource(fileBytes));
 
         } catch (Exception e) {
@@ -312,6 +312,21 @@ public class ClientPortalController {
         String email = authentication.getName();
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+    }
+
+    /**
+     * Nettoie un nom de fichier pour éviter l'injection dans les en-têtes HTTP
+     * et les attaques Zip Slip (traversal de répertoire).
+     */
+    private String sanitizeFilename(String filename) {
+        if (filename == null || filename.isEmpty()) return "document";
+        // Supprimer tout chemin de répertoire (Zip Slip prevention)
+        String sanitized = filename.replace("\\", "/");
+        int lastSlash = sanitized.lastIndexOf('/');
+        if (lastSlash >= 0) sanitized = sanitized.substring(lastSlash + 1);
+        // Supprimer caractères dangereux pour les en-têtes HTTP
+        sanitized = sanitized.replaceAll("[\\r\\n\"]", "_");
+        return sanitized.isEmpty() ? "document" : sanitized;
     }
 
     // =========================================================================
@@ -354,7 +369,7 @@ public class ClientPortalController {
                             if (watermarked != null) fileBytes = watermarked;
                         }
 
-                        ZipEntry entry = new ZipEntry(doc.getOriginalName());
+                        ZipEntry entry = new ZipEntry(sanitizeFilename(doc.getOriginalName()));
                         zos.putNextEntry(entry);
                         zos.write(fileBytes);
                         zos.closeEntry();

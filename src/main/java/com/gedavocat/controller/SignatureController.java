@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
@@ -28,6 +29,7 @@ import java.util.Map;
 @Controller
 @RequestMapping("/signatures")
 @RequiredArgsConstructor
+@PreAuthorize("hasAnyRole('LAWYER', 'ADMIN')")
 public class SignatureController {
 
     private final YousignService yousignService;
@@ -81,8 +83,8 @@ public class SignatureController {
 
         model.addAttribute("user", user);
 
-        // Tous les documents disponibles
-        List<Document> allDocuments = documentRepository.findAll();
+        // Documents de l'avocat connecté uniquement (sécurité)
+        List<Document> allDocuments = documentRepository.findByLawyerId(user.getId());
         model.addAttribute("documents", allDocuments);
 
         // Si un document est spécifié, le pré-remplir
@@ -171,6 +173,12 @@ public class SignatureController {
             Signature signature = signatureRepository.findById(signatureId)
                     .orElseThrow(() -> new RuntimeException("Signature introuvable"));
 
+            // Vérifier que la signature appartient à l'utilisateur
+            if (!signature.getRequestedBy().getId().equals(user.getId())) {
+                redirectAttributes.addFlashAttribute("error", "Accès non autorisé à cette signature.");
+                return "redirect:/signatures";
+            }
+
             model.addAttribute("user", user);
             model.addAttribute("signature", signature);
 
@@ -188,17 +196,25 @@ public class SignatureController {
     @GetMapping("/{signatureId}/download")
     public ResponseEntity<byte[]> downloadSignedDocument(
             @PathVariable String signatureId,
-            RedirectAttributes redirectAttributes
+            @AuthenticationPrincipal UserDetails userDetails
     ) {
         try {
+            // Vérifier la propriété
+            User user = userRepository.findByEmail(userDetails.getUsername())
+                    .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+            Signature sig = signatureRepository.findById(signatureId).orElse(null);
+            if (sig != null && !sig.getRequestedBy().getId().equals(user.getId())) {
+                return ResponseEntity.status(403).build();
+            }
+
             byte[] signedDocument = yousignService.downloadSignedDocument(signatureId);
 
             // Mettre à jour le statut en base si besoin
-            signatureRepository.findByYousignSignatureRequestId(signatureId).ifPresent(sig -> {
-                if (sig.getStatus() != Signature.SignatureStatus.SIGNED) {
-                    sig.setStatus(Signature.SignatureStatus.SIGNED);
-                    sig.setSignedAt(java.time.LocalDateTime.now());
-                    signatureRepository.save(sig);
+            signatureRepository.findByYousignSignatureRequestId(signatureId).ifPresent(s -> {
+                if (s.getStatus() != Signature.SignatureStatus.SIGNED) {
+                    s.setStatus(Signature.SignatureStatus.SIGNED);
+                    s.setSignedAt(java.time.LocalDateTime.now());
+                    signatureRepository.save(s);
                 }
             });
 
@@ -224,9 +240,17 @@ public class SignatureController {
     @PostMapping("/{signatureId}/cancel")
     public String cancelSignature(
             @PathVariable String signatureId,
+            @AuthenticationPrincipal UserDetails userDetails,
             RedirectAttributes redirectAttributes
     ) {
         try {
+            User user = userRepository.findByEmail(userDetails.getUsername())
+                    .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+            Signature sig = signatureRepository.findById(signatureId).orElse(null);
+            if (sig != null && !sig.getRequestedBy().getId().equals(user.getId())) {
+                redirectAttributes.addFlashAttribute("error", "Accès non autorisé.");
+                return "redirect:/signatures";
+            }
             yousignService.cancelSignatureRequest(signatureId);
 
             redirectAttributes.addFlashAttribute("message", "Demande de signature annulée");

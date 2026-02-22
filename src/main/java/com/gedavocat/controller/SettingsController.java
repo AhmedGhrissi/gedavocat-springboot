@@ -5,6 +5,7 @@ import com.gedavocat.repository.UserRepository;
 import com.gedavocat.service.SettingsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
@@ -14,6 +15,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Map;
+import java.util.regex.Pattern;
 
 /**
  * Contrôleur de gestion des paramètres
@@ -21,6 +23,7 @@ import java.util.Map;
 @Controller
 @RequestMapping("/settings")
 @RequiredArgsConstructor
+@PreAuthorize("hasAnyRole('LAWYER', 'ADMIN')")
 public class SettingsController {
 
     private final UserRepository userRepository;
@@ -37,7 +40,15 @@ public class SettingsController {
         User user = getCurrentUser(authentication);
         
         model.addAttribute("user", user);
-        model.addAttribute("yousignApiKey", settingsService.getYousignApiKey(user.getId()));
+        // Masquer la clé API dans la vue
+        String apiKey = settingsService.getYousignApiKey(user.getId());
+        String maskedKey = "";
+        if (apiKey != null && !apiKey.isEmpty()) {
+            maskedKey = apiKey.length() > 4
+                ? "••••" + apiKey.substring(apiKey.length() - 4)
+                : "••••";
+        }
+        model.addAttribute("yousignApiKey", maskedKey);
         model.addAttribute("yousignConfigured", settingsService.isYousignConfigured(user.getId()));
         
         return "settings/index";
@@ -129,13 +140,19 @@ public class SettingsController {
             Authentication authentication,
             RedirectAttributes redirectAttributes
     ) {
+        // B23 FIX : Validation des entrées
+        String validationError = validateProfileFields(firstName, lastName, phone, barNumber);
+        if (validationError != null) {
+            redirectAttributes.addFlashAttribute("error", validationError);
+            return "redirect:/settings";
+        }
         try {
             User user = getCurrentUser(authentication);
-            user.setFirstName(firstName);
-            user.setLastName(lastName);
-            user.setPhone(phone);
-            user.setBarNumber(barNumber);
-            user.setName(firstName + " " + lastName);
+            user.setFirstName(firstName.trim());
+            user.setLastName(lastName.trim());
+            user.setPhone(phone != null ? phone.trim() : null);
+            user.setBarNumber(barNumber != null ? barNumber.trim() : null);
+            user.setName(firstName.trim() + " " + lastName.trim());
             userRepository.save(user);
             redirectAttributes.addFlashAttribute("message", "Profil mis à jour avec succès");
         } catch (Exception e) {
@@ -154,15 +171,18 @@ public class SettingsController {
             @RequestParam(value = "barNumber", required = false) String barNumber,
             Authentication authentication
     ) {
+        // B23 FIX : Validation des entrées (AJAX)
+        String validationError = validateProfileFields(firstName, lastName, phone, barNumber);
+        if (validationError != null) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", validationError));
+        }
         try {
             User user = getCurrentUser(authentication);
-            user.setFirstName(firstName);
-            user.setLastName(lastName);
-            user.setPhone(phone);
-            user.setBarNumber(barNumber);
-            
-            // Mettre à jour le nom complet pour compatibilité
-            user.setName(firstName + " " + lastName);
+            user.setFirstName(firstName.trim());
+            user.setLastName(lastName.trim());
+            user.setPhone(phone != null ? phone.trim() : null);
+            user.setBarNumber(barNumber != null ? barNumber.trim() : null);
+            user.setName(firstName.trim() + " " + lastName.trim());
             
             userRepository.save(user);
             
@@ -232,7 +252,14 @@ public class SettingsController {
             userData.put("maxClients", user.getMaxClients());
             userData.put("yousignConfigured", settingsService.isYousignConfigured(user.getId()));
             String apiKey = settingsService.getYousignApiKey(user.getId());
-            userData.put("yousignApiKey", apiKey != null ? apiKey : "");
+            // Masquer la clé API — n'envoyer que les 4 derniers caractères
+            String maskedKey = "";
+            if (apiKey != null && !apiKey.isEmpty()) {
+                maskedKey = apiKey.length() > 4
+                    ? "••••" + apiKey.substring(apiKey.length() - 4)
+                    : "••••";
+            }
+            userData.put("yousignApiKey", maskedKey);
             return ResponseEntity.ok(userData);
         } catch (Exception e) {
             Map<String, Object> errMap = new java.util.LinkedHashMap<>();
@@ -284,5 +311,32 @@ public class SettingsController {
         String email = authentication.getName();
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+    }
+
+    // B23 FIX : Validation des champs profil
+    private static final Pattern NAME_PATTERN = Pattern.compile("^[\\p{L}\\s'-]{1,100}$");
+    private static final Pattern PHONE_PATTERN = Pattern.compile("^[+]?[0-9\\s.-]{0,20}$");
+    private static final Pattern BAR_PATTERN = Pattern.compile("^[A-Za-z0-9\\s-]{0,50}$");
+
+    private String validateProfileFields(String firstName, String lastName, String phone, String barNumber) {
+        if (firstName == null || firstName.isBlank() || firstName.length() > 100) {
+            return "Le prénom est obligatoire (max 100 caractères).";
+        }
+        if (!NAME_PATTERN.matcher(firstName.trim()).matches()) {
+            return "Le prénom contient des caractères invalides.";
+        }
+        if (lastName == null || lastName.isBlank() || lastName.length() > 100) {
+            return "Le nom est obligatoire (max 100 caractères).";
+        }
+        if (!NAME_PATTERN.matcher(lastName.trim()).matches()) {
+            return "Le nom contient des caractères invalides.";
+        }
+        if (phone != null && !phone.isBlank() && !PHONE_PATTERN.matcher(phone.trim()).matches()) {
+            return "Numéro de téléphone invalide.";
+        }
+        if (barNumber != null && !barNumber.isBlank() && !BAR_PATTERN.matcher(barNumber.trim()).matches()) {
+            return "Numéro de barreau invalide.";
+        }
+        return null; // OK
     }
 }

@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
 @Controller
 @RequestMapping("/documents")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('LAWYER', 'ADMIN', 'LAWYER_SECONDARY', 'CLIENT')")
+@PreAuthorize("hasAnyRole('LAWYER', 'ADMIN', 'LAWYER_SECONDARY')")
 public class DocumentController {
 
     private final DocumentService documentService;
@@ -98,8 +98,17 @@ public class DocumentController {
     @GetMapping("/case/{caseId}/trash")
     public String viewTrash(
             @PathVariable String caseId,
-            Model model
+            Model model,
+            Authentication authentication
     ) {
+        // Vérification ownership : le dossier doit appartenir à l'avocat connecté
+        User user = getCurrentUser(authentication);
+        Case caseEntity = caseService.getCaseById(caseId);
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        if (!isAdmin && !caseEntity.getLawyer().getId().equals(user.getId())) {
+            throw new org.springframework.security.access.AccessDeniedException("Accès non autorisé");
+        }
         model.addAttribute("documents", documentService.getDeletedDocuments(caseId));
         model.addAttribute("caseId", caseId);
         return "documents/trash";
@@ -122,6 +131,14 @@ public class DocumentController {
 
         try {
             User user = getCurrentUser(authentication);
+            // Vérification : le dossier doit appartenir à l'avocat connecté
+            Case caseEntity = caseService.getCaseById(caseId);
+            boolean isAdmin = authentication.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+            if (!isAdmin && !caseEntity.getLawyer().getId().equals(user.getId())) {
+                redirectAttributes.addFlashAttribute("error", "Accès non autorisé à ce dossier");
+                return "redirect:/documents";
+            }
             documentService.uploadDocument(caseId, file, user.getId(), user.getRole().name());
             redirectAttributes.addFlashAttribute("message", "Document uploadé avec succès");
         } catch (Exception e) {
@@ -266,7 +283,7 @@ public class DocumentController {
             return "redirect:/cases/" + caseId;
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
-            return "redirect:/documents/case/" + id + "/trash";
+            return "redirect:/documents";
         }
     }
 

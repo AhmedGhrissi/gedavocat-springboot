@@ -93,6 +93,11 @@ application-o2switch.properties
 
 # Docker production artifacts (contiennent les credentials)
 Dockerfile.prod
+Dockerfile.hotfix
+
+# Rapports d'audit (documents internes)
+QA-AUDIT-REPORT.md
+SECURITY-AUDIT-REPORT.md
 
 # Application properties (contains sensitive data)
 # Uncomment if you want to exclude it
@@ -107,3 +112,12 @@ node_modules/
 npm-debug.log
 yarn-error.log
 grafana.bat
+
+# Playwright / Tests artifacts
+tests/
+tests/node_modules/
+tests/test-results/
+tests/playwright-report/
+test-results/
+playwright-report/
+playwright/.cache/

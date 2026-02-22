@@ -190,7 +190,7 @@
                     <li class="disabled"><i class="fas fa-times"></i> Partage collaborateur</li>
                     <li class="disabled"><i class="fas fa-times"></i> RPVA e-Barreau</li>
                 </ul>
-                <a href="/register?plan=SOLO&billing=monthly" class="btn btn-outline btn-lg btn-subscribe" data-plan="SOLO">Commencer maintenant</a>
+                <a th:href="@{/register(plan=SOLO,billing=monthly)}" class="btn btn-outline btn-lg btn-subscribe" data-plan="SOLO">Commencer maintenant</a>
             </div>
             <div class="pricing-card popular">
                 <div class="popular-badge">LE PLUS POPULAIRE</div>
@@ -209,7 +209,7 @@
                     <li><i class="fas fa-check"></i> Partage collaborateur</li>
                     <li><i class="fas fa-check"></i> RPVA e-Barreau</li>
                 </ul>
-                <a href="/register?plan=CABINET&billing=monthly" class="btn btn-primary btn-lg btn-subscribe" data-plan="CABINET">Commencer maintenant</a>
+                <a th:href="@{/register(plan=CABINET,billing=monthly)}" class="btn btn-primary btn-lg btn-subscribe" data-plan="CABINET">Commencer maintenant</a>
             </div>
             <div class="pricing-card">
                 <div class="plan-name">Entreprise</div>
@@ -227,7 +227,7 @@
                     <li><i class="fas fa-check"></i> Partage collaborateur</li>
                     <li><i class="fas fa-check"></i> RPVA e-Barreau</li>
                 </ul>
-                <a href="/register?plan=ENTERPRISE&billing=monthly" class="btn btn-outline btn-lg btn-subscribe" data-plan="ENTERPRISE">Commencer maintenant</a>
+                <a th:href="@{/register(plan=ENTERPRISE,billing=monthly)}" class="btn btn-outline btn-lg btn-subscribe" data-plan="ENTERPRISE">Commencer maintenant</a>
             </div>
         </div>
     </div>

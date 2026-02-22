@@ -10,6 +10,10 @@ import com.gedavocat.service.EmailVerificationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.Map;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
@@ -87,7 +91,7 @@ public class AuthController {
             emailVerificationService.generateAndSend(email);
             redirectAttributes.addFlashAttribute("info",
                 "Un code de vérification à 6 chiffres a été envoyé à " + email + ". Veuillez le saisir ci-dessous.");
-            return "redirect:/verify-email?email=" + email;
+            return "redirect:/verify-email?email=" + URLEncoder.encode(email, StandardCharsets.UTF_8);
         } catch (Exception e) {
             model.addAttribute("error", e.getMessage());
             model.addAttribute("selectedPlan", request.getSubscriptionPlan());
@@ -146,7 +150,7 @@ public class AuthController {
             }
         });
         ra.addFlashAttribute("info", "Un nouveau code a été envoyé à " + emailLower + " (si le compte existe).");
-        return "redirect:/verify-email?email=" + emailLower;
+        return "redirect:/verify-email?email=" + URLEncoder.encode(emailLower, StandardCharsets.UTF_8);
     }
 
     // ----------------------------------------------------------------
@@ -158,9 +162,16 @@ public class AuthController {
      */
     @PostMapping("/api/auth/login")
     @ResponseBody
-    public ResponseEntity<AuthResponse> login(@Valid @RequestBody AuthRequest request) {
-        AuthResponse response = authService.authenticate(request);
-        return ResponseEntity.ok(response);
+    public ResponseEntity<?> login(@Valid @RequestBody AuthRequest request) {
+        try {
+            AuthResponse response = authService.authenticate(request);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "error", true,
+                "message", "Identifiants incorrects"
+            ));
+        }
     }
 
     /**
@@ -168,9 +179,16 @@ public class AuthController {
      */
     @PostMapping("/api/auth/register")
     @ResponseBody
-    public ResponseEntity<AuthResponse> registerApi(@Valid @RequestBody RegisterRequest request) {
-        AuthResponse response = authService.register(request);
-        return ResponseEntity.ok(response);
+    public ResponseEntity<?> registerApi(@Valid @RequestBody RegisterRequest request) {
+        try {
+            AuthResponse response = authService.register(request);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "error", true,
+                "message", e.getMessage() != null ? e.getMessage() : "Erreur lors de l'inscription"
+            ));
+        }
     }
 
     /**
@@ -178,8 +196,11 @@ public class AuthController {
      */
     @PostMapping("/api/auth/refresh")
     @ResponseBody
-    public ResponseEntity<AuthResponse> refreshToken(@RequestHeader("Authorization") String token) {
-        String jwt = token.substring(7); // Enlever "Bearer "
+    public ResponseEntity<AuthResponse> refreshToken(@RequestHeader(value = "Authorization", required = false) String token) {
+        if (token == null || !token.startsWith("Bearer ")) {
+            return ResponseEntity.badRequest().build();
+        }
+        String jwt = token.substring(7);
         AuthResponse response = authService.refreshToken(jwt);
         return ResponseEntity.ok(response);
     }

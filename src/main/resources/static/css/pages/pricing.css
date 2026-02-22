@@ -72,7 +72,7 @@
 .price {
     font-size: 48px; font-weight: 800;
     background: linear-gradient(135deg, #667eea, #764ba2);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
     display: inline-block;
 }
 .price-period { color: #64748b; font-size: 16px; font-weight: 500; }

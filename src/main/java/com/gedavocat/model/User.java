@@ -87,6 +87,10 @@ public class User {
     @Column(name = "subscription_ends_at")
     private LocalDateTime subscriptionEndsAt;
 
+    // ✅ Identifiant client Stripe (pour relier les webhooks au bon utilisateur)
+    @Column(name = "stripe_customer_id", length = 100)
+    private String stripeCustomerId;
+
     // ✅ ALIAS pour compatibilité avec templates
     @Transient
     public LocalDateTime getSubscriptionEndDate() {

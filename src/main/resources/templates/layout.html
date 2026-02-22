@@ -24,6 +24,9 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
+    <!-- T6 FIX : Fragment pour CSS additionnel des pages enfants -->
+    <th:block layout:fragment="extra-css"></th:block>
+
     <style>
         :root {
             --sidebar-width: 260px;
@@ -636,31 +639,31 @@
             <div class="subtitle">Gestion documentaire</div>
         </div>
 
-        <nav class="sidebar-nav">
+        <nav class="sidebar-nav" role="navigation" aria-label="Menu principal">
             <div class="nav-section-title">Navigation</div>
 
             <div sec:authorize="hasRole('ADMIN')">
-                <a href="/admin" class="nav-link">
+                <a th:href="@{/admin}" class="nav-link">
                     <i class="fas fa-shield-alt"></i>
                     <span>Administration</span>
                 </a>
-                <a href="/admin/system" class="nav-link">
+                <a th:href="@{/admin/system}" class="nav-link">
                     <i class="fas fa-server"></i>
                     <span>Système</span>
                 </a>
-                <a href="/admin/database" class="nav-link">
+                <a th:href="@{/admin/database}" class="nav-link">
                     <i class="fas fa-database"></i>
                     <span>Base de données</span>
                 </a>
-                <a href="/admin/logs" class="nav-link">
+                <a th:href="@{/admin/logs}" class="nav-link">
                     <i class="fas fa-file-alt"></i>
                     <span>Logs</span>
                 </a>
-                <a href="/admin/users" class="nav-link">
+                <a th:href="@{/admin/users}" class="nav-link">
                     <i class="fas fa-users-cog"></i>
                     <span>Utilisateurs</span>
                 </a>
-                <a href="/admin/settings" class="nav-link">
+                <a th:href="@{/admin/settings}" class="nav-link">
                     <i class="fas fa-cogs"></i>
                     <span>Paramètres</span>
                 </a>
@@ -668,31 +671,31 @@
 
             <!-- Avocat principal : accès complet -->
             <div sec:authorize="hasRole('LAWYER')">
-                <a href="/dashboard" class="nav-link">
+                <a th:href="@{/dashboard}" class="nav-link">
                     <i class="fas fa-home"></i>
                     <span>Tableau de bord</span>
                 </a>
-                <a href="/cases" class="nav-link">
+                <a th:href="@{/cases}" class="nav-link">
                     <i class="fas fa-folder"></i>
                     <span>Dossiers</span>
                 </a>
-                <a href="/clients" class="nav-link">
+                <a th:href="@{/clients}" class="nav-link">
                     <i class="fas fa-users"></i>
                     <span>Clients</span>
                 </a>
-                <a href="/invoices" class="nav-link">
+                <a th:href="@{/invoices}" class="nav-link">
                     <i class="fas fa-file-invoice-dollar"></i>
                     <span>Facturation</span>
                 </a>
-                <a href="/appointments" class="nav-link">
+                <a th:href="@{/appointments}" class="nav-link">
                     <i class="fas fa-calendar-alt"></i>
                     <span>Calendrier</span>
                 </a>
-                <a href="/signatures" class="nav-link">
+                <a th:href="@{/signatures}" class="nav-link">
                     <i class="fas fa-signature"></i>
                     <span>Signatures</span>
                 </a>
-                <a href="/rpva" class="nav-link">
+                <a th:href="@{/rpva}" class="nav-link">
                     <i class="fas fa-envelope"></i>
                     <span>RPVA</span>
                 </a>
@@ -700,11 +703,11 @@
 
             <!-- Collaborateur : accès restreint (dashboard + dossiers partagés) -->
             <div sec:authorize="hasRole('LAWYER_SECONDARY')">
-                <a href="/dashboard" class="nav-link">
+                <a th:href="@{/dashboard}" class="nav-link">
                     <i class="fas fa-home"></i>
                     <span>Tableau de bord</span>
                 </a>
-                <a href="/cases" class="nav-link">
+                <a th:href="@{/cases}" class="nav-link">
                     <i class="fas fa-folder"></i>
                     <span>Dossiers partagés</span>
                 </a>
@@ -712,27 +715,27 @@
 
             <!-- Client : portail client -->
             <div sec:authorize="hasRole('CLIENT')">
-                <a href="/my-cases" class="nav-link">
+                <a th:href="@{/my-cases}" class="nav-link">
                     <i class="fas fa-home"></i>
                     <span>Tableau de bord</span>
                 </a>
-                <a href="/my-cases" class="nav-link" data-nav="dossiers">
+                <a th:href="@{/my-cases}" class="nav-link" data-nav="dossiers">
                     <i class="fas fa-folder"></i>
                     <span>Mes dossiers</span>
                 </a>
-                <a href="/my-appointments" class="nav-link">
+                <a th:href="@{/my-appointments}" class="nav-link">
                     <i class="fas fa-calendar-alt"></i>
                     <span>Rendez-vous</span>
                 </a>
-                <a href="/my-signatures" class="nav-link">
+                <a th:href="@{/my-signatures}" class="nav-link">
                     <i class="fas fa-signature"></i>
                     <span>Signatures</span>
                 </a>
-                <a href="/my-cases/profile" class="nav-link">
+                <a th:href="@{/my-cases/profile}" class="nav-link">
                     <i class="fas fa-user-edit"></i>
                     <span>Mon profil</span>
                 </a>
-                <a href="/invoices/my-invoices" class="nav-link">
+                <a th:href="@{/invoices/my-invoices}" class="nav-link">
                     <i class="fas fa-file-invoice"></i>
                     <span>Mes factures</span>
                 </a>
@@ -744,7 +747,7 @@
                 <i class="fas fa-file-contract"></i>
                 <span>CGU</span>
             </a>
-            <a href="/legal/privacy" class="nav-link">
+            <a th:href="@{/legal/privacy}" class="nav-link">
                 <i class="fas fa-shield-alt"></i>
                 <span>Confidentialité & RGPD</span>
             </a>
@@ -1006,6 +1009,10 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/js/scanner.js" defer></script>
     <script>
+        // CSRF tokens pour les requêtes AJAX
+        const _csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
+        const _csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content;
+
         function testYousignModal() {
             const apiKey = document.getElementById('modalApiKey').value;
             if (!apiKey) {
@@ -1022,6 +1029,7 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
+                    [_csrfHeader]: _csrfToken
                 },
                 credentials: 'same-origin'
             })
@@ -1055,6 +1063,7 @@
             fetch('/settings/profile', {
                 method: 'POST',
                 body: formData,
+                headers: { 'Accept': 'application/json', [_csrfHeader]: _csrfToken },
                 credentials: 'same-origin'
             })
             .then(response => response.json())
@@ -1076,6 +1085,7 @@
             fetch('/settings/yousign', {
                 method: 'POST',
                 body: formData,
+                headers: { 'Accept': 'application/json', [_csrfHeader]: _csrfToken },
                 credentials: 'same-origin'
             })
             .then(response => response.json())
@@ -1148,14 +1158,24 @@
             const existingAlerts = document.querySelectorAll('.modal .alert');
             existingAlerts.forEach(alert => alert.remove());
             
-            // Créer une nouvelle alerte
+            // Créer une nouvelle alerte (textContent pour prévenir XSS)
             const alertDiv = document.createElement('div');
             alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
-            alertDiv.innerHTML = `
-                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'danger' ? 'exclamation-circle' : 'info-circle'}"></i>
-                ${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            `;
+            
+            const icon = document.createElement('i');
+            icon.className = `fas fa-${type === 'success' ? 'check-circle' : type === 'danger' ? 'exclamation-circle' : 'info-circle'}`;
+            alertDiv.appendChild(icon);
+            alertDiv.appendChild(document.createTextNode(' '));
+            
+            const msgSpan = document.createElement('span');
+            msgSpan.textContent = message;
+            alertDiv.appendChild(msgSpan);
+            
+            const closeBtn = document.createElement('button');
+            closeBtn.type = 'button';
+            closeBtn.className = 'btn-close';
+            closeBtn.setAttribute('data-bs-dismiss', 'alert');
+            alertDiv.appendChild(closeBtn);
             
             // Insérer l'alerte au début du modal-body
             const modalBody = document.querySelector('#settingsModal .modal-body');
@@ -1168,6 +1188,16 @@
                 }, 5000);
             }
         }
+
+        // T25 FIX: Auto-close alerts after 5 seconds
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.alert.alert-dismissible').forEach(function(alert) {
+                setTimeout(function() {
+                    var bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
+                    if (bsAlert) bsAlert.close();
+                }, 5000);
+            });
+        });
 
         // Active state avec JavaScript (évite les problèmes Thymeleaf)
         document.addEventListener('DOMContentLoaded', function() {
@@ -1322,6 +1352,34 @@
                 });
             }
         });
+    </script>
+
+    <!-- RGPD Cookie Consent Banner -->
+    <div id="cookieConsentBanner" style="display:none; position:fixed; bottom:0; left:0; right:0; z-index:9999; background:#1a1a2e; color:#fff; padding:16px 24px; box-shadow:0 -2px 10px rgba(0,0,0,0.3); font-size:14px;">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+            <div class="flex-grow-1" style="max-width:700px;">
+                <strong>🍪 Cookies & Confidentialité</strong>
+                <p class="mb-0 mt-1" style="font-size:13px;">Ce site utilise uniquement des cookies essentiels au fonctionnement du service (session, sécurité CSRF). Aucun cookie publicitaire ou de traçage n'est utilisé.
+                    <a th:href="@{/legal/privacy}" style="color:#667eea;">Politique de confidentialité</a>
+                </p>
+            </div>
+            <div class="d-flex gap-2">
+                <button onclick="acceptCookies()" class="btn btn-sm btn-primary" style="background:#667eea; border:none;">Accepter</button>
+                <button onclick="acceptCookies()" class="btn btn-sm btn-outline-light">Fermer</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        (function() {
+            if (!localStorage.getItem('cookieConsent')) {
+                document.getElementById('cookieConsentBanner').style.display = 'block';
+            }
+        })();
+        function acceptCookies() {
+            localStorage.setItem('cookieConsent', 'accepted');
+            localStorage.setItem('cookieConsentDate', new Date().toISOString());
+            document.getElementById('cookieConsentBanner').style.display = 'none';
+        }
     </script>
 </body>
 </html>
