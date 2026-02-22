@@ -4,9 +4,11 @@ import com.gedavocat.model.AuditLog;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -58,6 +60,8 @@ public interface AuditLogRepository extends JpaRepository<AuditLog, String> {
            "ORDER BY a.createdAt DESC")
     Page<AuditLog> searchAuditLogs(@Param("search") String search, Pageable pageable);
 
+    @Modifying
+    @Transactional
     void deleteByCreatedAtBefore(LocalDateTime date);
 
     long countByCreatedAtBefore(LocalDateTime date);
