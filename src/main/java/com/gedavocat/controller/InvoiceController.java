@@ -7,6 +7,7 @@ import com.gedavocat.repository.UserRepository;
 import com.gedavocat.service.InvoiceService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -19,6 +20,7 @@ import java.util.Map;
 /**
  * Contrôleur REST pour la gestion des factures
  */
+@Slf4j
 @RestController
 @RequestMapping("/api/invoices")
 @RequiredArgsConstructor
@@ -50,7 +52,8 @@ public class InvoiceController {
             }
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
+            log.error("Erreur lors de la création de la facture", e);
+            return ResponseEntity.badRequest().body(null);
         }
     }
     

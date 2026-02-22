@@ -3,6 +3,7 @@ package com.gedavocat.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;
@@ -66,7 +67,7 @@ public class Invoice {
     private InvoiceStatus status = InvoiceStatus.DRAFT;
     
     @NotNull(message = "Le montant total HT est obligatoire")
-    @Positive(message = "Le montant total HT doit être positif")
+    @PositiveOrZero(message = "Le montant total HT doit être positif ou nul")
     @Column(name = "total_ht", nullable = false, precision = 10, scale = 2)
     private BigDecimal totalHT;
     
@@ -75,7 +76,7 @@ public class Invoice {
     private BigDecimal totalTVA = BigDecimal.ZERO;
     
     @NotNull(message = "Le montant total TTC est obligatoire")
-    @Positive(message = "Le montant total TTC doit être positif")
+    @PositiveOrZero(message = "Le montant total TTC doit être positif ou nul")
     @Column(name = "total_ttc", nullable = false, precision = 10, scale = 2)
     private BigDecimal totalTTC;
     
