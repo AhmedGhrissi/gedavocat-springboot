@@ -35,8 +35,8 @@ public class SecurityConfig {
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 		http
-				// CSRF désactivé uniquement pour les endpoints API REST
-				.csrf(csrf -> csrf.ignoringRequestMatchers("/api/**", "/subscription/webhook"))
+				// CSRF désactivé uniquement pour les endpoints API REST et webhooks externes
+				.csrf(csrf -> csrf.ignoringRequestMatchers("/api/**", "/subscription/webhook", "/payment/webhook"))
 				.authorizeHttpRequests(auth -> auth
 						// Pages publiques
 						.requestMatchers("/", "/login", "/register", "/maintenance", "/subscription/pricing",
@@ -44,14 +44,16 @@ public class SecurityConfig {
 						"/robots.txt", "/sitemap.xml",
 							"/forgot-password", "/reset-password", "/verify-email", "/verify-email/resend",
 							"/clients/accept-invitation",
-							"/cases/shared", "/cases/shared-expired")
+							"/cases/shared", "/cases/shared-expired",
+							"/legal/**")
 						.permitAll()
 
 						// Pages administrateur
 						.requestMatchers("/admin/**", "/api/admin/**").hasRole("ADMIN")
 						
-						// Pages de paiement et webhooks
-						.requestMatchers("/payment/**").permitAll()
+					// Pages de paiement publiques et webhooks
+					.requestMatchers("/payment/pricing", "/payment/webhook", "/payment/success", "/payment/cancel").permitAll()
+					.requestMatchers("/payment/**").authenticated()
 						.requestMatchers("/api/webhooks/**").permitAll()
 						.requestMatchers("/invoices/my-invoices").hasAnyRole("CLIENT", "LAWYER", "ADMIN")
 						.requestMatchers("/invoices/**", "/api/invoices/**").hasAnyRole("LAWYER", "ADMIN")
@@ -62,21 +64,38 @@ public class SecurityConfig {
 						.hasAnyRole("LAWYER", "ADMIN", "LAWYER_SECONDARY")
 
 						// Pages client
-						.requestMatchers("/my-cases/**", "/my-documents/**").hasAnyRole("CLIENT", "LAWYER", "ADMIN")
+						.requestMatchers("/my-cases/**", "/my-documents/**", "/my-appointments", "/my-signatures").hasAnyRole("CLIENT", "LAWYER", "ADMIN")
 
 					.anyRequest().authenticated())
-				// En-têtes de sécurité ANSSI/OWASP
-				.headers(h -> h
-						.frameOptions(f -> f.deny())
-						.contentTypeOptions(Customizer.withDefaults())
-						.httpStrictTransportSecurity(hsts -> hsts
+				// En-têtes de sécurité ANSSI/OWASP/RGPD — niveau bancaire
+				.headers(h -> {
+						h.frameOptions(f -> f.deny());
+						h.contentTypeOptions(Customizer.withDefaults());
+						h.httpStrictTransportSecurity(hsts -> hsts
 								.includeSubDomains(true)
-								.maxAgeInSeconds(31536000))
-						.referrerPolicy(r -> r.policy(
-								ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
-						.permissionsPolicy(p -> p.policy(
-								"camera=(self), microphone=(), geolocation=(), payment=()")
-						))
+								.preload(true)
+								.maxAgeInSeconds(63072000)); // 2 ans (ANSSI recommandation)
+						h.referrerPolicy(r -> r.policy(
+								ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN));
+						h.permissionsPolicy(p -> p.policy(
+								"camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()"));
+						h.contentSecurityPolicy(csp -> csp.policyDirectives(
+								"default-src 'self'; " +
+								"script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://js.stripe.com; " +
+								"style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; " +
+								"font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com; " +
+								"img-src 'self' data: https:; " +
+								"connect-src 'self' https://api.stripe.com https://api.payplug.com; " +
+								"frame-src 'self' https://js.stripe.com https://hooks.stripe.com; " +
+								"object-src 'none'; " +
+								"base-uri 'self'; " +
+								"form-action 'self'; " +
+								"frame-ancestors 'none'"));
+						h.crossOriginOpenerPolicy(coop -> coop.policy(
+								org.springframework.security.web.header.writers.CrossOriginOpenerPolicyHeaderWriter.CrossOriginOpenerPolicy.SAME_ORIGIN));
+						h.crossOriginResourcePolicy(corp -> corp.policy(
+								org.springframework.security.web.header.writers.CrossOriginResourcePolicyHeaderWriter.CrossOriginResourcePolicy.SAME_ORIGIN));
+						})
 				// Session avec état pour le formLogin (pas stateless)
 				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
 				.authenticationProvider(authenticationProvider())
@@ -136,8 +155,9 @@ public class SecurityConfig {
 		firewall.setAllowUrlEncodedSlash(true);
 		firewall.setAllowUrlEncodedPercent(true);
 		firewall.setAllowUrlEncodedPeriod(true);
-		firewall.setAllowSemicolon(true); // Permet les points-virgules dans les URLs
-		firewall.setAllowBackSlash(true);
+		// Désactivé : setAllowSemicolon et setAllowBackSlash — risque de path traversal
+		// firewall.setAllowSemicolon(true);
+		// firewall.setAllowBackSlash(true);
 		firewall.setAllowUrlEncodedDoubleSlash(true);
 		return firewall;
 	}

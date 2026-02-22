@@ -5,6 +5,8 @@ import com.gedavocat.model.Case.CaseStatus;
 import com.gedavocat.model.Client;
 import com.gedavocat.model.User;
 import com.gedavocat.repository.UserRepository;
+import com.gedavocat.repository.PermissionRepository;
+import com.gedavocat.service.AppointmentService;
 import com.gedavocat.service.CaseService;
 import com.gedavocat.service.ClientService;
 import com.gedavocat.service.DocumentService;
@@ -34,6 +36,8 @@ public class CaseController {
     private final CaseService caseService;
     private final ClientService clientService;
     private final DocumentService documentService;
+    private final AppointmentService appointmentService;
+    private final PermissionRepository permissionRepository;
     private final UserRepository userRepository;
 
     /**
@@ -74,7 +78,6 @@ public class CaseController {
             Model model, 
             Authentication authentication
     ) {
-        System.out.println("=== DEBUG: newCaseForm appelé pour /cases/new ===");
         User user = getCurrentUser(authentication);
         List<Client> clients = isAdmin(authentication)
                 ? clientService.getAllClients()
@@ -95,7 +98,6 @@ public class CaseController {
         model.addAttribute("clients", clients);
         model.addAttribute("selectedClientId", clientId);
         model.addAttribute("isEdit", false);
-        System.out.println("=== DEBUG: Retour vers cases/form avec " + clients.size() + " clients ===");
         return "cases/form";
     }
 
@@ -105,24 +107,18 @@ public class CaseController {
     @PostMapping
     public String createCase(
             @Valid @ModelAttribute("case") Case caseEntity,
-            @RequestParam(value = "clientId", required = false) String clientId,
             BindingResult result,
+            @RequestParam(value = "clientId", required = false) String clientId,
             Authentication authentication,
             RedirectAttributes redirectAttributes,
             Model model
     ) {
-        System.out.println("=== DEBUG createCase: clientId reçu = " + clientId);
-        System.out.println("=== DEBUG createCase: case.name = " + caseEntity.getName());
-        System.out.println("=== DEBUG createCase: case.description = " + caseEntity.getDescription());
-        
         // Validation manuelle du clientId
         if (clientId == null || clientId.isEmpty()) {
             result.rejectValue("client", "error.case", "Veuillez sélectionner un client");
         }
         
         if (result.hasErrors()) {
-            System.out.println("=== DEBUG createCase: Erreurs de validation détectées");
-            result.getAllErrors().forEach(error -> System.out.println("Erreur: " + error));
             User user = getCurrentUser(authentication);
             model.addAttribute("clients", clientService.getClientsByLawyer(user.getId()));
             model.addAttribute("selectedClientId", clientId);
@@ -132,21 +128,16 @@ public class CaseController {
 
         try {
             User user = getCurrentUser(authentication);
-            System.out.println("=== DEBUG createCase: User ID = " + user.getId());
             
             // Récupérer et associer le client
             Client client = clientService.getClientById(clientId);
-            System.out.println("=== DEBUG createCase: Client trouvé = " + client.getName());
             caseEntity.setClient(client);
             
             Case savedCase = caseService.createCase(caseEntity, user.getId());
-            System.out.println("=== DEBUG createCase: Dossier créé avec ID = " + savedCase.getId());
             
             redirectAttributes.addFlashAttribute("message", "Dossier créé avec succès");
             return "redirect:/cases/" + savedCase.getId();
         } catch (Exception e) {
-            System.err.println("=== ERREUR createCase: " + e.getMessage());
-            e.printStackTrace();
             User user = getCurrentUser(authentication);
             model.addAttribute("clients", clientService.getClientsByLawyer(user.getId()));
             model.addAttribute("selectedClientId", clientId);
@@ -178,6 +169,20 @@ public class CaseController {
         model.addAttribute("case", caseEntity);
         model.addAttribute("documents", documentService.getLatestVersions(id));
         model.addAttribute("documentCount", documentService.getDocumentsByCase(id).size());
+
+        // Permissions (collaborateurs)
+        try {
+            model.addAttribute("permissions", permissionRepository.findByCaseEntityId(id));
+        } catch (Exception e) {
+            model.addAttribute("permissions", java.util.Collections.emptyList());
+        }
+
+        // Rendez-vous liés au dossier
+        try {
+            model.addAttribute("appointments", appointmentService.getAppointmentsByCase(id));
+        } catch (Exception e) {
+            model.addAttribute("appointments", java.util.Collections.emptyList());
+        }
 
         return "cases/view";
     }
@@ -226,21 +231,18 @@ public class CaseController {
     public String updateCase(
             @PathVariable String id,
             @Valid @ModelAttribute("case") Case caseEntity,
-            @RequestParam(value = "clientId", required = false) String clientId,
             BindingResult result,
+            @RequestParam(value = "clientId", required = false) String clientId,
             Authentication authentication,
             RedirectAttributes redirectAttributes,
             Model model
     ) {
-        System.out.println("=== DEBUG updateCase: ID = " + id + ", clientId = " + clientId);
-        
         // Validation manuelle du clientId
         if (clientId == null || clientId.isEmpty()) {
             result.rejectValue("client", "error.case", "Veuillez sélectionner un client");
         }
         
         if (result.hasErrors()) {
-            System.out.println("=== DEBUG updateCase: Erreurs de validation détectées");
             User user = getCurrentUser(authentication);
             // ADMIN: charge tous les clients; sinon: ceux de l'avocat courant
             List<Client> clients = isAdmin(authentication)
@@ -256,7 +258,6 @@ public class CaseController {
             User user = getCurrentUser(authentication);
             // Récupérer et associer le client
             Client client = clientService.getClientById(clientId);
-            System.out.println("=== DEBUG updateCase: Client trouvé = " + client.getName());
             caseEntity.setClient(client);
 
             // Pour ADMIN, passer l'ID du LAWYER propriétaire du dossier afin de
@@ -267,13 +268,10 @@ public class CaseController {
                 lawyerIdForService = existing.getLawyer().getId();
             }
             caseService.updateCase(id, caseEntity, lawyerIdForService);
-            System.out.println("=== DEBUG updateCase: Dossier mis à jour avec succès");
             
             redirectAttributes.addFlashAttribute("message", "Dossier modifié avec succès");
             return "redirect:/cases/" + id;
         } catch (Exception e) {
-            System.err.println("=== ERREUR updateCase: " + e.getMessage());
-            e.printStackTrace();
             User user = getCurrentUser(authentication);
             List<Client> clients = isAdmin(authentication)
                     ? clientService.getAllClients()

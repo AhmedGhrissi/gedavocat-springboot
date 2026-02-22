@@ -29,7 +29,7 @@
                                 Créé le <span th:text="${#temporals.format(case.createdAt, 'dd/MM/yyyy')}">01/01/2024</span>
                                 <span class="ms-3">
                                     <i class="fas fa-user-tie"></i>
-                                    Avocat : <span th:text="${case.lawyer.name}">Me Dupont</span>
+                                    Avocat : <span th:text="${case.lawyer != null ? case.lawyer.name : 'Non assigné'}">Me Dupont</span>
                                 </span>
                             </small>
                         </div>

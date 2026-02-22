@@ -181,6 +181,41 @@
                             <i class="fas fa-key"></i> Modifier le mot de passe
                         </button>
                     </form>
+
+                    <hr class="mb-4 mt-4">
+
+                    <!-- RGPD — Droits des personnes -->
+                    <h5><i class="fas fa-shield-alt"></i> Vos droits RGPD</h5>
+                    <p class="text-muted">Conformément au RGPD (Articles 15-20), vous disposez des droits suivants sur vos données personnelles.</p>
+                    <div class="d-flex flex-wrap gap-2 mt-3">
+                        <a th:href="@{/rgpd/export}" class="btn btn-outline-primary">
+                            <i class="fas fa-download me-1"></i> Exporter mes données (JSON)
+                        </a>
+                        <a th:href="@{/legal/privacy}" class="btn btn-outline-secondary">
+                            <i class="fas fa-file-alt me-1"></i> Politique de confidentialité
+                        </a>
+                    </div>
+                    <div class="mt-4">
+                        <button class="btn btn-outline-danger btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#deleteAccountSection">
+                            <i class="fas fa-trash-alt me-1"></i> Supprimer mon compte
+                        </button>
+                        <div class="collapse mt-3" id="deleteAccountSection">
+                            <div class="card card-body border-danger">
+                                <p class="text-danger"><strong>Attention :</strong> Cette action est irréversible. Toutes vos données seront anonymisées.</p>
+                                <form th:action="@{/rgpd/delete-account}" method="post">
+                                    <div class="form-floating mb-3">
+                                        <input type="email" id="confirmDeleteEmail" name="confirmEmail"
+                                               class="form-control" placeholder="Confirmez votre email" required>
+                                        <label for="confirmDeleteEmail">Confirmez votre email pour supprimer</label>
+                                    </div>
+                                    <button type="submit" class="btn btn-danger"
+                                            onclick="return confirm('Êtes-vous sûr de vouloir supprimer définitivement votre compte ?')">
+                                        <i class="fas fa-exclamation-triangle me-1"></i> Supprimer définitivement mon compte
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

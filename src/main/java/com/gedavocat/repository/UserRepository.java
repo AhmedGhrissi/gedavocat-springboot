@@ -23,6 +23,11 @@ public interface UserRepository extends JpaRepository<User, String> {
     Optional<User> findByEmail(String email);
 
     Optional<User> findByResetToken(String resetToken);
+
+    /**
+     * Trouve un utilisateur par son identifiant client Stripe
+     */
+    Optional<User> findByStripeCustomerId(String stripeCustomerId);
     
     /**
      * Vérifie si un email existe déjà

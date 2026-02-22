@@ -70,7 +70,7 @@
                             <span style="color: #cbd5e1;">RPVA / e-Barreau</span>
                         </li>
                     </ul>
-                    <a href="/register?plan=SOLO&billing=monthly" class="cta-button cta-secondary cta-plan">
+                    <a th:href="@{/register(plan=SOLO,billing=monthly)}" class="cta-button cta-secondary cta-plan">
                         Commencer gratuitement
                     </a>
                 </div>
@@ -122,7 +122,7 @@
                             <span>Support prioritaire</span>
                         </li>
                     </ul>
-                    <a href="/register?plan=CABINET&billing=monthly" class="cta-button cta-primary cta-plan">
+                    <a th:href="@{/register(plan=CABINET,billing=monthly)}" class="cta-button cta-primary cta-plan">
                         Démarrer maintenant
                     </a>
                 </div>
@@ -173,7 +173,7 @@
                             <span>Support dédié 24/7</span>
                         </li>
                     </ul>
-                    <a href="/register?plan=ENTERPRISE&billing=monthly" class="cta-button cta-secondary cta-plan">
+                    <a th:href="@{/register(plan=ENTERPRISE,billing=monthly)}" class="cta-button cta-secondary cta-plan">
                         Commencer à la demande
                     </a>
                 </div>

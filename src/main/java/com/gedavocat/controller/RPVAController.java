@@ -9,6 +9,7 @@ import com.gedavocat.repository.UserRepository;
 import com.gedavocat.service.RPVAService;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
@@ -31,6 +32,7 @@ import java.util.Map;
 @Controller
 @RequestMapping("/rpva")
 @RequiredArgsConstructor
+@PreAuthorize("hasAnyRole('LAWYER', 'ADMIN')")
 public class RPVAController {
 
     private final RPVAService rpvaService;
@@ -52,8 +54,13 @@ public class RPVAController {
         // Récupérer les communications envoyées et reçues depuis la base
         List<RpvaCommunication> sentCommunications = rpvaCommunicationRepository
             .findBySentById(user.getId());
-        List<RpvaCommunication> receivedCommunications = rpvaCommunicationRepository
-            .findBySentById(user.getId());
+        // Filtrer les notifications (reçues) vs les autres (envoyées)
+        List<RpvaCommunication> receivedCommunications = sentCommunications.stream()
+            .filter(c -> c.getType() == RpvaCommunication.CommunicationType.NOTIFICATION)
+            .toList();
+        sentCommunications = sentCommunications.stream()
+            .filter(c -> c.getType() != RpvaCommunication.CommunicationType.NOTIFICATION)
+            .toList();
 
         model.addAttribute("sentCommunications", sentCommunications);
         model.addAttribute("receivedCommunications", receivedCommunications);

@@ -1,11 +1,13 @@
 package com.gedavocat.controller;
 
+import com.gedavocat.model.Appointment;
 import com.gedavocat.model.Case;
 import com.gedavocat.model.Client;
 import com.gedavocat.model.Document;
 import com.gedavocat.model.User;
 import com.gedavocat.repository.ClientRepository;
 import com.gedavocat.repository.UserRepository;
+import com.gedavocat.service.AppointmentService;
 import com.gedavocat.service.CaseService;
 import com.gedavocat.service.DocumentService;
 import com.gedavocat.service.WatermarkService;
@@ -25,10 +27,14 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 /**
  * Contrôleur pour le portail client
@@ -45,6 +51,7 @@ public class ClientPortalController {
     private final ClientRepository clientRepository;
     private final UserRepository userRepository;
     private final WatermarkService watermarkService;
+    private final AppointmentService appointmentService;
 
     /**
      * Liste des dossiers du client connecté
@@ -102,9 +109,18 @@ public class ClientPortalController {
         
         // Récupérer les documents du dossier
         List<Document> documents = documentService.getLatestVersions(caseId);
+
+        // Récupérer les rendez-vous liés au dossier
+        List<Appointment> appointments;
+        try {
+            appointments = appointmentService.getAppointmentsByCase(caseId);
+        } catch (Exception e) {
+            appointments = Collections.emptyList();
+        }
         
         model.addAttribute("case", caseEntity);
         model.addAttribute("documents", documents);
+        model.addAttribute("appointments", appointments);
         model.addAttribute("user", user);
         model.addAttribute("client", client);
         
@@ -284,7 +300,7 @@ public class ClientPortalController {
             return ResponseEntity.ok()
                     .contentType(MediaType.parseMediaType(document.getMimetype()))
                     .header(HttpHeaders.CONTENT_DISPOSITION,
-                            "attachment; filename=\"" + document.getOriginalName() + "\"")
+                            "attachment; filename=\"" + sanitizeFilename(document.getOriginalName()) + "\"")
                     .body(new ByteArrayResource(fileBytes));
 
         } catch (Exception e) {
@@ -296,6 +312,82 @@ public class ClientPortalController {
         String email = authentication.getName();
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+    }
+
+    /**
+     * Nettoie un nom de fichier pour éviter l'injection dans les en-têtes HTTP
+     * et les attaques Zip Slip (traversal de répertoire).
+     */
+    private String sanitizeFilename(String filename) {
+        if (filename == null || filename.isEmpty()) return "document";
+        // Supprimer tout chemin de répertoire (Zip Slip prevention)
+        String sanitized = filename.replace("\\", "/");
+        int lastSlash = sanitized.lastIndexOf('/');
+        if (lastSlash >= 0) sanitized = sanitized.substring(lastSlash + 1);
+        // Supprimer caractères dangereux pour les en-têtes HTTP
+        sanitized = sanitized.replaceAll("[\\r\\n\"]", "_");
+        return sanitized.isEmpty() ? "document" : sanitized;
+    }
+
+    // =========================================================================
+    // Export ZIP de tous les documents d'un dossier
+    // =========================================================================
+
+    @GetMapping("/{caseId}/export-zip")
+    public ResponseEntity<Resource> exportCaseDocumentsZip(
+            @PathVariable String caseId,
+            Authentication authentication
+    ) {
+        try {
+            User user = getCurrentUser(authentication);
+            java.util.Optional<Client> clientOpt = clientRepository.findByClientUserId(user.getId());
+            if (clientOpt.isEmpty()) return ResponseEntity.status(403).build();
+            Client client = clientOpt.get();
+
+            Case caseEntity = caseService.getCaseById(caseId);
+            if (caseEntity.getClient() == null || !caseEntity.getClient().getId().equals(client.getId())) {
+                return ResponseEntity.status(403).build();
+            }
+
+            List<Document> documents = documentService.getLatestVersions(caseId);
+            if (documents.isEmpty()) {
+                return ResponseEntity.noContent().build();
+            }
+
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            try (ZipOutputStream zos = new ZipOutputStream(baos)) {
+                for (Document doc : documents) {
+                    try {
+                        Path filePath = documentService.downloadDocument(doc.getId(), user.getId());
+                        byte[] fileBytes = Files.readAllBytes(filePath);
+
+                        // Appliquer filigrane CONFIDENTIEL sur les PDF
+                        if (watermarkService.isPdf(fileBytes)) {
+                            byte[] watermarked = watermarkService.addWatermark(
+                                    new ByteArrayInputStream(fileBytes),
+                                    WatermarkService.WATERMARK_CONFIDENTIEL);
+                            if (watermarked != null) fileBytes = watermarked;
+                        }
+
+                        ZipEntry entry = new ZipEntry(sanitizeFilename(doc.getOriginalName()));
+                        zos.putNextEntry(entry);
+                        zos.write(fileBytes);
+                        zos.closeEntry();
+                    } catch (Exception ignored) {
+                        // Skip documents that can't be read
+                    }
+                }
+            }
+
+            String zipName = "Dossier_" + caseEntity.getName().replaceAll("[^a-zA-Z0-9àâéèêëïîôùûüç_\\- ]", "").trim() + ".zip";
+            return ResponseEntity.ok()
+                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + zipName + "\"")
+                    .body(new ByteArrayResource(baos.toByteArray()));
+
+        } catch (Exception e) {
+            throw new RuntimeException("Erreur lors de l'export ZIP : " + e.getMessage());
+        }
     }
 
     // =========================================================================

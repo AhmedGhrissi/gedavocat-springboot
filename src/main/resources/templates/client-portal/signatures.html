@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>Mes Signatures</title>
+    <style>
+        .signatures-header {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: #fff;
+            border-radius: 16px;
+            padding: 2rem 2.5rem;
+            margin-bottom: 2rem;
+        }
+        .sig-card {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,.06);
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+        }
+        .sig-icon {
+            width: 50px; height: 50px;
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.3rem;
+        }
+        .sig-icon.pending   { background: #fef3c7; color: #92400e; }
+        .sig-icon.signed    { background: #d1fae5; color: #065f46; }
+        .sig-icon.rejected  { background: #fee2e2; color: #991b1b; }
+        .sig-icon.draft     { background: #e5e7eb; color: #6b7280; }
+        .sig-info { flex: 1; }
+        .sig-info h6 { margin-bottom: .25rem; }
+        .badge-sig {
+            font-size: .75rem; padding: .3em .7em; border-radius: 6px;
+        }
+        .badge-pending  { background: #fef3c7; color: #92400e; }
+        .badge-signed   { background: #d1fae5; color: #065f46; }
+        .badge-rejected { background: #fee2e2; color: #991b1b; }
+        .badge-draft    { background: #e5e7eb; color: #6b7280; }
+        .badge-expired  { background: #fecaca; color: #991b1b; }
+    </style>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="container-fluid">
+
+        <!-- En-tête -->
+        <div class="signatures-header">
+            <h1><i class="fas fa-signature"></i> Mes Signatures</h1>
+            <p style="font-size: 16px; opacity: .95;">
+                Documents nécessitant votre signature électronique.
+            </p>
+        </div>
+
+        <!-- En attente de signature -->
+        <div th:if="${signatures != null and !signatures.empty}">
+            <h5 class="fw-bold mb-3"><i class="fas fa-hourglass-half text-warning"></i> En attente</h5>
+            <div th:each="sig : ${signatures}" th:if="${sig.status?.name() == 'PENDING'}" class="sig-card">
+                <div class="sig-icon pending">
+                    <i class="fas fa-file-signature"></i>
+                </div>
+                <div class="sig-info">
+                    <h6 class="fw-bold" th:text="${sig.documentName}">Document.pdf</h6>
+                    <div class="text-muted" style="font-size: .85rem;">
+                        Demandé le <span th:text="${#temporals.format(sig.createdAt, 'dd/MM/yyyy')}">01/01/2025</span>
+                        <span th:if="${sig.requestedBy}" class="ms-2">
+                            par <span th:text="${sig.requestedBy.firstName + ' ' + sig.requestedBy.lastName}">Avocat</span>
+                        </span>
+                    </div>
+                </div>
+                <span class="badge badge-sig badge-pending">En attente</span>
+            </div>
+
+            <!-- Signées -->
+            <h5 class="fw-bold mb-3 mt-4"><i class="fas fa-check-circle text-success"></i> Signées</h5>
+            <div th:each="sig : ${signatures}" th:if="${sig.status?.name() == 'SIGNED'}" class="sig-card" style="opacity: .8;">
+                <div class="sig-icon signed">
+                    <i class="fas fa-check"></i>
+                </div>
+                <div class="sig-info">
+                    <h6 class="fw-bold" th:text="${sig.documentName}">Document.pdf</h6>
+                    <div class="text-muted" style="font-size: .85rem;">
+                        Signé le <span th:if="${sig.signedAt}" th:text="${#temporals.format(sig.signedAt, 'dd/MM/yyyy HH:mm')}">01/01/2025</span>
+                        <span th:if="${sig.requestedBy}" class="ms-2">
+                            • Demandé par <span th:text="${sig.requestedBy.firstName + ' ' + sig.requestedBy.lastName}">Avocat</span>
+                        </span>
+                    </div>
+                </div>
+                <span class="badge badge-sig badge-signed">Signé</span>
+            </div>
+
+            <!-- Rejetées / Autres -->
+            <div th:each="sig : ${signatures}"
+                 th:if="${sig.status?.name() != 'PENDING' and sig.status?.name() != 'SIGNED'}"
+                 class="sig-card" style="opacity: .6;">
+                <div class="sig-icon draft">
+                    <i class="fas fa-times-circle"></i>
+                </div>
+                <div class="sig-info">
+                    <h6 class="fw-bold" th:text="${sig.documentName}">Document.pdf</h6>
+                    <div class="text-muted" style="font-size: .85rem;">
+                        <span th:text="${#temporals.format(sig.createdAt, 'dd/MM/yyyy')}">01/01/2025</span>
+                    </div>
+                </div>
+                <span class="badge badge-sig badge-draft" th:text="${sig.status?.displayName ?: sig.status}">Statut</span>
+            </div>
+        </div>
+
+        <!-- État vide -->
+        <div th:if="${signatures == null or signatures.empty}" class="text-center py-5">
+            <i class="fas fa-signature fa-4x text-muted mb-3"></i>
+            <h3>Aucune demande de signature</h3>
+            <p class="text-muted">Vous n'avez aucune demande de signature en cours.</p>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>

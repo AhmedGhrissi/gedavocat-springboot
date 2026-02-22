@@ -103,8 +103,39 @@
                 </div>
             </div>
 
-            <!-- Aide -->
+            <!-- Colonne droite : mot de passe + aide -->
             <div class="col-lg-5 mt-4 mt-lg-0">
+
+                <!-- Changement de mot de passe -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-body">
+                        <h6 class="fw-bold"><i class="fas fa-lock text-warning"></i> Changer mon mot de passe</h6>
+                        <div id="pwdAlert" class="alert d-none mt-2 mb-3" role="alert"></div>
+                        <form id="clientPasswordForm">
+                            <div class="mb-3">
+                                <label for="currentPassword" class="form-label small fw-bold">Mot de passe actuel</label>
+                                <input type="password" id="currentPassword" name="currentPassword"
+                                       class="form-control form-control-sm" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="newPassword" class="form-label small fw-bold">Nouveau mot de passe</label>
+                                <input type="password" id="newPassword" name="newPassword"
+                                       class="form-control form-control-sm" minlength="8" required>
+                                <div class="form-text">Minimum 8 caractères</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="confirmNewPassword" class="form-label small fw-bold">Confirmer le nouveau mot de passe</label>
+                                <input type="password" id="confirmNewPassword" name="confirmNewPassword"
+                                       class="form-control form-control-sm" minlength="8" required>
+                            </div>
+                            <button type="submit" class="btn btn-warning btn-sm w-100">
+                                <i class="fas fa-key"></i> Modifier le mot de passe
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Aide -->
                 <div class="card border-0 shadow-sm">
                     <div class="card-body">
                         <h6 class="fw-bold"><i class="fas fa-question-circle text-info"></i> Pourquoi ces informations ?</h6>
@@ -125,5 +156,44 @@
 
     </div>
 </div>
+
+<script th:inline="javascript">
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('clientPasswordForm');
+    if (!form) return;
+
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const alert = document.getElementById('pwdAlert');
+        const np = document.getElementById('newPassword').value;
+        const cp = document.getElementById('confirmNewPassword').value;
+        if (np !== cp) {
+            alert.className = 'alert alert-danger mt-2 mb-3';
+            alert.textContent = 'Les mots de passe ne correspondent pas.';
+            return;
+        }
+        const csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content || 'X-CSRF-TOKEN';
+        const headers = {'Content-Type': 'application/x-www-form-urlencoded'};
+        if (csrfToken) headers[csrfHeader] = csrfToken;
+
+        fetch('/my-cases/profile/change-password', {
+            method: 'POST',
+            headers: headers,
+            body: new URLSearchParams(new FormData(form))
+        })
+        .then(r => r.json())
+        .then(data => {
+            alert.className = 'alert mt-2 mb-3 ' + (data.success ? 'alert-success' : 'alert-danger');
+            alert.textContent = data.message;
+            if (data.success) form.reset();
+        })
+        .catch(() => {
+            alert.className = 'alert alert-danger mt-2 mb-3';
+            alert.textContent = 'Erreur réseau.';
+        });
+    });
+});
+</script>
 </body>
 </html>

@@ -2,111 +2,140 @@
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout}">
-<head><title>Clients</title>
+<head>
+    <title>Clients</title>
 </head>
 <body>
     <div layout:fragment="content">
-        <!-- Flash messages -->
-        <div th:if="${message}" class="alert alert-success alert-dismissible fade show mx-3 mt-3" role="alert">
-            <i class="fas fa-check-circle me-2"></i>
-            <span th:text="${message}"></span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show mx-3 mt-3" role="alert">
-            <i class="fas fa-exclamation-circle me-2"></i>
-            <span th:text="${error}"></span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
+        <div class="container-fluid">
+            <!-- Messages -->
+            <div th:if="${message}" class="alert alert-success alert-dismissible fade show mt-3" role="alert">
+                <i class="fas fa-check-circle me-2"></i> <span th:text="${message}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            <div th:if="${error}" class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
+                <i class="fas fa-exclamation-circle me-2"></i> <span th:text="${error}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
 
-        <div class="container">
+            <!-- En-tête -->
             <div class="d-flex justify-content-between align-items-center mt-3 mb-3">
-                <h1><i class="fas fa-users"></i> Mes clients</h1>
+                <div>
+                    <h1 style="font-size:24px;font-weight:700;margin-bottom:4px">
+                        <i class="fas fa-users"></i> Clients
+                    </h1>
+                    <p class="text-muted mb-0" style="font-size:14px"
+                       th:text="${totalClients + ' client(s)'}">0 client(s)</p>
+                </div>
                 <a th:href="@{/clients/new}" class="btn btn-primary">
                     <i class="fas fa-user-plus"></i> Nouveau client
                 </a>
             </div>
-            
+
             <!-- Recherche -->
             <div class="card mb-3">
-                <div class="card-body">
-                    <form th:action="@{/clients}" method="get" class="row">
-                        <div class="col-md-10">
-                            <input type="text" name="search" th:value="${search}" 
-                                   class="form-control" placeholder="Rechercher un client (nom ou email)...">
-                        </div>
-                        <div class="col-md-2">
-                            <button type="submit" class="btn btn-primary w-100">
-                                <i class="fas fa-search"></i> Rechercher
-                            </button>
-                        </div>
+                <div class="card-body py-3">
+                    <form th:action="@{/clients}" method="get" class="d-flex gap-2">
+                        <input type="text" name="search" th:value="${search}"
+                               class="form-control form-control-sm" placeholder="Rechercher par nom, email ou nom de dossier...">
+                        <button type="submit" class="btn btn-sm btn-primary">
+                            <i class="fas fa-search"></i>
+                        </button>
+                        <a th:if="${search != null and !search.isEmpty()}" th:href="@{/clients}" class="btn btn-sm btn-outline-secondary">
+                            <i class="fas fa-times"></i>
+                        </a>
                     </form>
                 </div>
             </div>
-            
-            <!-- Statistiques -->
-            <div class="mb-3">
-                <p><strong th:text="${totalClients}">0</strong> client(s) au total</p>
-            </div>
-            
-            <!-- Liste des clients -->
+
+            <!-- Liste -->
             <div class="card">
-                <div class="card-body">
-                    <table class="table table-hover" th:if="${!clients.empty}">
-                        <thead>
-                            <tr>
-                                <th>Nom</th>
-                                <th>Email</th>
-                                <th>Téléphone</th>
-                                <th>Date création</th>
-                                <th>Portail client</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr th:each="client : ${clients}">
-                                <td>
-                                    <a th:href="@{/clients/{id}(id=${client.id})}" th:text="${client.name}">Nom</a>
-                                </td>
-                                <td th:text="${client.email}">Email</td>
-                                <td th:text="${client.phone ?: '-'}">Téléphone</td>
-                                <td th:text="${#temporals.format(client.createdAt, 'dd/MM/yyyy')}">Date</td>
-                                <td>
-                                    <span th:if="${client.invitationStatus == 'VALIDATED'}" class="badge bg-success">
-                                        <i class="fas fa-check-circle"></i> Validé
-                                    </span>
-                                    <span th:if="${client.invitationStatus == 'PENDING'}" class="badge bg-warning text-dark">
-                                        <i class="fas fa-clock"></i> En attente
-                                    </span>
-                                    <span th:if="${client.invitationStatus == 'EXPIRED'}" class="badge bg-danger">
-                                        <i class="fas fa-times-circle"></i> Expiré
-                                    </span>
-                                    <span th:if="${client.invitationStatus == 'NOT_INVITED'}" class="badge bg-secondary">
-                                        <i class="fas fa-minus-circle"></i> Non invité
-                                    </span>
-                                </td>
-                                <td>
-                                    <a th:href="@{/clients/{id}(id=${client.id})}" class="btn btn-sm btn-info">
-                                        <i class="fas fa-eye"></i> Voir
-                                    </a>
-                                    <a th:href="@{/clients/{id}/edit(id=${client.id})}" class="btn btn-sm btn-warning">
-                                        <i class="fas fa-edit"></i> Modifier
-                                    </a>
-                                    <form th:action="@{/clients/{id}/delete(id=${client.id})}" method="post" style="display: inline;">
-                                        <button type="submit" class="btn btn-sm btn-danger" 
-                                                onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce client ?')">
-                                            <i class="fas fa-trash"></i> Supprimer
-                                        </button>
-                                    </form>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    
-                    <div th:if="${clients.empty}" class="text-center p-4">
-                        <i class="fas fa-users fa-4x text-muted mb-3"></i>
-                        <p>Aucun client trouvé</p>
-                        <a th:href="@{/clients/new}" class="btn btn-primary">
-                            <i class="fas fa-user-plus"></i> Créer votre premier client
+                <div class="card-body p-0">
+                    <div class="table-responsive" th:if="${!clients.empty}">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th style="padding-left:20px">Client</th>
+                                    <th>Type</th>
+                                    <th>Email</th>
+                                    <th>Téléphone</th>
+                                    <th>Portail</th>
+                                    <th>Créé le</th>
+                                    <th style="width:220px">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="client : ${clients}">
+                                    <td style="padding-left:20px">
+                                        <a th:href="@{/clients/{id}(id=${client.id})}" 
+                                           th:text="${client.name}" 
+                                           class="text-decoration-none fw-semibold">Nom</a>
+                                        <div th:if="${client.companyName != null and !client.companyName.isEmpty()}"
+                                             class="text-muted" style="font-size:12px"
+                                             th:text="${client.companyName}">Société</div>
+                                    </td>
+                                    <td>
+                                        <span th:if="${client.clientType != null and client.clientType.name() == 'PROFESSIONAL'}"
+                                              class="badge bg-info" style="font-size:11px">
+                                            <i class="fas fa-building"></i> Pro
+                                        </span>
+                                        <span th:if="${client.clientType == null or client.clientType.name() == 'INDIVIDUAL'}"
+                                              class="badge bg-secondary" style="font-size:11px">
+                                            <i class="fas fa-user"></i> Particulier
+                                        </span>
+                                    </td>
+                                    <td style="font-size:13px" th:text="${client.email}">Email</td>
+                                    <td style="font-size:13px" th:text="${client.phone ?: '—'}">—</td>
+                                    <td>
+                                        <span th:if="${client.invitationStatus == 'VALIDATED'}" class="badge bg-success">
+                                            <i class="fas fa-check-circle"></i> Actif
+                                        </span>
+                                        <span th:if="${client.invitationStatus == 'PENDING'}" class="badge bg-warning text-dark">
+                                            <i class="fas fa-clock"></i> En attente
+                                        </span>
+                                        <span th:if="${client.invitationStatus == 'EXPIRED'}" class="badge bg-danger">
+                                            <i class="fas fa-times-circle"></i> Expiré
+                                        </span>
+                                        <span th:if="${client.invitationStatus == 'NOT_INVITED'}" class="badge bg-secondary">
+                                            Non invité
+                                        </span>
+                                    </td>
+                                    <td style="font-size:13px" th:text="${#temporals.format(client.createdAt, 'dd/MM/yyyy')}">Date</td>
+                                    <td>
+                                        <div class="d-flex gap-1">
+                                            <a th:href="@{/clients/{id}(id=${client.id})}" class="btn btn-sm btn-outline-info" title="Voir">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a th:href="@{/clients/{id}/edit(id=${client.id})}" class="btn btn-sm btn-outline-warning" title="Modifier">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a th:href="@{/cases/new?clientId={cid}(cid=${client.id})}" class="btn btn-sm btn-outline-primary" title="Nouveau dossier">
+                                                <i class="fas fa-folder-plus"></i>
+                                            </a>
+                                            <form th:action="@{/clients/{id}/delete(id=${client.id})}" method="post" style="display:inline">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Supprimer"
+                                                        onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce client et tous ses dossiers ?')">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div th:if="${clients.empty}" class="text-center py-5">
+                        <i class="fas fa-users fa-3x mb-3" style="color:#94a3b8"></i>
+                        <h5>Aucun client trouvé</h5>
+                        <p class="text-muted" th:if="${search != null and !search.isEmpty()}">
+                            Aucun résultat pour « <span th:text="${search}"></span> »
+                        </p>
+                        <p class="text-muted" th:if="${search == null or search.isEmpty()}">
+                            Commencez par créer votre premier client
+                        </p>
+                        <a th:href="@{/clients/new}" class="btn btn-primary mt-2">
+                            <i class="fas fa-user-plus"></i> Créer un client
                         </a>
                     </div>
                 </div>
