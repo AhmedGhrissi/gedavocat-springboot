@@ -80,4 +80,17 @@ public interface UserRepository extends JpaRepository<User, String> {
     List<User> findByFirstNameContainingOrLastNameContainingOrEmailContaining(@Param("keyword") String keyword);
 
     long countByCreatedAtAfter(LocalDateTime date);
+
+    /**
+     * Recherche filtrée avec critères combinés (admin)
+     */
+    @Query("SELECT u FROM User u WHERE " +
+           "(:search IS NULL OR LOWER(u.firstName) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           "LOWER(u.lastName) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           "LOWER(u.email) LIKE LOWER(CONCAT('%', :search, '%'))) AND " +
+           "(:role IS NULL OR u.role = :role) AND " +
+           "(:accountEnabled IS NULL OR u.accountEnabled = :accountEnabled)")
+    List<User> findWithFilters(@Param("search") String search,
+                               @Param("role") UserRole role,
+                               @Param("accountEnabled") Boolean accountEnabled);
 }

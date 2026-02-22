@@ -2,7 +2,11 @@
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout}">
-<head><title>Administration - Gestion des utilisateurs</title>
+<head>
+    <link rel="stylesheet" th:href="@{/css/pages/admin.css}">
+    <meta id="_csrf_token"  th:content="${_csrf.token}">
+    <meta id="_csrf_header" th:content="${_csrf.headerName}">
+<title>Administration - Gestion des utilisateurs</title>
 </head>
 <body>
 <div layout:fragment="content">
@@ -13,9 +17,32 @@
                 <h2 class="mb-1">👥 Gestion des utilisateurs</h2>
                 <p class="text-muted">Administration des comptes et permissions</p>
             </div>
-            <a href="/admin" class="btn btn-outline-secondary">
-                <i class="fas fa-arrow-left"></i> Retour au dashboard
-            </a>
+        </div>
+
+        <!-- Navigation admin -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="btn-group" role="group">
+                    <a href="/admin" class="btn btn-outline-primary">
+                        <i class="fas fa-home"></i> Dashboard
+                    </a>
+                    <a href="/admin/system" class="btn btn-outline-primary">
+                        <i class="fas fa-server"></i> Système
+                    </a>
+                    <a href="/admin/database" class="btn btn-outline-primary">
+                        <i class="fas fa-database"></i> Base de données
+                    </a>
+                    <a href="/admin/logs" class="btn btn-outline-primary">
+                        <i class="fas fa-file-alt"></i> Logs
+                    </a>
+                    <a href="/admin/users" class="btn btn-primary">
+                        <i class="fas fa-users"></i> Utilisateurs
+                    </a>
+                    <a href="/admin/statistics" class="btn btn-outline-primary">
+                        <i class="fas fa-chart-line"></i> Statistiques
+                    </a>
+                </div>
+            </div>
         </div>
 
         <!-- Statistiques utilisateurs -->
@@ -73,29 +100,33 @@
                 <form method="get" action="/admin/users" class="row g-3">
                     <div class="col-md-4">
                         <label class="form-label">Recherche</label>
-                        <input type="text" name="search" class="form-control" placeholder="Nom, email...">
+                        <input type="text" name="search" class="form-control" placeholder="Nom, email..."
+                               th:value="${filterSearch}">
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">Rôle</label>
                         <select name="role" class="form-select">
-                            <option value="">Tous les rôles</option>
-                            <option value="ADMIN">Administrateur</option>
-                            <option value="LAWYER">Avocat</option>
-                            <option value="CLIENT">Client</option>
+                            <option value="" th:selected="${filterRole == ''}">Tous les rôles</option>
+                            <option value="ADMIN"   th:selected="${filterRole == 'ADMIN'}">Administrateur</option>
+                            <option value="LAWYER"  th:selected="${filterRole == 'LAWYER'}">Avocat</option>
+                            <option value="CLIENT"  th:selected="${filterRole == 'CLIENT'}">Client</option>
                         </select>
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">Statut</label>
                         <select name="status" class="form-select">
-                            <option value="">Tous</option>
-                            <option value="active">Actifs</option>
-                            <option value="inactive">Inactifs</option>
+                            <option value=""         th:selected="${filterStatus == ''}">Tous</option>
+                            <option value="active"   th:selected="${filterStatus == 'active'}">Actifs</option>
+                            <option value="inactive" th:selected="${filterStatus == 'inactive'}">Inactifs</option>
                         </select>
                     </div>
-                    <div class="col-md-2 d-flex align-items-end">
+                    <div class="col-md-2 d-flex align-items-end gap-2">
                         <button type="submit" class="btn btn-primary w-100">
                             <i class="fas fa-search"></i> Filtrer
                         </button>
+                        <a href="/admin/users" class="btn btn-outline-secondary" title="Réinitialiser">
+                            <i class="fas fa-times"></i>
+                        </a>
                     </div>
                 </form>
             </div>
@@ -191,20 +222,32 @@
                                     19/02/2026 16:30
                                 </td>
                                 <td>
-                                    <span class="badge bg-success">
+                                    <span th:if="${user.accountEnabled}" class="badge bg-success">
                                         <i class="fas fa-circle"></i> Actif
+                                    </span>
+                                    <span th:unless="${user.accountEnabled}" class="badge bg-danger">
+                                        <i class="fas fa-ban"></i> Bloqué
                                     </span>
                                 </td>
                                 <td>
                                     <div class="btn-group btn-group-sm">
-                                        <button class="btn btn-outline-primary" title="Voir détails">
+                                        <button class="btn btn-outline-primary btn-view-user"
+                                                th:data-user-id="${user.id}"
+                                                data-bs-toggle="modal" data-bs-target="#viewUserModal"
+                                                title="Voir détails">
                                             <i class="fas fa-eye"></i>
                                         </button>
-                                        <button class="btn btn-outline-secondary" title="Modifier">
+                                        <button class="btn btn-outline-secondary btn-edit-user"
+                                                th:data-user-id="${user.id}"
+                                                data-bs-toggle="modal" data-bs-target="#editUserModal"
+                                                title="Modifier">
                                             <i class="fas fa-edit"></i>
                                         </button>
-                                        <button class="btn btn-outline-danger" title="Désactiver">
-                                            <i class="fas fa-ban"></i>
+                                        <button class="btn btn-outline-danger btn-delete-user"
+                                                th:data-user-id="${user.id}"
+                                                th:data-user-name="${user.firstName + ' ' + user.lastName}"
+                                                title="Supprimer">
+                                            <i class="fas fa-trash"></i>
                                         </button>
                                     </div>
                                 </td>
@@ -270,6 +313,124 @@
             </div>
         </div>
     </div>
+
+    <!-- Modal Voir utilisateur -->
+    <div class="modal fade" id="viewUserModal" tabindex="-1" aria-labelledby="viewUserModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="viewUserModalLabel"><i class="fas fa-user"></i> Détails de l'utilisateur</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="viewUserSpinner" class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status"></div>
+                    </div>
+                    <div id="viewUserContent" style="display:none">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <dl class="row">
+                                    <dt class="col-sm-5">Prénom</dt>        <dd class="col-sm-7" id="vu-firstName"></dd>
+                                    <dt class="col-sm-5">Nom</dt>           <dd class="col-sm-7" id="vu-lastName"></dd>
+                                    <dt class="col-sm-5">Email</dt>         <dd class="col-sm-7" id="vu-email"></dd>
+                                    <dt class="col-sm-5">Rôle</dt>          <dd class="col-sm-7" id="vu-roleLabel"></dd>
+                                    <dt class="col-sm-5">Téléphone</dt>     <dd class="col-sm-7" id="vu-phone"></dd>
+                                    <dt class="col-sm-5">N° Barreau</dt>    <dd class="col-sm-7" id="vu-barNumber"></dd>
+                                </dl>
+                            </div>
+                            <div class="col-md-6">
+                                <dl class="row">
+                                    <dt class="col-sm-5">Abonnement</dt>    <dd class="col-sm-7" id="vu-subscriptionPlan"></dd>
+                                    <dt class="col-sm-5">Statut abo.</dt>   <dd class="col-sm-7" id="vu-subscriptionStatus"></dd>
+                                    <dt class="col-sm-5">Max clients</dt>   <dd class="col-sm-7" id="vu-maxClients"></dd>
+                                    <dt class="col-sm-5">Statut compte</dt> <dd class="col-sm-7" id="vu-accountEnabled"></dd>
+                                    <dt class="col-sm-5">Créé le</dt>       <dd class="col-sm-7" id="vu-createdAt"></dd>
+                                    <dt class="col-sm-5">Mis à jour</dt>    <dd class="col-sm-7" id="vu-updatedAt"></dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                    <button type="button" class="btn btn-primary" id="viewToEditBtn">
+                        <i class="fas fa-edit"></i> Modifier
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Modifier utilisateur -->
+    <div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="editUserForm" method="post">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editUserModalLabel"><i class="fas fa-user-edit"></i> Modifier l'utilisateur</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="editUserSpinner" class="text-center py-4">
+                            <div class="spinner-border text-primary" role="status"></div>
+                        </div>
+                        <div id="editUserContent" style="display:none">
+                            <div class="mb-3">
+                                <label class="form-label">Prénom <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" name="firstName" id="edit-firstName" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Nom <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" name="lastName" id="edit-lastName" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Email <span class="text-danger">*</span></label>
+                                <input type="email" class="form-control" name="email" id="edit-email" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Rôle <span class="text-danger">*</span></label>
+                                <select class="form-select" name="role" id="edit-role">
+                                    <option value="ADMIN">Administrateur</option>
+                                    <option value="LAWYER">Avocat</option>
+                                    <option value="CLIENT">Client</option>
+                                    <option value="LAWYER_SECONDARY">Collaborateur</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="edit-accountEnabled"
+                                           name="accountEnabled" value="true">
+                                    <label class="form-check-label" for="edit-accountEnabled">
+                                        <strong>Compte actif</strong>
+                                        <small class="text-muted d-block">Décocher pour bloquer l'accès à l'application</small>
+                                    </label>
+                                </div>
+                            </div>
+                            <div id="editBlockWarning" class="alert alert-warning" style="display:none">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                En bloquant cet utilisateur, il ne pourra plus se connecter.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer justify-content-between">
+                        <button type="button" class="btn btn-outline-danger btn-delete-from-edit"
+                                id="editDeleteBtn">
+                            <i class="fas fa-trash"></i> Supprimer
+                        </button>
+                        <div>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Enregistrer
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- (formulaire caché supprimé — delete via fetch avec X-CSRF-TOKEN) -->
 
     <!-- Modal Nouvel utilisateur -->
     <div class="modal fade" id="newUserModal" tabindex="-1" aria-labelledby="newUserModalLabel" aria-hidden="true">
@@ -349,11 +510,11 @@
     </div>
 
     <script>
+        /* ===================== Nouvel utilisateur ===================== */
         function toggleSubscriptionFields() {
             const isLawyer = document.getElementById('roleLawyer').checked;
             document.getElementById('subscriptionInfo').style.display = isLawyer ? 'block' : 'none';
         }
-
         function togglePasswordVisibility() {
             const pwdInput = document.getElementById('newPassword');
             const icon = document.getElementById('togglePwdIcon');
@@ -363,6 +524,134 @@
             } else {
                 pwdInput.type = 'password';
                 icon.classList.replace('fa-eye-slash', 'fa-eye');
+            }
+        }
+
+        /* ===================== Bouton Voir ===================== */
+        document.querySelectorAll('.btn-view-user').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const userId = this.dataset.userId;
+                adminLoadUser(userId, 'view');
+            });
+        });
+
+        /* ===================== Bouton Modifier ===================== */
+        document.querySelectorAll('.btn-edit-user').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const userId = this.dataset.userId;
+                adminLoadUser(userId, 'edit');
+            });
+        });
+
+        /* Bouton "Modifier" depuis la modale de vue */
+        let currentUserId = null;
+        document.getElementById('viewToEditBtn').addEventListener('click', function () {
+            if (currentUserId) {
+                bootstrap.Modal.getInstance(document.getElementById('viewUserModal')).hide();
+                adminLoadUser(currentUserId, 'edit');
+                new bootstrap.Modal(document.getElementById('editUserModal')).show();
+            }
+        });
+
+        /* ===================== Fetch utilisateur ===================== */
+        function adminLoadUser(userId, mode) {
+            currentUserId = userId;
+            if (mode === 'view') {
+                document.getElementById('viewUserContent').style.display = 'none';
+                document.getElementById('viewUserSpinner').style.display = 'block';
+            } else {
+                document.getElementById('editUserContent').style.display = 'none';
+                document.getElementById('editUserSpinner').style.display = 'block';
+            }
+
+            fetch('/admin/users/' + userId, { credentials: 'same-origin', headers: { 'Accept': 'application/json' } })
+                .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+                .then(u => {
+                    if (mode === 'view') {
+                        document.getElementById('vu-firstName').textContent        = u.firstName || '-';
+                        document.getElementById('vu-lastName').textContent         = u.lastName  || '-';
+                        document.getElementById('vu-email').textContent            = u.email     || '-';
+                        document.getElementById('vu-roleLabel').textContent        = u.roleLabel || '-';
+                        document.getElementById('vu-phone').textContent            = u.phone     || '-';
+                        document.getElementById('vu-barNumber').textContent        = u.barNumber || '-';
+                        document.getElementById('vu-subscriptionPlan').textContent = u.subscriptionPlan || '-';
+                        document.getElementById('vu-subscriptionStatus').textContent = u.subscriptionStatus || '-';
+                        document.getElementById('vu-maxClients').textContent       = u.maxClients != null ? u.maxClients : '-';
+                        document.getElementById('vu-accountEnabled').innerHTML     = u.accountEnabled
+                            ? '<span class="badge bg-success">Actif</span>'
+                            : '<span class="badge bg-danger">Bloqué</span>';
+                        document.getElementById('vu-createdAt').textContent        = u.createdAt  || '-';
+                        document.getElementById('vu-updatedAt').textContent        = u.updatedAt  || '-';
+                        document.getElementById('viewUserSpinner').style.display  = 'none';
+                        document.getElementById('viewUserContent').style.display  = 'block';
+                    } else {
+                        document.getElementById('edit-firstName').value = u.firstName || '';
+                        document.getElementById('edit-lastName').value  = u.lastName  || '';
+                        document.getElementById('edit-email').value     = u.email     || '';
+                        document.getElementById('edit-role').value      = u.role      || 'LAWYER';
+                        const enabledCb = document.getElementById('edit-accountEnabled');
+                        enabledCb.checked = u.accountEnabled;
+                        document.getElementById('editBlockWarning').style.display = u.accountEnabled ? 'none' : 'block';
+                        /* Action du formulaire d'édition */
+                        document.getElementById('editUserForm').action = '/admin/users/' + userId + '/edit';
+                        /* Bouton supprimer dans la modale édition */
+                        document.getElementById('editDeleteBtn').dataset.userId   = userId;
+                        document.getElementById('editDeleteBtn').dataset.userName = u.firstName + ' ' + u.lastName;
+                        document.getElementById('editUserSpinner').style.display  = 'none';
+                        document.getElementById('editUserContent').style.display  = 'block';
+                    }
+                })
+                .catch(err => {
+                    alert('Erreur lors du chargement : ' + err.message);
+                    if (mode === 'view') {
+                        document.getElementById('viewUserSpinner').innerHTML =
+                            '<div class="alert alert-danger">Erreur de chargement</div>';
+                    } else {
+                        document.getElementById('editUserSpinner').innerHTML =
+                            '<div class="alert alert-danger">Erreur de chargement</div>';
+                    }
+                });
+        }
+
+        /* Mise à jour de l'avertissement de blocage en temps réel */
+        document.getElementById('edit-accountEnabled').addEventListener('change', function () {
+            document.getElementById('editBlockWarning').style.display = this.checked ? 'none' : 'block';
+        });
+
+        /* ===================== Bouton Supprimer (tableau) ===================== */
+        document.querySelectorAll('.btn-delete-user').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const userId   = this.dataset.userId;
+                const userName = this.dataset.userName;
+                confirmDelete(userId, userName);
+            });
+        });
+
+        /* Bouton supprimer depuis la modale édition */
+        document.getElementById('editDeleteBtn').addEventListener('click', function () {
+            const userId   = this.dataset.userId;
+            const userName = this.dataset.userName;
+            bootstrap.Modal.getInstance(document.getElementById('editUserModal')).hide();
+            confirmDelete(userId, userName);
+        });
+
+        function confirmDelete(userId, userName) {
+            if (confirm('Supprimer définitivement l\'utilisateur ' + userName + ' ?\n⚠️ Cette action est irréversible.')) {
+                const csrfToken  = document.getElementById('_csrf_token').content;
+                const csrfHeader = document.getElementById('_csrf_header').content;
+                fetch('/admin/users/' + userId + '/delete', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: { [csrfHeader]: csrfToken }
+                })
+                .then(r => {
+                    if (r.ok || r.redirected) {
+                        window.location = '/admin/users';
+                    } else {
+                        alert('Erreur suppression : HTTP ' + r.status);
+                    }
+                })
+                .catch(err => alert('Erreur réseau : ' + err.message));
             }
         }
     </script>

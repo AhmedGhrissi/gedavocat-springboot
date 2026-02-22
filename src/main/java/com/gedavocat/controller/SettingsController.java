@@ -222,22 +222,22 @@ public class SettingsController {
     public ResponseEntity<Map<String, Object>> getUserData(Authentication authentication) {
         try {
             User user = getCurrentUser(authentication);
-            Map<String, Object> userData = Map.of(
-                "firstName", user.getFirstName() != null ? user.getFirstName() : "",
-                "lastName", user.getLastName() != null ? user.getLastName() : "",
-                "email", user.getEmail(),
-                "phone", user.getPhone() != null ? user.getPhone() : "",
-                "barNumber", user.getBarNumber() != null ? user.getBarNumber() : "",
-                "subscriptionPlan", user.getSubscriptionPlan() != null ? user.getSubscriptionPlan().getDisplayName() : "FREE",
-                "maxClients", user.getMaxClients(),
-                "yousignConfigured", settingsService.isYousignConfigured(user.getId()),
-                "yousignApiKey", settingsService.getYousignApiKey(user.getId())
-            );
+            Map<String, Object> userData = new java.util.LinkedHashMap<>();
+            userData.put("firstName", user.getFirstName() != null ? user.getFirstName() : "");
+            userData.put("lastName", user.getLastName() != null ? user.getLastName() : "");
+            userData.put("email", user.getEmail() != null ? user.getEmail() : "");
+            userData.put("phone", user.getPhone() != null ? user.getPhone() : "");
+            userData.put("barNumber", user.getBarNumber() != null ? user.getBarNumber() : "");
+            userData.put("subscriptionPlan", user.getSubscriptionPlan() != null ? user.getSubscriptionPlan().getDisplayName() : "FREE");
+            userData.put("maxClients", user.getMaxClients());
+            userData.put("yousignConfigured", settingsService.isYousignConfigured(user.getId()));
+            String apiKey = settingsService.getYousignApiKey(user.getId());
+            userData.put("yousignApiKey", apiKey != null ? apiKey : "");
             return ResponseEntity.ok(userData);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of(
-                "error", e.getMessage()
-            ));
+            Map<String, Object> errMap = new java.util.LinkedHashMap<>();
+            errMap.put("error", e.getMessage() != null ? e.getMessage() : "Erreur inconnue");
+            return ResponseEntity.badRequest().body(errMap);
         }
     }
 

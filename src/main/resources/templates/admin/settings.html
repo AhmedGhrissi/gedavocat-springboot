@@ -2,7 +2,9 @@
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout}">
-<head><title>Administration - Paramètres</title>
+<head>
+    <link rel="stylesheet" th:href="@{/css/pages/admin.css}">
+<title>Administration - Paramètres</title>
 </head>
 <body>
 <div layout:fragment="content">
@@ -13,9 +15,32 @@
                 <h2 class="mb-1">⚙️ Paramètres et intégrations</h2>
                 <p class="text-muted">Configuration et liens vers les plateformes externes</p>
             </div>
-            <a href="/admin" class="btn btn-outline-secondary">
-                <i class="fas fa-arrow-left"></i> Retour au dashboard
-            </a>
+        </div>
+
+        <!-- Navigation admin -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="btn-group" role="group">
+                    <a href="/admin" class="btn btn-outline-primary">
+                        <i class="fas fa-home"></i> Dashboard
+                    </a>
+                    <a href="/admin/system" class="btn btn-outline-primary">
+                        <i class="fas fa-server"></i> Système
+                    </a>
+                    <a href="/admin/database" class="btn btn-outline-primary">
+                        <i class="fas fa-database"></i> Base de données
+                    </a>
+                    <a href="/admin/logs" class="btn btn-outline-primary">
+                        <i class="fas fa-file-alt"></i> Logs
+                    </a>
+                    <a href="/admin/users" class="btn btn-outline-primary">
+                        <i class="fas fa-users"></i> Utilisateurs
+                    </a>
+                    <a href="/admin/statistics" class="btn btn-outline-primary">
+                        <i class="fas fa-chart-line"></i> Statistiques
+                    </a>
+                </div>
+            </div>
         </div>
 
         <!-- Intégrations externes -->

@@ -6,15 +6,20 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.io.File;
+import javax.sql.DataSource;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.sql.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.zip.GZIPOutputStream;
 
 /**
  * API REST pour les actions d'administration (GC, sauvegarde, nettoyage)
@@ -27,15 +32,10 @@ import java.util.Map;
 public class AdminApiController {
 
     private final AuditLogRepository auditLogRepository;
+    private final DataSource dataSource;
 
     @Value("${spring.datasource.url:jdbc:mysql://localhost:3306/gedavocat}")
     private String datasourceUrl;
-
-    @Value("${spring.datasource.username:gedavocat}")
-    private String datasourceUsername;
-
-    @Value("${spring.datasource.password:}")
-    private String datasourcePassword;
 
     /**
      * Force le Garbage Collector JVM
@@ -54,45 +54,103 @@ public class AdminApiController {
     }
 
     /**
-     * Lance un mysqldump de la base de données
+     * Lance un dump SQL complet via JDBC (compatible tous environnements Docker)
      */
     @PostMapping("/backup")
     public ResponseEntity<Map<String, Object>> runBackup() {
         try {
-            // Extraire le nom de la base depuis l'URL JDBC
             String dbName = extractDbName(datasourceUrl);
             String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
             String backupDir = "/opt/gedavocat/backups";
             String backupFile = backupDir + "/backup_" + timestamp + ".sql.gz";
 
-            // Créer le répertoire si inexistant
             new File(backupDir).mkdirs();
 
-            String[] cmd = {
-                "/bin/bash", "-c",
-                String.format("mysqldump -u %s -p%s %s 2>/dev/null | gzip > %s",
-                    datasourceUsername, datasourcePassword, dbName, backupFile)
-            };
+            try (Connection conn = dataSource.getConnection();
+                 OutputStream fos = new FileOutputStream(backupFile);
+                 GZIPOutputStream gzip = new GZIPOutputStream(fos);
+                 Writer writer = new OutputStreamWriter(gzip, StandardCharsets.UTF_8)) {
 
-            Process process = Runtime.getRuntime().exec(cmd);
-            int exitCode = process.waitFor();
+                writer.write("-- DocAvocat SQL Backup\n");
+                writer.write("-- Date: " + LocalDateTime.now() + "\n");
+                writer.write("-- Database: " + dbName + "\n\n");
+                writer.write("SET FOREIGN_KEY_CHECKS=0;\n\n");
 
-            if (exitCode == 0) {
-                long size = new File(backupFile).length();
-                log.info("Sauvegarde créée : {} ({} bytes)", backupFile, size);
-                return ResponseEntity.ok(Map.of(
-                    "success", true,
-                    "message", "Sauvegarde créée : " + backupFile + " (" + formatBytes(size) + ")"
-                ));
-            } else {
-                log.warn("mysqldump terminé avec code {}", exitCode);
-                return ResponseEntity.ok(Map.of(
-                    "success", false,
-                    "message", "Sauvegarde terminée avec code " + exitCode + ". Vérifiez les logs serveur."
-                ));
+                // Liste des tables
+                List<String> tables = new ArrayList<>();
+                try (ResultSet rs = conn.getMetaData().getTables(dbName, null, "%", new String[]{"TABLE"})) {
+                    while (rs.next()) tables.add(rs.getString("TABLE_NAME"));
+                }
+
+                for (String table : tables) {
+                    // DDL : CREATE TABLE
+                    try (Statement st = conn.createStatement();
+                         ResultSet rs = st.executeQuery("SHOW CREATE TABLE `" + table + "`")) {
+                        if (rs.next()) {
+                            writer.write("DROP TABLE IF EXISTS `" + table + "`;\n");
+                            writer.write(rs.getString(2) + ";\n\n");
+                        }
+                    }
+
+                    // Données : INSERT
+                    try (Statement st = conn.createStatement();
+                         ResultSet rs = st.executeQuery("SELECT * FROM `" + table + "`")) {
+                        ResultSetMetaData meta = rs.getMetaData();
+                        int colCount = meta.getColumnCount();
+                        boolean hasRows = false;
+
+                        // Colonnes
+                        StringBuilder colNames = new StringBuilder("INSERT INTO `").append(table).append("` (");
+                        for (int i = 1; i <= colCount; i++) {
+                            if (i > 1) colNames.append(", ");
+                            colNames.append("`").append(meta.getColumnName(i)).append("`");
+                        }
+                        colNames.append(") VALUES\n");
+
+                        StringBuilder rows = new StringBuilder();
+                        while (rs.next()) {
+                            hasRows = true;
+                            rows.append("  (");
+                            for (int i = 1; i <= colCount; i++) {
+                                if (i > 1) rows.append(", ");
+                                Object val = rs.getObject(i);
+                                if (val == null) {
+                                    rows.append("NULL");
+                                } else if (val instanceof Number) {
+                                    rows.append(val);
+                                } else if (val instanceof Boolean) {
+                                    rows.append((Boolean) val ? 1 : 0);
+                                } else {
+                                    rows.append("'").append(val.toString()
+                                        .replace("\\", "\\\\")
+                                        .replace("'", "''")
+                                        .replace("\n", "\\n")
+                                        .replace("\r", "\\r")).append("'");
+                                }
+                            }
+                            rows.append("),\n");
+                        }
+
+                        if (hasRows) {
+                            // Remplace la dernière virgule par un point-virgule
+                            String rowStr = rows.toString();
+                            rowStr = rowStr.substring(0, rowStr.lastIndexOf(",\n")) + ";\n\n";
+                            writer.write(colNames.toString() + rowStr);
+                        }
+                    }
+                }
+                writer.write("SET FOREIGN_KEY_CHECKS=1;\n");
             }
+
+            long size = new File(backupFile).length();
+            log.info("Sauvegarde JDBC créée : {} ({})", backupFile, formatBytes(size));
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Sauvegarde créée : " + backupFile + " (" + formatBytes(size) + ")"
+            ));
+
         } catch (Exception e) {
-            log.error("Erreur lors de la sauvegarde", e);
+            log.error("Erreur lors de la sauvegarde JDBC", e);
             return ResponseEntity.internalServerError().body(Map.of(
                 "success", false,
                 "message", "Erreur : " + e.getMessage()
@@ -104,16 +162,23 @@ public class AdminApiController {
      * Supprime les audit logs de plus de 90 jours
      */
     @PostMapping("/clean-audit-logs")
-    @Transactional
     public ResponseEntity<Map<String, Object>> cleanAuditLogs() {
-        LocalDateTime cutoff = LocalDateTime.now().minusDays(90);
-        long count = auditLogRepository.countByCreatedAtBefore(cutoff);
-        auditLogRepository.deleteByCreatedAtBefore(cutoff);
-        log.info("Nettoyage audit logs : {} entrées supprimées (antérieures à {})", count, cutoff);
-        return ResponseEntity.ok(Map.of(
-            "success", true,
-            "message", count + " entrées d'audit supprimées (antérieures à 90 jours)"
-        ));
+        try {
+            LocalDateTime cutoff = LocalDateTime.now().minusDays(90);
+            long count = auditLogRepository.countByCreatedAtBefore(cutoff);
+            auditLogRepository.deleteByCreatedAtBefore(cutoff);
+            log.info("Nettoyage audit logs : {} entrées supprimées (antérieures à {})", count, cutoff);
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", count + " entrées d'audit supprimées (antérieures à 90 jours)"
+            ));
+        } catch (Exception e) {
+            log.error("Erreur lors du nettoyage des audit logs", e);
+            return ResponseEntity.internalServerError().body(Map.of(
+                "success", false,
+                "message", "Erreur : " + e.getMessage()
+            ));
+        }
     }
 
     private String extractDbName(String jdbcUrl) {
