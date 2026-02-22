@@ -6,6 +6,11 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.http.*;
 import com.gedavocat.model.User;
 
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+import java.nio.charset.StandardCharsets;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
 /**
@@ -22,6 +27,30 @@ public class PayPlugService {
     private String apiUrl;
 
     private final RestTemplate restTemplate = new RestTemplate();
+
+    /**
+     * Vérifie la signature HMAC-SHA256 du webhook PayPlug.
+     * Si aucune clé secrète n'est configurée, la vérification est ignorée (développement).
+     */
+    public boolean verifyWebhookSignature(String payload, String signature) {
+        if (secretKey == null || secretKey.isEmpty() || secretKey.startsWith("sk_test_YOUR")) {
+            // Clé non configurée → accepter en dev (mais loguer un warning)
+            return true;
+        }
+        if (signature == null || signature.isEmpty()) {
+            return false;
+        }
+        try {
+            Mac mac = Mac.getInstance("HmacSHA256");
+            SecretKeySpec keySpec = new SecretKeySpec(secretKey.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
+            mac.init(keySpec);
+            byte[] hmacBytes = mac.doFinal(payload.getBytes(StandardCharsets.UTF_8));
+            String computed = Base64.getEncoder().encodeToString(hmacBytes);
+            return computed.equals(signature);
+        } catch (NoSuchAlgorithmException | InvalidKeyException e) {
+            return false;
+        }
+    }
 
     /**
      * Créer un paiement PayPlug

@@ -20,8 +20,6 @@
                                   method="post" 
                                   th:object="${client}">
                                 
-                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-                                
                                 <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
                                     <i class="fas fa-exclamation-circle"></i> <span th:text="${error}"></span>
                                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>

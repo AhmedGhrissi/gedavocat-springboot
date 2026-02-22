@@ -97,6 +97,46 @@ public interface AppointmentRepository extends JpaRepository<Appointment, String
         @Param("now") LocalDateTime now
     );
 
+    // ========== Méthodes avec JOIN FETCH (open-in-view=false) ==========
+
+    @Query("SELECT a FROM Appointment a LEFT JOIN FETCH a.client LEFT JOIN FETCH a.relatedCase LEFT JOIN FETCH a.lawyer " +
+           "WHERE a.lawyer.id = :lawyerId AND a.appointmentDate BETWEEN :startDate AND :endDate " +
+           "ORDER BY a.appointmentDate")
+    List<Appointment> findByLawyerIdAndDateRangeWithRelations(
+        @Param("lawyerId") String lawyerId,
+        @Param("startDate") LocalDateTime startDate,
+        @Param("endDate") LocalDateTime endDate
+    );
+
+    @Query("SELECT a FROM Appointment a LEFT JOIN FETCH a.client LEFT JOIN FETCH a.relatedCase LEFT JOIN FETCH a.lawyer " +
+           "WHERE a.lawyer.id = :lawyerId AND a.appointmentDate > :now " +
+           "AND a.status NOT IN ('CANCELLED', 'COMPLETED') " +
+           "ORDER BY a.appointmentDate")
+    List<Appointment> findUpcomingAppointmentsByLawyerWithRelations(
+        @Param("lawyerId") String lawyerId,
+        @Param("now") LocalDateTime now
+    );
+
+    @Query("SELECT a FROM Appointment a LEFT JOIN FETCH a.client LEFT JOIN FETCH a.relatedCase LEFT JOIN FETCH a.lawyer " +
+           "WHERE a.lawyer.id = :lawyerId AND DATE(a.appointmentDate) = DATE(:date) " +
+           "ORDER BY a.appointmentDate")
+    List<Appointment> findTodayAppointmentsByLawyerWithRelations(
+        @Param("lawyerId") String lawyerId,
+        @Param("date") LocalDateTime date
+    );
+
+    @Query("SELECT a FROM Appointment a LEFT JOIN FETCH a.client LEFT JOIN FETCH a.relatedCase LEFT JOIN FETCH a.lawyer " +
+           "WHERE a.client.id = :clientId ORDER BY a.appointmentDate DESC")
+    List<Appointment> findByClientIdWithRelationsOrderByAppointmentDateDesc(
+        @Param("clientId") String clientId
+    );
+
+    @Query("SELECT a FROM Appointment a LEFT JOIN FETCH a.client LEFT JOIN FETCH a.relatedCase LEFT JOIN FETCH a.lawyer " +
+           "WHERE a.relatedCase.id = :caseId ORDER BY a.appointmentDate DESC")
+    List<Appointment> findByRelatedCaseIdWithRelationsOrderByAppointmentDateDesc(
+        @Param("caseId") String caseId
+    );
+
     /**
      * Supprime la référence au dossier dans les rendez-vous (avant suppression du dossier)
      */

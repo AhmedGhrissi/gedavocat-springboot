@@ -65,6 +65,30 @@ public class DocumentService {
         return documentRepository.findDeletedByCaseId(caseId);
     }
     
+    private static final java.util.Set<String> ALLOWED_EXTENSIONS = java.util.Set.of(
+            ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx",
+            ".odt", ".ods", ".odp", ".txt", ".csv", ".rtf",
+            ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tiff", ".webp",
+            ".zip", ".rar", ".7z", ".eml", ".msg"
+    );
+
+    private static final java.util.Set<String> ALLOWED_MIMETYPES = java.util.Set.of(
+            "application/pdf", "application/msword",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "application/vnd.ms-excel",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "application/vnd.ms-powerpoint",
+            "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+            "application/vnd.oasis.opendocument.text",
+            "application/vnd.oasis.opendocument.spreadsheet",
+            "application/vnd.oasis.opendocument.presentation",
+            "text/plain", "text/csv", "application/rtf",
+            "image/jpeg", "image/png", "image/gif", "image/bmp", "image/tiff", "image/webp",
+            "application/zip", "application/x-rar-compressed", "application/x-7z-compressed",
+            "message/rfc822", "application/vnd.ms-outlook",
+            "application/octet-stream"
+    );
+
     /**
      * Upload un nouveau document
      */
@@ -76,6 +100,30 @@ public class DocumentService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
         
+        // SÉCURITÉ : validation du fichier
+        String originalFilename = file.getOriginalFilename();
+        if (originalFilename == null || originalFilename.isBlank()) {
+            throw new RuntimeException("Nom de fichier invalide");
+        }
+        // Sanitize filename — remove path separators and null bytes
+        originalFilename = originalFilename.replaceAll("[/\\\\\\x00]", "_");
+        
+        // Validate extension
+        String fileExtension = "";
+        int dotIndex = originalFilename.lastIndexOf(".");
+        if (dotIndex > 0) {
+            fileExtension = originalFilename.substring(dotIndex).toLowerCase();
+        }
+        if (!ALLOWED_EXTENSIONS.contains(fileExtension)) {
+            throw new RuntimeException("Type de fichier non autorisé: " + fileExtension);
+        }
+        
+        // Validate MIME type
+        String mimeType = file.getContentType();
+        if (mimeType == null || !ALLOWED_MIMETYPES.contains(mimeType.toLowerCase())) {
+            throw new RuntimeException("Type MIME non autorisé: " + mimeType);
+        }
+        
         // Créer le répertoire si nécessaire
         try {
             Path uploadPath = Paths.get(uploadDir);
@@ -84,8 +132,6 @@ public class DocumentService {
             }
             
             // Générer un nom de fichier unique
-            String originalFilename = file.getOriginalFilename();
-            String fileExtension = originalFilename.substring(originalFilename.lastIndexOf("."));
             String uniqueFilename = UUID.randomUUID().toString() + fileExtension;
             
             // Sauvegarder le fichier

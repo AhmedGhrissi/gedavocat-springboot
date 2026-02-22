@@ -1,12 +1,8 @@
 ﻿<!DOCTYPE html>
 <html lang="fr" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <link rel="stylesheet" href="/css/pages/home.css">
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <!-- SEO -->
     <title>DocAvocat | Logiciel GED pour avocats — Dossiers, Documents, RPVA</title>
     <meta name="description" content="DocAvocat simplifie la gestion de votre cabinet : dossiers clients, documents sécurisés, signatures électroniques et communications RPVA e-Barreau en un seul outil.">
     <meta name="robots" content="index, follow">
@@ -14,91 +10,270 @@
     <meta name="theme-color" content="#667eea">
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <link rel="shortcut icon" href="/favicon.svg">
-
-    <!-- Open Graph -->
-    <meta property="og:type"        content="website">
-    <meta property="og:site_name"   content="DocAvocat">
-    <meta property="og:title"       content="DocAvocat | Logiciel GED pour avocats">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="DocAvocat">
+    <meta property="og:title" content="DocAvocat | Logiciel GED pour avocats">
     <meta property="og:description" content="Gérez vos dossiers, clients et documents en toute sécurité. Signatures électroniques et RPVA intégrés.">
-    <meta property="og:url"         content="https://docavocat.fr/">
-    <meta property="og:locale"      content="fr_FR">
-
-    <!-- Twitter Card -->
-    <meta name="twitter:card"        content="summary_large_image">
-    <meta name="twitter:title"       content="DocAvocat | Logiciel pour cabinet d'avocat">
-    <meta name="twitter:description" content="Gérez vos dossiers, documents et clients facilement. Signatures électroniques et RPVA intégrés.">
-
+    <meta property="og:url" content="https://docavocat.fr/">
+    <meta property="og:locale" content="fr_FR">
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
-    <link rel="stylesheet" th:href="@{/css/main.css}">
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+        body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#1e293b;background:#fff;line-height:1.6}
+        .container{max-width:1200px;margin:0 auto;padding:0 24px}
+        .navbar{position:fixed;top:0;left:0;right:0;z-index:1000;background:rgba(255,255,255,0.95);backdrop-filter:blur(12px);border-bottom:1px solid #e2e8f0;padding:0 24px;height:72px;display:flex;align-items:center}
+        .navbar .container{display:flex;justify-content:space-between;align-items:center;width:100%}
+        .logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:#1e293b;font-weight:700;font-size:20px}
+        .logo i{color:#667eea;font-size:22px}
+        .nav-links{display:flex;gap:8px}
+        .btn{padding:10px 20px;border-radius:10px;font-weight:600;font-size:14px;text-decoration:none;border:none;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:6px}
+        .btn-ghost{color:#64748b;background:transparent}
+        .btn-ghost:hover{color:#1e293b;background:#f1f5f9}
+        .btn-primary{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff}
+        .btn-primary:hover{box-shadow:0 4px 15px rgba(102,126,234,.4);transform:translateY(-1px)}
+        .btn-outline{border:2px solid #667eea;color:#667eea;background:transparent}
+        .btn-outline:hover{background:rgba(102,126,234,.08)}
+        .btn-lg{padding:14px 32px;font-size:16px;border-radius:12px}
+        .btn-white{background:#fff;color:#667eea;font-weight:700}
+        .btn-white:hover{box-shadow:0 4px 15px rgba(0,0,0,.15);transform:translateY(-1px)}
+        .hero{padding:160px 24px 100px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff;text-align:center;position:relative;overflow:hidden}
+        .hero::before{content:'';position:absolute;top:-200px;right:-200px;width:600px;height:600px;background:radial-gradient(circle,rgba(255,255,255,.1) 0%,transparent 70%)}
+        .hero h1{font-size:clamp(2rem,5vw,3.5rem);font-weight:800;margin-bottom:16px;line-height:1.15}
+        .hero p{font-size:18px;color:rgba(255,255,255,.9);max-width:600px;margin:0 auto 40px}
+        .hero-cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+        .features{padding:100px 24px;background:#f8fafc}
+        .section-title{text-align:center;margin-bottom:60px}
+        .section-title h2{font-size:2rem;font-weight:800;margin-bottom:12px}
+        .section-title p{color:#64748b;font-size:17px;max-width:600px;margin:0 auto}
+        .features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px}
+        .feature-card{background:#fff;border-radius:16px;padding:32px;text-align:center;border:1px solid #e2e8f0;transition:all .3s}
+        .feature-card:hover{transform:translateY(-4px);box-shadow:0 12px 32px rgba(0,0,0,.08)}
+        .fi{width:64px;height:64px;border-radius:16px;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;font-size:24px}
+        .fi.purple{background:rgba(102,126,234,.1);color:#667eea}
+        .fi.green{background:rgba(16,185,129,.1);color:#10b981}
+        .fi.blue{background:rgba(14,165,233,.1);color:#0ea5e9}
+        .fi.orange{background:rgba(245,158,11,.1);color:#f59e0b}
+        .fi.red{background:rgba(239,68,68,.1);color:#ef4444}
+        .fi.indigo{background:rgba(99,102,241,.1);color:#6366f1}
+        .feature-card h3{font-size:18px;font-weight:700;margin-bottom:8px}
+        .feature-card p{font-size:14px;color:#64748b;line-height:1.6}
+        .pricing{padding:100px 24px;background:#fff}
+        .billing-toggle{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:48px}
+        .billing-toggle span{font-size:15px;font-weight:600;color:#64748b;cursor:pointer}
+        .billing-toggle span.active{color:#1e293b}
+        .toggle-switch{width:52px;height:28px;background:#667eea;border-radius:99px;position:relative;cursor:pointer;transition:background .3s}
+        .toggle-switch::after{content:'';position:absolute;top:3px;left:3px;width:22px;height:22px;background:#fff;border-radius:50%;transition:transform .3s}
+        .toggle-switch.annual::after{transform:translateX(24px)}
+        .discount-badge{background:#ecfdf5;color:#059669;font-size:12px;font-weight:700;padding:4px 10px;border-radius:99px;border:1px solid #a7f3d0}
+        .pricing-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:24px}
+        .pricing-card{background:#fff;border:2px solid #e2e8f0;border-radius:20px;padding:36px 32px;position:relative;transition:all .3s}
+        .pricing-card:hover{border-color:#667eea;box-shadow:0 12px 40px rgba(102,126,234,.12)}
+        .pricing-card.popular{border-color:#667eea;box-shadow:0 8px 30px rgba(102,126,234,.15)}
+        .popular-badge{position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-size:12px;font-weight:700;padding:4px 16px;border-radius:99px}
+        .plan-name{font-size:20px;font-weight:700;margin-bottom:4px}
+        .plan-desc{color:#64748b;font-size:14px;margin-bottom:20px}
+        .price{font-size:40px;font-weight:800;color:#1e293b;margin-bottom:4px}
+        .price span{font-size:16px;font-weight:500;color:#64748b}
+        .price-original{font-size:16px;color:#94a3b8;text-decoration:line-through;margin-bottom:4px;display:none}
+        .price-original.show{display:block}
+        .price-period{font-size:13px;color:#94a3b8;margin-bottom:24px}
+        .pricing-card ul{list-style:none;padding:0;margin:0 0 28px}
+        .pricing-card li{display:flex;align-items:flex-start;gap:10px;padding:8px 0;font-size:14px;color:#475569}
+        .pricing-card li i{margin-top:3px;flex-shrink:0}
+        .pricing-card li i.fa-check{color:#10b981}
+        .pricing-card li i.fa-times{color:#cbd5e1}
+        .pricing-card li.disabled{color:#cbd5e1}
+        .pricing-card .btn{width:100%;justify-content:center}
+        .footer{background:#1e293b;color:#94a3b8;padding:48px 24px;text-align:center}
+        .footer-links{display:flex;gap:24px;justify-content:center;margin-bottom:16px;flex-wrap:wrap}
+        .footer-links a{color:#94a3b8;text-decoration:none;font-size:14px}
+        .footer-links a:hover{color:#fff}
+        .footer p{font-size:13px}
+        @media(max-width:768px){.hero{padding:120px 16px 80px}.hero h1{font-size:2rem}.pricing-grid{grid-template-columns:1fr;max-width:400px;margin:0 auto}}
+    </style>
 </head>
 <body>
-    <nav class="navbar">
-        <div class="container">
-            <a href="/" class="logo">
-                <i class="fas fa-balance-scale"></i>
-                <span>GED Avocat</span>
+
+<nav class="navbar">
+    <div class="container">
+        <a href="/" class="logo"><i class="fas fa-scale-balanced"></i><span>DocAvocat</span></a>
+        <div class="nav-links">
+            <a th:href="@{/login}" class="btn btn-ghost">Connexion</a>
+            <a href="#pricing" class="btn btn-primary">Commencer</a>
+        </div>
+    </div>
+</nav>
+
+<section class="hero">
+    <div class="container">
+        <h1>La gestion de votre cabinet,<br>simplifiée.</h1>
+        <p>Dossiers, clients, documents, signatures électroniques et RPVA e-Barreau — tout en un seul outil sécurisé et conforme RGPD.</p>
+        <div class="hero-cta">
+            <a href="#pricing" class="btn btn-white btn-lg"><i class="fas fa-rocket"></i> Commencer maintenant</a>
+            <a th:href="@{/login}" class="btn btn-lg" style="border:2px solid rgba(255,255,255,.4);color:#fff;background:transparent">
+                <i class="fas fa-sign-in-alt"></i> Se connecter
             </a>
-            <div>
-                <a th:href="@{/login}" class="btn btn-secondary">Connexion</a>
-                <a th:href="@{/register}" class="btn btn-primary">Inscription</a>
+        </div>
+    </div>
+</section>
+
+<section class="features">
+    <div class="container">
+        <div class="section-title">
+            <h2>Tout ce dont vous avez besoin</h2>
+            <p>Une plateforme complète conçue spécifiquement pour les avocats et cabinets juridiques.</p>
+        </div>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="fi purple"><i class="fas fa-folder-open"></i></div>
+                <h3>Gestion des dossiers</h3>
+                <p>Créez, organisez et suivez vos dossiers. Partagez avec vos collaborateurs de manière sécurisée et temporaire.</p>
+            </div>
+            <div class="feature-card">
+                <div class="fi green"><i class="fas fa-users"></i></div>
+                <h3>Gestion des clients</h3>
+                <p>Gérez vos clients particuliers et professionnels. Espace client dédié avec accès sécurisé à leurs dossiers.</p>
+            </div>
+            <div class="feature-card">
+                <div class="fi blue"><i class="fas fa-file-signature"></i></div>
+                <h3>Signatures électroniques</h3>
+                <p>Envoyez des documents à signer via Yousign. Suivi en temps réel de toutes vos signatures.</p>
+            </div>
+            <div class="feature-card">
+                <div class="fi orange"><i class="fas fa-calendar-alt"></i></div>
+                <h3>Calendrier & rendez-vous</h3>
+                <p>Planifiez vos rendez-vous, reliez-les à vos clients et envoyez des notifications automatiques par email.</p>
+            </div>
+            <div class="feature-card">
+                <div class="fi red"><i class="fas fa-file-invoice-dollar"></i></div>
+                <h3>Facturation</h3>
+                <p>Créez et importez vos factures, reliez-les à vos clients et suivez les paiements.</p>
+            </div>
+            <div class="feature-card">
+                <div class="fi indigo"><i class="fas fa-shield-alt"></i></div>
+                <h3>Sécurité & RGPD</h3>
+                <p>Chiffrement des données, filigranes sur les documents, conformité RGPD et audit de sécurité intégré.</p>
             </div>
         </div>
-    </nav>
+    </div>
+</section>
 
-    <section class="hero">
-        <div class="container">
-            <h1><i class="fas fa-balance-scale"></i> GED Avocat</h1>
-            <p>Gestion Électronique de Documents pour Avocats</p>
-            <p>La solution complète pour gérer vos clients, dossiers et documents en toute sécurité</p>
-            <a th:href="@{/register}" class="btn btn-primary" style="font-size: 1.2rem; padding: 1rem 2rem;">
-                <i class="fas fa-rocket"></i> Commencer maintenant
-            </a>
+<section class="pricing" id="pricing">
+    <div class="container">
+        <div class="section-title">
+            <h2>Des tarifs adaptés à votre activité</h2>
+            <p>Choisissez l'offre qui correspond à la taille de votre cabinet. Sans engagement.</p>
         </div>
-    </section>
-
-    <section class="features">
-        <div class="container">
-            <h2 class="text-center">Fonctionnalités principales</h2>
-            <div class="features-grid">
-                <div class="feature-card">
-                    <i class="fas fa-users"></i>
-                    <h3>Gestion des clients</h3>
-                    <p>Gérez facilement tous vos clients avec leurs informations et historique complet</p>
-                </div>
-                <div class="feature-card">
-                    <i class="fas fa-folder-open"></i>
-                    <h3>Dossiers juridiques</h3>
-                    <p>Organisez vos affaires par client avec un suivi détaillé de l'avancement</p>
-                </div>
-                <div class="feature-card">
-                    <i class="fas fa-file-alt"></i>
-                    <h3>Documents sécurisés</h3>
-                    <p>Stockage sécurisé avec gestion des versions et corbeille</p>
-                </div>
-                <div class="feature-card">
-                    <i class="fas fa-share-alt"></i>
-                    <h3>Partage collaboratif</h3>
-                    <p>Partagez des dossiers avec vos collaborateurs en toute sécurité</p>
-                </div>
-                <div class="feature-card">
-                    <i class="fas fa-shield-alt"></i>
-                    <h3>Sécurité maximale</h3>
-                    <p>Chiffrement des données et conformité RGPD garantie</p>
-                </div>
-                <div class="feature-card">
-                    <i class="fas fa-chart-line"></i>
-                    <h3>Statistiques</h3>
-                    <p>Tableau de bord complet avec toutes vos métriques importantes</p>
-                </div>
+        <div class="billing-toggle">
+            <span id="labelMonthly" class="active" onclick="if(isAnnual)toggleBilling()">Mensuel</span>
+            <div class="toggle-switch" id="billingToggle" onclick="toggleBilling()"></div>
+            <span id="labelAnnual" onclick="if(!isAnnual)toggleBilling()">Annuel</span>
+            <span class="discount-badge">-20%</span>
+        </div>
+        <div class="pricing-grid">
+            <div class="pricing-card">
+                <div class="plan-name">Solo</div>
+                <div class="plan-desc">Pour l'avocat indépendant</div>
+                <div class="price-original" id="originalSolo"></div>
+                <div class="price" id="priceSolo">29,99 € <span>/mois</span></div>
+                <div class="price-period" id="periodSolo">Facturation mensuelle</div>
+                <ul>
+                    <li><i class="fas fa-check"></i> Jusqu'à 10 clients</li>
+                    <li><i class="fas fa-check"></i> Gestion des dossiers</li>
+                    <li><i class="fas fa-check"></i> Stockage documents 5 Go</li>
+                    <li><i class="fas fa-check"></i> 10 signatures / mois</li>
+                    <li><i class="fas fa-check"></i> Calendrier & rendez-vous</li>
+                    <li><i class="fas fa-check"></i> Facturation</li>
+                    <li class="disabled"><i class="fas fa-times"></i> Partage collaborateur</li>
+                    <li class="disabled"><i class="fas fa-times"></i> RPVA e-Barreau</li>
+                </ul>
+                <a th:href="@{/register(plan=SOLO,billing=monthly)}" class="btn btn-outline btn-lg btn-subscribe" data-plan="SOLO">Commencer maintenant</a>
+            </div>
+            <div class="pricing-card popular">
+                <div class="popular-badge">LE PLUS POPULAIRE</div>
+                <div class="plan-name">Cabinet</div>
+                <div class="plan-desc">Pour les cabinets en croissance</div>
+                <div class="price-original" id="originalCabinet"></div>
+                <div class="price" id="priceCabinet">99,99 € <span>/mois</span></div>
+                <div class="price-period" id="periodCabinet">Facturation mensuelle</div>
+                <ul>
+                    <li><i class="fas fa-check"></i> Jusqu'à 100 clients</li>
+                    <li><i class="fas fa-check"></i> Gestion des dossiers</li>
+                    <li><i class="fas fa-check"></i> Stockage documents 50 Go</li>
+                    <li><i class="fas fa-check"></i> 50 signatures / mois</li>
+                    <li><i class="fas fa-check"></i> Calendrier & rendez-vous</li>
+                    <li><i class="fas fa-check"></i> Facturation</li>
+                    <li><i class="fas fa-check"></i> Partage collaborateur</li>
+                    <li><i class="fas fa-check"></i> RPVA e-Barreau</li>
+                </ul>
+                <a th:href="@{/register(plan=CABINET,billing=monthly)}" class="btn btn-primary btn-lg btn-subscribe" data-plan="CABINET">Commencer maintenant</a>
+            </div>
+            <div class="pricing-card">
+                <div class="plan-name">Entreprise</div>
+                <div class="plan-desc">Pour les grands cabinets</div>
+                <div class="price-original" id="originalEnterprise"></div>
+                <div class="price" id="priceEnterprise">299,99 € <span>/mois</span></div>
+                <div class="price-period" id="periodEnterprise">Facturation mensuelle</div>
+                <ul>
+                    <li><i class="fas fa-check"></i> Clients illimités</li>
+                    <li><i class="fas fa-check"></i> Gestion des dossiers</li>
+                    <li><i class="fas fa-check"></i> Stockage illimité</li>
+                    <li><i class="fas fa-check"></i> Signatures illimitées</li>
+                    <li><i class="fas fa-check"></i> Calendrier & rendez-vous</li>
+                    <li><i class="fas fa-check"></i> Facturation</li>
+                    <li><i class="fas fa-check"></i> Partage collaborateur</li>
+                    <li><i class="fas fa-check"></i> RPVA e-Barreau</li>
+                </ul>
+                <a th:href="@{/register(plan=ENTERPRISE,billing=monthly)}" class="btn btn-outline btn-lg btn-subscribe" data-plan="ENTERPRISE">Commencer maintenant</a>
             </div>
         </div>
-    </section>
+    </div>
+</section>
 
-    <footer class="footer">
-        <div class="container">
-            <p class="text-center">&copy; 2024 GED Avocat. Tous droits réservés.</p>
+<footer class="footer">
+    <div class="container">
+        <div class="footer-links">
+            <a th:href="@{/legal/terms}">CGU</a>
+            <a th:href="@{/legal/privacy}">Confidentialité & RGPD</a>
+            <a th:href="@{/login}">Connexion</a>
         </div>
-    </footer>
+        <p>&copy; 2026 DocAvocat. Tous droits réservés.</p>
+    </div>
+</footer>
+
+<script>
+let isAnnual = false;
+const prices = { SOLO:{monthly:29.99,annual:23.99}, CABINET:{monthly:99.99,annual:79.99}, ENTERPRISE:{monthly:299.99,annual:239.99} };
+function toggleBilling(){
+    isAnnual=!isAnnual;
+    document.getElementById('billingToggle').classList.toggle('annual',isAnnual);
+    document.getElementById('labelMonthly').classList.toggle('active',!isAnnual);
+    document.getElementById('labelAnnual').classList.toggle('active',isAnnual);
+    ['Solo','Cabinet','Enterprise'].forEach(function(plan){
+        var key=plan.toUpperCase();
+        var priceEl=document.getElementById('price'+plan);
+        var originalEl=document.getElementById('original'+plan);
+        var periodEl=document.getElementById('period'+plan);
+        if(isAnnual){
+            var m=prices[key].monthly, a=prices[key].annual;
+            originalEl.textContent=m.toFixed(2).replace('.',',')+' \u20AC/mois';
+            originalEl.classList.add('show');
+            priceEl.innerHTML=a.toFixed(2).replace('.',',')+' \u20AC <span>/mois</span>';
+            periodEl.textContent='Facturation annuelle \u2014 '+(a*12).toFixed(2).replace('.',',')+' \u20AC/an';
+        } else {
+            originalEl.classList.remove('show');
+            priceEl.innerHTML=prices[key].monthly.toFixed(2).replace('.',',')+' \u20AC <span>/mois</span>';
+            periodEl.textContent='Facturation mensuelle';
+        }
+    });
+    document.querySelectorAll('.btn-subscribe').forEach(function(btn){
+        var plan=btn.dataset.plan;
+        btn.href='/register?plan='+plan+'&billing='+(isAnnual?'annual':'monthly');
+    });
+}
+</script>
 </body>
 </html>

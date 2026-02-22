@@ -140,7 +140,7 @@
 .premium-empty i {
     font-size: 80px;
     background: linear-gradient(135deg, #667eea, #764ba2);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
     margin-bottom: 24px;
 }
 .premium-empty h3 { font-size: 24px; color: var(--text-primary); margin-bottom: 12px; }

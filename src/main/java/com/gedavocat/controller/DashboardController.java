@@ -59,7 +59,8 @@ public class DashboardController {
         } else if (user.isLawyer()) {
             buildLawyerDashboard(user, model);
         } else if (user.isClient()) {
-            buildClientDashboard(user, model);
+            // B19 FIX : Les clients sont redirigés vers leur portail dédié
+            return "redirect:/my-cases";
         } else {
             buildEmptyDashboard(model);
         }

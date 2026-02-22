@@ -35,6 +35,7 @@
                                     <label for="name" class="form-label">Nom du dossier <span class="text-danger">*</span></label>
                                     <input type="text" 
                                            class="form-control" 
+                                           th:classappend="${#fields.hasErrors('name')} ? 'is-invalid' : ''"
                                            id="name" 
                                            th:field="*{name}"
                                            required
@@ -72,6 +73,7 @@
                                 <div class="mb-3">
                                     <label for="description" class="form-label">Description</label>
                                     <textarea class="form-control" 
+                                              th:classappend="${#fields.hasErrors('description')} ? 'is-invalid' : ''"
                                               id="description" 
                                               th:field="*{description}"
                                               rows="4"
@@ -82,8 +84,8 @@
                                 <div class="mb-3" th:if="${isEdit}">
                                     <label for="status" class="form-label">Statut</label>
                                     <select class="form-select" id="status" th:field="*{status}">
-                                        <option th:each="stat : ${T(com.gedavocat.model.Case.CaseStatus).values()}" 
-                                                th:value="${stat}" 
+                                        <option th:each="stat : ${caseStatuses}"
+                                                th:value="${stat}"
                                                 th:text="${stat.displayName}">
                                             Statut
                                         </option>

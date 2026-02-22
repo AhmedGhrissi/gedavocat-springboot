@@ -7,6 +7,8 @@ import com.gedavocat.service.ClientInvitationService;
 import com.gedavocat.service.ClientService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -22,6 +24,7 @@ import java.util.List;
 @Controller
 @RequestMapping("/clients")
 @RequiredArgsConstructor
+@PreAuthorize("hasAnyRole('LAWYER', 'ADMIN', 'LAWYER_SECONDARY')")
 public class ClientController {
 
     private final ClientService clientService;
@@ -58,7 +61,6 @@ public class ClientController {
      */
     @GetMapping("/new")
     public String newClientForm(Model model) {
-        System.out.println("=== DEBUG: newClientForm appelé pour /clients/new ===");
         model.addAttribute("client", new Client());
         return "clients/form";
     }
@@ -75,22 +77,15 @@ public class ClientController {
             RedirectAttributes redirectAttributes,
             Model model
     ) {
-        System.out.println("=== DEBUG createClient: client.name = " + client.getName());
-        System.out.println("=== DEBUG createClient: client.email = " + client.getEmail());
-        
         if (result.hasErrors()) {
-            System.out.println("=== DEBUG createClient: Erreurs de validation détectées");
-            result.getAllErrors().forEach(error -> System.out.println("Erreur: " + error));
             model.addAttribute("client", client);
             return "clients/form";
         }
 
         try {
             User user = getCurrentUser(authentication);
-            System.out.println("=== DEBUG createClient: User ID = " + user.getId());
             
             Client savedClient = clientService.createClient(client, user.getId());
-            System.out.println("=== DEBUG createClient: Client créé avec ID = " + savedClient.getId());
 
             if (sendInvitation) {
                 String lawyerFullName = user.getFirstName() + " " + user.getLastName();
@@ -101,8 +96,6 @@ public class ClientController {
             }
             return "redirect:/clients";
         } catch (Exception e) {
-            System.err.println("=== ERREUR createClient: " + e.getMessage());
-            e.printStackTrace();
             model.addAttribute("client", client);
             model.addAttribute("error", e.getMessage());
             return "clients/form";
@@ -118,8 +111,8 @@ public class ClientController {
         Client client = clientService.getClientById(id);
 
         // Vérifier l'accès
-        if (!client.getLawyer().getId().equals(user.getId())) {
-            throw new RuntimeException("Accès non autorisé");
+        if (client.getLawyer() == null || !client.getLawyer().getId().equals(user.getId())) {
+            throw new AccessDeniedException("Accès non autorisé");
         }
 
         model.addAttribute("client", client);
@@ -131,12 +124,11 @@ public class ClientController {
      */
     @GetMapping("/{id}/edit")
     public String editClientForm(@PathVariable String id, Model model, Authentication authentication) {
-        System.out.println("=== DEBUG: editClientForm appelé pour client ID = " + id);
         User user = getCurrentUser(authentication);
         Client client = clientService.getClientById(id);
 
-        if (!client.getLawyer().getId().equals(user.getId())) {
-            throw new RuntimeException("Accès non autorisé");
+        if (client.getLawyer() == null || !client.getLawyer().getId().equals(user.getId())) {
+            throw new AccessDeniedException("Accès non autorisé");
         }
 
         model.addAttribute("client", client);
@@ -155,12 +147,7 @@ public class ClientController {
             RedirectAttributes redirectAttributes,
             Model model
     ) {
-        System.out.println("=== DEBUG updateClient: ID = " + id);
-        System.out.println("=== DEBUG updateClient: client.name = " + client.getName());
-        
         if (result.hasErrors()) {
-            System.out.println("=== DEBUG updateClient: Erreurs de validation détectées");
-            result.getAllErrors().forEach(error -> System.out.println("Erreur: " + error));
             model.addAttribute("client", client);
             return "clients/form";
         }
@@ -168,13 +155,10 @@ public class ClientController {
         try {
             User user = getCurrentUser(authentication);
             clientService.updateClient(id, client, user.getId());
-            System.out.println("=== DEBUG updateClient: Client mis à jour avec succès");
             
             redirectAttributes.addFlashAttribute("message", "Client modifié avec succès");
             return "redirect:/clients/" + id;
         } catch (Exception e) {
-            System.err.println("=== ERREUR updateClient: " + e.getMessage());
-            e.printStackTrace();
             model.addAttribute("client", client);
             model.addAttribute("error", e.getMessage());
             return "clients/form";

@@ -41,7 +41,7 @@
                                 <div class="step-content">
                                     <h4>Créez vos dossiers</h4>
                                     <p>Organisez vos affaires par client et par type</p>
-                                    <a href="/cases/new" class="btn btn-success">
+                                    <a th:href="@{/cases/new}" class="btn btn-success">
                                         <i class="fas fa-folder-plus"></i> Créer un dossier
                                     </a>
                                 </div>
@@ -52,7 +52,7 @@
                                 <div class="step-content">
                                     <h4>Importez vos documents</h4>
                                     <p>Uploadez et organisez vos pièces juridiques</p>
-                                    <a href="/documents/upload" class="btn btn-info">
+                                    <a th:href="@{/documents}" class="btn btn-info">
                                         <i class="fas fa-upload"></i> Importer des documents
                                     </a>
                                 </div>
@@ -110,13 +110,13 @@
                         <h4><i class="fas fa-question-circle"></i> Besoin d'aide ?</h4>
                         <p>Notre équipe est là pour vous accompagner dans vos premiers pas.</p>
                         <div class="help-actions">
-                            <a href="/help" class="btn btn-outline-primary">
+                            <a th:href="@{/dashboard}" class="btn btn-outline-primary">
                                 <i class="fas fa-book"></i> Documentation
                             </a>
-                            <a href="/support" class="btn btn-outline-primary">
+                            <a href="mailto:support@docavocat.fr" class="btn btn-outline-primary">
                                 <i class="fas fa-life-ring"></i> Support
                             </a>
-                            <a href="mailto:support@gedavocat.com" class="btn btn-outline-primary">
+                            <a href="mailto:support@docavocat.fr" class="btn btn-outline-primary">
                                 <i class="fas fa-envelope"></i> Nous contacter
                             </a>
                         </div>

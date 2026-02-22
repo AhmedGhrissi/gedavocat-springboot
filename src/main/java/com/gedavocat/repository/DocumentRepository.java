@@ -15,7 +15,7 @@ public interface DocumentRepository extends JpaRepository<Document, String> {
     /**
      * Trouve tous les documents d'un dossier (non supprimés)
      */
-    @Query("SELECT d FROM Document d WHERE d.caseEntity.id = :caseId AND d.deletedAt IS NULL")
+    @Query("SELECT d FROM Document d LEFT JOIN FETCH d.caseEntity LEFT JOIN FETCH d.uploadedBy WHERE d.caseEntity.id = :caseId AND d.deletedAt IS NULL")
     List<Document> findByCaseIdAndNotDeleted(@Param("caseId") String caseId);
     
     /**
@@ -27,7 +27,7 @@ public interface DocumentRepository extends JpaRepository<Document, String> {
     /**
      * Trouve les dernières versions des documents
      */
-    @Query("SELECT d FROM Document d WHERE d.caseEntity.id = :caseId " +
+    @Query("SELECT d FROM Document d LEFT JOIN FETCH d.caseEntity LEFT JOIN FETCH d.uploadedBy WHERE d.caseEntity.id = :caseId " +
            "AND d.isLatest = TRUE AND d.deletedAt IS NULL")
     List<Document> findLatestVersionsByCaseId(@Param("caseId") String caseId);
     

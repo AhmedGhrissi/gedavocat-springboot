@@ -60,7 +60,7 @@ public class CaseService {
      * Récupère les dossiers d'un client
      */
     public List<Case> getCasesByClient(String clientId) {
-        return caseRepository.findByClientId(clientId);
+        return caseRepository.findByClientIdWithLawyerAndClient(clientId);
     }
     
     /**

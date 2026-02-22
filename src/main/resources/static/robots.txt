@@ -30,7 +30,7 @@ Disallow: /rpva/
 Disallow: /signatures/
 Disallow: /invoices/
 Disallow: /api/
-Disallow: /payement/
+Disallow: /payment/
 Disallow: /subscription/
 Disallow: /payment/
 

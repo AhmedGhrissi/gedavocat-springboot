@@ -102,11 +102,7 @@ services:
       - /opt/gedavocat/logs:/opt/gedavocat/logs
       - /opt/gedavocat/temp:/opt/gedavocat/temp
       - /opt/gedavocat/backups:/opt/gedavocat/backups
-      # Docker socket en lecture seule (métriques dashboard admin)
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    # Accès au groupe docker pour lire le socket (GID 988 sur Hetzner)
-    group_add:
-      - "${DOCKER_GID:-988}"
+      # Docker socket removed for security — DO NOT mount docker.sock in app container
     networks:
       - docavocat-net
     logging:
@@ -165,7 +161,7 @@ services:
     ports:
       - "127.0.0.1:3000:3000"
     environment:
-      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-GrafanaDocAvocat2026!}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD}
       GF_USERS_ALLOW_SIGN_UP: "false"
       GF_SERVER_ROOT_URL: "http://localhost:3000"
       GF_ANALYTICS_REPORTING_ENABLED: "false"

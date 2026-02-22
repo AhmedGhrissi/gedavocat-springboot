@@ -9,6 +9,7 @@ import com.gedavocat.repository.UserRepository;
 import com.gedavocat.service.RPVAService;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
@@ -31,6 +32,7 @@ import java.util.Map;
 @Controller
 @RequestMapping("/rpva")
 @RequiredArgsConstructor
+@PreAuthorize("hasAnyRole('LAWYER', 'ADMIN')")
 public class RPVAController {
 
     private final RPVAService rpvaService;
@@ -52,8 +54,13 @@ public class RPVAController {
         // Récupérer les communications envoyées et reçues depuis la base
         List<RpvaCommunication> sentCommunications = rpvaCommunicationRepository
             .findBySentById(user.getId());
-        List<RpvaCommunication> receivedCommunications = rpvaCommunicationRepository
-            .findBySentById(user.getId());
+        // Filtrer les notifications (reçues) vs les autres (envoyées)
+        List<RpvaCommunication> receivedCommunications = sentCommunications.stream()
+            .filter(c -> c.getType() == RpvaCommunication.CommunicationType.NOTIFICATION)
+            .toList();
+        sentCommunications = sentCommunications.stream()
+            .filter(c -> c.getType() != RpvaCommunication.CommunicationType.NOTIFICATION)
+            .toList();
 
         model.addAttribute("sentCommunications", sentCommunications);
         model.addAttribute("receivedCommunications", receivedCommunications);
@@ -120,6 +127,11 @@ public class RPVAController {
         // Si un dossier est spécifié
         if (caseId != null) {
             Case caseEntity = caseRepository.findById(caseId).orElse(null);
+            // Ownership check: verify case belongs to authenticated lawyer
+            if (caseEntity != null && caseEntity.getLawyer() != null
+                    && !caseEntity.getLawyer().getId().equals(user.getId())) {
+                caseEntity = null; // do not expose foreign case
+            }
             model.addAttribute("case", caseEntity);
         }
 
@@ -189,6 +201,13 @@ public class RPVAController {
             User user = userRepository.findByEmail(userDetails.getUsername())
                     .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
 
+            // Ownership check: verify communication belongs to user
+            RpvaCommunication comm = rpvaCommunicationRepository.findById(communicationId).orElse(null);
+            if (comm != null && !comm.getSentBy().getId().equals(user.getId())) {
+                model.addAttribute("error", "Accès non autorisé");
+                return "redirect:/rpva";
+            }
+
             // Récupérer le statut de la communication
             Map<String, Object> status = rpvaService.getCommunicationStatus(communicationId);
 
@@ -209,9 +228,18 @@ public class RPVAController {
      */
     @GetMapping("/communications/{communicationId}/receipt")
     public ResponseEntity<byte[]> downloadReceipt(
-            @PathVariable String communicationId
+            @PathVariable String communicationId,
+            @AuthenticationPrincipal UserDetails userDetails
     ) {
         try {
+            // Ownership check: verify communication belongs to authenticated user
+            User user = userRepository.findByEmail(userDetails.getUsername())
+                    .orElseThrow(() -> new RuntimeException("Utilisateur non trouv\u00e9"));
+            RpvaCommunication comm = rpvaCommunicationRepository.findById(communicationId).orElse(null);
+            if (comm != null && !comm.getSentBy().getId().equals(user.getId())) {
+                return ResponseEntity.status(403).build();
+            }
+
             byte[] receipt = rpvaService.downloadReceipt(communicationId);
             if (receipt == null || receipt.length == 0) {
                 return ResponseEntity.notFound().build();
@@ -258,11 +286,21 @@ public class RPVAController {
             @RequestParam String caseId,
             @RequestParam String jurisdictionCode,
             @RequestParam String caseType,
+            @AuthenticationPrincipal UserDetails userDetails,
             RedirectAttributes redirectAttributes
     ) {
         try {
+            User user = userRepository.findByEmail(userDetails.getUsername())
+                    .orElseThrow(() -> new RuntimeException("Utilisateur non trouv\u00e9"));
+
             Case caseEntity = caseRepository.findById(caseId)
-                    .orElseThrow(() -> new RuntimeException("Dossier non trouvé"));
+                    .orElseThrow(() -> new RuntimeException("Dossier non trouv\u00e9"));
+
+            // Ownership check: verify this case belongs to the authenticated lawyer
+            if (caseEntity.getLawyer() == null || !caseEntity.getLawyer().getId().equals(user.getId())) {
+                redirectAttributes.addFlashAttribute("error", "Acc\u00e8s non autoris\u00e9 \u00e0 ce dossier");
+                return "redirect:/rpva";
+            }
 
             // Récupérer les parties depuis le dossier
             Map<String, Object> parties = new HashMap<>();
