@@ -98,6 +98,7 @@ public class CaseController {
         model.addAttribute("clients", clients);
         model.addAttribute("selectedClientId", clientId);
         model.addAttribute("isEdit", false);
+        model.addAttribute("caseStatuses", CaseStatus.values());
         return "cases/form";
     }
 
@@ -123,18 +124,19 @@ public class CaseController {
             model.addAttribute("clients", clientService.getClientsByLawyer(user.getId()));
             model.addAttribute("selectedClientId", clientId);
             model.addAttribute("isEdit", false);
+            model.addAttribute("caseStatuses", CaseStatus.values());
             return "cases/form";
         }
 
         try {
             User user = getCurrentUser(authentication);
-            
+
             // Récupérer et associer le client
             Client client = clientService.getClientById(clientId);
             caseEntity.setClient(client);
-            
+
             Case savedCase = caseService.createCase(caseEntity, user.getId());
-            
+
             redirectAttributes.addFlashAttribute("message", "Dossier créé avec succès");
             return "redirect:/cases/" + savedCase.getId();
         } catch (Exception e) {
@@ -142,6 +144,7 @@ public class CaseController {
             model.addAttribute("clients", clientService.getClientsByLawyer(user.getId()));
             model.addAttribute("selectedClientId", clientId);
             model.addAttribute("isEdit", false);
+            model.addAttribute("caseStatuses", CaseStatus.values());
             model.addAttribute("error", e.getMessage());
             return "cases/form";
         }
@@ -221,6 +224,7 @@ public class CaseController {
         model.addAttribute("clients", clients);
         model.addAttribute("selectedClientId", caseEntity.getClient() != null ? caseEntity.getClient().getId() : "");
         model.addAttribute("isEdit", true);
+        model.addAttribute("caseStatuses", CaseStatus.values());
         return "cases/form";
     }
 
@@ -251,6 +255,7 @@ public class CaseController {
             model.addAttribute("clients", clients);
             model.addAttribute("selectedClientId", clientId);
             model.addAttribute("isEdit", true);
+            model.addAttribute("caseStatuses", CaseStatus.values());
             return "cases/form";
         }
 
@@ -279,6 +284,7 @@ public class CaseController {
             model.addAttribute("clients", clients);
             model.addAttribute("selectedClientId", clientId);
             model.addAttribute("isEdit", true);
+            model.addAttribute("caseStatuses", CaseStatus.values());
             model.addAttribute("error", e.getMessage());
             return "cases/form";
         }

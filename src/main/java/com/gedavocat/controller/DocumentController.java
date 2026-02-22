@@ -126,7 +126,7 @@ public class DocumentController {
     ) {
         if (file.isEmpty()) {
             redirectAttributes.addFlashAttribute("error", "Veuillez sélectionner un fichier");
-            return "redirect:/documents/case/" + caseId;
+            return "redirect:/cases/" + caseId;
         }
 
         try {
@@ -137,7 +137,7 @@ public class DocumentController {
                     .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
             if (!isAdmin && !caseEntity.getLawyer().getId().equals(user.getId())) {
                 redirectAttributes.addFlashAttribute("error", "Accès non autorisé à ce dossier");
-                return "redirect:/documents";
+                return "redirect:/cases";
             }
             documentService.uploadDocument(caseId, file, user.getId(), user.getRole().name());
             redirectAttributes.addFlashAttribute("message", "Document uploadé avec succès");
@@ -145,7 +145,7 @@ public class DocumentController {
             redirectAttributes.addFlashAttribute("error", "Erreur lors de l'upload: " + e.getMessage());
         }
 
-        return "redirect:/documents/case/" + caseId;
+        return "redirect:/cases/" + caseId;
     }
 
     /**

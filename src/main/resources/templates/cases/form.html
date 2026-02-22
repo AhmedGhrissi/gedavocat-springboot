@@ -84,8 +84,8 @@
                                 <div class="mb-3" th:if="${isEdit}">
                                     <label for="status" class="form-label">Statut</label>
                                     <select class="form-select" id="status" th:field="*{status}">
-                                        <option th:each="stat : ${T(com.gedavocat.model.Case.CaseStatus).values()}" 
-                                                th:value="${stat}" 
+                                        <option th:each="stat : ${caseStatuses}"
+                                                th:value="${stat}"
                                                 th:text="${stat.displayName}">
                                             Statut
                                         </option>
