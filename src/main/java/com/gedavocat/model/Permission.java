@@ -3,7 +3,9 @@ package com.gedavocat.model;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
@@ -24,6 +26,8 @@ import java.util.UUID;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString(exclude = {"caseEntity", "grantedBy", "lawyer"})
+@EqualsAndHashCode(exclude = {"caseEntity", "grantedBy", "lawyer"})
 public class Permission {
     
     @Id
