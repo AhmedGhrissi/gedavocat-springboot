@@ -1,312 +1,360 @@
-﻿<!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      layout:decorate="~{layout}">
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Choisir votre abonnement - DocAvocat</title>
+    <meta name="robots" content="index, follow">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="shortcut icon" href="/favicon.svg">
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" th:href="@{/css/pages/pricing.css}">
-<title>Choisir votre abonnement</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f1f5f9;
+            color: #1e293b;
+            min-height: 100vh;
+        }
+        .pricing-page { max-width: 1280px; margin: 0 auto; padding: 48px 24px 80px; }
+        .pricing-topbar {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 48px;
+        }
+        .pricing-logo {
+            display: flex; align-items: center; gap: 10px;
+            text-decoration: none; color: #1e293b;
+            font-size: 20px; font-weight: 700;
+        }
+        .pricing-logo i { color: #667eea; }
+        .pricing-topbar-links { display: flex; gap: 16px; align-items: center; }
+        .pricing-topbar-links a {
+            color: #64748b; text-decoration: none; font-size: 14px; font-weight: 500;
+            transition: color 0.2s;
+        }
+        .pricing-topbar-links a:hover { color: #667eea; }
+        .pricing-topbar-links .btn-login {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white; padding: 8px 20px; border-radius: 10px;
+            font-weight: 600; font-size: 14px;
+        }
+        .pricing-topbar-links .btn-login:hover { color: white; opacity: 0.9; }
+    </style>
 </head>
 <body>
-    <div layout:fragment="content">
-        <div class="container-fluid">
-            <!-- Hero -->
-            <div class="pricing-hero">
-                <h1>Choisissez votre plan</h1>
-                <p>Gérez votre cabinet d'avocat avec efficacité. Annulez à tout moment.</p>
+    <div class="pricing-page">
+
+        <!-- Top bar minimal -->
+        <div class="pricing-topbar">
+            <a th:href="@{/}" class="pricing-logo">
+                <i class="fas fa-scale-balanced"></i>
+                DocAvocat
+            </a>
+            <div class="pricing-topbar-links">
+                <a th:href="@{/login}">Se connecter</a>
+                <a th:href="@{/login}" class="btn-login">Accéder à l'app</a>
+            </div>
+        </div>
+
+        <!-- Hero -->
+        <div class="pricing-hero">
+            <h1>Choisissez votre plan</h1>
+            <p>Gérez votre cabinet d'avocat avec efficacité. Annulez à tout moment.</p>
+        </div>
+
+        <!-- Period Toggle -->
+        <div class="period-toggle">
+            <button class="period-btn active" onclick="togglePeriod('monthly')">
+                Mensuel
+            </button>
+            <button class="period-btn" onclick="togglePeriod('yearly')">
+                Annuel
+                <span class="save-badge">-20%</span>
+            </button>
+        </div>
+
+        <!-- Pricing Cards -->
+        <div class="pricing-grid">
+            <!-- SOLO -->
+            <div class="pricing-card">
+                <div class="plan-name">Solo</div>
+                <div class="plan-description">
+                    Parfait pour les avocats indépendants démarrant leur activité
+                </div>
+                <div class="price-container">
+                    <span class="price monthly-price">29€</span>
+                    <span class="price yearly-price" style="display: none;">23€</span>
+                    <span class="price-period">/mois</span>
+                    <span class="old-price yearly-price" style="display: none;">29€</span>
+                </div>
+                <ul class="features-list">
+                    <li class="feature-item">
+                        <div class="feature-icon"><i class="fas fa-check"></i></div>
+                        <span><strong>5 clients</strong> maximum</span>
+                    </li>
+                    <li class="feature-item">
+                        <div class="feature-icon"><i class="fas fa-check"></i></div>
+                        <span><strong>10 dossiers</strong> actifs</span>
+                    </li>
+                    <li class="feature-item">
+                        <div class="feature-icon"><i class="fas fa-check"></i></div>
+                        <span><strong>5 GB</strong> de stockage</span>
+                    </li>
+                    <li class="feature-item">
+                        <div class="feature-icon"><i class="fas fa-check"></i></div>
+                        <span>Gestion documentaire</span>
+                    </li>
+                    <li class="feature-item">
+                        <div class="feature-icon"><i class="fas fa-check"></i></div>
+                        <span>Support email</span>
+                    </li>
+                    <li class="feature-item">
+                        <div class="feature-icon disabled"><i class="fas fa-times"></i></div>
+                        <span style="color: #cbd5e1;">Signatures électroniques</span>
+                    </li>
+                    <li class="feature-item">
+                        <div class="feature-icon disabled"><i class="fas fa-times"></i></div>
+                        <span style="color: #cbd5e1;">RPVA / e-Barreau</span>
+                    </li>
+                </ul>
+                <a th:href="@{/register(plan=SOLO,billing=monthly)}" class="cta-button cta-secondary cta-plan">
+                    Commencer gratuitement
+                </a>
             </div>
 
-            <!-- Period Toggle -->
-            <div class="period-toggle">
-                <button class="period-btn active" onclick="togglePeriod('monthly')">
-                    Mensuel
-                </button>
-                <button class="period-btn" onclick="togglePeriod('yearly')">
-                    Annuel
-                    <span class="save-badge">-20%</span>
-                </button>
+            <!-- CABINET (Featured) -->
+            <div class="pricing-card featured">
+                <div class="featured-badge">⭐ Recommandé</div>
+                <div class="plan-name">Cabinet</div>
+                <div class="plan-description">
+                    Pour les cabinets établis avec plusieurs collaborateurs
+                </div>
+                <div class="price-container">
+                    <span class="price monthly-price">99€</span>
+                    <span class="price yearly-price" style="display: none;">79€</span>
+                    <span class="price-period">/mois</span>
+                    <span class="old-price yearly-price" style="display: none;">99€</span>
+                </div>
+                <ul class="features-list">
+                    <li class="feature-item">
+                        <div class="feature-icon"><i class="fas fa-check"></i></div>
+                        <span><strong>50 clients</strong> maximum</span>
+                    </li>
+                    <li class="feature-item">
+                        <div class="feature-icon"><i class="fas fa-check"></i></div>
+                        <span><strong>Dossiers illimités</strong></span>
+                    </li>
+                    <li class="feature-item">
+                        <div class="feature-icon"><i class="fas fa-check"></i></div>
+                        <span><strong>100 GB</strong> de stockage</span>
+                    </li>
+                    <li class="feature-item">
+                        <div class="feature-icon"><i class="fas fa-check"></i></div>
+                        <span>Gestion documentaire avancée</span>
+                    </li>
+                    <li class="feature-item">
+                        <div class="feature-icon"><i class="fas fa-check"></i></div>
+                        <span><strong>5 signatures/mois</strong> (Yousign)</span>
+                    </li>
+                    <li class="feature-item">
+                        <div class="feature-icon"><i class="fas fa-check"></i></div>
+                        <span>RPVA / e-Barreau intégré</span>
+                    </li>
+                    <li class="feature-item">
+                        <div class="feature-icon"><i class="fas fa-check"></i></div>
+                        <span><strong>3 utilisateurs</strong> inclus</span>
+                    </li>
+                    <li class="feature-item">
+                        <div class="feature-icon"><i class="fas fa-check"></i></div>
+                        <span>Support prioritaire</span>
+                    </li>
+                </ul>
+                <a th:href="@{/register(plan=CABINET,billing=monthly)}" class="cta-button cta-primary cta-plan">
+                    Démarrer maintenant
+                </a>
             </div>
 
-            <!-- Pricing Cards -->
-            <div class="pricing-grid">
-                <!-- SOLO -->
-                <div class="pricing-card">
-                    <div class="plan-name">Solo</div>
-                    <div class="plan-description">
-                        Parfait pour les avocats indépendants démarrant leur activité
-                    </div>
-                    <div class="price-container">
-                        <span class="price monthly-price">29€</span>
-                        <span class="price yearly-price" style="display: none;">23€</span>
-                        <span class="price-period">/mois</span>
-                        <span class="old-price yearly-price" style="display: none;">29€</span>
-                    </div>
-                    <ul class="features-list">
-                        <li class="feature-item">
-                            <div class="feature-icon"><i class="fas fa-check"></i></div>
-                            <span><strong>5 clients</strong> maximum</span>
-                        </li>
-                        <li class="feature-item">
-                            <div class="feature-icon"><i class="fas fa-check"></i></div>
-                            <span><strong>10 dossiers</strong> actifs</span>
-                        </li>
-                        <li class="feature-item">
-                            <div class="feature-icon"><i class="fas fa-check"></i></div>
-                            <span><strong>5 GB</strong> de stockage</span>
-                        </li>
-                        <li class="feature-item">
-                            <div class="feature-icon"><i class="fas fa-check"></i></div>
-                            <span>Gestion documentaire</span>
-                        </li>
-                        <li class="feature-item">
-                            <div class="feature-icon"><i class="fas fa-check"></i></div>
-                            <span>Support email</span>
-                        </li>
-                        <li class="feature-item">
-                            <div class="feature-icon disabled"><i class="fas fa-times"></i></div>
-                            <span style="color: #cbd5e1;">Signatures électroniques</span>
-                        </li>
-                        <li class="feature-item">
-                            <div class="feature-icon disabled"><i class="fas fa-times"></i></div>
-                            <span style="color: #cbd5e1;">RPVA / e-Barreau</span>
-                        </li>
-                    </ul>
-                    <a th:href="@{/register(plan=SOLO,billing=monthly)}" class="cta-button cta-secondary cta-plan">
-                        Commencer gratuitement
-                    </a>
+            <!-- ENTERPRISE -->
+            <div class="pricing-card">
+                <div class="plan-name">Entreprise</div>
+                <div class="plan-description">
+                    Pour les grands cabinets avec besoins personnalisés
                 </div>
-
-                <!-- CABINET (Featured) -->
-                <div class="pricing-card featured">
-                    <div class="featured-badge">⭐ Recommandé</div>
-                    <div class="plan-name">Cabinet</div>
-                    <div class="plan-description">
-                        Pour les cabinets établis avec plusieurs collaborateurs
-                    </div>
-                    <div class="price-container">
-                        <span class="price monthly-price">99€</span>
-                        <span class="price yearly-price" style="display: none;">79€</span>
-                        <span class="price-period">/mois</span>
-                        <span class="old-price yearly-price" style="display: none;">99€</span>
-                    </div>
-                    <ul class="features-list">
-                        <li class="feature-item">
-                            <div class="feature-icon"><i class="fas fa-check"></i></div>
-                            <span><strong>50 clients</strong> maximum</span>
-                        </li>
-                        <li class="feature-item">
-                            <div class="feature-icon"><i class="fas fa-check"></i></div>
-                            <span><strong>Dossiers illimités</strong></span>
-                        </li>
-                        <li class="feature-item">
-                            <div class="feature-icon"><i class="fas fa-check"></i></div>
-                            <span><strong>100 GB</strong> de stockage</span>
-                        </li>
-                        <li class="feature-item">
-                            <div class="feature-icon"><i class="fas fa-check"></i></div>
-                            <span>Gestion documentaire avancée</span>
-                        </li>
-                        <li class="feature-item">
-                            <div class="feature-icon"><i class="fas fa-check"></i></div>
-                            <span><strong>5 signatures/mois</strong> (Yousign)</span>
-                        </li>
-                        <li class="feature-item">
-                            <div class="feature-icon"><i class="fas fa-check"></i></div>
-                            <span>RPVA / e-Barreau intégré</span>
-                        </li>
-                        <li class="feature-item">
-                            <div class="feature-icon"><i class="fas fa-check"></i></div>
-                            <span><strong>3 utilisateurs</strong> inclus</span>
-                        </li>
-                        <li class="feature-item">
-                            <div class="feature-icon"><i class="fas fa-check"></i></div>
-                            <span>Support prioritaire</span>
-                        </li>
-                    </ul>
-                    <a th:href="@{/register(plan=CABINET,billing=monthly)}" class="cta-button cta-primary cta-plan">
-                        Démarrer maintenant
-                    </a>
+                <div class="price-container">
+                    <span class="price monthly-price">299€</span>
+                    <span class="price yearly-price" style="display: none;">239€</span>
+                    <span class="price-period">/mois</span>
+                    <span class="old-price yearly-price" style="display: none;">299€</span>
                 </div>
-
-                <!-- ENTERPRISE -->
-                <div class="pricing-card">
-                    <div class="plan-name">Entreprise</div>
-                    <div class="plan-description">
-                        Pour les grands cabinets avec besoins personnalisés
-                    </div>
-                    <div class="price-container">
-                        <span class="price monthly-price">299€</span>
-                        <span class="price yearly-price" style="display: none;">239€</span>
-                        <span class="price-period">/mois</span>
-                        <span class="old-price yearly-price" style="display: none;">299€</span>
-                    </div>
-                    <ul class="features-list">
-                        <li class="feature-item">
-                            <div class="feature-icon"><i class="fas fa-check"></i></div>
-                            <span><strong>Clients illimités</strong></span>
-                        </li>
-                        <li class="feature-item">
-                            <div class="feature-icon"><i class="fas fa-check"></i></div>
-                            <span><strong>Dossiers illimités</strong></span>
-                        </li>
-                        <li class="feature-item">
-                            <div class="feature-icon"><i class="fas fa-check"></i></div>
-                            <span><strong>1 TB</strong> de stockage</span>
-                        </li>
-                        <li class="feature-item">
-                            <div class="feature-icon"><i class="fas fa-check"></i></div>
-                            <span>Toutes fonctionnalités Cabinet</span>
-                        </li>
-                        <li class="feature-item">
-                            <div class="feature-icon"><i class="fas fa-check"></i></div>
-                            <span><strong>30 signatures/mois</strong> incluses</span>
-                        </li>
-                        <li class="feature-item">
-                            <div class="feature-icon"><i class="fas fa-check"></i></div>
-                            <span><strong>Utilisateurs illimités</strong></span>
-                        </li>
-                        <li class="feature-item">
-                            <div class="feature-icon"><i class="fas fa-check"></i></div>
-                            <span>API personnalisée</span>
-                        </li>
-                        <li class="feature-item">
-                            <div class="feature-icon"><i class="fas fa-check"></i></div>
-                            <span>Support dédié 24/7</span>
-                        </li>
-                    </ul>
-                    <a th:href="@{/register(plan=ENTERPRISE,billing=monthly)}" class="cta-button cta-secondary cta-plan">
-                        Commencer à la demande
-                    </a>
-                </div>
+                <ul class="features-list">
+                    <li class="feature-item">
+                        <div class="feature-icon"><i class="fas fa-check"></i></div>
+                        <span><strong>Clients illimités</strong></span>
+                    </li>
+                    <li class="feature-item">
+                        <div class="feature-icon"><i class="fas fa-check"></i></div>
+                        <span><strong>Dossiers illimités</strong></span>
+                    </li>
+                    <li class="feature-item">
+                        <div class="feature-icon"><i class="fas fa-check"></i></div>
+                        <span><strong>1 TB</strong> de stockage</span>
+                    </li>
+                    <li class="feature-item">
+                        <div class="feature-icon"><i class="fas fa-check"></i></div>
+                        <span>Toutes fonctionnalités Cabinet</span>
+                    </li>
+                    <li class="feature-item">
+                        <div class="feature-icon"><i class="fas fa-check"></i></div>
+                        <span><strong>30 signatures/mois</strong> incluses</span>
+                    </li>
+                    <li class="feature-item">
+                        <div class="feature-icon"><i class="fas fa-check"></i></div>
+                        <span><strong>Utilisateurs illimités</strong></span>
+                    </li>
+                    <li class="feature-item">
+                        <div class="feature-icon"><i class="fas fa-check"></i></div>
+                        <span>API personnalisée</span>
+                    </li>
+                    <li class="feature-item">
+                        <div class="feature-icon"><i class="fas fa-check"></i></div>
+                        <span>Support dédié 24/7</span>
+                    </li>
+                </ul>
+                <a th:href="@{/register(plan=ENTERPRISE,billing=monthly)}" class="cta-button cta-secondary cta-plan">
+                    Commencer à la demande
+                </a>
             </div>
+        </div>
 
-            <!-- Payment Methods -->
-            <div class="payment-methods">
-                <h3><i class="fas fa-shield-alt" style="color: #10b981;"></i> Moyens de paiement sécurisés</h3>
-                <div class="methods-grid">
-                    <div class="method-card">
-                        <div class="method-icon">💳</div>
-                        <div class="method-name">Carte Bancaire</div>
-                    </div>
-                    <div class="method-card">
-                        <div class="method-icon">🏦</div>
-                        <div class="method-name">SEPA</div>
-                    </div>
-                    <div class="method-card">
-                        <div class="method-icon">🍎</div>
-                        <div class="method-name">Apple Pay</div>
-                    </div>
-                    <div class="method-card">
-                        <div class="method-icon">🤖</div>
-                        <div class="method-name">Google Pay</div>
-                    </div>
-                    <div class="method-card">
-                        <div class="method-icon">💰</div>
-                        <div class="method-name">PayPlug</div>
-                    </div>
+        <!-- Payment Methods -->
+        <div class="payment-methods">
+            <h3><i class="fas fa-shield-alt" style="color: #10b981;"></i> Moyens de paiement sécurisés</h3>
+            <div class="methods-grid">
+                <div class="method-card">
+                    <div class="method-icon">💳</div>
+                    <div class="method-name">Carte Bancaire</div>
                 </div>
-            </div>
-
-            <!-- Trust Section -->
-            <div class="trust-section">
-                <h3 style="margin-bottom: 8px; color: #f1f5f9;">Paiement 100% sécurisé 🇫🇷</h3>
-                <p style="color: #64748b; margin-bottom: 0;">Powered by PayPlug - Solution française certifiée PCI-DSS</p>
-                <div class="trust-badges">
-                    <div class="trust-badge">
-                        <i class="fas fa-lock"></i>
-                        <span>Paiement crypté SSL</span>
-                    </div>
-                    <div class="trust-badge">
-                        <i class="fas fa-shield-check"></i>
-                        <span>Certifié PCI-DSS</span>
-                    </div>
-                    <div class="trust-badge">
-                        <i class="fas fa-undo"></i>
-                        <span>Annulation à tout moment</span>
-                    </div>
-                    <div class="trust-badge">
-                        <i class="fas fa-euro-sign"></i>
-                        <span>RGPD Compliant</span>
-                    </div>
+                <div class="method-card">
+                    <div class="method-icon">🏦</div>
+                    <div class="method-name">SEPA</div>
                 </div>
-            </div>
-
-            <!-- FAQ -->
-            <div class="faq-section">
-                <h2 style="text-align: center; margin-bottom: 32px;">Questions fréquentes</h2>
-
-                <div class="faq-item">
-                    <div class="faq-question">💳 Quels moyens de paiement acceptez-vous ?</div>
-                    <div class="faq-answer">
-                        Carte bancaire, SEPA, Apple Pay et Google Pay via notre partenaire PayPlug (solution 100% française).
-                    </div>
+                <div class="method-card">
+                    <div class="method-icon">🍎</div>
+                    <div class="method-name">Apple Pay</div>
                 </div>
-
-                <div class="faq-item">
-                    <div class="faq-question">🔄 Puis-je changer de plan ?</div>
-                    <div class="faq-answer">
-                        Oui, vous pouvez changer de plan à tout moment. Le changement est immédiat et le prix est ajusté au prorata.
-                    </div>
+                <div class="method-card">
+                    <div class="method-icon">🤖</div>
+                    <div class="method-name">Google Pay</div>
                 </div>
-
-                <div class="faq-item">
-                    <div class="faq-question">❌ Puis-je annuler mon abonnement ?</div>
-                    <div class="faq-answer">
-                        Absolument ! Vous pouvez annuler à tout moment depuis votre espace client. Aucune période d'engagement.
-                    </div>
-                </div>
-
-                <div class="faq-item">
-                    <div class="faq-question">🔒 Mes données sont-elles sécurisées ?</div>
-                    <div class="faq-answer">
-                        Vos données sont hébergées en France, chiffrées et sauvegardées quotidiennement. Nous sommes 100% conformes RGPD.
-                    </div>
-                </div>
-
-                <div class="faq-item">
-                    <div class="faq-question">📧 Quel support proposez-vous ?</div>
-                    <div class="faq-answer">
-                        Support email pour Solo, support prioritaire pour Cabinet, support dédié 24/7 pour Entreprise.
-                    </div>
+                <div class="method-card">
+                    <div class="method-icon">💰</div>
+                    <div class="method-name">PayPlug</div>
                 </div>
             </div>
         </div>
 
-        <script>
-            // Lire la période depuis l'URL si passée depuis la landing page
-            (function() {
-                const params = new URLSearchParams(window.location.search);
-                const billingParam = params.get('billing');
-                if (billingParam === 'yearly') {
-                    document.addEventListener('DOMContentLoaded', function() { togglePeriod('yearly'); });
-                }
-            })();
+        <!-- Trust Section -->
+        <div class="trust-section">
+            <h3 style="margin-bottom: 8px; color: #f1f5f9;">Paiement 100% sécurisé 🇫🇷</h3>
+            <p style="color: #64748b; margin-bottom: 0;">Powered by PayPlug - Solution française certifiée PCI-DSS</p>
+            <div class="trust-badges">
+                <div class="trust-badge">
+                    <i class="fas fa-lock"></i>
+                    <span>Paiement crypté SSL</span>
+                </div>
+                <div class="trust-badge">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>Certifié PCI-DSS</span>
+                </div>
+                <div class="trust-badge">
+                    <i class="fas fa-undo"></i>
+                    <span>Annulation à tout moment</span>
+                </div>
+                <div class="trust-badge">
+                    <i class="fas fa-euro-sign"></i>
+                    <span>RGPD Compliant</span>
+                </div>
+            </div>
+        </div>
 
-            function togglePeriod(period) {
-                // Toggle buttons
-                document.querySelectorAll('.period-btn').forEach(btn => btn.classList.remove('active'));
-                if (event && event.target) event.target.classList.add('active');
-                else {
-                    const btn = period === 'yearly' ? document.querySelectorAll('.period-btn')[1] : document.querySelectorAll('.period-btn')[0];
-                    if (btn) btn.classList.add('active');
-                }
+        <!-- FAQ -->
+        <div class="faq-section">
+            <h2 style="text-align: center; margin-bottom: 32px;">Questions fréquentes</h2>
 
-                // Toggle prices
-                if (period === 'yearly') {
-                    document.querySelectorAll('.monthly-price').forEach(el => el.style.display = 'none');
-                    document.querySelectorAll('.yearly-price').forEach(el => el.style.display = 'inline');
-                } else {
-                    document.querySelectorAll('.monthly-price').forEach(el => el.style.display = 'inline');
-                    document.querySelectorAll('.yearly-price').forEach(el => el.style.display = 'none');
-                }
+            <div class="faq-item">
+                <div class="faq-question">💳 Quels moyens de paiement acceptez-vous ?</div>
+                <div class="faq-answer">
+                    Carte bancaire, SEPA, Apple Pay et Google Pay via notre partenaire PayPlug (solution 100% française).
+                </div>
+            </div>
 
-                // Mettre à jour les liens des boutons CTA avec la période
-                document.querySelectorAll('.cta-plan').forEach(btn => {
-                    const url = new URL(btn.href, window.location.origin);
-                    url.searchParams.set('billing', period);
-                    btn.href = url.pathname + url.search;
-                });
-            }
-        </script>
+            <div class="faq-item">
+                <div class="faq-question">🔄 Puis-je changer de plan ?</div>
+                <div class="faq-answer">
+                    Oui, vous pouvez changer de plan à tout moment. Le changement est immédiat et le prix est ajusté au prorata.
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">❌ Puis-je annuler mon abonnement ?</div>
+                <div class="faq-answer">
+                    Absolument ! Vous pouvez annuler à tout moment depuis votre espace client. Aucune période d'engagement.
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">🔒 Mes données sont-elles sécurisées ?</div>
+                <div class="faq-answer">
+                    Vos données sont hébergées en France, chiffrées et sauvegardées quotidiennement. Nous sommes 100% conformes RGPD.
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">📧 Quel support proposez-vous ?</div>
+                <div class="faq-answer">
+                    Support email pour Solo, support prioritaire pour Cabinet, support dédié 24/7 pour Entreprise.
+                </div>
+            </div>
+        </div>
+
     </div>
+
+    <script>
+        // Lire la période depuis l'URL si passée depuis la landing page
+        (function() {
+            const params = new URLSearchParams(window.location.search);
+            const billingParam = params.get('billing');
+            if (billingParam === 'yearly') {
+                document.addEventListener('DOMContentLoaded', function() { togglePeriod('yearly'); });
+            }
+        })();
+
+        function togglePeriod(period) {
+            document.querySelectorAll('.period-btn').forEach(btn => btn.classList.remove('active'));
+            if (event && event.target) event.target.classList.add('active');
+            else {
+                const btn = period === 'yearly' ? document.querySelectorAll('.period-btn')[1] : document.querySelectorAll('.period-btn')[0];
+                if (btn) btn.classList.add('active');
+            }
+
+            if (period === 'yearly') {
+                document.querySelectorAll('.monthly-price').forEach(el => el.style.display = 'none');
+                document.querySelectorAll('.yearly-price').forEach(el => el.style.display = 'inline');
+            } else {
+                document.querySelectorAll('.monthly-price').forEach(el => el.style.display = 'inline');
+                document.querySelectorAll('.yearly-price').forEach(el => el.style.display = 'none');
+            }
+
+            document.querySelectorAll('.cta-plan').forEach(btn => {
+                const url = new URL(btn.href, window.location.origin);
+                url.searchParams.set('billing', period);
+                btn.href = url.pathname + url.search;
+            });
+        }
+    </script>
 </body>
 </html>
