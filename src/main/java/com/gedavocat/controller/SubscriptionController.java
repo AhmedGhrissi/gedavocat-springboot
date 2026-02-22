@@ -44,7 +44,7 @@ public class SubscriptionController {
             model.addAttribute("currentPlan", user.getSubscriptionPlan());
         }
         model.addAttribute("stripePublishableKey", stripeService.getPublishableKey());
-        return "payment/pricing";
+        return "subscription/pricing";
     }
 
     /**

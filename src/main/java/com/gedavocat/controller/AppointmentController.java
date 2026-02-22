@@ -15,6 +15,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -41,6 +42,7 @@ public class AppointmentController {
      * Page principale du calendrier
      */
     @GetMapping
+    @Transactional(readOnly = true)
     public String calendar(Authentication authentication, Model model,
                           @RequestParam(required = false) Integer year,
                           @RequestParam(required = false) Integer month) {
@@ -62,6 +64,11 @@ public class AppointmentController {
         List<Appointment> upcomingAppointments = appointmentService.getUpcomingAppointments(user.getId());
         List<Appointment> todayAppointments = appointmentService.getTodayAppointments(user.getId());
         
+        // Force-initialiser les proxies lazy (open-in-view=false)
+        initializeAppointmentProxies(appointments);
+        initializeAppointmentProxies(upcomingAppointments);
+        initializeAppointmentProxies(todayAppointments);
+        
         model.addAttribute("user", user);
         model.addAttribute("appointments", appointments);
         model.addAttribute("upcomingAppointments", upcomingAppointments);
@@ -77,6 +84,7 @@ public class AppointmentController {
      * Liste des rendez-vous
      */
     @GetMapping("/list")
+    @Transactional(readOnly = true)
     public String list(Authentication authentication, Model model,
                       @RequestParam(required = false) String filter) {
         User user = getCurrentUser(authentication);
@@ -91,6 +99,9 @@ public class AppointmentController {
         } else {
             appointments = appointmentService.getAppointmentsByLawyer(user.getId());
         }
+        
+        // Force-initialiser les proxies lazy (open-in-view=false)
+        initializeAppointmentProxies(appointments);
         
         model.addAttribute("user", user);
         model.addAttribute("appointments", appointments);
@@ -368,6 +379,25 @@ public class AppointmentController {
     // ==========================================
     // MÉTHODES UTILITAIRES
     // ==========================================
+
+    /**
+     * Force l'initialisation des proxies lazy des rendez-vous
+     * (nécessaire car open-in-view=false)
+     */
+    private void initializeAppointmentProxies(List<Appointment> appointments) {
+        if (appointments == null) return;
+        for (Appointment a : appointments) {
+            if (a.getClient() != null) {
+                a.getClient().getName(); // force init
+            }
+            if (a.getRelatedCase() != null) {
+                a.getRelatedCase().getName(); // force init
+            }
+            if (a.getLawyer() != null) {
+                a.getLawyer().getFirstName(); // force init
+            }
+        }
+    }
 
     private User getCurrentUser(Authentication authentication) {
         return userRepository.findByEmail(authentication.getName())
