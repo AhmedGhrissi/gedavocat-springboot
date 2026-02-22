@@ -116,7 +116,7 @@
     <!-- CSS -->
     <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/main.css}">
     <link rel="stylesheet" href="/css/pages/landing.css">
 </head>
 <body>
@@ -174,7 +174,7 @@
                         <li>Gestion documentaire</li>
                         <li>Support email</li>
                     </ul>
-                    <a href="/subscription/pricing?plan=SOLO" class="btn-select">Choisir Solo</a>
+                    <a th:href="@{/register(plan=SOLO,billing=monthly)}" class="btn-select">Choisir Solo</a>
                 </div>
 
                 <!-- Plan Cabinet (Popular) -->
@@ -192,7 +192,7 @@
                         <li>Communications RPVA</li>
                         <li>Support prioritaire</li>
                     </ul>
-                    <a href="/subscription/pricing?plan=CABINET" class="btn-select">Choisir Cabinet</a>
+                    <a th:href="@{/register(plan=CABINET,billing=monthly)}" class="btn-select">Choisir Cabinet</a>
                 </div>
 
                 <!-- Plan Enterprise -->
@@ -210,7 +210,7 @@
                         <li>Support dédié 24/7</li>
                         <li>Formation personnalisée</li>
                     </ul>
-                    <a href="/subscription/pricing?plan=ENTERPRISE" class="btn-select">Choisir Entreprise</a>
+                    <a th:href="@{/register(plan=ENTERPRISE,billing=monthly)}" class="btn-select">Choisir Entreprise</a>
                 </div>
 
             </div>
@@ -228,10 +228,10 @@
         document.getElementById('btn-yearly').style.color = period === 'yearly' ? '#667eea' : '#718096';
         document.getElementById('btn-yearly').style.boxShadow = period === 'yearly' ? '0 2px 6px rgba(0,0,0,.1)' : 'none';
         // Mettre à jour les liens des boutons avec la période sélectionnée
-        document.querySelectorAll('.btn-select[href*="/subscription/pricing"]').forEach(btn => {
-            const url = new URL(btn.href);
+        document.querySelectorAll('.btn-select[href*="/register"]').forEach(btn => {
+            const url = new URL(btn.href, window.location.origin);
             url.searchParams.set('billing', period);
-            btn.href = url.toString();
+            btn.href = url.pathname + url.search;
         });
     }
     </script>

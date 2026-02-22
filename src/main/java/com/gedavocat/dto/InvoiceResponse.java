@@ -24,6 +24,7 @@ public class InvoiceResponse {
     private String clientId;
     private String clientName;
     private String clientEmail;
+    private String lawyerId;
     private LocalDate invoiceDate;
     private LocalDate dueDate;
     private LocalDate paidDate;

@@ -1,12 +1,8 @@
 package com.gedavocat.service;
 
 import com.gedavocat.model.Appointment;
-import com.gedavocat.model.Case;
-import com.gedavocat.model.Client;
 import com.gedavocat.model.User;
 import com.gedavocat.repository.AppointmentRepository;
-import com.gedavocat.repository.CaseRepository;
-import com.gedavocat.repository.ClientRepository;
 import com.gedavocat.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,8 +26,6 @@ public class AppointmentService {
 
     private final AppointmentRepository appointmentRepository;
     private final UserRepository userRepository;
-    private final ClientRepository clientRepository;
-    private final CaseRepository caseRepository;
 
     /**
      * Crée un nouveau rendez-vous
@@ -127,21 +121,21 @@ public class AppointmentService {
                                                                   LocalDate endDate) {
         LocalDateTime start = startDate.atStartOfDay();
         LocalDateTime end = endDate.atTime(LocalTime.MAX);
-        return appointmentRepository.findByLawyerIdAndDateRange(lawyerId, start, end);
+        return appointmentRepository.findByLawyerIdAndDateRangeWithRelations(lawyerId, start, end);
     }
 
     /**
      * Récupère les rendez-vous à venir d'un avocat
      */
     public List<Appointment> getUpcomingAppointments(String lawyerId) {
-        return appointmentRepository.findUpcomingAppointmentsByLawyer(lawyerId, LocalDateTime.now());
+        return appointmentRepository.findUpcomingAppointmentsByLawyerWithRelations(lawyerId, LocalDateTime.now());
     }
 
     /**
      * Récupère les rendez-vous du jour
      */
     public List<Appointment> getTodayAppointments(String lawyerId) {
-        return appointmentRepository.findTodayAppointmentsByLawyer(lawyerId, LocalDateTime.now());
+        return appointmentRepository.findTodayAppointmentsByLawyerWithRelations(lawyerId, LocalDateTime.now());
     }
 
     /**
@@ -155,14 +149,14 @@ public class AppointmentService {
      * Récupère les rendez-vous d'un client
      */
     public List<Appointment> getAppointmentsByClient(String clientId) {
-        return appointmentRepository.findByClientIdOrderByAppointmentDateDesc(clientId);
+        return appointmentRepository.findByClientIdWithRelationsOrderByAppointmentDateDesc(clientId);
     }
 
     /**
      * Récupère les rendez-vous liés à un dossier
      */
     public List<Appointment> getAppointmentsByCase(String caseId) {
-        return appointmentRepository.findByRelatedCaseIdOrderByAppointmentDateDesc(caseId);
+        return appointmentRepository.findByRelatedCaseIdWithRelationsOrderByAppointmentDateDesc(caseId);
     }
 
     /**

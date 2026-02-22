@@ -7,9 +7,9 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.Map;
-import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -43,7 +43,7 @@ public class EmailVerificationService {
      * @return le code généré (utile pour les tests / logs)
      */
     public String generateAndSend(String email) {
-        String code = String.format("%06d", new Random().nextInt(1_000_000));
+        String code = String.format("%06d", new SecureRandom().nextInt(1_000_000));
         pendingCodes.put(email.toLowerCase(), new VerificationEntry(code, LocalDateTime.now().plusMinutes(CODE_EXPIRY_MINUTES)));
         sendEmail(email, code);
         log.info("[EmailVerification] Code généré pour {} (expire dans {} min)", email, CODE_EXPIRY_MINUTES);

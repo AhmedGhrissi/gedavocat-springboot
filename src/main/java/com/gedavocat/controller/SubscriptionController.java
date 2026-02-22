@@ -44,7 +44,7 @@ public class SubscriptionController {
             model.addAttribute("currentPlan", user.getSubscriptionPlan());
         }
         model.addAttribute("stripePublishableKey", stripeService.getPublishableKey());
-        return "payement/pricing";
+        return "subscription/pricing";
     }
 
     /**
@@ -124,7 +124,7 @@ public class SubscriptionController {
                 model.addAttribute("error", "Erreur lors de la vérification du paiement");
             }
         }
-        return "payement/success";
+        return "payment/success";
     }
 
     /**
@@ -133,7 +133,7 @@ public class SubscriptionController {
     @GetMapping("/cancel")
     public String cancelPayment(Model model) {
         model.addAttribute("message", "Vous avez annulé le processus de paiement");
-        return "payement/cancel";
+        return "payment/cancel";
     }
 
     /**
@@ -148,7 +148,7 @@ public class SubscriptionController {
         model.addAttribute("status", user.getSubscriptionStatus());
         model.addAttribute("endDate", user.getSubscriptionEndsAt());
         
-        return "payement/manage";
+        return "payment/manage";
     }
 
     /**
@@ -248,6 +248,12 @@ public class SubscriptionController {
             
             activateSubscription(user, plan, period, session.getSubscription());
             
+            // Sauvegarder l'ID client Stripe pour les webhooks futurs
+            if (session.getCustomer() != null && (user.getStripeCustomerId() == null || user.getStripeCustomerId().isEmpty())) {
+                user.setStripeCustomerId(session.getCustomer());
+                userRepository.save(user);
+            }
+            
             log.info("✅ Abonnement activé via webhook pour: {}", user.getEmail());
             
         } catch (Exception e) {
@@ -267,10 +273,8 @@ public class SubscriptionController {
                 String customerId = subscription.getCustomer();
                 String status = subscription.getStatus();
                 
-                // Trouver l'utilisateur par customer ID ou metadata
-                User user = userRepository.findAll().stream()
-                    .filter(u -> u.getEmail() != null)
-                    .findFirst()
+                // Trouver l'utilisateur par son Stripe Customer ID
+                User user = userRepository.findByStripeCustomerId(customerId)
                     .orElse(null);
                 
                 if (user != null) {
@@ -282,6 +286,8 @@ public class SubscriptionController {
                     }
                     userRepository.save(user);
                     log.info("✅ Statut d'abonnement mis à jour pour: {}", user.getEmail());
+                } else {
+                    log.warn("⚠️ Aucun utilisateur trouvé pour le Stripe customer: {}", customerId);
                 }
             }
         } catch (Exception e) {
@@ -299,16 +305,17 @@ public class SubscriptionController {
             
             if (subscription != null) {
                 // Trouver l'utilisateur et désactiver son abonnement
-                User user = userRepository.findAll().stream()
-                    .filter(u -> u.getEmail() != null)
-                    .findFirst()
+                String customerId = subscription.getCustomer();
+                User user = userRepository.findByStripeCustomerId(customerId)
                     .orElse(null);
                 
                 if (user != null) {
                     user.setSubscriptionStatus(User.SubscriptionStatus.INACTIVE);
-                    user.setSubscriptionEndDate(LocalDateTime.now());
+                    user.setSubscriptionEndsAt(LocalDateTime.now());
                     userRepository.save(user);
                     log.info("✅ Abonnement désactivé pour: {}", user.getEmail());
+                } else {
+                    log.warn("⚠️ Aucun utilisateur trouvé pour le Stripe customer: {}", customerId);
                 }
             }
         } catch (Exception e) {
@@ -326,21 +333,22 @@ public class SubscriptionController {
             
             if (invoice != null && invoice.getSubscription() != null) {
                 // Renouveler l'abonnement
-                User user = userRepository.findAll().stream()
-                    .filter(u -> u.getEmail() != null)
-                    .findFirst()
+                String customerId = invoice.getCustomer();
+                User user = userRepository.findByStripeCustomerId(customerId)
                     .orElse(null);
                 
                 if (user != null) {
                     // Prolonger la date de fin d'abonnement
-                    LocalDateTime newEndDate = user.getSubscriptionEndDate() != null 
-                        ? user.getSubscriptionEndDate().plusMonths(1) 
+                    LocalDateTime newEndDate = user.getSubscriptionEndsAt() != null 
+                        ? user.getSubscriptionEndsAt().plusMonths(1) 
                         : LocalDateTime.now().plusMonths(1);
                     
-                    user.setSubscriptionEndDate(newEndDate);
+                    user.setSubscriptionEndsAt(newEndDate);
                     user.setSubscriptionStatus(User.SubscriptionStatus.ACTIVE);
                     userRepository.save(user);
                     log.info("✅ Abonnement renouvelé pour: {} jusqu'au {}", user.getEmail(), newEndDate);
+                } else {
+                    log.warn("⚠️ Aucun utilisateur trouvé pour le Stripe customer: {}", customerId);
                 }
             }
         } catch (Exception e) {
@@ -358,9 +366,8 @@ public class SubscriptionController {
             
             if (invoice != null) {
                 // Gérer l'échec de paiement
-                User user = userRepository.findAll().stream()
-                    .filter(u -> u.getEmail() != null)
-                    .findFirst()
+                String customerId = invoice.getCustomer();
+                User user = userRepository.findByStripeCustomerId(customerId)
                     .orElse(null);
                 
                 if (user != null) {
@@ -371,6 +378,8 @@ public class SubscriptionController {
                     log.warn("⚠️ Paiement échoué pour: {}. Abonnement suspendu.", user.getEmail());
                     
                     // TODO: Envoyer un email de notification à l'utilisateur
+                } else {
+                    log.warn("⚠️ Aucun utilisateur trouvé pour le Stripe customer: {}", customerId);
                 }
             }
         } catch (Exception e) {

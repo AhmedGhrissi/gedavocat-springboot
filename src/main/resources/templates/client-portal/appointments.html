@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>Mes Rendez-vous</title>
+    <style>
+        .appointments-header {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: #fff;
+            border-radius: 16px;
+            padding: 2rem 2.5rem;
+            margin-bottom: 2rem;
+        }
+        .appointment-card {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,.06);
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+            transition: box-shadow .2s;
+        }
+        .appointment-card:hover {
+            box-shadow: 0 4px 16px rgba(0,0,0,.1);
+        }
+        .apt-date-box {
+            min-width: 70px;
+            text-align: center;
+            background: #f0f0ff;
+            border-radius: 10px;
+            padding: .6rem .5rem;
+        }
+        .apt-date-box .day { font-size: 1.5rem; font-weight: 700; color: #6366f1; }
+        .apt-date-box .month { font-size: .75rem; text-transform: uppercase; color: #888; }
+        .apt-info { flex: 1; }
+        .apt-info h6 { margin-bottom: .25rem; }
+        .apt-info .text-muted { font-size: .85rem; }
+        .badge-type {
+            font-size: .75rem;
+            padding: .3em .7em;
+            border-radius: 6px;
+        }
+        .status-scheduled   { background: #dbeafe; color: #1e40af; }
+        .status-confirmed    { background: #d1fae5; color: #065f46; }
+        .status-completed    { background: #e5e7eb; color: #374151; }
+        .status-cancelled    { background: #fee2e2; color: #991b1b; }
+        .status-no_show      { background: #fef3c7; color: #92400e; }
+    </style>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="container-fluid">
+
+        <!-- En-tête -->
+        <div class="appointments-header">
+            <h1><i class="fas fa-calendar-check"></i> Mes Rendez-vous</h1>
+            <p style="font-size: 16px; opacity: .95;">
+                Consultez les rendez-vous planifiés par votre avocat.
+            </p>
+        </div>
+
+        <!-- Rendez-vous à venir -->
+        <h5 class="fw-bold mb-3"><i class="fas fa-clock text-primary"></i> À venir</h5>
+        <div th:if="${appointments != null and !appointments.empty}" class="mb-4">
+            <div th:each="apt : ${appointments}"
+                 th:if="${apt.appointmentDate != null and apt.appointmentDate.isAfter(#temporals.createNow())}"
+                 class="appointment-card">
+
+                <div class="apt-date-box">
+                    <div class="day" th:text="${apt.appointmentDate.getDayOfMonth()}">12</div>
+                    <div class="month" th:text="${#temporals.format(apt.appointmentDate, 'MMM yyyy')}">Jan 2025</div>
+                </div>
+
+                <div class="apt-info">
+                    <h6 class="fw-bold" th:text="${apt.title}">Rendez-vous</h6>
+                    <div class="text-muted">
+                        <i class="fas fa-clock"></i>
+                        <span th:text="${#temporals.format(apt.appointmentDate, 'HH:mm')}">10:00</span>
+                        <span th:if="${apt.endDate}">
+                            – <span th:text="${#temporals.format(apt.endDate, 'HH:mm')}">11:00</span>
+                        </span>
+                        <span th:if="${apt.location}" class="ms-2">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span th:text="${apt.location}">Cabinet</span>
+                        </span>
+                    </div>
+                    <div th:if="${apt.relatedCase}" class="text-muted mt-1">
+                        <i class="fas fa-folder"></i>
+                        Dossier : <span th:text="${apt.relatedCase.name}">Nom du dossier</span>
+                    </div>
+                    <div th:if="${apt.videoConferenceLink}" class="mt-1">
+                        <a th:href="${apt.videoConferenceLink}" target="_blank" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-video"></i> Rejoindre la visioconférence
+                        </a>
+                    </div>
+                </div>
+
+                <div>
+                    <span class="badge badge-type"
+                          th:classappend="${apt.status?.name() == 'CONFIRMED' ? 'status-confirmed' :
+                                           (apt.status?.name() == 'SCHEDULED' ? 'status-scheduled' :
+                                           (apt.status?.name() == 'COMPLETED' ? 'status-completed' :
+                                           (apt.status?.name() == 'CANCELLED' ? 'status-cancelled' : 'status-scheduled')))}"
+                          th:text="${apt.status?.displayName ?: 'Planifié'}">Planifié</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rendez-vous passés -->
+        <h5 class="fw-bold mb-3 mt-4"><i class="fas fa-history text-secondary"></i> Passés</h5>
+        <div th:if="${appointments != null and !appointments.empty}" class="mb-4">
+            <div th:each="apt : ${appointments}"
+                 th:if="${apt.appointmentDate != null and !apt.appointmentDate.isAfter(#temporals.createNow())}"
+                 class="appointment-card" style="opacity: .7;">
+
+                <div class="apt-date-box">
+                    <div class="day" th:text="${apt.appointmentDate.getDayOfMonth()}">12</div>
+                    <div class="month" th:text="${#temporals.format(apt.appointmentDate, 'MMM yyyy')}">Jan 2025</div>
+                </div>
+
+                <div class="apt-info">
+                    <h6 class="fw-bold" th:text="${apt.title}">Rendez-vous</h6>
+                    <div class="text-muted">
+                        <i class="fas fa-clock"></i>
+                        <span th:text="${#temporals.format(apt.appointmentDate, 'HH:mm')}">10:00</span>
+                        <span th:if="${apt.relatedCase}" class="ms-2">
+                            <i class="fas fa-folder"></i>
+                            <span th:text="${apt.relatedCase.name}">Dossier</span>
+                        </span>
+                    </div>
+                </div>
+
+                <div>
+                    <span class="badge badge-type"
+                          th:classappend="${apt.status?.name() == 'COMPLETED' ? 'status-completed' :
+                                           (apt.status?.name() == 'CANCELLED' ? 'status-cancelled' : 'status-scheduled')}"
+                          th:text="${apt.status?.displayName ?: 'Terminé'}">Terminé</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- État vide -->
+        <div th:if="${appointments == null or appointments.empty}" class="text-center py-5">
+            <i class="fas fa-calendar fa-4x text-muted mb-3"></i>
+            <h3>Aucun rendez-vous</h3>
+            <p class="text-muted">Votre avocat n'a pas encore planifié de rendez-vous.</p>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>

@@ -9,6 +9,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
@@ -36,7 +37,7 @@ public class PaymentController {
             model.addAttribute("user", user);
             model.addAttribute("currentPlan", user.getSubscriptionPlan());
         }
-        return "payement/pricing";
+        return "payment/pricing";
     }
 
     /**
@@ -99,7 +100,7 @@ public class PaymentController {
             }
         }
 
-        return "payement/success";
+        return "payment/success";
     }
 
     /**
@@ -107,16 +108,28 @@ public class PaymentController {
      */
     @GetMapping("/cancel")
     public String cancel(Model model) {
-        return "payement/cancel";
+        return "payment/cancel";
     }
 
     /**
      * Webhook PayPlug (appelé automatiquement)
+     * Vérifie la signature HMAC-SHA256 du payload pour prévenir les falsifications.
      */
     @PostMapping("/webhook")
     @ResponseBody
-    public String webhook(@RequestBody Map<String, Object> payload) {
+    public ResponseEntity<String> webhook(
+            @RequestBody String rawPayload,
+            @RequestHeader(value = "PayPlug-Signature", required = false) String signature
+    ) {
         try {
+            // B4 FIX : Vérification de signature PayPlug
+            if (!payPlugService.verifyWebhookSignature(rawPayload, signature)) {
+                return ResponseEntity.status(403).body("Invalid signature");
+            }
+
+            @SuppressWarnings("unchecked")
+            Map<String, Object> payload = new com.fasterxml.jackson.databind.ObjectMapper()
+                    .readValue(rawPayload, Map.class);
             Boolean isPaid = (Boolean) payload.get("is_paid");
 
             if (Boolean.TRUE.equals(isPaid)) {
@@ -142,11 +155,11 @@ public class PaymentController {
                 System.out.println("✅ Abonnement activé pour " + user.getEmail() + " - Plan: " + plan);
             }
 
-            return "OK";
+            return ResponseEntity.ok("OK");
 
         } catch (Exception e) {
             e.printStackTrace();
-            return "ERROR";
+            return ResponseEntity.status(500).body("ERROR");
         }
     }
 
@@ -163,7 +176,7 @@ public class PaymentController {
         model.addAttribute("status", user.getSubscriptionStatus());
         model.addAttribute("endDate", user.getSubscriptionEndsAt());
 
-        return "payement/manage";
+        return "payment/manage";
     }
 
     /**
