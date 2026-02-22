@@ -202,7 +202,8 @@
                                             <i class="fas fa-file-pdf"></i>
                                         </a>
                                         <button type="button" class="btn btn-outline-danger" title="Supprimer"
-                                                th:onclick="'deleteInvoice(\'' + ${invoice.id} + '\')'">
+                                                th:data-id="${invoice.id}"
+                                                onclick="deleteInvoice(this.dataset.id)">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </div>

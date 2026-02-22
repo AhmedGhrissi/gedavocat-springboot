@@ -121,6 +121,13 @@ public class SignatureController {
             Document document = documentRepository.findById(documentId)
                     .orElseThrow(() -> new RuntimeException("Document non trouvé"));
 
+            // Ownership check: verify document belongs to authenticated lawyer
+            if (document.getCaseEntity() == null || document.getCaseEntity().getLawyer() == null
+                    || !document.getCaseEntity().getLawyer().getId().equals(user.getId())) {
+                redirectAttributes.addFlashAttribute("error", "Accès non autorisé à ce document");
+                return "redirect:/signatures";
+            }
+
             // Créer la demande de signature
             Map<String, Object> result = yousignService.createSignatureRequest(
                     document.getPath(),
@@ -269,9 +276,19 @@ public class SignatureController {
     @PostMapping("/{signatureId}/remind")
     public String remindSignerSimple(
             @PathVariable String signatureId,
+            @AuthenticationPrincipal UserDetails userDetails,
             RedirectAttributes redirectAttributes
     ) {
         try {
+            // Ownership check
+            User user = userRepository.findByEmail(userDetails.getUsername())
+                    .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+            Signature sig = signatureRepository.findById(signatureId).orElse(null);
+            if (sig != null && !sig.getRequestedBy().getId().equals(user.getId())) {
+                redirectAttributes.addFlashAttribute("error", "Accès non autorisé");
+                return "redirect:/signatures";
+            }
+
             // Relancer sans signerId spécifique (tous les signataires en attente)
             yousignService.remindSigner(signatureId, "");
             redirectAttributes.addFlashAttribute("message", "Relance envoyée au signataire");
@@ -288,9 +305,19 @@ public class SignatureController {
     public String remindSigner(
             @PathVariable String signatureId,
             @PathVariable String signerId,
+            @AuthenticationPrincipal UserDetails userDetails,
             RedirectAttributes redirectAttributes
     ) {
         try {
+            // Ownership check
+            User user = userRepository.findByEmail(userDetails.getUsername())
+                    .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+            Signature sig = signatureRepository.findById(signatureId).orElse(null);
+            if (sig != null && !sig.getRequestedBy().getId().equals(user.getId())) {
+                redirectAttributes.addFlashAttribute("error", "Accès non autorisé");
+                return "redirect:/signatures";
+            }
+
             yousignService.remindSigner(signatureId, signerId);
 
             redirectAttributes.addFlashAttribute("message", "Relance envoyée au signataire");

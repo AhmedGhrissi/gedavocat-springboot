@@ -79,7 +79,9 @@
                                     <i class="fas fa-upload"></i> Envoyer un document
                                 </button>
                                 <button class="btn btn-secondary btn-sm" type="button"
-                                        th:onclick="|openScanner('/my-cases/${case.id}/upload-ajax', '/my-cases/${case.id}')|">
+                                        th:data-upload="@{/my-cases/{id}/upload-ajax(id=${case.id})}"
+                                        th:data-redirect="@{/my-cases/{id}(id=${case.id})}"
+                                        onclick="openScanner(this.dataset.upload, this.dataset.redirect)">
                                     <i class="fas fa-camera"></i> Scanner
                                 </button>
                             </div>

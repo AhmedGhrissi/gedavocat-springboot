@@ -149,12 +149,26 @@ public class AppointmentController {
             
             // Associer le client si spécifié
             if (clientId != null && !clientId.isEmpty()) {
-                clientRepository.findById(clientId).ifPresent(appointment::setClient);
+                clientRepository.findById(clientId).ifPresent(c -> {
+                    // Ownership check: verify client belongs to this lawyer
+                    if (c.getLawyer() != null && c.getLawyer().getId().equals(user.getId())) {
+                        appointment.setClient(c);
+                    } else {
+                        throw new RuntimeException("Client non autorisé");
+                    }
+                });
             }
             
             // Associer le dossier si spécifié
             if (caseId != null && !caseId.isEmpty()) {
-                caseRepository.findById(caseId).ifPresent(appointment::setRelatedCase);
+                caseRepository.findById(caseId).ifPresent(cs -> {
+                    // Ownership check: verify case belongs to this lawyer
+                    if (cs.getLawyer() != null && cs.getLawyer().getId().equals(user.getId())) {
+                        appointment.setRelatedCase(cs);
+                    } else {
+                        throw new RuntimeException("Dossier non autorisé");
+                    }
+                });
             }
             
             Appointment created = appointmentService.createAppointment(appointment, user.getId());
@@ -226,12 +240,24 @@ public class AppointmentController {
             
             // Associer le client si spécifié
             if (clientId != null && !clientId.isEmpty()) {
-                clientRepository.findById(clientId).ifPresent(appointment::setClient);
+                clientRepository.findById(clientId).ifPresent(c -> {
+                    if (c.getLawyer() != null && c.getLawyer().getId().equals(user.getId())) {
+                        appointment.setClient(c);
+                    } else {
+                        throw new RuntimeException("Client non autorisé");
+                    }
+                });
             }
             
             // Associer le dossier si spécifié
             if (caseId != null && !caseId.isEmpty()) {
-                caseRepository.findById(caseId).ifPresent(appointment::setRelatedCase);
+                caseRepository.findById(caseId).ifPresent(cs -> {
+                    if (cs.getLawyer() != null && cs.getLawyer().getId().equals(user.getId())) {
+                        appointment.setRelatedCase(cs);
+                    } else {
+                        throw new RuntimeException("Dossier non autorisé");
+                    }
+                });
             }
             
             appointmentService.updateAppointment(id, appointment);

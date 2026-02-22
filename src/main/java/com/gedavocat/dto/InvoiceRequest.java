@@ -1,6 +1,7 @@
 package com.gedavocat.dto;
 
 import com.gedavocat.model.Invoice.InvoiceStatus;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -42,5 +43,6 @@ public class InvoiceRequest {
     
     private String documentUrl;
     
+    @Valid
     private List<InvoiceItemRequest> items = new ArrayList<>();
 }

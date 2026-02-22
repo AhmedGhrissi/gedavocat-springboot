@@ -82,6 +82,14 @@ public class DocumentController {
     ) {
         User user = getCurrentUser(authentication);
         
+        // SÉCURITÉ : vérifier que l'utilisateur a accès au dossier
+        Case caseEntity = caseService.getCaseById(caseId);
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        if (!isAdmin && !caseEntity.getLawyer().getId().equals(user.getId())) {
+            throw new org.springframework.security.access.AccessDeniedException("Accès non autorisé à ce dossier");
+        }
+        
         // Récupérer tous les dossiers accessibles pour le modal d'upload
         List<Case> accessibleCases = caseService.getAccessibleCases(user.getId());
         
@@ -165,6 +173,14 @@ public class DocumentController {
 
         try {
             User user = getCurrentUser(authentication);
+            // SÉCURITÉ : vérifier que l'utilisateur a accès au dossier
+            Case caseEntity = caseService.getCaseById(caseId);
+            boolean isAdmin = authentication.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+            if (!isAdmin && !caseEntity.getLawyer().getId().equals(user.getId())) {
+                return ResponseEntity.status(403)
+                    .body(Map.of("success", false, "message", "Accès non autorisé à ce dossier"));
+            }
             Document document = documentService.uploadDocument(caseId, file, user.getId(), user.getRole().name());
             return ResponseEntity.ok()
                 .body(Map.of("success", true, "message", "Document uploadé avec succès", "documentId", document.getId()));
@@ -191,6 +207,14 @@ public class DocumentController {
 
         try {
             User user = getCurrentUser(authentication);
+            // SÉCURITÉ : vérifier ownership du document parent
+            Document parentDoc = documentService.getDocumentById(documentId);
+            boolean isAdmin = authentication.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+            if (!isAdmin && !parentDoc.getCaseEntity().getLawyer().getId().equals(user.getId())) {
+                redirectAttributes.addFlashAttribute("error", "Accès non autorisé");
+                return "redirect:/documents";
+            }
             Document document = documentService.uploadNewVersion(documentId, file, user.getId());
             redirectAttributes.addFlashAttribute("message", "Nouvelle version uploadée (v" + document.getVersion() + ")");
             return "redirect:/cases/" + document.getCaseEntity().getId();
@@ -215,8 +239,14 @@ public class DocumentController {
             Path filePath = documentService.downloadDocument(id, user.getId());
             Document document = documentService.getDocumentById(id);
 
+            // SÉCURITÉ : vérifier ownership
+            boolean isAdmin = authentication.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
             boolean isClient = authentication.getAuthorities().stream()
                     .anyMatch(a -> a.getAuthority().equals("ROLE_CLIENT"));
+            if (!isAdmin && !isClient && !document.getCaseEntity().getLawyer().getId().equals(user.getId())) {
+                throw new org.springframework.security.access.AccessDeniedException("Accès non autorisé");
+            }
 
             byte[] fileBytes = Files.readAllBytes(filePath);
 
@@ -234,7 +264,7 @@ public class DocumentController {
             return ResponseEntity.ok()
                     .contentType(MediaType.parseMediaType(document.getMimetype()))
                     .header(HttpHeaders.CONTENT_DISPOSITION,
-                            "attachment; filename=\"" + document.getOriginalName() + "\"")
+                            "attachment; filename=\"" + document.getOriginalName().replaceAll("[\\r\\n\"\\\\]", "_") + "\"")
                     .body(resource);
         } catch (Exception e) {
             throw new RuntimeException("Erreur lors du téléchargement: " + e.getMessage());
@@ -254,6 +284,13 @@ public class DocumentController {
             User user = getCurrentUser(authentication);
             Document document = documentService.getDocumentById(id);
             String caseId = document.getCaseEntity().getId();
+
+            // SÉCURITÉ : vérifier ownership
+            boolean isAdmin = authentication.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+            if (!isAdmin && !document.getCaseEntity().getLawyer().getId().equals(user.getId())) {
+                throw new org.springframework.security.access.AccessDeniedException("Accès non autorisé");
+            }
 
             documentService.softDeleteDocument(id, user.getId());
             redirectAttributes.addFlashAttribute("message", "Document supprimé (déplacé vers la corbeille)");
@@ -278,6 +315,13 @@ public class DocumentController {
             Document document = documentService.getDocumentById(id);
             String caseId = document.getCaseEntity().getId();
 
+            // SÉCURITÉ : vérifier ownership
+            boolean isAdmin = authentication.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+            if (!isAdmin && !document.getCaseEntity().getLawyer().getId().equals(user.getId())) {
+                throw new org.springframework.security.access.AccessDeniedException("Accès non autorisé");
+            }
+
             documentService.restoreDocument(id, user.getId());
             redirectAttributes.addFlashAttribute("message", "Document restauré avec succès");
             return "redirect:/cases/" + caseId;
@@ -300,6 +344,13 @@ public class DocumentController {
             User user = getCurrentUser(authentication);
             Document document = documentService.getDocumentById(id);
             String caseId = document.getCaseEntity().getId();
+
+            // SÉCURITÉ : vérifier ownership
+            boolean isAdmin = authentication.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+            if (!isAdmin && !document.getCaseEntity().getLawyer().getId().equals(user.getId())) {
+                throw new org.springframework.security.access.AccessDeniedException("Accès non autorisé");
+            }
 
             documentService.permanentDeleteDocument(id, user.getId());
             redirectAttributes.addFlashAttribute("message", "Document supprimé définitivement");

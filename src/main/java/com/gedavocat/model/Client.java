@@ -27,7 +27,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @NoArgsConstructor
-@ToString(exclude = {"lawyer", "clientUser", "cases"})
+@ToString(exclude = {"lawyer", "clientUser", "cases", "invoices"})
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Client {
     

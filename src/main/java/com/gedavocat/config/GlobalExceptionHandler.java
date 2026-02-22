@@ -5,11 +5,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -44,6 +47,27 @@ public class GlobalExceptionHandler {
         mav.addObject("status", "404 - Page non trouvée");
         mav.addObject("message", "La page demandée n'existe pas.");
         mav.setStatus(HttpStatus.NOT_FOUND);
+        return mav;
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public Object handleValidationErrors(MethodArgumentNotValidException ex, HttpServletRequest request) {
+        log.warn("Erreur de validation sur {} : {}", request.getRequestURI(), ex.getMessage());
+        if (isApiRequest(request)) {
+            Map<String, Object> body = new HashMap<>();
+            body.put("status", 400);
+            body.put("error", "Erreur de validation");
+            Map<String, String> fieldErrors = new HashMap<>();
+            for (FieldError fieldError : ex.getBindingResult().getFieldErrors()) {
+                fieldErrors.put(fieldError.getField(), fieldError.getDefaultMessage());
+            }
+            body.put("errors", fieldErrors);
+            return ResponseEntity.badRequest().body(body);
+        }
+        ModelAndView mav = new ModelAndView("error");
+        mav.addObject("status", "400 - Données invalides");
+        mav.addObject("message", "Les données soumises sont invalides. Veuillez vérifier votre saisie.");
+        mav.setStatus(HttpStatus.BAD_REQUEST);
         return mav;
     }
 

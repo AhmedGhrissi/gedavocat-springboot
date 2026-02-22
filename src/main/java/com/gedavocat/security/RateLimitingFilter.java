@@ -29,11 +29,12 @@ public class RateLimitingFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
-        // Appliquer uniquement aux endpoints sensibles d'authentification
+        // Appliquer aux endpoints sensibles d'authentification ET verification email
         return !path.startsWith("/login") && !path.startsWith("/register")
                 && !path.startsWith("/api/auth/")
                 && !path.startsWith("/forgot-password")
-                && !path.startsWith("/reset-password");
+                && !path.startsWith("/reset-password")
+                && !path.startsWith("/verify-email");
     }
 
     @Override
@@ -66,11 +67,21 @@ public class RateLimitingFilter extends OncePerRequestFilter {
     }
 
     private String getClientIp(HttpServletRequest request) {
-        String xff = request.getHeader("X-Forwarded-For");
-        if (xff != null && !xff.isEmpty()) {
-            return xff.split(",")[0].trim();
+        // SÉCURITÉ : ne faire confiance à X-Forwarded-For que si le proxy est de confiance
+        // On préfère l'IP directe pour éviter le spoofing
+        String remoteAddr = request.getRemoteAddr();
+        // Accepter X-Real-IP seulement depuis le reverse proxy local
+        if ("127.0.0.1".equals(remoteAddr) || "0:0:0:0:0:0:0:1".equals(remoteAddr)) {
+            String realIp = request.getHeader("X-Real-IP");
+            if (realIp != null && !realIp.isEmpty()) {
+                return realIp.trim();
+            }
+            String xff = request.getHeader("X-Forwarded-For");
+            if (xff != null && !xff.isEmpty()) {
+                return xff.split(",")[0].trim();
+            }
         }
-        return request.getRemoteAddr();
+        return remoteAddr;
     }
 
     private static class RateBucket {
