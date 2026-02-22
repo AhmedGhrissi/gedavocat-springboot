@@ -78,4 +78,7 @@ public interface CaseRepository extends JpaRepository<Case, String> {
     List<Case> searchByLawyerAndNameOrDescriptionWithClient(@Param("lawyerId") String lawyerId, @Param("search") String search);
 
     long countByCreatedAtAfter(java.time.LocalDateTime date);
+
+    @Query("SELECT c FROM Case c LEFT JOIN FETCH c.lawyer LEFT JOIN FETCH c.client WHERE c.client.id = :clientId")
+    List<Case> findByClientIdWithLawyerAndClient(@Param("clientId") String clientId);
 }

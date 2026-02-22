@@ -25,6 +25,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -64,6 +65,7 @@ public class ClientPortalController {
     }
 
     @GetMapping
+    @Transactional(readOnly = true)
     public String listMyCases(Model model, Authentication authentication) {
         User user = getCurrentUser(authentication);
         
@@ -74,6 +76,16 @@ public class ClientPortalController {
 
         // Récupérer UNIQUEMENT les dossiers de ce client
         List<Case> myCases = caseService.getCasesByClient(client.getId());
+        
+        // Force-initialiser les proxies lazy (open-in-view=false)
+        for (Case c : myCases) {
+            if (c.getLawyer() != null) {
+                c.getLawyer().getName(); // force init
+            }
+            if (c.getClient() != null) {
+                c.getClient().getName(); // force init
+            }
+        }
         
         model.addAttribute("cases", myCases);
         model.addAttribute("user", user);
@@ -86,6 +98,7 @@ public class ClientPortalController {
      * Détail d'un dossier (avec vérification de propriété)
      */
     @GetMapping("/{caseId}")
+    @Transactional(readOnly = true)
     public String viewMyCase(
             @PathVariable String caseId,
             Model model,
@@ -114,8 +127,19 @@ public class ClientPortalController {
         List<Appointment> appointments;
         try {
             appointments = appointmentService.getAppointmentsByCase(caseId);
+            // Force-initialiser les proxies lazy (open-in-view=false)
+            for (Appointment a : appointments) {
+                if (a.getClient() != null) a.getClient().getName();
+                if (a.getRelatedCase() != null) a.getRelatedCase().getName();
+            }
         } catch (Exception e) {
             appointments = Collections.emptyList();
+        }
+        
+        // Force-initialiser les proxies lazy du dossier
+        if (caseEntity.getLawyer() != null) {
+            caseEntity.getLawyer().getName();
+            caseEntity.getLawyer().getEmail();
         }
         
         model.addAttribute("case", caseEntity);

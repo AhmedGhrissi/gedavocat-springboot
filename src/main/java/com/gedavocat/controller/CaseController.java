@@ -61,6 +61,13 @@ public class CaseController {
             cases = caseService.getCasesByLawyer(user.getId());
         }
 
+        // Force-initialiser les proxies lazy (open-in-view=false)
+        for (Case c : cases) {
+            if (c.getClient() != null) {
+                c.getClient().getName();
+            }
+        }
+
         model.addAttribute("cases", cases);
         model.addAttribute("search", search);
         model.addAttribute("selectedStatus", status);
@@ -175,14 +182,29 @@ public class CaseController {
 
         // Permissions (collaborateurs)
         try {
-            model.addAttribute("permissions", permissionRepository.findByCaseEntityId(id));
+            var permissions = permissionRepository.findByCaseEntityId(id);
+            // Force-initialiser les proxies lazy (open-in-view=false)
+            for (var perm : permissions) {
+                if (perm.getLawyer() != null) {
+                    perm.getLawyer().getFirstName();
+                    perm.getLawyer().getLastName();
+                    perm.getLawyer().getEmail();
+                }
+            }
+            model.addAttribute("permissions", permissions);
         } catch (Exception e) {
             model.addAttribute("permissions", java.util.Collections.emptyList());
         }
 
         // Rendez-vous liés au dossier
         try {
-            model.addAttribute("appointments", appointmentService.getAppointmentsByCase(id));
+            List<com.gedavocat.model.Appointment> appointments = appointmentService.getAppointmentsByCase(id);
+            // Force-initialiser les proxies lazy (open-in-view=false)
+            for (com.gedavocat.model.Appointment a : appointments) {
+                if (a.getClient() != null) a.getClient().getName();
+                if (a.getRelatedCase() != null) a.getRelatedCase().getName();
+            }
+            model.addAttribute("appointments", appointments);
         } catch (Exception e) {
             model.addAttribute("appointments", java.util.Collections.emptyList());
         }

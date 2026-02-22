@@ -13,6 +13,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
@@ -41,6 +42,7 @@ public class ClientFeaturesController {
     // =========================================================================
 
     @GetMapping("/my-appointments")
+    @Transactional(readOnly = true)
     public String myAppointments(Model model, Authentication authentication) {
         User user = getCurrentUser(authentication);
         var clientOpt = clientRepository.findByClientUserId(user.getId());
@@ -54,6 +56,12 @@ public class ClientFeaturesController {
         List<Appointment> appointments;
         try {
             appointments = appointmentService.getAppointmentsByClient(client.getId());
+            // Force-initialiser les proxies lazy (open-in-view=false)
+            for (Appointment a : appointments) {
+                if (a.getClient() != null) a.getClient().getName();
+                if (a.getRelatedCase() != null) a.getRelatedCase().getName();
+                if (a.getLawyer() != null) a.getLawyer().getFirstName();
+            }
         } catch (Exception e) {
             appointments = Collections.emptyList();
         }
