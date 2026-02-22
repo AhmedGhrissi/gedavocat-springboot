@@ -666,33 +666,30 @@
                 </a>
             </div>
 
-            <div sec:authorize="hasAnyRole('LAWYER', 'LAWYER_SECONDARY')">
+            <!-- Avocat principal : accès complet -->
+            <div sec:authorize="hasRole('LAWYER')">
                 <a href="/dashboard" class="nav-link">
                     <i class="fas fa-home"></i>
                     <span>Tableau de bord</span>
                 </a>
                 <a href="/cases" class="nav-link">
                     <i class="fas fa-folder"></i>
-                    <span>Mes dossiers</span>
+                    <span>Dossiers</span>
                 </a>
-                <a href="/clients" class="nav-link" sec:authorize="hasRole('LAWYER')">
+                <a href="/clients" class="nav-link">
                     <i class="fas fa-users"></i>
-                    <span>Mes clients</span>
+                    <span>Clients</span>
                 </a>
-                <a href="/invoices" class="nav-link" sec:authorize="hasRole('LAWYER')">
+                <a href="/invoices" class="nav-link">
                     <i class="fas fa-file-invoice-dollar"></i>
                     <span>Facturation</span>
-                </a>
-                <a href="/documents" class="nav-link">
-                    <i class="fas fa-file"></i>
-                    <span>Documents</span>
                 </a>
                 <a href="/appointments" class="nav-link">
                     <i class="fas fa-calendar-alt"></i>
                     <span>Calendrier</span>
                 </a>
                 <a href="/signatures" class="nav-link">
-                    <i class="fas fa-edit"></i>
+                    <i class="fas fa-signature"></i>
                     <span>Signatures</span>
                 </a>
                 <a href="/rpva" class="nav-link">
@@ -701,6 +698,19 @@
                 </a>
             </div>
 
+            <!-- Collaborateur : accès restreint (dashboard + dossiers partagés) -->
+            <div sec:authorize="hasRole('LAWYER_SECONDARY')">
+                <a href="/dashboard" class="nav-link">
+                    <i class="fas fa-home"></i>
+                    <span>Tableau de bord</span>
+                </a>
+                <a href="/cases" class="nav-link">
+                    <i class="fas fa-folder"></i>
+                    <span>Dossiers partagés</span>
+                </a>
+            </div>
+
+            <!-- Client : portail client -->
             <div sec:authorize="hasRole('CLIENT')">
                 <a href="/my-cases" class="nav-link">
                     <i class="fas fa-home"></i>
@@ -709,6 +719,14 @@
                 <a href="/my-cases" class="nav-link" data-nav="dossiers">
                     <i class="fas fa-folder"></i>
                     <span>Mes dossiers</span>
+                </a>
+                <a href="/my-appointments" class="nav-link">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>Rendez-vous</span>
+                </a>
+                <a href="/my-signatures" class="nav-link">
+                    <i class="fas fa-signature"></i>
+                    <span>Signatures</span>
                 </a>
                 <a href="/my-cases/profile" class="nav-link">
                     <i class="fas fa-user-edit"></i>
@@ -925,34 +943,50 @@
 
                         <!-- Onglet Sécurité -->
                         <div class="tab-pane fade" id="security-pane" role="tabpanel">
-                            <h6><i class="fas fa-shield-alt"></i> Sécurité du compte</h6>
+                            <h6><i class="fas fa-lock"></i> Modifier le mot de passe</h6>
                             
-                            <div class="alert alert-warning">
-                                <i class="fas fa-construction"></i>
-                                <strong>En développement :</strong> 
-                                Les paramètres de sécurité avancés seront bientôt disponibles.
-                            </div>
+                            <form id="changePasswordForm">
+                                <div class="form-floating mb-3">
+                                    <input type="password" id="currentPassword" name="currentPassword" class="form-control" placeholder="Mot de passe actuel" required>
+                                    <label for="currentPassword">Mot de passe actuel</label>
+                                </div>
+                                <div class="form-floating mb-3">
+                                    <input type="password" id="newPassword" name="newPassword" class="form-control" placeholder="Nouveau mot de passe" required minlength="8">
+                                    <label for="newPassword">Nouveau mot de passe</label>
+                                    <div class="form-text">Minimum 8 caractères, avec majuscule, minuscule et chiffre</div>
+                                </div>
+                                <div class="form-floating mb-3">
+                                    <input type="password" id="confirmNewPassword" name="confirmNewPassword" class="form-control" placeholder="Confirmer" required>
+                                    <label for="confirmNewPassword">Confirmer le nouveau mot de passe</label>
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-key"></i> Modifier le mot de passe
+                                </button>
+                            </form>
 
-                            <div class="row g-3">
+                            <hr class="my-4">
+
+                            <h6><i class="fas fa-shield-alt"></i> Informations du compte</h6>
+                            <div class="row g-3" sec:authorize="!hasRole('CLIENT')">
                                 <div class="col-md-6">
                                     <div class="card">
                                         <div class="card-body text-center">
-                                            <h6>Abonnement actuel</h6>
-                                            <span class="badge bg-primary fs-6">FREE</span>
+                                            <h6 class="mb-1">Abonnement</h6>
+                                            <span id="secPlanBadge" class="badge bg-primary fs-6">—</span>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="card">
                                         <div class="card-body text-center">
-                                            <h6>Limite de clients</h6>
-                                            <p class="mb-0">5 clients maximum</p>
+                                            <h6 class="mb-1">Limite de clients</h6>
+                                            <p id="secMaxClients" class="mb-0">—</p>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="mt-3 text-center">
+                            <div class="mt-3 text-center" sec:authorize="!hasRole('CLIENT')">
                                 <a th:href="@{/payment/manage}" class="btn btn-outline-primary" data-bs-dismiss="modal">
                                     <i class="fas fa-crown"></i> Gérer mon abonnement
                                 </a>
@@ -1098,10 +1132,10 @@
                     }
                     
                     // Mettre à jour les infos d'abonnement (si l'onglet existe)
-                    var secBadge = document.querySelector('#security-pane .badge');
-                    if (secBadge) secBadge.textContent = data.subscriptionPlan;
-                    var secP = document.querySelector('#security-pane p');
-                    if (secP) secP.textContent = data.maxClients + ' clients maximum';
+                    var secBadge = document.getElementById('secPlanBadge');
+                    if (secBadge) secBadge.textContent = data.subscriptionPlan || '—';
+                    var secP = document.getElementById('secMaxClients');
+                    if (secP) secP.textContent = (data.maxClients || '—') + ' clients maximum';
                 }
             })
             .catch(error => {
@@ -1254,6 +1288,37 @@
                 yousignForm.addEventListener('submit', function(e) {
                     e.preventDefault();
                     saveYousignSettings();
+                });
+            }
+
+            // Formulaire changement de mot de passe
+            const pwdForm = document.getElementById('changePasswordForm');
+            if (pwdForm) {
+                pwdForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const newPwd = document.getElementById('newPassword').value;
+                    const confirmPwd = document.getElementById('confirmNewPassword').value;
+                    if (newPwd !== confirmPwd) {
+                        showAlert('Les mots de passe ne correspondent pas.', 'danger');
+                        return;
+                    }
+                    const csrfToken = document.querySelector('meta[name="_csrf"]').content;
+                    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
+                    const body = new URLSearchParams();
+                    body.append('currentPassword', document.getElementById('currentPassword').value);
+                    body.append('newPassword', newPwd);
+                    fetch('/settings/change-password', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded', [csrfHeader]: csrfToken },
+                        body: body.toString(),
+                        credentials: 'same-origin'
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        showAlert(data.message || (data.success ? 'Mot de passe modifié !' : 'Erreur'), data.success ? 'success' : 'danger');
+                        if (data.success) pwdForm.reset();
+                    })
+                    .catch(() => showAlert('Erreur lors du changement de mot de passe.', 'danger'));
                 });
             }
         });

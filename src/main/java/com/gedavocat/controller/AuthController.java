@@ -70,10 +70,13 @@ public class AuthController {
     public String register(
             @Valid @ModelAttribute RegisterRequest request,
             BindingResult result,
+            @RequestParam(required = false) String billing,
             Model model,
             RedirectAttributes redirectAttributes
     ) {
         if (result.hasErrors()) {
+            model.addAttribute("selectedPlan", request.getSubscriptionPlan());
+            model.addAttribute("selectedBilling", billing != null ? billing : "monthly");
             return "auth/register";
         }
 
@@ -87,6 +90,8 @@ public class AuthController {
             return "redirect:/verify-email?email=" + email;
         } catch (Exception e) {
             model.addAttribute("error", e.getMessage());
+            model.addAttribute("selectedPlan", request.getSubscriptionPlan());
+            model.addAttribute("selectedBilling", billing != null ? billing : "monthly");
             return "auth/register";
         }
     }

@@ -1,12 +1,15 @@
 ﻿<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
       layout:decorate="~{layout}">
-<head><title>Détails dossier</title>
+<head>
+    <link rel="stylesheet" th:href="@{/css/pages/cases.css}">
+    <title th:text="'Dossier — ' + ${case.name}">Détails dossier</title>
 </head>
 <body>
     <div layout:fragment="content">
-        <div class="container">
+        <div class="container-fluid">
             <!-- Messages -->
             <div th:if="${message}" class="alert alert-success alert-dismissible fade show mt-3" role="alert">
                 <i class="fas fa-check-circle"></i> <span th:text="${message}"></span>
@@ -17,181 +20,229 @@
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
 
-            <div class="d-flex justify-content-between align-items-center mt-3 mb-3">
-                <h1><i class="fas fa-folder-open"></i> <span th:text="${case.name}">Dossier</span></h1>
+            <!-- En-tête du dossier -->
+            <div class="d-flex flex-wrap justify-content-between align-items-center mt-3 mb-4 gap-2">
                 <div>
-                    <a th:href="@{/cases/{id}/edit(id=${case.id})}" class="btn btn-warning">
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <a th:href="@{/cases}" class="text-muted text-decoration-none" style="font-size:13px">
+                            <i class="fas fa-arrow-left"></i> Dossiers
+                        </a>
+                        <span class="text-muted" style="font-size:13px">/</span>
+                    </div>
+                    <h1 style="font-size:24px;font-weight:700;margin:0">
+                        <i class="fas fa-folder-open me-1"></i>
+                        <span th:text="${case.name}">Dossier</span>
+                    </h1>
+                </div>
+                <div class="d-flex flex-wrap gap-2" sec:authorize="hasRole('LAWYER')">
+                    <a th:href="@{/cases/{id}/edit(id=${case.id})}" class="btn btn-sm btn-warning">
                         <i class="fas fa-edit"></i> Modifier
                     </a>
-                    <a th:href="@{/cases/{id}/share(id=${case.id})}" class="btn btn-info text-white">
-                        <i class="fas fa-share-alt"></i> Partager
-                    </a>
-                    <form th:if="${case.status.name() == 'OPEN' or case.status.name() == 'IN_PROGRESS'}" 
-                          th:action="@{/cases/{id}/close(id=${case.id})}" 
-                          method="post" style="display: inline;">
-                        <button type="submit" class="btn btn-success">
+                    <form th:if="${case.status.name() == 'OPEN' or case.status.name() == 'IN_PROGRESS'}"
+                          th:action="@{/cases/{id}/close(id=${case.id})}" method="post" style="display:inline">
+                        <button type="submit" class="btn btn-sm btn-success">
                             <i class="fas fa-check"></i> Fermer
                         </button>
                     </form>
-                    <form th:if="${case.status.name() == 'CLOSED'}" 
-                          th:action="@{/cases/{id}/archive(id=${case.id})}" 
-                          method="post" style="display: inline;">
-                        <button type="submit" class="btn btn-secondary">
+                    <form th:if="${case.status.name() == 'CLOSED'}"
+                          th:action="@{/cases/{id}/archive(id=${case.id})}" method="post" style="display:inline">
+                        <button type="submit" class="btn btn-sm btn-secondary">
                             <i class="fas fa-archive"></i> Archiver
                         </button>
                     </form>
-                    <form th:action="@{/cases/{id}/delete(id=${case.id})}" method="post" style="display: inline;">
-                        <button type="submit" class="btn btn-danger" 
+                    <form th:action="@{/cases/{id}/delete(id=${case.id})}" method="post" style="display:inline">
+                        <button type="submit" class="btn btn-sm btn-outline-danger"
                                 onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce dossier ?')">
-                            <i class="fas fa-trash"></i> Supprimer
+                            <i class="fas fa-trash"></i>
                         </button>
                     </form>
                 </div>
             </div>
-            
-            <!-- Informations du dossier -->
+
             <div class="row">
-                <div class="col-md-6">
+                <!-- Colonne principale -->
+                <div class="col-lg-8">
+                    <!-- Informations du dossier -->
                     <div class="card mb-3">
-                        <div class="card-header">
-                            <h5><i class="fas fa-info-circle"></i> Informations</h5>
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0"><i class="fas fa-info-circle me-1"></i> Informations</h6>
+                            <span class="badge"
+                                  th:classappend="${case.status.name() == 'OPEN' ? 'bg-success' : (case.status.name() == 'IN_PROGRESS' ? 'bg-info' : (case.status.name() == 'CLOSED' ? 'bg-warning' : 'bg-secondary'))}"
+                                  th:text="${case.status.displayName}">Statut</span>
                         </div>
                         <div class="card-body">
-                            <table class="table">
-                                <tr>
-                                    <th>Nom :</th>
-                                    <td th:text="${case.name}">Nom</td>
-                                </tr>
-                                <tr>
-                                    <th>Client :</th>
-                                    <td>
-                                        <a th:if="${case.client != null}" th:href="@{/clients/{id}(id=${case.client.id})}" 
-                                           th:text="${case.client.name != null ? case.client.name : 'N/A'}">Client</a>
-                                        <span th:if="${case.client == null}" class="text-muted">Aucun client</span>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th>Statut :</th>
-                                    <td>
-                                        <span class="badge" 
-                                              th:classappend="${case.status.name() == 'OPEN' ? 'bg-success' : (case.status.name() == 'IN_PROGRESS' ? 'bg-primary' : (case.status.name() == 'CLOSED' ? 'bg-warning text-dark' : 'bg-secondary'))}"
-                                              th:text="${case.status.displayName}">Statut</span>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th>Date création :</th>
-                                    <td th:text="${#temporals.format(case.createdAt, 'dd/MM/yyyy HH:mm')}">Date</td>
-                                </tr>
-                                <tr>
-                                    <th>Dernière modification :</th>
-                                    <td th:text="${#temporals.format(case.updatedAt, 'dd/MM/yyyy HH:mm')}">Date</td>
-                                </tr>
-                                <tr th:if="${case.description}">
-                                    <th>Description :</th>
-                                    <td th:text="${case.description}">Description</td>
-                                </tr>
-                            </table>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p class="mb-2"><strong>Client :</strong>
+                                        <a th:if="${case.client != null}" th:href="@{/clients/{id}(id=${case.client.id})}"
+                                           th:text="${case.client.name}" class="text-decoration-none">Client</a>
+                                        <span th:if="${case.client == null}" class="text-muted">Aucun</span>
+                                    </p>
+                                    <p class="mb-2"><strong>Créé le :</strong>
+                                        <span th:text="${#temporals.format(case.createdAt, 'dd/MM/yyyy à HH:mm')}">Date</span>
+                                    </p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p class="mb-2"><strong>Dernière modification :</strong>
+                                        <span th:text="${#temporals.format(case.updatedAt, 'dd/MM/yyyy à HH:mm')}">Date</span>
+                                    </p>
+                                    <p class="mb-2"><strong>Documents :</strong>
+                                        <span th:text="${documentCount}">0</span>
+                                    </p>
+                                </div>
+                            </div>
+                            <div th:if="${case.description}" class="mt-2">
+                                <strong>Description :</strong>
+                                <p class="mb-0 mt-1" th:text="${case.description}" style="color:#64748b">Description</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Documents -->
+                    <div class="card mb-3">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0"><i class="fas fa-file-alt me-1"></i> Documents</h6>
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#uploadModal">
+                                    <i class="fas fa-upload"></i> Uploader
+                                </button>
+                                <button type="button" class="btn btn-sm btn-secondary"
+                                        th:onclick="|openScanner('/documents/case/${case.id}/upload-ajax', '/cases/${case.id}')|">
+                                    <i class="fas fa-camera"></i> Scanner
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive" th:if="${documents != null and !documents.empty}">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th style="padding-left:20px">Nom</th>
+                                            <th>Type</th>
+                                            <th>Taille</th>
+                                            <th>Version</th>
+                                            <th>Date</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="doc : ${documents}">
+                                            <td style="padding-left:20px">
+                                                <i class="fas fa-file me-1" style="color:#667eea"></i>
+                                                <span th:text="${doc.originalName}">Document</span>
+                                            </td>
+                                            <td style="font-size:12px" th:text="${doc.mimetype ?: '—'}">Type</td>
+                                            <td style="font-size:12px" th:text="${doc.fileSize != null ? #numbers.formatDecimal(doc.fileSize / 1024.0, 1, 2) + ' KB' : '—'}">Taille</td>
+                                            <td><span class="badge bg-secondary">v<span th:text="${doc.version}">1</span></span></td>
+                                            <td style="font-size:12px" th:text="${#temporals.format(doc.createdAt, 'dd/MM/yyyy')}">Date</td>
+                                            <td>
+                                                <a th:href="@{/documents/{id}/download(id=${doc.id})}" class="btn btn-sm btn-outline-success" title="Télécharger">
+                                                    <i class="fas fa-download"></i>
+                                                </a>
+                                                <form th:action="@{/documents/{id}/delete(id=${doc.id})}" method="post" style="display:inline"
+                                                      sec:authorize="hasRole('LAWYER')"
+                                                      onsubmit="return confirm('Supprimer ce document ?')">
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Supprimer">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div th:if="${documents == null or documents.empty}" class="text-center py-4">
+                                <i class="fas fa-file-upload fa-2x mb-2" style="color:#94a3b8"></i>
+                                <p class="text-muted mb-2">Aucun document</p>
+                                <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal">
+                                    <i class="fas fa-upload"></i> Ajouter un document
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
-                
-                <div class="col-md-6">
-                    <div class="card mb-3">
-                        <div class="card-header">
-                            <h5><i class="fas fa-chart-bar"></i> Statistiques</h5>
+
+                <!-- Colonne latérale -->
+                <div class="col-lg-4">
+                    <!-- Collaborateurs (partage) -->
+                    <div class="card mb-3" sec:authorize="hasRole('LAWYER')">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0"><i class="fas fa-users me-1"></i> Collaborateurs</h6>
+                            <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#shareModal">
+                                <i class="fas fa-share-alt"></i> Partager
+                            </button>
                         </div>
                         <div class="card-body">
-                            <p><i class="fas fa-file"></i> Documents : <strong th:text="${documentCount}">0</strong></p>
+                            <div th:if="${permissions != null and !#lists.isEmpty(permissions)}">
+                                <div th:each="perm : ${permissions}" class="d-flex align-items-center justify-content-between mb-2 p-2" style="background:#f8fafc;border-radius:8px">
+                                    <div>
+                                        <div style="font-size:13px;font-weight:600" th:text="${perm.lawyer.firstName + ' ' + perm.lawyer.lastName}">Collaborateur</div>
+                                        <div style="font-size:11px;color:#94a3b8" th:text="${perm.lawyer.email}">email</div>
+                                    </div>
+                                    <div>
+                                        <span class="badge bg-info" style="font-size:10px" th:if="${perm.expiresAt != null}"
+                                              th:text="'Exp. ' + ${#temporals.format(perm.expiresAt, 'dd/MM')}">Exp.</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div th:if="${permissions == null or #lists.isEmpty(permissions)}" class="text-center py-2">
+                                <p class="text-muted mb-0" style="font-size:13px">Aucun collaborateur</p>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </div>
-            
-            <!-- Documents -->
-            <div class="card mb-3">
-                <div class="card-header">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h5><i class="fas fa-file-alt"></i> Documents</h5>
-                        <div class="d-flex flex-wrap gap-2">
-                            <a th:href="@{/documents/case/{id}(id=${case.id})}" class="btn btn-outline-primary btn-sm">
-                                <i class="fas fa-list"></i> Voir tous
+
+                    <!-- Rendez-vous à venir -->
+                    <div class="card mb-3">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0"><i class="fas fa-calendar-alt me-1"></i> Rendez-vous</h6>
+                            <a th:href="@{/appointments}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-plus"></i>
                             </a>
-                            <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#uploadModal">
-                                <i class="fas fa-upload"></i> Uploader
-                            </button>
-                            <button type="button" class="btn btn-secondary btn-sm"
-                                    th:onclick="|openScanner('/documents/case/${case.id}/upload-ajax', '/cases/${case.id}')|">                                <i class="fas fa-camera me-1"></i>Scanner / Importer
-                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div th:if="${appointments != null and !#lists.isEmpty(appointments)}">
+                                <div th:each="apt : ${appointments}" class="mb-2 p-2" style="background:#f8fafc;border-radius:8px">
+                                    <div style="font-size:13px;font-weight:600" th:text="${apt.title}">RDV</div>
+                                    <div style="font-size:11px;color:#94a3b8" th:text="${#temporals.format(apt.appointmentDate, 'dd/MM/yyyy HH:mm')}">Date</div>
+                                </div>
+                            </div>
+                            <div th:if="${appointments == null or #lists.isEmpty(appointments)}" class="text-center py-2">
+                                <p class="text-muted mb-0" style="font-size:13px">Aucun rendez-vous prévu</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Historique -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h6 class="mb-0"><i class="fas fa-history me-1"></i> Historique</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex align-items-center gap-2 mb-2" style="font-size:12px">
+                                <i class="fas fa-circle" style="font-size:6px;color:#10b981"></i>
+                                <span>Créé le <span th:text="${#temporals.format(case.createdAt, 'dd/MM/yyyy')}">date</span></span>
+                            </div>
+                            <div class="d-flex align-items-center gap-2 mb-2" style="font-size:12px">
+                                <i class="fas fa-circle" style="font-size:6px;color:#667eea"></i>
+                                <span>Modifié le <span th:text="${#temporals.format(case.updatedAt, 'dd/MM/yyyy')}">date</span></span>
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div class="card-body">
-                    <table class="table" th:if="${documents != null and !documents.empty}">
-                        <thead>
-                            <tr>
-                                <th>Nom</th>
-                                <th>Type</th>
-                                <th>Taille</th>
-                                <th>Version</th>
-                                <th>Date</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr th:each="doc : ${documents}">
-                                <td th:text="${doc.originalName}">Document</td>
-                                <td th:text="${doc.mimetype ?: 'Non défini'}">Type</td>
-                                <td th:text="${doc.fileSize != null ? #numbers.formatDecimal(doc.fileSize / 1024.0, 1, 2) + ' KB' : 'Inconnue'}">Taille</td>
-                                <td>v<span th:text="${doc.version}">1</span></td>
-                                <td th:text="${#temporals.format(doc.createdAt, 'dd/MM/yyyy')}">Date</td>
-                                <td>
-                                    <a th:href="@{/documents/{id}/download(id=${doc.id})}" class="btn btn-sm btn-success">
-                                        <i class="fas fa-download"></i> Télécharger
-                                    </a>
-                                    <form th:action="@{/documents/{id}/delete(id=${doc.id})}" method="post" style="display: inline;"
-                                          onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce document ?');">
-                                        <button type="submit" class="btn btn-sm btn-danger">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </form>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <div th:if="${documents == null or documents.empty}" class="text-center p-3">
-                        <i class="fas fa-file-plus fa-3x text-muted mb-3"></i>
-                        <p class="text-muted">Aucun document pour ce dossier</p>
-                        <div class="d-flex gap-2 justify-content-center flex-wrap">
-                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal">
-                                <i class="fas fa-upload"></i> Uploader votre premier document
-                            </button>
-                            <button type="button" class="btn btn-secondary"
-                                    th:onclick="|openScanner('/documents/case/${case.id}/upload-ajax', '/cases/${case.id}')|">
-                                <i class="fas fa-camera me-1"></i>Scanner / Importer
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="mt-3">
-                <a th:href="@{/cases}" class="btn btn-secondary">
-                    <i class="fas fa-arrow-left"></i> Retour à la liste
-                </a>
             </div>
         </div>
-        
+
         <!-- Modal Upload -->
         <div class="modal fade" id="uploadModal" tabindex="-1">
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title">Uploader un document</h5>
+                        <h5 class="modal-title"><i class="fas fa-upload me-2"></i> Uploader un document</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <form th:action="@{/documents/case/{id}/upload(id=${case.id})}" method="post" enctype="multipart/form-data">
                         <div class="modal-body">
-                            <div class="form-group">
+                            <div class="mb-3">
                                 <label for="file" class="form-label">Sélectionner un fichier</label>
                                 <input type="file" id="file" name="file" class="form-control" required>
                             </div>
@@ -206,10 +257,58 @@
                 </div>
             </div>
         </div>
+
+        <!-- Modal Partage collaborateur -->
+        <div class="modal fade" id="shareModal" tabindex="-1" sec:authorize="hasRole('LAWYER')">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title"><i class="fas fa-share-alt me-2"></i> Partager le dossier</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <form th:action="@{/cases/{id}/share(id=${case.id})}" method="post">
+                        <div class="modal-body">
+                            <p class="text-muted" style="font-size:13px">
+                                Invitez un collaborateur à accéder à ce dossier.
+                                Il recevra un email avec un lien d'accès.
+                            </p>
+                            <div class="mb-3">
+                                <label for="shareEmail" class="form-label">Email du collaborateur</label>
+                                <input type="email" id="shareEmail" name="email" class="form-control"
+                                       placeholder="collaborateur@cabinet.fr" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="shareDuration" class="form-label">Durée d'accès</label>
+                                <select id="shareDuration" name="durationDays" class="form-select">
+                                    <option value="7">7 jours</option>
+                                    <option value="30" selected>30 jours</option>
+                                    <option value="90">90 jours</option>
+                                    <option value="180">6 mois</option>
+                                    <option value="365">1 an</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Permissions</label>
+                                <div class="form-check">
+                                    <input type="checkbox" id="canRead" name="canRead" class="form-check-input" checked disabled>
+                                    <label for="canRead" class="form-check-label">Lecture (toujours activé)</label>
+                                </div>
+                                <div class="form-check">
+                                    <input type="checkbox" id="canUpload" name="canUpload" class="form-check-input" checked>
+                                    <label for="canUpload" class="form-check-label">Déposer des documents</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane"></i> Envoyer l'invitation
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
-    
-    <th:block layout:fragment="extra-js">
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    </th:block>
 </body>
 </html>

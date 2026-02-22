@@ -241,6 +241,45 @@ public class SettingsController {
         }
     }
 
+    /**
+     * Changement de mot de passe via AJAX (depuis le modal Paramètres)
+     */
+    @PostMapping("/change-password")
+    @ResponseBody
+    @Transactional
+    public ResponseEntity<Map<String, Object>> changePasswordAjax(
+            @RequestParam("currentPassword") String currentPassword,
+            @RequestParam("newPassword") String newPassword,
+            Authentication authentication
+    ) {
+        try {
+            User user = getCurrentUser(authentication);
+            if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+                return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", "Mot de passe actuel incorrect."
+                ));
+            }
+            if (newPassword.length() < 8) {
+                return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", "Le nouveau mot de passe doit comporter au moins 8 caractères."
+                ));
+            }
+            user.setPassword(passwordEncoder.encode(newPassword));
+            userRepository.save(user);
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Mot de passe modifié avec succès !"
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "success", false,
+                "message", "Erreur : " + e.getMessage()
+            ));
+        }
+    }
+
     private User getCurrentUser(Authentication authentication) {
         String email = authentication.getName();
         return userRepository.findByEmail(email)

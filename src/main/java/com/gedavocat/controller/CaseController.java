@@ -5,6 +5,8 @@ import com.gedavocat.model.Case.CaseStatus;
 import com.gedavocat.model.Client;
 import com.gedavocat.model.User;
 import com.gedavocat.repository.UserRepository;
+import com.gedavocat.repository.PermissionRepository;
+import com.gedavocat.service.AppointmentService;
 import com.gedavocat.service.CaseService;
 import com.gedavocat.service.ClientService;
 import com.gedavocat.service.DocumentService;
@@ -34,6 +36,8 @@ public class CaseController {
     private final CaseService caseService;
     private final ClientService clientService;
     private final DocumentService documentService;
+    private final AppointmentService appointmentService;
+    private final PermissionRepository permissionRepository;
     private final UserRepository userRepository;
 
     /**
@@ -178,6 +182,20 @@ public class CaseController {
         model.addAttribute("case", caseEntity);
         model.addAttribute("documents", documentService.getLatestVersions(id));
         model.addAttribute("documentCount", documentService.getDocumentsByCase(id).size());
+
+        // Permissions (collaborateurs)
+        try {
+            model.addAttribute("permissions", permissionRepository.findByCaseEntityId(id));
+        } catch (Exception e) {
+            model.addAttribute("permissions", java.util.Collections.emptyList());
+        }
+
+        // Rendez-vous liés au dossier
+        try {
+            model.addAttribute("appointments", appointmentService.getAppointmentsByCase(id));
+        } catch (Exception e) {
+            model.addAttribute("appointments", java.util.Collections.emptyList());
+        }
 
         return "cases/view";
     }
