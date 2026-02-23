@@ -87,6 +87,12 @@ public interface DocumentRepository extends JpaRepository<Document, String> {
     long sumFileSizeNonDeleted();
 
     /**
+     * Trouve un document par ID avec le Case et le Client chargés (évite LazyInitializationException)
+     */
+    @Query("SELECT d FROM Document d LEFT JOIN FETCH d.caseEntity c LEFT JOIN FETCH c.client LEFT JOIN FETCH d.uploadedBy WHERE d.id = :id")
+    java.util.Optional<Document> findByIdWithCaseAndClient(@Param("id") String id);
+
+    /**
      * Efface les références parent_document_id pour les documents d'un dossier
      */
     @Modifying
