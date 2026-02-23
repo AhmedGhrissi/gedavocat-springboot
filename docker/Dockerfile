@@ -35,9 +35,9 @@ LABEL maintainer="contact@docavocat.fr"
 # Utilisateur dédié non-root
 RUN groupadd -r docavocat && useradd -r -g docavocat docavocat
 
-# curl pour le healthcheck
+# curl pour le healthcheck, gosu pour le drop de privilèges
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends curl \
+    && apt-get install -y --no-install-recommends curl gosu \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -56,17 +56,16 @@ RUN mkdir -p \
 COPY --from=builder /build/target/gedavocat-app-*.jar app.jar
 RUN chown docavocat:docavocat app.jar
 
-USER docavocat
+# Script d'entrée : corrige les permissions des volumes puis lance l'app
+COPY docker/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+# On reste root pour l'entrypoint — le script fait gosu docavocat
+# USER docavocat
 
 EXPOSE 8080
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=90s --retries=5 \
     CMD curl -f http://localhost:8080/actuator/health || exit 1
 
-ENTRYPOINT ["java", \
-    "-Xms256m", "-Xmx512m", \
-    "-XX:+UseContainerSupport", \
-    "-XX:MaxRAMPercentage=75.0", \
-    "-Djava.security.egd=file:/dev/./urandom", \
-    "-Dspring.profiles.active=prod", \
-    "-jar", "app.jar"]
+ENTRYPOINT ["/entrypoint.sh"]
