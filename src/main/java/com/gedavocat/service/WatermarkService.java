@@ -19,9 +19,10 @@ import java.io.InputStream;
 
 /**
  * Service d'ajout de filigrane (watermark) sur des documents PDF.
+ * Les filigranes sont appliqués de manière persistante au moment de l'upload :
  *
- * - "COPIE"          : appliqué quand un client téléverse un document
- * - "CONFIDENTIEL"   : appliqué quand un client télécharge un document
+ * - "COPIE"          : document déposé par un client
+ * - "CONFIDENTIEL"   : document déposé par un avocat
  */
 @Slf4j
 @Service

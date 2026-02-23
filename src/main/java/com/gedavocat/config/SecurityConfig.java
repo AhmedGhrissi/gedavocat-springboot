@@ -5,6 +5,9 @@ import com.gedavocat.security.UserDetailsServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.Profiles;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -31,6 +34,7 @@ public class SecurityConfig {
 
 	private final UserDetailsServiceImpl userDetailsService;
 	private final JwtAuthenticationFilter jwtAuthFilter;
+	private final Environment env;
 
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -51,16 +55,18 @@ public class SecurityConfig {
 						// Pages administrateur
 						.requestMatchers("/admin/**", "/api/admin/**").hasRole("ADMIN")
 						
-					// Pages de paiement publiques et webhooks
-					.requestMatchers("/payment/pricing", "/payment/webhook", "/payment/success", "/payment/cancel").permitAll()
-					.requestMatchers("/payment/**").authenticated()
+						// Pages de paiement publiques et webhooks
+						.requestMatchers("/payment/pricing", "/payment/webhook", "/payment/success", "/payment/cancel").permitAll()
+						.requestMatchers("/payment/**").authenticated()
 						.requestMatchers("/api/webhooks/**").permitAll()
+						// Allow CLIENTs to GET individual invoices and PDFs (view/download)
+						.requestMatchers(HttpMethod.GET, "/invoices/*", "/invoices/*/pdf").hasAnyRole("CLIENT", "LAWYER", "ADMIN")
 						.requestMatchers("/invoices/my-invoices").hasAnyRole("CLIENT", "LAWYER", "ADMIN")
 						.requestMatchers("/invoices/**", "/api/invoices/**").hasAnyRole("LAWYER", "ADMIN")
 						
 						// Pages avocat et admin
 						.requestMatchers("/dashboard", "/clients/**", "/cases/**", "/documents/**", "/signatures/**",
-								"/rpva/**", "/permissions/**", "/api/clients/**", "/api/cases/**", "/api/documents/**")
+							"/rpva/**", "/permissions/**", "/api/clients/**", "/api/cases/**", "/api/documents/**")
 						.hasAnyRole("LAWYER", "ADMIN", "LAWYER_SECONDARY")
 
 						// Pages client
@@ -69,60 +75,76 @@ public class SecurityConfig {
 					.anyRequest().authenticated())
 				// En-têtes de sécurité ANSSI/OWASP/RGPD — niveau bancaire
 				.headers(h -> {
-						h.frameOptions(f -> f.deny());
-						h.contentTypeOptions(Customizer.withDefaults());
-						h.httpStrictTransportSecurity(hsts -> hsts
-								.includeSubDomains(true)
-								.preload(true)
-								.maxAgeInSeconds(63072000)); // 2 ans (ANSSI recommandation)
-						h.referrerPolicy(r -> r.policy(
-								ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN));
-						h.permissionsPolicy(p -> p.policy(
-								"camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()"));
-						h.contentSecurityPolicy(csp -> csp.policyDirectives(
-								"default-src 'self'; " +
-								"script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://js.stripe.com; " +
-								"style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; " +
-								"font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com; " +
-								"img-src 'self' data: https:; " +
-								"connect-src 'self' https://api.stripe.com https://api.payplug.com; " +
-								"frame-src 'self' https://js.stripe.com https://hooks.stripe.com; " +
-								"object-src 'none'; " +
-								"base-uri 'self'; " +
-								"form-action 'self'; " +
-								"frame-ancestors 'none'"));
-						h.crossOriginOpenerPolicy(coop -> coop.policy(
-								org.springframework.security.web.header.writers.CrossOriginOpenerPolicyHeaderWriter.CrossOriginOpenerPolicy.SAME_ORIGIN));
-						h.crossOriginResourcePolicy(corp -> corp.policy(
-								org.springframework.security.web.header.writers.CrossOriginResourcePolicyHeaderWriter.CrossOriginResourcePolicy.SAME_ORIGIN));
-						})
+							h.frameOptions(f -> f.deny());
+							h.contentTypeOptions(Customizer.withDefaults());
+							h.httpStrictTransportSecurity(hsts -> hsts
+									.includeSubDomains(true)
+									.preload(true)
+									.maxAgeInSeconds(63072000)); // 2 ans (ANSSI recommandation)
+							h.referrerPolicy(r -> r.policy(
+									ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN));
+							h.permissionsPolicy(p -> p.policy(
+									"camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()"));
+
+							// Build connect-src and other origin lists once (effectively final) so they can be referenced by nested lambdas
+							boolean isDevOrLocal = env.acceptsProfiles(Profiles.of("dev", "local"));
+							final String connectSrc = isDevOrLocal
+									? "'self' https://api.stripe.com https://api.payplug.com https://cdn.jsdelivr.net"
+									: "'self' https://api.stripe.com https://api.payplug.com";
+
+							// Always allow the CDN for script/style/font resources so external UI libs (FullCalendar, cdnjs, Google Fonts) can load
+							final String extraScriptOrigins = " https://cdn.jsdelivr.net";
+							final String extraStyleOrigins = " https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com";
+							final String extraFontOrigins = " https://cdnjs.cloudflare.com https://fonts.gstatic.com";
+
+							final String scriptSrc = "'self' 'unsafe-inline' https://js.stripe.com" + extraScriptOrigins;
+							final String styleSrc = "'self' 'unsafe-inline'" + extraStyleOrigins;
+							final String fontSrc  = "'self'" + extraFontOrigins;
+
+							h.contentSecurityPolicy(csp -> csp.policyDirectives(
+									"default-src 'self'; " +
+									"script-src " + scriptSrc + "; " +
+									"style-src " + styleSrc + "; " +
+									"font-src " + fontSrc + "; " +
+									"img-src 'self' data: https:; " +
+									"connect-src " + connectSrc + "; " +
+									"frame-src 'self' https://js.stripe.com https://hooks.stripe.com; " +
+									"object-src 'none'; " +
+									"base-uri 'self'; " +
+									"form-action 'self'; " +
+									"frame-ancestors 'none'"));
+							h.crossOriginOpenerPolicy(coop -> coop.policy(
+									org.springframework.security.web.header.writers.CrossOriginOpenerPolicyHeaderWriter.CrossOriginOpenerPolicy.SAME_ORIGIN));
+							h.crossOriginResourcePolicy(corp -> corp.policy(
+									org.springframework.security.web.header.writers.CrossOriginResourcePolicyHeaderWriter.CrossOriginResourcePolicy.SAME_ORIGIN));
+							})
 				// Session avec état pour le formLogin (pas stateless)
 				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
 				.authenticationProvider(authenticationProvider())
 				// Filtre JWT uniquement pour les API REST
 				.addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
 				.formLogin(form -> form.loginPage("/login").loginProcessingUrl("/login") // Spring Security gère POST
-																							// /login
-						.usernameParameter("email") // Le champ input s'appelle "email"
-						.passwordParameter("password")
-						.successHandler((request, response, authentication) -> {
-							// Redirection selon le rôle
-							String role = authentication.getAuthorities().stream()
-									.findFirst()
-									.map(a -> a.getAuthority())
-									.orElse("");
-							
-							if (role.equals("ROLE_ADMIN")) {
-								response.sendRedirect("/admin");
-							} else if (role.equals("ROLE_CLIENT")) {
-								response.sendRedirect("/my-cases");
-							} else {
-								response.sendRedirect("/dashboard");
-							}
-						})
-						.failureUrl("/login?error=true").permitAll())
+																	// /login
+							.usernameParameter("email") // Le champ input s'appelle "email"
+							.passwordParameter("password")
+							.successHandler((request, response, authentication) -> {
+									// Redirection selon le rôle
+									String role = authentication.getAuthorities().stream()
+											.findFirst()
+											.map(a -> a.getAuthority())
+											.orElse("");
+									
+									if (role.equals("ROLE_ADMIN")) {
+										response.sendRedirect("/admin");
+									} else if (role.equals("ROLE_CLIENT")) {
+										response.sendRedirect("/my-cases");
+									} else {
+										response.sendRedirect("/dashboard");
+									}
+								})
+							.failureUrl("/login?error=true").permitAll())
 				.logout(logout -> logout.logoutUrl("/logout").logoutSuccessUrl("/login")
-						.deleteCookies("JSESSIONID").invalidateHttpSession(true).permitAll());
+							.deleteCookies("JSESSIONID").invalidateHttpSession(true).permitAll());
 
 		return http.build();
 	}

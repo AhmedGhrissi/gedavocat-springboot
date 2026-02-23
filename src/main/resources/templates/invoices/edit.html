@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+  <title>Modifier la facture</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --gold:#B8952A; --gold-lt:#D4AF5A; --gold-dk:#8B6F1E;
+      --navy:#0D1B2A; --navy-mid:#162233; --slate:#2C3E50;
+      --smoke:#F5F3EE; --cream:#FAF8F3;
+      --text:#1A1A1A; --text-muted:#6B7280;
+      --border:rgba(184,149,42,.2); --radius:2px;
+    }
+    body { background:var(--cream); font-family:'Jost',sans-serif; color:var(--text); }
+
+    /* Header */
+    .page-header { background:var(--navy); position:relative; overflow:hidden; }
+    .page-header::before { content:''; position:absolute; inset:0; background:repeating-linear-gradient(45deg,transparent,transparent 40px,rgba(184,149,42,.04) 40px,rgba(184,149,42,.04) 41px); }
+    .page-header-inner { position:relative;z-index:1; padding:2.25rem 2.5rem; display:flex; justify-content:space-between; align-items:center; }
+    .page-eyebrow { font-size:.65rem; font-weight:600; letter-spacing:.25em; text-transform:uppercase; color:var(--gold); margin-bottom:.5rem; }
+    .page-title { font-family:'Cormorant Garamond',serif; font-size:2rem; font-weight:300; color:#fff; margin:0; line-height:1.1; }
+    .page-title strong { color:var(--gold-lt); font-weight:600; }
+
+    .btn-gold { background:transparent; border:1px solid var(--gold); color:var(--gold-lt); font-family:'Jost',sans-serif; font-size:.75rem; font-weight:500; letter-spacing:.1em; text-transform:uppercase; padding:.55rem 1.25rem; text-decoration:none; cursor:pointer; transition:all .25s; border-radius:var(--radius); display:inline-flex; align-items:center; gap:.4rem; }
+    .btn-gold:hover { background:var(--gold); color:var(--navy); }
+    .btn-gold-solid { background:var(--gold); border:1px solid var(--gold); color:var(--navy); font-family:'Jost',sans-serif; font-size:.75rem; font-weight:600; letter-spacing:.1em; text-transform:uppercase; padding:.55rem 1.5rem; text-decoration:none; cursor:pointer; transition:all .25s; border-radius:var(--radius); display:inline-flex; align-items:center; gap:.4rem; }
+    .btn-gold-solid:hover { background:var(--gold-lt); }
+    .btn-ghost { background:transparent; border:1px solid rgba(255,255,255,.2); color:rgba(255,255,255,.6); font-family:'Jost',sans-serif; font-size:.75rem; letter-spacing:.08em; text-transform:uppercase; padding:.55rem 1.25rem; text-decoration:none; cursor:pointer; transition:all .25s; border-radius:var(--radius); display:inline-flex; align-items:center; gap:.4rem; }
+    .btn-ghost:hover { border-color:rgba(255,255,255,.5); color:#fff; }
+
+    /* Layout */
+    .edit-body { padding:2.5rem; display:grid; grid-template-columns:1fr 300px; gap:2rem; }
+
+    /* Cards */
+    .inv-card { background:#fff; border:1px solid rgba(0,0,0,.06); border-radius:4px; box-shadow:0 2px 12px rgba(0,0,0,.04); overflow:hidden; margin-bottom:1.5rem; }
+    .inv-card-header { padding:1.1rem 1.75rem; border-bottom:1px solid rgba(0,0,0,.06); display:flex; align-items:center; gap:.75rem; background:var(--smoke); }
+    .inv-card-icon { width:30px; height:30px; border-radius:2px; background:var(--navy); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .inv-card-icon i { color:var(--gold-lt); font-size:.7rem; }
+    .inv-card-header h6 { font-size:.65rem; font-weight:600; letter-spacing:.2em; text-transform:uppercase; color:var(--slate); margin:0; }
+    .inv-card-body { padding:1.75rem; }
+
+    /* Form fields */
+    .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:1.25rem 2rem; }
+    .form-grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:1.25rem 2rem; }
+    .field-group { display:flex; flex-direction:column; gap:.35rem; }
+    .field-label { font-size:.65rem; font-weight:600; letter-spacing:.15em; text-transform:uppercase; color:var(--text-muted); }
+    .field-label span { color:#c0392b; }
+    .inv-input, .inv-select, .inv-textarea {
+      padding:.65rem 1rem; border:1px solid rgba(0,0,0,.12); border-radius:var(--radius);
+      font-family:'Jost',sans-serif; font-size:.875rem; color:var(--text); background:#fff;
+      transition:border-color .2s, box-shadow .2s; width:100%; box-sizing:border-box;
+    }
+    .inv-input:focus, .inv-select:focus, .inv-textarea:focus { outline:none; border-color:var(--gold); box-shadow:0 0 0 3px rgba(184,149,42,.1); }
+    .inv-select { appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236B7280'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 1rem center; }
+    .inv-textarea { resize:vertical; min-height:80px; line-height:1.6; }
+
+    /* Input group */
+    .input-group { display:flex; }
+    .input-group .inv-input { border-right:none; border-radius:var(--radius) 0 0 var(--radius); }
+    .input-group-btn { padding:.65rem 1rem; border:1px solid rgba(0,0,0,.12); border-left:none; border-radius:0 var(--radius) var(--radius) 0; background:var(--smoke); color:var(--text-muted); font-family:'Jost',sans-serif; font-size:.75rem; font-weight:500; letter-spacing:.08em; text-transform:uppercase; cursor:pointer; transition:all .2s; white-space:nowrap; }
+    .input-group-btn:hover { background:var(--navy); color:var(--gold-lt); border-color:var(--navy); }
+
+    /* Items */
+    .item-card { background:var(--smoke); border:1px solid rgba(0,0,0,.07); border-radius:4px; padding:1.25rem; margin-bottom:1rem; position:relative; transition:box-shadow .2s; }
+    .item-card:hover { box-shadow:0 4px 12px rgba(0,0,0,.08); }
+    .item-card-grid { display:grid; grid-template-columns:3fr 1fr 1.5fr 1fr; gap:1rem; }
+    .item-remove { position:absolute; top:.75rem; right:.75rem; background:transparent; border:none; color:var(--text-muted); cursor:pointer; padding:.25rem; transition:color .2s; font-size:.85rem; }
+    .item-remove:hover { color:#c0392b; }
+    .add-item-btn { width:100%; padding:.75rem; background:transparent; border:1px dashed rgba(184,149,42,.4); border-radius:4px; font-family:'Jost',sans-serif; font-size:.75rem; font-weight:500; letter-spacing:.12em; text-transform:uppercase; color:var(--gold-dk); cursor:pointer; transition:all .2s; display:flex; align-items:center; justify-content:center; gap:.5rem; }
+    .add-item-btn:hover { background:rgba(184,149,42,.05); border-color:var(--gold); color:var(--gold); }
+
+    /* Gold divider */
+    .gold-div { height:1px; background:linear-gradient(to right,var(--gold),transparent); margin:1.5rem 0; }
+
+    /* Summary card */
+    .summary-card { background:var(--navy); border-radius:4px; overflow:hidden; margin-bottom:1.5rem; }
+    .summary-header { padding:1.1rem 1.5rem; border-bottom:1px solid rgba(184,149,42,.15); }
+    .summary-header h6 { font-size:.65rem; font-weight:600; letter-spacing:.2em; text-transform:uppercase; color:var(--gold-lt); margin:0; }
+    .summary-body { padding:1.5rem; }
+    .sum-row { display:flex; justify-content:space-between; padding:.5rem 0; border-top:1px solid rgba(255,255,255,.07); }
+    .sum-row:first-child { border-top:none; }
+    .sum-label { font-size:.8rem; color:rgba(255,255,255,.5); }
+    .sum-val   { font-size:.875rem; font-weight:500; color:rgba(255,255,255,.85); }
+    .sum-row.ttc { border-top:1px solid rgba(184,149,42,.3) !important; margin-top:.5rem; padding-top:.75rem; }
+    .sum-row.ttc .sum-label { color:rgba(255,255,255,.75); font-weight:600; font-size:.85rem; }
+    .sum-row.ttc .sum-val   { font-family:'Cormorant Garamond',serif; font-size:1.6rem; font-weight:600; color:var(--gold-lt); }
+
+    .save-btn-wrap { display:flex; flex-direction:column; gap:.5rem; }
+    .save-btn { width:100%; padding:.85rem; background:var(--gold); border:none; border-radius:var(--radius); font-family:'Jost',sans-serif; font-size:.8rem; font-weight:600; letter-spacing:.12em; text-transform:uppercase; color:var(--navy); cursor:pointer; transition:all .25s; display:flex; align-items:center; justify-content:center; gap:.5rem; }
+    .save-btn:hover { background:var(--gold-lt); }
+    .cancel-link { display:block; text-align:center; padding:.65rem; font-size:.73rem; font-weight:500; letter-spacing:.08em; text-transform:uppercase; color:var(--text-muted); text-decoration:none; transition:color .2s; }
+    .cancel-link:hover { color:var(--text); }
+
+    .fade-in-up { animation:fadeInUp .5s ease both; }
+    .fade-in-up:nth-child(2){ animation-delay:.08s; }
+    .fade-in-up:nth-child(3){ animation-delay:.16s; }
+    @keyframes fadeInUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+  </style>
+</head>
+<body>
+<div layout:fragment="content">
+
+  <div class="page-header">
+    <div class="page-header-inner">
+      <div>
+        <p class="page-eyebrow"><i class="fas fa-pen"></i> &nbsp;Facturation</p>
+        <h1 class="page-title">Modifier <strong th:text="${invoice.invoiceNumber}">FACT-2026-00001</strong></h1>
+      </div>
+      <div style="display:flex;gap:.75rem">
+        <a th:href="@{/invoices/{id}(id=${invoice.id})}" class="btn-ghost"><i class="fas fa-times"></i> Annuler</a>
+      </div>
+    </div>
+  </div>
+
+  <form id="editForm" onsubmit="submitForm(event)">
+  <div class="edit-body">
+
+    <!-- Left -->
+    <div>
+      <!-- Base info -->
+      <div class="inv-card fade-in-up">
+        <div class="inv-card-header">
+          <div class="inv-card-icon"><i class="fas fa-info"></i></div>
+          <h6>Informations générales</h6>
+        </div>
+        <div class="inv-card-body">
+          <div class="form-grid">
+            <div class="field-group">
+              <label class="field-label">N° Facture <span>*</span></label>
+              <div class="input-group">
+                <input type="text" id="invoiceNumber" class="inv-input" required th:value="${invoice.invoiceNumber}">
+                <button type="button" class="input-group-btn" onclick="generateNumber()">
+                  <i class="fas fa-sync-alt"></i> Générer
+                </button>
+              </div>
+            </div>
+            <div class="field-group">
+              <label class="field-label">Client <span>*</span></label>
+              <select id="clientId" class="inv-select" required>
+                <option value="">— Sélectionner —</option>
+                <option th:each="c : ${clients}" th:value="${c.id}" th:text="${c.name}"
+                        th:selected="${c.id == invoice.clientId}"></option>
+              </select>
+            </div>
+          </div>
+
+          <div class="gold-div"></div>
+
+          <div class="form-grid-3">
+            <div class="field-group">
+              <label class="field-label">Date de facture <span>*</span></label>
+              <input type="date" id="invoiceDate" class="inv-input" required
+                     th:value="${#temporals.format(invoice.invoiceDate,'yyyy-MM-dd')}">
+            </div>
+            <div class="field-group">
+              <label class="field-label">Date d'échéance</label>
+              <input type="date" id="dueDate" class="inv-input"
+                     th:value="${invoice.dueDate != null ? #temporals.format(invoice.dueDate,'yyyy-MM-dd') : ''}">
+            </div>
+            <div class="field-group">
+              <label class="field-label">Statut</label>
+              <select id="status" class="inv-select">
+                <option value="DRAFT"     th:selected="${invoice.status == 'DRAFT'}">Brouillon</option>
+                <option value="SENT"      th:selected="${invoice.status == 'SENT'}">Envoyée</option>
+                <option value="PAID"      th:selected="${invoice.status == 'PAID'}">Payée</option>
+                <option value="OVERDUE"   th:selected="${invoice.status == 'OVERDUE'}">En retard</option>
+                <option value="CANCELLED" th:selected="${invoice.status == 'CANCELLED'}">Annulée</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Prestations -->
+      <div class="inv-card fade-in-up">
+        <div class="inv-card-header">
+          <div class="inv-card-icon"><i class="fas fa-list-ul"></i></div>
+          <h6>Prestations</h6>
+        </div>
+        <div class="inv-card-body">
+          <div id="itemsContainer"></div>
+          <button type="button" class="add-item-btn" onclick="addItem()">
+            <i class="fas fa-plus"></i> Ajouter une prestation
+          </button>
+        </div>
+      </div>
+
+      <!-- Notes -->
+      <div class="inv-card fade-in-up">
+        <div class="inv-card-header">
+          <div class="inv-card-icon"><i class="fas fa-sticky-note"></i></div>
+          <h6>Notes &amp; conditions</h6>
+        </div>
+        <div class="inv-card-body">
+          <div class="field-group">
+            <label class="field-label">Mentions légales / Conditions de paiement</label>
+            <textarea id="notes" class="inv-textarea" rows="3"
+                      th:text="${invoice.notes}">Paiement sous 30 jours. Pénalités de retard : 3 fois le taux d'intérêt légal.</textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right -->
+    <div style="position:sticky;top:80px;align-self:start">
+      <div class="summary-card fade-in-up">
+        <div class="summary-header"><h6><i class="fas fa-calculator" style="margin-right:.5rem"></i>Résumé</h6></div>
+        <div class="summary-body">
+          <div class="sum-row"><span class="sum-label">Total HT</span><span class="sum-val" id="totalHT">0,00 €</span></div>
+          <div class="sum-row"><span class="sum-label">TVA</span><span class="sum-val" id="totalTVA">0,00 €</span></div>
+          <div class="sum-row ttc"><span class="sum-label">Total TTC</span><span class="sum-val" id="totalTTC">0,00 €</span></div>
+        </div>
+      </div>
+
+      <div class="save-btn-wrap fade-in-up">
+        <button type="submit" class="save-btn"><i class="fas fa-save"></i> Enregistrer les modifications</button>
+        <a th:href="@{/invoices/{id}(id=${invoice.id})}" class="cancel-link">Annuler sans sauvegarder</a>
+      </div>
+    </div>
+
+  </div>
+  </form>
+
+  <script th:inline="javascript">
+    const invoiceId   = /*[[${invoice.id}]]*/ '';
+    const csrf        = document.querySelector('meta[name="_csrf"]') ? document.querySelector('meta[name="_csrf"]').content : '';
+    const initItems   = /*[[${invoice.items}]]*/ [];
+    let counter = 0;
+
+    function addItem(desc='', qty=1, price=0, tva=20) {
+      counter++;
+      const id = counter;
+      const html = `
+        <div class="item-card" id="ic-${id}">
+          <button type="button" class="item-remove" onclick="removeItem(${id})" title="Supprimer">
+            <i class="fas fa-times"></i>
+          </button>
+          <div class="item-card-grid">
+            <div class="field-group">
+              <label class="field-label">Description <span style="color:#c0392b">*</span></label>
+              <input class="inv-input item-desc" type="text" placeholder="Ex: Consultation juridique"
+                     value="${esc(desc)}" required>
+            </div>
+            <div class="field-group">
+              <label class="field-label">Qté</label>
+              <input class="inv-input item-qty" type="number" value="${qty}" min="0.01" step="0.01" oninput="calc()">
+            </div>
+            <div class="field-group">
+              <label class="field-label">Prix unit. HT (€)</label>
+              <input class="inv-input item-price" type="number" value="${price}" min="0" step="0.01" oninput="calc()">
+            </div>
+            <div class="field-group">
+              <label class="field-label">TVA (%)</label>
+              <input class="inv-input item-tva" type="number" value="${tva}" min="0" max="100" step="0.1" oninput="calc()">
+            </div>
+          </div>
+        </div>`;
+      document.getElementById('itemsContainer').insertAdjacentHTML('beforeend', html);
+      calc();
+    }
+
+    function esc(s){ const d=document.createElement('div'); d.appendChild(document.createTextNode(s||'')); return d.innerHTML; }
+
+    function removeItem(id){ document.getElementById('ic-'+id)?.remove(); calc(); }
+
+    function calc() {
+      let ht=0, tva=0;
+      document.querySelectorAll('.item-card').forEach(c=>{
+        const q = parseFloat(c.querySelector('.item-qty').value)||0;
+        const p = parseFloat(c.querySelector('.item-price').value)||0;
+        const t = parseFloat(c.querySelector('.item-tva').value)||0;
+        const lht = q*p; ht+=lht; tva+=lht*(t/100);
+      });
+      const fmt = v => v.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';
+      document.getElementById('totalHT').textContent  = fmt(ht);
+      document.getElementById('totalTVA').textContent = fmt(tva);
+      document.getElementById('totalTTC').textContent = fmt(ht+tva);
+    }
+
+    function generateNumber() {
+      fetch('/api/invoices/generate-number')
+        .then(r=>r.json()).then(d=>{ document.getElementById('invoiceNumber').value=d.invoiceNumber; })
+        .catch(()=>{});
+    }
+
+    function collectData() {
+      const items=[];
+      document.querySelectorAll('.item-card').forEach((c,i)=>{
+        items.push({
+          description: c.querySelector('.item-desc').value,
+          quantity: parseFloat(c.querySelector('.item-qty').value),
+          unitPriceHT: parseFloat(c.querySelector('.item-price').value),
+          tvaRate: parseFloat(c.querySelector('.item-tva').value),
+          displayOrder: i+1
+        });
+      });
+      return {
+        invoiceNumber: document.getElementById('invoiceNumber').value,
+        clientId:      document.getElementById('clientId').value,
+        invoiceDate:   document.getElementById('invoiceDate').value,
+        dueDate:       document.getElementById('dueDate').value || null,
+        status:        document.getElementById('status').value,
+        notes:         document.getElementById('notes').value,
+        items
+      };
+    }
+
+    function submitForm(e) {
+      e.preventDefault();
+      const data = collectData();
+      if(!data.clientId)         { alert('Veuillez sélectionner un client.'); return; }
+      if(!data.items.length)     { alert('Veuillez ajouter au moins une prestation.'); return; }
+      fetch('/api/invoices/'+invoiceId, {
+        method:'PUT',
+        headers:{'Content-Type':'application/json','X-CSRF-TOKEN':csrf},
+        body: JSON.stringify(data)
+      }).then(r=>{
+        if(!r.ok) return r.text().then(t=>{throw new Error(t);});
+        return r.json();
+      }).then(()=>{ location.href='/invoices/'+invoiceId; })
+        .catch(err=>alert('Erreur : '+err.message));
+    }
+
+    window.addEventListener('DOMContentLoaded', ()=>{
+      if(initItems && initItems.length) {
+        initItems.forEach(i=>addItem(i.description, i.quantity, i.unitPriceHT, i.tvaRate));
+      } else { addItem(); }
+    });
+  </script>
+</div>
+</body>
+</html>

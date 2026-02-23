@@ -14,6 +14,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -160,14 +161,21 @@ public class Invoice {
     
     // Calcul automatique des totaux
     public void calculateTotals() {
-        this.totalHT = items.stream()
+        // Sum line totals safely (null-safe) and ensure scale/rounding
+        BigDecimal ht = items.stream()
             .map(InvoiceItem::getTotalHT)
-            .reduce(BigDecimal.ZERO, BigDecimal::add);
-        
-        this.totalTVA = items.stream()
+            .map(v -> v == null ? BigDecimal.ZERO : v)
+            .reduce(BigDecimal.ZERO, BigDecimal::add)
+            .setScale(2, RoundingMode.HALF_UP);
+
+        BigDecimal tva = items.stream()
             .map(InvoiceItem::getTotalTVA)
-            .reduce(BigDecimal.ZERO, BigDecimal::add);
-        
-        this.totalTTC = totalHT.add(totalTVA);
+            .map(v -> v == null ? BigDecimal.ZERO : v)
+            .reduce(BigDecimal.ZERO, BigDecimal::add)
+            .setScale(2, RoundingMode.HALF_UP);
+
+        this.totalHT = ht;
+        this.totalTVA = tva;
+        this.totalTTC = ht.add(tva).setScale(2, RoundingMode.HALF_UP);
     }
 }

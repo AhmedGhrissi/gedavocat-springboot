@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+  <title>Facture</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --gold:      #B8952A;
+      --gold-lt:   #D4AF5A;
+      --gold-dk:   #8B6F1E;
+      --navy:      #0D1B2A;
+      --navy-mid:  #162233;
+      --navy-lt:   #1E2F42;
+      --slate:     #2C3E50;
+      --smoke:     #F5F3EE;
+      --cream:     #FAF8F3;
+      --text:      #1A1A1A;
+      --text-muted:#6B7280;
+      --border:    rgba(184,149,42,0.2);
+      --radius:    2px;
+    }
+    body { background: var(--cream); font-family: 'Jost', sans-serif; color: var(--text); }
+
+    /* Header */
+    .inv-header { background: var(--navy); position: relative; overflow: hidden; }
+    .inv-header::before {
+      content:''; position:absolute; inset:0;
+      background: repeating-linear-gradient(45deg,transparent,transparent 40px,rgba(184,149,42,.04) 40px,rgba(184,149,42,.04) 41px);
+    }
+    .inv-header-inner { position:relative;z-index:1; padding:2.5rem 2.5rem 2rem; display:flex; justify-content:space-between; align-items:flex-start; }
+    .inv-eyebrow { font-size:.65rem; font-weight:600; letter-spacing:.25em; text-transform:uppercase; color:var(--gold); margin-bottom:.5rem; }
+    .inv-title { font-family:'Cormorant Garamond',serif; font-size:2.2rem; font-weight:300; color:#fff; line-height:1.1; margin:0; }
+    .inv-title strong { font-weight:600; color:var(--gold-lt); }
+    .inv-header-actions { display:flex; gap:.75rem; align-items:center; padding-top:.25rem; }
+
+    .btn-gold { background:transparent; border:1px solid var(--gold); color:var(--gold-lt); font-family:'Jost',sans-serif; font-size:.75rem; font-weight:500; letter-spacing:.1em; text-transform:uppercase; padding:.55rem 1.25rem; text-decoration:none; cursor:pointer; transition:all .25s; border-radius:var(--radius); display:inline-flex; align-items:center; gap:.4rem; }
+    .btn-gold:hover { background:var(--gold); color:var(--navy); }
+    .btn-gold-solid { background:var(--gold); border:1px solid var(--gold); color:var(--navy); font-family:'Jost',sans-serif; font-size:.75rem; font-weight:600; letter-spacing:.1em; text-transform:uppercase; padding:.55rem 1.25rem; text-decoration:none; cursor:pointer; transition:all .25s; border-radius:var(--radius); display:inline-flex; align-items:center; gap:.4rem; }
+    .btn-gold-solid:hover { background:var(--gold-lt); color:var(--navy); }
+    .btn-ghost { background:transparent; border:1px solid rgba(255,255,255,.2); color:rgba(255,255,255,.6); font-family:'Jost',sans-serif; font-size:.75rem; font-weight:400; letter-spacing:.08em; text-transform:uppercase; padding:.55rem 1.25rem; text-decoration:none; cursor:pointer; transition:all .25s; border-radius:var(--radius); display:inline-flex; align-items:center; gap:.4rem; }
+    .btn-ghost:hover { border-color:rgba(255,255,255,.5); color:#fff; }
+
+    /* Status bar */
+    .status-bar { background:var(--navy-mid); border-top:1px solid rgba(184,149,42,.15); padding:.85rem 2.5rem; display:flex; align-items:center; gap:2.5rem; flex-wrap:wrap; }
+    .status-item { display:flex; align-items:center; gap:.6rem; }
+    .status-label { font-size:.65rem; font-weight:600; letter-spacing:.15em; text-transform:uppercase; color:var(--text-muted); }
+    .status-val { font-size:.8rem; font-weight:500; color:rgba(255,255,255,.85); }
+    .badge-pill { display:inline-flex; align-items:center; gap:.35rem; padding:.2rem .75rem; border-radius:99px; font-size:.7rem; font-weight:600; letter-spacing:.08em; text-transform:uppercase; }
+    .badge-paid    { background:rgba(39,174,96,.15);  color:#2ecc71; border:1px solid rgba(39,174,96,.3); }
+    .badge-sent    { background:rgba(52,152,219,.15); color:#5dade2; border:1px solid rgba(52,152,219,.3); }
+    .badge-draft   { background:rgba(149,165,166,.15);color:#95a5a6; border:1px solid rgba(149,165,166,.3); }
+    .badge-overdue { background:rgba(231,76,60,.15);  color:#e74c3c; border:1px solid rgba(231,76,60,.3); }
+    .badge-cancelled{background:rgba(44,62,80,.5);   color:#7f8c8d; border:1px solid rgba(127,140,141,.3);}
+
+    /* Layout */
+    .inv-body { padding:2.5rem; display:grid; grid-template-columns:1fr 320px; gap:2rem; }
+
+    /* Cards */
+    .inv-card { background:#fff; border:1px solid rgba(0,0,0,.06); border-radius:4px; box-shadow:0 2px 12px rgba(0,0,0,.04); overflow:hidden; margin-bottom:1.5rem; }
+    .inv-card-header { padding:1.1rem 1.75rem; border-bottom:1px solid rgba(0,0,0,.06); display:flex; align-items:center; gap:.75rem; background:var(--smoke); }
+    .inv-card-icon { width:30px; height:30px; border-radius:2px; background:var(--navy); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .inv-card-icon i { color:var(--gold-lt); font-size:.7rem; }
+    .inv-card-header h6 { font-size:.65rem; font-weight:600; letter-spacing:.2em; text-transform:uppercase; color:var(--slate); margin:0; }
+    .inv-card-body { padding:1.75rem; }
+
+    /* Info grid */
+    .info-grid { display:grid; grid-template-columns:1fr 1fr; gap:1.5rem 2rem; }
+    .info-field label { display:block; font-size:.65rem; font-weight:600; letter-spacing:.15em; text-transform:uppercase; color:var(--text-muted); margin-bottom:.3rem; }
+    .info-field p { margin:0; font-size:.9rem; }
+    .info-field .serif { font-family:'Cormorant Garamond',serif; font-size:1.05rem; font-weight:500; }
+
+    .gold-div { height:1px; background:linear-gradient(to right,var(--gold),transparent); margin:1.5rem 0; }
+
+    /* Items table */
+    .items-table { width:100%; border-collapse:collapse; }
+    .items-table thead tr { background:var(--navy); }
+    .items-table thead th { padding:.75rem 1rem; font-size:.65rem; font-weight:600; letter-spacing:.15em; text-transform:uppercase; color:var(--gold-lt); white-space:nowrap; }
+    .items-table thead th:first-child { padding-left:1.75rem; text-align:left; }
+    .items-table thead th:last-child  { padding-right:1.75rem; text-align:right; }
+    .items-table thead th:not(:first-child):not(:last-child) { text-align:center; }
+    .items-table tbody tr { border-bottom:1px solid rgba(0,0,0,.05); transition:background .15s; }
+    .items-table tbody tr:last-child { border-bottom:none; }
+    .items-table tbody tr:hover { background:var(--smoke); }
+    .items-table tbody td { padding:1rem; font-size:.875rem; }
+    .items-table tbody td:first-child { padding-left:1.75rem; }
+    .items-table tbody td:last-child  { padding-right:1.75rem; text-align:right; font-weight:600; }
+    .items-table tbody td:not(:first-child):not(:last-child) { text-align:center; }
+
+    /* Totals */
+    .totals-wrap { padding:1.25rem 1.75rem; }
+    .total-row { display:flex; justify-content:space-between; align-items:center; padding:.55rem 0; border-top:1px solid rgba(0,0,0,.05); }
+    .total-row:first-child { border-top:none; }
+    .t-label { font-size:.8rem; color:var(--text-muted); }
+    .t-val   { font-size:.875rem; font-weight:500; }
+    .total-row.ttc { border-top:2px solid var(--gold) !important; margin-top:.5rem; padding-top:.75rem; }
+    .total-row.ttc .t-label { font-size:.9rem; font-weight:600; color:var(--navy); }
+    .total-row.ttc .t-val   { font-family:'Cormorant Garamond',serif; font-size:1.7rem; font-weight:600; color:var(--navy); }
+
+    /* Side */
+    .side-sticky { position:sticky; top:80px; }
+    .notes-text { font-size:.8rem; color:var(--text-muted); line-height:1.7; font-style:italic; }
+
+    /* Actions */
+    .action-list { display:flex; flex-direction:column; gap:.5rem; }
+    .action-btn { width:100%; padding:.7rem 1rem; background:transparent; border:1px solid rgba(0,0,0,.1); border-radius:var(--radius); font-family:'Jost',sans-serif; font-size:.73rem; font-weight:500; letter-spacing:.08em; text-transform:uppercase; color:var(--slate); cursor:pointer; text-align:left; display:flex; align-items:center; gap:.6rem; transition:all .2s; text-decoration:none; }
+    .action-btn:hover  { background:var(--smoke); border-color:var(--slate); color:var(--navy); }
+    .action-btn.danger { color:#c0392b; border-color:rgba(192,57,43,.2); }
+    .action-btn.danger:hover { background:rgba(192,57,43,.06); border-color:#c0392b; }
+    .action-btn.success { color:#27ae60; border-color:rgba(39,174,96,.25); }
+    .action-btn.success:hover { background:rgba(39,174,96,.06); border-color:#27ae60; }
+    .action-btn i { width:16px; text-align:center; }
+
+    /* PDF badge */
+    .pdf-badge { display:flex; align-items:center; gap:1rem; padding:1rem 1.25rem; background:var(--smoke); border:1px dashed var(--border); border-radius:4px; text-decoration:none; transition:all .2s; }
+    .pdf-badge:hover { border-color:var(--gold); background:rgba(184,149,42,.05); }
+    .pdf-icon { font-size:1.5rem; color:var(--gold); }
+    .pdf-name { display:block; font-size:.8rem; font-weight:600; color:var(--navy); }
+    .pdf-sub  { display:block; font-size:.7rem; color:var(--text-muted); }
+
+    /* Modal */
+    .inv-overlay { display:none; position:fixed; inset:0; z-index:9999; background:rgba(13,27,42,.75); backdrop-filter:blur(4px); align-items:center; justify-content:center; }
+    .inv-overlay.open { display:flex; }
+    .inv-modal { background:#fff; width:460px; border-radius:4px; box-shadow:0 25px 60px rgba(0,0,0,.3); overflow:hidden; animation:slideUp .25s ease; }
+    @keyframes slideUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+    .inv-modal-hd { background:var(--navy); padding:1.5rem 1.75rem; border-bottom:1px solid rgba(184,149,42,.2); }
+    .inv-modal-hd h5 { font-family:'Cormorant Garamond',serif; font-size:1.3rem; font-weight:500; color:#fff; margin:0; }
+    .inv-modal-hd p  { font-size:.78rem; color:rgba(255,255,255,.5); margin:.25rem 0 0; }
+    .inv-modal-bd { padding:1.75rem; }
+    .inv-modal-ft { padding:1.25rem 1.75rem; border-top:1px solid rgba(0,0,0,.07); display:flex; justify-content:flex-end; gap:.75rem; }
+    .field-label { font-size:.65rem; font-weight:600; letter-spacing:.15em; text-transform:uppercase; color:var(--text-muted); margin-bottom:.4rem; display:block; }
+    .inv-select { width:100%; padding:.65rem 1rem; border:1px solid rgba(0,0,0,.12); border-radius:var(--radius); font-family:'Jost',sans-serif; font-size:.875rem; color:var(--text); background:#fff; appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236B7280'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 1rem center; }
+    .inv-select:focus { outline:none; border-color:var(--gold); box-shadow:0 0 0 3px rgba(184,149,42,.1); }
+
+    .fade-in     { animation:fadeIn .4s ease both; }
+    .fade-in-up  { animation:fadeInUp .5s ease both; }
+    .fade-in-up:nth-child(2){ animation-delay:.08s; }
+    .fade-in-up:nth-child(3){ animation-delay:.16s; }
+    @keyframes fadeIn    { from{opacity:0}              to{opacity:1} }
+    @keyframes fadeInUp  { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+  </style>
+</head>
+<body>
+<div layout:fragment="content">
+
+  <div class="inv-header fade-in">
+    <div class="inv-header-inner">
+      <div>
+        <p class="inv-eyebrow"><i class="fas fa-file-invoice"></i> &nbsp;Facturation</p>
+        <h1 class="inv-title">Facture <strong th:text="${invoice.invoiceNumber}">FACT-2026-00001</strong></h1>
+      </div>
+      <div class="inv-header-actions">
+        <a th:href="@{/invoices/{id}/edit(id=${invoice.id})}" class="btn-gold"><i class="fas fa-pen"></i> Modifier</a>
+        <a th:href="@{/invoices/{id}/pdf(id=${invoice.id})}" class="btn-gold-solid" target="_blank"><i class="fas fa-file-pdf"></i> PDF</a>
+        <a href="/invoices" class="btn-ghost"><i class="fas fa-arrow-left"></i> Retour</a>
+      </div>
+    </div>
+    <div class="status-bar">
+      <div class="status-item">
+        <span class="status-label">Statut</span>
+        <span th:switch="${invoice.status}">
+          <span th:case="'DRAFT'"      class="badge-pill badge-draft">    <i class="fas fa-circle" style="font-size:.45em"></i> Brouillon</span>
+          <span th:case="'SENT'"       class="badge-pill badge-sent">     <i class="fas fa-circle" style="font-size:.45em"></i> Envoyée</span>
+          <span th:case="'PAID'"       class="badge-pill badge-paid">     <i class="fas fa-circle" style="font-size:.45em"></i> Payée</span>
+          <span th:case="'OVERDUE'"    class="badge-pill badge-overdue">  <i class="fas fa-circle" style="font-size:.45em"></i> En retard</span>
+          <span th:case="'CANCELLED'"  class="badge-pill badge-cancelled"><i class="fas fa-circle" style="font-size:.45em"></i> Annulée</span>
+        </span>
+      </div>
+      <div class="status-item">
+        <span class="status-label">Client</span>
+        <span class="status-val" th:text="${invoice.clientName}">—</span>
+      </div>
+      <div class="status-item">
+        <span class="status-label">Date</span>
+        <span class="status-val" th:text="${#temporals.format(invoice.invoiceDate,'dd/MM/yyyy')}">—</span>
+      </div>
+      <div class="status-item" th:if="${invoice.dueDate != null}">
+        <span class="status-label">Échéance</span>
+        <span class="status-val"
+              th:text="${#temporals.format(invoice.dueDate,'dd/MM/yyyy')}"
+              th:style="${invoice.overdue ? 'color:#e74c3c;font-weight:600' : ''}">—</span>
+      </div>
+      <div class="status-item" th:if="${invoice.paidDate != null}">
+        <span class="status-label">Payée le</span>
+        <span class="status-val" th:text="${#temporals.format(invoice.paidDate,'dd/MM/yyyy')}">—</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="inv-body">
+    <!-- Left -->
+    <div>
+      <div class="inv-card fade-in-up">
+        <div class="inv-card-header">
+          <div class="inv-card-icon"><i class="fas fa-info"></i></div>
+          <h6>Informations générales</h6>
+        </div>
+        <div class="inv-card-body">
+          <div class="info-grid">
+            <div class="info-field">
+              <label>N° Facture</label>
+              <p class="serif" th:text="${invoice.invoiceNumber}">—</p>
+            </div>
+            <div class="info-field">
+              <label>Client</label>
+              <p class="serif" th:text="${invoice.clientName}">—</p>
+            </div>
+            <div class="info-field" th:if="${invoice.paymentMethod != null}">
+              <label>Mode de paiement</label>
+              <p th:text="${invoice.paymentMethod}">—</p>
+            </div>
+            <div class="info-field" th:if="${invoice.paidDate != null}">
+              <label>Payée le</label>
+              <p th:text="${#temporals.format(invoice.paidDate,'dd/MM/yyyy')}">—</p>
+            </div>
+          </div>
+          <div th:if="${invoice.notes != null and !invoice.notes.isEmpty()}">
+            <div class="gold-div"></div>
+            <div class="info-field">
+              <label>Notes &amp; conditions</label>
+              <p class="notes-text" th:text="${invoice.notes}">—</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="inv-card fade-in-up">
+        <div class="inv-card-header">
+          <div class="inv-card-icon"><i class="fas fa-list-ul"></i></div>
+          <h6>Détail des prestations</h6>
+        </div>
+        <table class="items-table">
+          <thead>
+            <tr>
+              <th>Description</th>
+              <th>Qté</th>
+              <th>Prix unit. HT</th>
+              <th>TVA</th>
+              <th>Total HT</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr th:each="item : ${invoice.items}">
+              <td style="font-weight:500" th:text="${item.description}">—</td>
+              <td th:text="${item.quantity}">1</td>
+              <td th:text="|${#numbers.formatDecimal(item.unitPriceHT,0,2)} €|">—</td>
+              <td th:text="|${item.tvaRate} %|">20 %</td>
+              <td th:text="|${#numbers.formatDecimal(item.quantity * item.unitPriceHT,0,2)} €|">—</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="totals-wrap">
+          <div style="max-width:260px;margin-left:auto">
+            <div class="total-row">
+              <span class="t-label">Total HT</span>
+              <span class="t-val" th:text="|${#numbers.formatDecimal(invoice.totalHT,0,2)} €|">—</span>
+            </div>
+            <div class="total-row">
+              <span class="t-label">TVA</span>
+              <span class="t-val" th:text="|${#numbers.formatDecimal(invoice.totalTVA,0,2)} €|">—</span>
+            </div>
+            <div class="total-row ttc">
+              <span class="t-label">Total TTC</span>
+              <span class="t-val" th:text="|${#numbers.formatDecimal(invoice.totalTTC,0,2)} €|">—</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right -->
+    <div class="side-sticky">
+      <div class="inv-card fade-in-up">
+        <div class="inv-card-header">
+          <div class="inv-card-icon"><i class="fas fa-bolt"></i></div>
+          <h6>Actions</h6>
+        </div>
+        <div class="inv-card-body">
+          <div class="action-list">
+            <a th:href="@{/invoices/{id}/edit(id=${invoice.id})}" class="action-btn"><i class="fas fa-pen"></i> Modifier la facture</a>
+            <a th:href="@{/invoices/{id}/pdf(id=${invoice.id})}" class="action-btn" target="_blank"><i class="fas fa-download"></i> Télécharger PDF</a>
+            <button class="action-btn success"
+                    th:if="${invoice.status != 'PAID' and invoice.status != 'CANCELLED'}"
+                    onclick="openPaidModal()">
+              <i class="fas fa-check-circle"></i> Marquer comme payée
+            </button>
+            <button class="action-btn danger"
+                    th:attr="data-invoice-id=${invoice.id}" onclick="deleteInvoice(this.dataset.invoiceId)">
+              <i class="fas fa-trash"></i> Supprimer
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="inv-card fade-in-up" th:if="${invoice.documentUrl != null}">
+        <div class="inv-card-header">
+          <div class="inv-card-icon"><i class="fas fa-paperclip"></i></div>
+          <h6>Document joint</h6>
+        </div>
+        <div class="inv-card-body">
+          <a th:href="${invoice.documentUrl}" target="_blank" class="pdf-badge">
+            <i class="fas fa-file-pdf pdf-icon"></i>
+            <div>
+              <span class="pdf-name">Facture originale</span>
+              <span class="pdf-sub">Ouvrir le document</span>
+            </div>
+            <i class="fas fa-external-link-alt" style="margin-left:auto;color:var(--text-muted);font-size:.7rem"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal paiement -->
+  <div class="inv-overlay" id="paidOverlay">
+    <div class="inv-modal">
+      <div class="inv-modal-hd">
+        <h5><i class="fas fa-check-circle" style="color:var(--gold-lt);margin-right:.5rem"></i> Confirmer le paiement</h5>
+        <p>Indiquez le mode de règlement reçu</p>
+      </div>
+      <div class="inv-modal-bd">
+        <label class="field-label">Mode de paiement</label>
+        <select id="paymentMethod" class="inv-select">
+          <option value="">— Non précisé —</option>
+          <option value="Virement bancaire">Virement bancaire</option>
+          <option value="Chèque">Chèque</option>
+          <option value="Espèces">Espèces</option>
+          <option value="Carte bancaire">Carte bancaire</option>
+          <option value="Prélèvement">Prélèvement</option>
+        </select>
+      </div>
+      <div class="inv-modal-ft">
+        <button class="btn-ghost" style="border-color:rgba(0,0,0,.15);color:var(--slate)" onclick="closePaidModal()">Annuler</button>
+        <button class="btn-gold-solid" onclick="confirmMarkAsPaid()"><i class="fas fa-check"></i> Confirmer</button>
+      </div>
+    </div>
+  </div>
+
+  <script th:inline="javascript">
+    const invoiceId = /*[[${invoice.id}]]*/ '';
+    const csrf = document.querySelector('meta[name="_csrf"]') ? document.querySelector('meta[name="_csrf"]').content : '';
+
+    function openPaidModal()  { document.getElementById('paidOverlay').classList.add('open'); }
+    function closePaidModal() { document.getElementById('paidOverlay').classList.remove('open'); }
+    document.getElementById('paidOverlay').addEventListener('click', e => { if(e.target===document.getElementById('paidOverlay')) closePaidModal(); });
+
+    function confirmMarkAsPaid() {
+      fetch('/api/invoices/'+invoiceId+'/mark-as-paid', {
+        method:'PATCH', headers:{'Content-Type':'application/json','X-CSRF-TOKEN':csrf},
+        body: JSON.stringify({paymentMethod: document.getElementById('paymentMethod').value || null})
+      }).then(r => r.ok ? location.reload() : alert('Erreur'));
+    }
+    function deleteInvoice(id) {
+      if(confirm('Supprimer définitivement cette facture ?')) {
+        fetch('/api/invoices/'+id, {method:'DELETE', headers:{'X-CSRF-TOKEN':csrf}})
+          .then(r => r.ok ? location.href='/invoices' : alert('Erreur'));
+      }
+    }
+  </script>
+</div>
+</body>
+</html>
