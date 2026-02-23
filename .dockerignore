@@ -3,6 +3,7 @@ target/
 
 # ─── Docker (le Dockerfile et les composes ne font pas partie du contexte) ──
 docker/
+!docker/entrypoint.sh
 *.dockerfile
 Dockerfile*
 
@@ -41,7 +42,6 @@ Thumbs.db
 # ─── Documentation et scripts de déploiement ───────────────
 *.md
 *.pdf
-*.sh
 scripts/
 
 # ─── Tests ─────────────────────────────────────────────────
