@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout}">
@@ -162,19 +162,19 @@
                     <form th:action="@{/settings/password}" method="post" class="mt-3" id="passwordForm">
                         <div class="form-floating mb-3">
                             <input type="password" id="currentPassword" name="currentPassword"
-                                   class="form-control" placeholder="Mot de passe actuel" required>
+                                   class="form-control" placeholder="Mot de passe actuel" required autocomplete="current-password">
                             <label for="currentPassword">Mot de passe actuel</label>
                         </div>
                         <div class="form-floating mb-3">
                             <input type="password" id="newPassword" name="newPassword"
                                    class="form-control" placeholder="Nouveau mot de passe"
-                                   minlength="8" required>
+                                   minlength="8" required autocomplete="new-password">
                             <label for="newPassword">Nouveau mot de passe (min. 8 caractères)</label>
                         </div>
                         <div class="form-floating mb-3">
                             <input type="password" id="confirmPassword" name="confirmPassword"
                                    class="form-control" placeholder="Confirmer le nouveau mot de passe"
-                                   minlength="8" required>
+                                   minlength="8" required autocomplete="new-password">
                             <label for="confirmPassword">Confirmer le nouveau mot de passe</label>
                         </div>
                         <button type="submit" class="btn btn-warning">

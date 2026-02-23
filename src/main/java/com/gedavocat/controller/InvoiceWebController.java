@@ -13,6 +13,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
@@ -72,9 +76,9 @@ public class InvoiceWebController {
         try {
             User user = getCurrentUser(authentication);
             String lawyerId = user.getId();
-            
+
             var invoices = invoiceService.getInvoicesByLawyer(lawyerId);
-            
+
             long paidCount = invoices.stream().filter(i -> "PAID".equals(i.getStatus().name())).count();
             long pendingCount = invoices.stream().filter(i -> "SENT".equals(i.getStatus().name())).count();
             long overdueCount = invoices.stream().filter(i -> i.isOverdue()).count();
@@ -82,7 +86,7 @@ public class InvoiceWebController {
                 .filter(i -> "PAID".equals(i.getStatus().name()))
                 .mapToDouble(i -> i.getTotalTTC().doubleValue())
                 .sum();
-            
+
             model.addAttribute("invoices", invoices);
             model.addAttribute("paidCount", paidCount);
             model.addAttribute("pendingCount", pendingCount);
@@ -90,7 +94,7 @@ public class InvoiceWebController {
             model.addAttribute("totalAmount", totalAmount);
             model.addAttribute("clients", getClientsForUser(authentication, lawyerId));
             model.addAttribute("today", LocalDate.now());
-            
+
             return "invoices/index";
         } catch (Exception e) {
             model.addAttribute("error", "Erreur lors du chargement des factures");
@@ -289,6 +293,48 @@ public class InvoiceWebController {
         } catch (Exception e) {
             model.addAttribute("error", "Erreur lors du chargement de vos factures");
             return "invoices/my-invoices";
+        }
+    }
+
+ // InvoiceWebController.java — ajouter cet endpoint
+    @GetMapping("/{id}/pdf")
+    @PreAuthorize("hasAnyRole('LAWYER', 'CLIENT', 'ADMIN')")
+    public ResponseEntity<byte[]> downloadPdf(@PathVariable String id,
+                                               Authentication authentication) {
+        try {
+            User user = getCurrentUser(authentication);
+            var invoice = invoiceService.getInvoiceById(id);
+
+            boolean isAdmin = authentication.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+            boolean isClient = authentication.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_CLIENT"));
+
+            if (!isAdmin) {
+                if (isClient) {
+                    var clientOpt = clientService.findByClientUser(user.getId());
+                    if (clientOpt.isEmpty() || !clientOpt.get().getId().equals(invoice.getClientId())) {
+                        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+                    }
+                } else {
+                    if (invoice.getLawyerId() == null || !invoice.getLawyerId().equals(user.getId())) {
+                        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+                    }
+                }
+            }
+
+            byte[] pdfBytes = invoiceService.generatePdf(id);
+            String filename = "facture-" + invoice.getInvoiceNumber() + ".pdf";
+
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION,
+                            "attachment; filename=\"" + filename + "\"")
+                    .contentType(MediaType.APPLICATION_PDF)
+                    .body(pdfBytes);
+
+        } catch (Exception e) {
+            log.error("Erreur PDF facture {}", id, e);
+            return ResponseEntity.notFound().build();
         }
     }
 }
