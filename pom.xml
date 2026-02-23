@@ -143,6 +143,13 @@
 			<version>7.2.5</version>
 		</dependency>
 
+		<!-- PDF -->
+		<dependency>
+			<groupId>com.github.librepdf</groupId>
+			<artifactId>openpdf</artifactId>
+			<version>1.3.30</version>
+		</dependency>
+
 		<!-- Spring Boot DevTools -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -241,7 +248,7 @@
 					</excludes>
 				</configuration>
 			</plugin>
-			
+
 			<!-- Plugin Maven Resources avec encodage UTF-8 -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -255,7 +262,7 @@
 					</nonFilteredFileExtensions>
 				</configuration>
 			</plugin>
-			
+
 			<!-- Plugin Maven Compiler avec encodage UTF-8 -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
