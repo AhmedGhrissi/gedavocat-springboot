@@ -1,0 +1,5 @@
+{
+  "name": "com.chrome.devtools.json",
+  "description": "Placeholder to satisfy Chrome DevTools appspecific requests for local dev environments",
+  "version": "1.0"
+}

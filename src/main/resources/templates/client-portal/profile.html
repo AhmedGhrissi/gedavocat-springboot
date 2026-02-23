@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout}">
@@ -115,18 +115,18 @@
                             <div class="mb-3">
                                 <label for="currentPassword" class="form-label small fw-bold">Mot de passe actuel</label>
                                 <input type="password" id="currentPassword" name="currentPassword"
-                                       class="form-control form-control-sm" required>
+                                       class="form-control form-control-sm" required autocomplete="current-password">
                             </div>
                             <div class="mb-3">
                                 <label for="newPassword" class="form-label small fw-bold">Nouveau mot de passe</label>
                                 <input type="password" id="newPassword" name="newPassword"
-                                       class="form-control form-control-sm" minlength="8" required>
+                                       class="form-control form-control-sm" minlength="8" required autocomplete="new-password">
                                 <div class="form-text">Minimum 8 caractères</div>
                             </div>
                             <div class="mb-3">
                                 <label for="confirmNewPassword" class="form-label small fw-bold">Confirmer le nouveau mot de passe</label>
                                 <input type="password" id="confirmNewPassword" name="confirmNewPassword"
-                                       class="form-control form-control-sm" minlength="8" required>
+                                       class="form-control form-control-sm" minlength="8" required autocomplete="new-password">
                             </div>
                             <button type="submit" class="btn btn-warning btn-sm w-100">
                                 <i class="fas fa-key"></i> Modifier le mot de passe
