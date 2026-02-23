@@ -175,9 +175,9 @@
                     <div class="card mb-3" sec:authorize="hasRole('LAWYER')">
                         <div class="card-header d-flex justify-content-between align-items-center">
                             <h6 class="mb-0"><i class="fas fa-users me-1"></i> Collaborateurs</h6>
-                            <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#shareModal">
+                            <a th:href="@{/cases/{id}/share(id=${case.id})}" class="btn btn-sm btn-outline-primary">
                                 <i class="fas fa-share-alt"></i> Partager
-                            </button>
+                            </a>
                         </div>
                         <div class="card-body">
                             <div th:if="${permissions != null and !#lists.isEmpty(permissions)}">
@@ -265,57 +265,6 @@
             </div>
         </div>
 
-        <!-- Modal Partage collaborateur -->
-        <div class="modal fade" id="shareModal" tabindex="-1" sec:authorize="hasRole('LAWYER')">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title"><i class="fas fa-share-alt me-2"></i> Partager le dossier</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <form th:action="@{/cases/{id}/share(id=${case.id})}" method="post">
-                        <div class="modal-body">
-                            <p class="text-muted" style="font-size:13px">
-                                Invitez un collaborateur à accéder à ce dossier.
-                                Il recevra un email avec un lien d'accès.
-                            </p>
-                            <div class="mb-3">
-                                <label for="shareEmail" class="form-label">Email du collaborateur</label>
-                                <input type="email" id="shareEmail" name="email" class="form-control"
-                                       placeholder="collaborateur@cabinet.fr" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="shareDuration" class="form-label">Durée d'accès</label>
-                                <select id="shareDuration" name="durationDays" class="form-select">
-                                    <option value="7">7 jours</option>
-                                    <option value="30" selected>30 jours</option>
-                                    <option value="90">90 jours</option>
-                                    <option value="180">6 mois</option>
-                                    <option value="365">1 an</option>
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Permissions</label>
-                                <div class="form-check">
-                                    <input type="checkbox" id="canRead" name="canRead" class="form-check-input" checked disabled>
-                                    <label for="canRead" class="form-check-label">Lecture (toujours activé)</label>
-                                </div>
-                                <div class="form-check">
-                                    <input type="checkbox" id="canUpload" name="canUpload" class="form-check-input" checked>
-                                    <label for="canUpload" class="form-check-label">Déposer des documents</label>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-paper-plane"></i> Envoyer l'invitation
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
     </div>
 </body>
 </html>
