@@ -226,8 +226,9 @@ public class DocumentController {
 
     /**
      * Télécharger un document.
-     * Si l'utilisateur a le rôle CLIENT, un filigrane "CONFIDENTIEL" est appliqué
-     * automatiquement sur les fichiers PDF avant l'envoi.
+     * Filigrane appliqué à la volée :
+     *   - Avocat télécharge un doc déposé par un client → filigrane COPIE
+     *   - Sinon → aucun filigrane
      */
     @GetMapping("/{id}/download")
     public ResponseEntity<Resource> downloadDocument(
@@ -250,10 +251,11 @@ public class DocumentController {
 
             byte[] fileBytes = Files.readAllBytes(filePath);
 
-            if (isClient && watermarkService.isPdf(fileBytes)) {
+            // Filigrane COPIE si le document a été déposé par un client
+            if ("CLIENT".equals(document.getUploaderRole()) && watermarkService.isPdf(fileBytes)) {
                 byte[] watermarked = watermarkService.addWatermark(
                         new java.io.ByteArrayInputStream(fileBytes),
-                        WatermarkService.WATERMARK_CONFIDENTIEL);
+                        WatermarkService.WATERMARK_COPIE);
                 if (watermarked != null) {
                     fileBytes = watermarked;
                 }
@@ -268,6 +270,53 @@ public class DocumentController {
                     .body(resource);
         } catch (Exception e) {
             throw new RuntimeException("Erreur lors du téléchargement: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Prévisualisation d'un document (affichage inline dans le navigateur).
+     * Même logique de filigrane que le téléchargement.
+     */
+    @GetMapping("/{id}/preview")
+    public ResponseEntity<Resource> previewDocument(
+            @PathVariable String id,
+            Authentication authentication
+    ) {
+        try {
+            User user = getCurrentUser(authentication);
+            Path filePath = documentService.downloadDocument(id, user.getId());
+            Document document = documentService.getDocumentById(id);
+
+            // SÉCURITÉ : vérifier ownership
+            boolean isAdminPreview = authentication.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+            boolean isClientPreview = authentication.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_CLIENT"));
+            if (!isAdminPreview && !isClientPreview && !document.getCaseEntity().getLawyer().getId().equals(user.getId())) {
+                throw new org.springframework.security.access.AccessDeniedException("Accès non autorisé");
+            }
+
+            byte[] fileBytes = Files.readAllBytes(filePath);
+
+            // Filigrane COPIE si le document a été déposé par un client
+            if ("CLIENT".equals(document.getUploaderRole()) && watermarkService.isPdf(fileBytes)) {
+                byte[] watermarked = watermarkService.addWatermark(
+                        new java.io.ByteArrayInputStream(fileBytes),
+                        WatermarkService.WATERMARK_COPIE);
+                if (watermarked != null) {
+                    fileBytes = watermarked;
+                }
+            }
+
+            Resource resource = new ByteArrayResource(fileBytes);
+
+            return ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType(document.getMimetype()))
+                    .header(HttpHeaders.CONTENT_DISPOSITION,
+                            "inline; filename=\"" + document.getOriginalName() + "\"")
+                    .body(resource);
+        } catch (Exception e) {
+            throw new RuntimeException("Erreur lors de la prévisualisation: " + e.getMessage());
         }
     }
 

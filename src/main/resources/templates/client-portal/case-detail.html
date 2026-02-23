@@ -90,10 +90,6 @@
                         <!-- Formulaire d'upload (collapsible) -->
                         <div class="collapse mb-3" id="uploadForm">
                             <div class="card card-body border-success">
-                                <p class="text-muted small mb-2">
-                                    <i class="fas fa-info-circle"></i>
-                                    Les fichiers PDF seront automatiquement marqués <strong>"COPIE"</strong>.
-                                </p>
                                 <form th:action="@{/my-cases/{caseId}/upload(caseId=${case.id})}"
                                       method="post" enctype="multipart/form-data">
                                     <div class="input-group">
@@ -127,12 +123,21 @@
                                     <small class="text-muted">
                                         <span th:text="${doc.fileSize != null ? #numbers.formatDecimal(doc.fileSize / 1024.0, 1, 2) + ' KB' : ''}"></span>
                                         • Ajouté le <span th:text="${#temporals.format(doc.createdAt, 'dd/MM/yyyy')}"></span>
+                                        <span th:if="${doc.uploaderRole != null}" class="badge bg-light text-dark ms-1" 
+                                              th:text="${doc.uploaderRole == 'CLIENT' ? 'Par vous' : 'Par l''avocat'}"></span>
                                     </small>
                                 </div>
-                                <a th:href="@{/my-cases/documents/{id}/download(id=${doc.id})}" 
-                                   class="btn btn-sm btn-primary">
-                                    <i class="fas fa-download"></i> Télécharger
-                                </a>
+                                <div class="d-flex gap-1">
+                                    <a th:if="${doc.mimetype != null and (doc.mimetype.startsWith('application/pdf') or doc.mimetype.startsWith('image/'))}" 
+                                       th:href="@{/my-cases/documents/{id}/preview(id=${doc.id})}" 
+                                       class="btn btn-sm btn-outline-primary" target="_blank" title="Prévisualiser">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a th:href="@{/my-cases/documents/{id}/download(id=${doc.id})}" 
+                                       class="btn btn-sm btn-primary">
+                                        <i class="fas fa-download"></i> Télécharger
+                                    </a>
+                                </div>
                             </div>
                         </div>
                         

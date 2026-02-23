@@ -138,6 +138,11 @@
                                             <td><span class="badge bg-secondary">v<span th:text="${doc.version}">1</span></span></td>
                                             <td style="font-size:12px" th:text="${#temporals.format(doc.createdAt, 'dd/MM/yyyy')}">Date</td>
                                             <td>
+                                                <a th:if="${doc.mimetype != null and (doc.mimetype.startsWith('application/pdf') or doc.mimetype.startsWith('image/'))}" 
+                                                   th:href="@{/documents/{id}/preview(id=${doc.id})}" 
+                                                   class="btn btn-sm btn-outline-primary" target="_blank" title="Prévisualiser">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
                                                 <a th:href="@{/documents/{id}/download(id=${doc.id})}" class="btn btn-sm btn-outline-success" title="Télécharger">
                                                     <i class="fas fa-download"></i>
                                                 </a>
