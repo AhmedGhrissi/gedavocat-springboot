@@ -51,10 +51,11 @@ public class DocumentService {
     }
     
     /**
-     * Récupère un document par ID
+     * Récupère un document par ID (avec Case + Client chargés pour éviter LazyInitializationException)
      */
+    @Transactional(readOnly = true)
     public Document getDocumentById(String documentId) {
-        return documentRepository.findById(documentId)
+        return documentRepository.findByIdWithCaseAndClient(documentId)
                 .orElseThrow(() -> new RuntimeException("Document non trouvé"));
     }
     
