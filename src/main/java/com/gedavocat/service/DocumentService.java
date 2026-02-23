@@ -161,8 +161,11 @@ public class DocumentService {
             
             return saved;
             
+        } catch (java.nio.file.AccessDeniedException e) {
+            throw new RuntimeException("Permissions insuffisantes pour écrire dans " + uploadDir 
+                + ". Vérifiez les droits du répertoire (chown docavocat:docavocat " + uploadDir + ")");
         } catch (IOException e) {
-            throw new RuntimeException("Erreur lors de l'upload du fichier: " + e.getMessage());
+            throw new RuntimeException("Erreur lors de l'upload du fichier: " + e.getClass().getSimpleName() + " — " + e.getMessage());
         }
     }
     
