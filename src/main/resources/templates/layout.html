@@ -775,7 +775,7 @@
                         credentials: 'same-origin'
                     })
                     .then(r => r.json())
-                    .then data => {
+                    .then(data => {
                         showAlert(data.message || (data.success ? 'Mot de passe modifié !' : 'Erreur'), data.success ? 'success' : 'danger');
                         if (data.success) pwdForm.reset();
                     })
