@@ -56,4 +56,19 @@ public interface PermissionRepository extends JpaRepository<Permission, String> 
            "WHERE p.caseEntity.id = :caseId AND p.lawyer.id = :lawyerId " +
            "AND p.isActive = TRUE AND p.canWrite = TRUE AND p.revokedAt IS NULL")
     boolean hasWriteAccess(@Param("caseId") String caseId, @Param("lawyerId") String lawyerId);
+    
+    /**
+     * Récupère les permissions actives pour une liste d'IDs de dossiers
+     */
+    @Query("SELECT p FROM Permission p WHERE p.caseEntity.id IN :caseIds " +
+           "AND p.isActive = TRUE AND p.revokedAt IS NULL")
+    java.util.List<Permission> findActiveByCaseEntityIdIn(@Param("caseIds") java.util.List<String> caseIds);
+
+    /**
+     * Trouve les permissions actives d'un dossier avec les avocats associés
+     */
+    @Query("SELECT p FROM Permission p LEFT JOIN FETCH p.lawyer l WHERE p.caseEntity.id = :caseId " +
+           "AND p.isActive = TRUE AND p.revokedAt IS NULL")
+    java.util.List<Permission> findActiveWithLawyerByCaseId(@Param("caseId") String caseId);
+
 }

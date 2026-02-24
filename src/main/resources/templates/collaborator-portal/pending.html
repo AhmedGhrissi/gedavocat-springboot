@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+
+<th:block layout:fragment="extra-css">
+    <link rel="stylesheet" th:href="@{/css/pages/collaborator-portal.css}">
+</th:block>
+
+<head>
+    <link rel="stylesheet" th:href="@{/css/pages/client-portal.css}">
+<title>Accès collaborateur</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="collab-page">
+        <div class="container text-center py-5">
+            <i class="fas fa-user-lock fa-4x text-muted mb-3"></i>
+            <h3 th:text="${errorMessage}">Accès restreint</h3>
+            <p class="text-muted">Si vous pensez qu'il s'agit d'une erreur, contactez l'administrateur ou l'avocat responsable.</p>
+            <a th:href="@{/}" class="btn btn-outline-primary mt-3">Retour à l'accueil</a>
+        </div>
+        </div>
+     </div>
+</body>
+</html>
