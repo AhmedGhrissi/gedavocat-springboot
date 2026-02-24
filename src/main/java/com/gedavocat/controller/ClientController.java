@@ -200,6 +200,7 @@ public class ClientController {
     /**
      * Affiche le formulaire d'acceptation d'invitation
      */
+    @PreAuthorize("permitAll()")
     @GetMapping("/accept-invitation")
     public String acceptInvitationForm(@RequestParam String token, Model model) {
         var entry = invitationService.validateToken(token);
@@ -215,6 +216,7 @@ public class ClientController {
     /**
      * Traite l'acceptation de l'invitation (création du compte)
      */
+    @PreAuthorize("permitAll()")
     @PostMapping("/accept-invitation")
     public String processAcceptInvitation(
             @RequestParam String token,
