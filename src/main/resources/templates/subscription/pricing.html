@@ -17,7 +17,7 @@
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background: #f1f5f9;
-            color: #1e293b;
+            color: var(--text-primary);
             min-height: 100vh;
         }
         .pricing-page { max-width: 1280px; margin: 0 auto; padding: 48px 24px 80px; }
@@ -27,18 +27,18 @@
         }
         .pricing-logo {
             display: flex; align-items: center; gap: 10px;
-            text-decoration: none; color: #1e293b;
+            text-decoration: none; color: var(--text-primary);
             font-size: 20px; font-weight: 700;
         }
-        .pricing-logo i { color: #667eea; }
+        .pricing-logo i { color: var(--brand-500); }
         .pricing-topbar-links { display: flex; gap: 16px; align-items: center; }
         .pricing-topbar-links a {
-            color: #64748b; text-decoration: none; font-size: 14px; font-weight: 500;
+            color: var(--text-secondary); text-decoration: none; font-size: 14px; font-weight: 500;
             transition: color 0.2s;
         }
-        .pricing-topbar-links a:hover { color: #667eea; }
+        .pricing-topbar-links a:hover { color: var(--brand-500); }
         .pricing-topbar-links .btn-login {
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: linear-gradient(135deg, var(--brand-500), var(--brand-700));
             color: white; padding: 8px 20px; border-radius: 10px;
             font-weight: 600; font-size: 14px;
         }
@@ -61,8 +61,8 @@
         </div>
 
         <!-- Hero -->
-        <div class="pricing-hero">
-            <h1>Choisissez votre plan</h1>
+        <div class="pricing-hero page-header">
+            <h1 class="animate-fade-in-up">Choisissez votre plan</h1>
             <p>Gérez votre cabinet d'avocat avec efficacité. Annulez à tout moment.</p>
         </div>
 
@@ -173,7 +173,7 @@
                         <span>Support prioritaire</span>
                     </li>
                 </ul>
-                <a th:href="@{/register(plan=CABINET,billing=monthly)}" class="cta-button cta-primary cta-plan">
+                <a th:href="@{/register(plan=CABINET,billing=monthly)}" class="cta-button cta-primary cta-plan" style="border-radius:var(--radius-lg);font-weight:600">
                     Démarrer maintenant
                 </a>
             </div>
@@ -232,7 +232,7 @@
 
         <!-- Payment Methods -->
         <div class="payment-methods">
-            <h3><i class="fas fa-shield-alt" style="color: #10b981;"></i> Moyens de paiement sécurisés</h3>
+            <h3><i class="fas fa-shield-alt" style="color: var(--success);"></i> Moyens de paiement sécurisés</h3>
             <div class="methods-grid">
                 <div class="method-card">
                     <div class="method-icon">💳</div>
@@ -260,7 +260,7 @@
         <!-- Trust Section -->
         <div class="trust-section">
             <h3 style="margin-bottom: 8px; color: #f1f5f9;">Paiement 100% sécurisé 🇫🇷</h3>
-            <p style="color: #64748b; margin-bottom: 0;">Powered by PayPlug - Solution française certifiée PCI-DSS</p>
+            <p style="color: var(--text-secondary); margin-bottom: 0;">Powered by PayPlug - Solution française certifiée PCI-DSS</p>
             <div class="trust-badges">
                 <div class="trust-badge">
                     <i class="fas fa-lock"></i>

@@ -12,10 +12,14 @@
 <div layout:fragment="content">
     <div class="container-fluid">
         <!-- En-tête -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h2 class="mb-1">👥 Gestion des utilisateurs</h2>
-                <p class="text-muted">Administration des comptes et permissions</p>
+        <div class="hero-banner mb-4">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div style="position:relative;z-index:1">
+                    <h1 style="font-size:1.5rem;font-weight:800;letter-spacing:-0.025em;margin-bottom:4px;color:#fff">
+                        <i class="fas fa-users-cog me-2"></i>Gestion des utilisateurs
+                    </h1>
+                    <p style="font-size:0.875rem;margin:0;color:rgba(255,255,255,0.8)">Administration des comptes et permissions</p>
+                </div>
             </div>
         </div>
 
@@ -121,7 +125,7 @@
                         </select>
                     </div>
                     <div class="col-md-2 d-flex align-items-end gap-2">
-                        <button type="submit" class="btn btn-primary w-100">
+                        <button type="submit" class="btn btn-primary w-100" style="border-radius:var(--radius-lg);font-weight:600">
                             <i class="fas fa-search"></i> Filtrer
                         </button>
                         <a href="/admin/users" class="btn btn-outline-secondary" title="Réinitialiser">
@@ -148,7 +152,7 @@
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="mb-0"><i class="fas fa-list"></i> Liste des utilisateurs</h5>
-                <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#newUserModal">
+                <button class="btn btn-sm btn-success" style="border-radius:var(--radius-lg);font-weight:600" data-bs-toggle="modal" data-bs-target="#newUserModal">
                     <i class="fas fa-plus"></i> Nouvel utilisateur
                 </button>
             </div>
@@ -188,7 +192,9 @@
                         <tbody>
                             <tr th:if="${users == null or users.empty}">
                                 <td colspan="8" class="text-center py-5">
-                                    <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                                    <div style="width:64px;height:64px;border-radius:50%;background:var(--bg-tertiary);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;">
+                                        <i class="fas fa-users" style="font-size:1.5rem;color:var(--text-tertiary)"></i>
+                                    </div>
                                     <p class="text-muted">Aucun utilisateur trouvé</p>
                                 </td>
                             </tr>
@@ -275,7 +281,9 @@
                                 <tbody>
                                     <tr th:if="${clientsWithoutAccount == null or clientsWithoutAccount.empty}">
                                         <td colspan="6" class="text-center py-5">
-                                            <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                                            <div style="width:64px;height:64px;border-radius:50%;background:var(--bg-tertiary);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;">
+                                                <i class="fas fa-check-circle" style="font-size:1.5rem;color:var(--success)"></i>
+                                            </div>
                                             <p class="text-muted">Tous les clients ont un compte utilisateur</p>
                                         </td>
                                     </tr>
@@ -299,7 +307,7 @@
                                         <td>
                                             <form th:action="@{/admin/users/send-invitation}" method="post" class="d-inline">
                                                 <input type="hidden" name="clientId" th:value="${client.id}" />
-                                                <button type="submit" class="btn btn-sm btn-primary">
+                                                <button type="submit" class="btn btn-sm btn-primary" style="border-radius:var(--radius-lg);font-weight:600">
                                                     <i class="fas fa-envelope"></i> Envoyer invitation
                                                 </button>
                                             </form>
@@ -500,7 +508,7 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                        <button type="submit" class="btn btn-success">
+                        <button type="submit" class="btn btn-success" style="border-radius:var(--radius-lg);font-weight:600">
                             <i class="fas fa-check"></i> Créer l'utilisateur
                         </button>
                     </div>

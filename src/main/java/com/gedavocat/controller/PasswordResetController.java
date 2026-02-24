@@ -1,6 +1,7 @@
 package com.gedavocat.controller;
 
 import com.gedavocat.service.PasswordResetService;
+import com.gedavocat.util.PasswordValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -70,6 +71,12 @@ public class PasswordResetController {
         }
         if (password.length() < 8) {
             model.addAttribute("error", "Le mot de passe doit contenir au moins 8 caractères.");
+            model.addAttribute("token", token);
+            return "auth/reset-password";
+        }
+        // SEC-15 FIX : Mêmes exigences de complexité que l'inscription
+        if (!PasswordValidator.isValid(password)) {
+            model.addAttribute("error", PasswordValidator.PASSWORD_REQUIREMENTS_MESSAGE);
             model.addAttribute("token", token);
             return "auth/reset-password";
         }

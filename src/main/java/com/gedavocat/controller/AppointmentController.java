@@ -21,7 +21,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.util.List;
-import java.util.UUID;
 
 /**
  * Contrôleur pour la gestion du calendrier et des rendez-vous

@@ -253,6 +253,13 @@ public class User {
     }
 
     /**
+     * Vérifier si l'utilisateur est avocat secondaire / collaborateur
+     */
+    public boolean isCollaborator() {
+        return this.role == UserRole.LAWYER_SECONDARY;
+    }
+
+    /**
      * Vérifier si l'abonnement est actif
      */
     public boolean hasActiveSubscription() {

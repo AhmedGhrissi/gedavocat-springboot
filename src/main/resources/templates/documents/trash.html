@@ -20,8 +20,8 @@
             </div>
 
             <!-- En-tête de la corbeille -->
-            <div class="trash-header">
-                <h1><i class="fas fa-trash"></i> Corbeille</h1>
+            <div class="trash-header page-header">
+                <h1 class="animate-fade-in-up"><i class="fas fa-trash"></i> Corbeille</h1>
                 <p style="font-size: 16px; opacity: 0.95;">Documents supprimés - Restauration possible</p>
             </div>
 
@@ -80,10 +80,12 @@
 
             <!-- État vide -->
             <div th:if="${documents == null or documents.empty}" class="empty-state">
-                <i class="fas fa-check-circle"></i>
+                <div style="border-radius:var(--radius-xl);background:var(--bg-tertiary);display:inline-flex;align-items:center;justify-content:center;width:80px;height:80px;margin-bottom:1rem;">
+                    <i class="fas fa-check-circle fa-2x" style="color:var(--success);"></i>
+                </div>
                 <h3>La corbeille est vide</h3>
                 <p>Aucun document supprimé</p>
-                <a th:href="@{/documents/case/{caseId}(caseId=${caseId})}" class="btn btn-primary mt-3">
+                <a th:href="@{/documents/case/{caseId}(caseId=${caseId})}" class="btn btn-primary mt-3" style="font-weight:600;border-radius:var(--radius-lg);">
                     <i class="fas fa-arrow-left"></i> Retour aux documents
                 </a>
             </div>

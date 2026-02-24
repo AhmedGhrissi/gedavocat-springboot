@@ -3,7 +3,6 @@ package com.gedavocat.controller;
 import com.gedavocat.dto.AuthRequest;
 import com.gedavocat.dto.AuthResponse;
 import com.gedavocat.dto.RegisterRequest;
-import com.gedavocat.model.User;
 import com.gedavocat.repository.UserRepository;
 import com.gedavocat.service.AuthService;
 import com.gedavocat.service.EmailVerificationService;

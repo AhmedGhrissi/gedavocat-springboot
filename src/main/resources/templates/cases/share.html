@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout}">
@@ -109,7 +109,7 @@
                                     </div>
                                     <div th:if="${link.valid}">
                                         <input type="text" class="form-control form-control-sm mt-1"
-                                               th:value="${@environment.getProperty('app.base-url', 'https://docavocat.fr') + '/cases/shared?token=' + link.token}"
+                                               th:value="${linkPublicUrls != null && linkPublicUrls.containsKey(link.id) ? linkPublicUrls[link.id] : @environment.getProperty('app.base-url', 'https://docavocat.fr') + '/cases/shared?token=' + link.token}"
                                                readonly onclick="this.select()">
                                     </div>
                                 </div>

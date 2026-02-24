@@ -43,6 +43,14 @@ public class CaseShareLink {
     @Column(name = "token", nullable = false, unique = true, length = 72)
     private String token;
 
+    /** Email du destinataire de l'invitation */
+    @Column(name = "recipient_email", length = 255)
+    private String recipientEmail;
+
+    /** Date d'envoi de l'invitation */
+    @Column(name = "invited_at")
+    private LocalDateTime invitedAt;
+
     /**
      * Description ou note explicative pour le destinataire
      * (ex: "Cabinet Martin pour expertise")

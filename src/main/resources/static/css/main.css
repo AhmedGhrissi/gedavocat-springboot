@@ -12,8 +12,8 @@
     --border: #e2e8f0;
     --text-primary: #1e293b;
     --text-secondary: #64748b;
-    --primary: #667eea;
-    --primary-end: #764ba2;
+    --primary: #6366f1;
+    --primary-end: #8b5cf6;
     --accent: #6366f1;
     --success: #10b981;
     --warning: #f59e0b;
@@ -21,7 +21,7 @@
     --info: #0ea5e9;
 
     /* Legacy aliases */
-    --primary-color: #667eea;
+    --primary-color: #6366f1;
     --secondary-color: #6366f1;
     --success-color: #10b981;
     --danger-color: #ef4444;

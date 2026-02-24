@@ -1,4 +1,7 @@
-/* ── Payment success / cancel page styles ── */
+/* ══════════════════════════════════════════════════════════
+   PAYMENT — Success / Cancel result pages
+   Uses design-system.css tokens
+══════════════════════════════════════════════════════════ */
 
 @keyframes fadeInUp {
     from { opacity: 0; transform: translateY(30px); }
@@ -6,96 +9,186 @@
 }
 @keyframes pulse {
     0%, 100% { transform: scale(1); }
-    50%       { transform: scale(1.05); }
+    50%      { transform: scale(1.05); }
 }
 
-/* Success variant */
+/* ── Containers ── */
 .success-container,
 .cancel-container {
     min-height: 80vh;
-    display: flex; align-items: center; justify-content: center;
-    background: #f8fafc;
-    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-2xl);
 }
-.cancel-container { background: #fffbeb; }
+.cancel-container { background: rgba(245,158,11,0.03); }
 
+/* ── Cards ── */
 .success-card,
 .cancel-card {
-    background: #ffffff;
-    border-radius: 24px; padding: 60px 40px;
+    background: var(--surface);
+    border-radius: var(--radius-2xl);
+    padding: 60px 40px;
     max-width: 600px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.08);
+    box-shadow: var(--shadow-xl);
     text-align: center;
-    animation: fadeInUp 0.8s ease-out;
-    border: 1px solid #e2e8f0;
+    animation: fadeInUp 0.8s var(--ease-out, ease-out);
+    border: 1px solid var(--border-light);
 }
 
+/* ── Icons ── */
 .success-icon {
-    width: 120px; height: 120px;
+    width: 112px;
+    height: 112px;
     margin: 0 auto 32px;
     background: linear-gradient(135deg, #10b981, #059669);
-    border-radius: 50%; display: flex; align-items: center; justify-content: center;
-    font-size: 64px; color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3.5rem;
+    color: #fff;
     animation: pulse 2s ease-in-out infinite;
+    box-shadow: 0 8px 30px rgba(16,185,129,0.3);
 }
 .cancel-icon {
-    width: 120px; height: 120px;
+    width: 112px;
+    height: 112px;
     margin: 0 auto 32px;
     background: linear-gradient(135deg, #fbbf24, #f59e0b);
-    border-radius: 50%; display: flex; align-items: center; justify-content: center;
-    font-size: 64px; color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3.5rem;
+    color: #fff;
     animation: pulse 2s ease-in-out infinite;
+    box-shadow: 0 8px 30px rgba(245,158,11,0.3);
 }
 
+/* ── Titles ── */
 .success-title,
-.cancel-title { font-size: 36px; font-weight: 800; color: #1e293b; margin-bottom: 16px; }
+.cancel-title {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin-bottom: 16px;
+    letter-spacing: -0.02em;
+}
 .success-subtitle,
-.cancel-subtitle { font-size: 18px; color: #64748b; margin-bottom: 32px; }
+.cancel-subtitle {
+    font-size: 1.0625rem;
+    color: var(--text-secondary);
+    margin-bottom: 32px;
+    line-height: 1.6;
+}
 
+/* ── Info boxes ── */
 .info-box {
-    background: #f8fafc;
-    padding: 20px; border-radius: 12px;
-    text-align: left; margin-bottom: 32px;
-    border: 1px solid #e2e8f0;
+    background: var(--bg-secondary);
+    padding: 20px;
+    border-radius: var(--radius-lg);
+    text-align: left;
+    margin-bottom: 32px;
+    border: 1px solid var(--border-light);
 }
 .info-box.orange { border-left: 4px solid #f59e0b; }
 .info-box.green  { border-left: 4px solid #10b981; }
-.info-box h5 { color: #1e293b; margin-bottom: 12px; font-weight: 700; }
-.info-box p  { color: #64748b; margin: 0; line-height: 1.6; }
+.info-box h5 { color: var(--text-primary); margin-bottom: 12px; font-weight: 700; }
+.info-box p  { color: var(--text-secondary); margin: 0; line-height: 1.6; font-size: 0.9375rem; }
 
+/* ── Reason cards (cancel page) ── */
 .reasons-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 16px; margin-bottom: 32px;
+    gap: 16px;
+    margin-bottom: 32px;
 }
 .reason-card {
-    background: #f8fafc;
-    padding: 20px; border-radius: 12px; text-align: left;
-    transition: all 0.3s; border: 1px solid #e2e8f0;
+    background: var(--bg-secondary);
+    padding: 20px;
+    border-radius: var(--radius-lg);
+    text-align: left;
+    transition: var(--transition-base);
+    border: 1px solid var(--border-light);
 }
-.reason-card:hover { border-color: #667eea; transform: translateY(-4px); }
+.reason-card:hover {
+    border-color: var(--brand-300);
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+}
 .reason-icon {
-    width: 40px; height: 40px;
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    border-radius: 10px; display: flex; align-items: center; justify-content: center;
-    color: white; font-size: 20px; margin-bottom: 12px;
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, var(--brand-500), var(--brand-700));
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 1.125rem;
+    margin-bottom: 12px;
 }
-.reason-title { font-weight: 700; color: #1e293b; margin-bottom: 8px; }
-.reason-text  { font-size: 14px; color: #64748b; margin: 0; }
+.reason-title { font-weight: 700; color: var(--text-primary); margin-bottom: 8px; }
+.reason-text  { font-size: 0.875rem; color: var(--text-secondary); margin: 0; line-height: 1.5; }
 
-.action-buttons { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+/* ── Action buttons ── */
+.action-buttons {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
 .btn-premium {
-    padding: 16px 32px; border-radius: 12px; font-weight: 700;
-    text-decoration: none; transition: all 0.3s;
-    display: inline-flex; align-items: center; gap: 8px;
+    padding: 14px 32px;
+    border-radius: var(--radius-lg);
+    font-weight: 700;
+    text-decoration: none;
+    transition: var(--transition-base);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9375rem;
 }
 .btn-primary-premium {
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    color: white; border: none;
+    background: linear-gradient(135deg, var(--brand-500), var(--brand-700));
+    color: #fff;
+    border: none;
 }
-.btn-primary-premium:hover { transform: translateY(-2px); color: white; box-shadow: 0 8px 20px rgba(102,126,234,0.4); }
+.btn-primary-premium:hover {
+    transform: translateY(-2px);
+    color: #fff;
+    box-shadow: var(--shadow-lg), 0 0 20px rgba(99,102,241,0.3);
+}
 .btn-secondary-premium {
-    background: #f8fafc;
-    color: #1e293b; border: 2px solid #e2e8f0;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 2px solid var(--border-default);
 }
-.btn-secondary-premium:hover { background: #f1f5f9; color: #1e293b; }
+.btn-secondary-premium:hover {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    border-color: var(--brand-300);
+}
+
+/* ── Dark mode ── */
+.dark .success-card,
+.dark .cancel-card { background: var(--surface); border-color: var(--border-default); }
+.dark .success-container { background: var(--bg-tertiary); }
+.dark .cancel-container { background: rgba(245,158,11,0.05); }
+.dark .info-box { background: var(--bg-tertiary); border-color: var(--border-default); }
+.dark .reason-card { background: var(--bg-tertiary); border-color: var(--border-default); }
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+    .success-card,
+    .cancel-card { padding: 40px 24px; }
+    .success-title,
+    .cancel-title { font-size: 1.5rem; }
+    .success-icon,
+    .cancel-icon { width: 88px; height: 88px; font-size: 2.5rem; }
+    .reasons-grid { grid-template-columns: 1fr; }
+    .action-buttons { flex-direction: column; }
+    .btn-premium { width: 100%; justify-content: center; }
+}

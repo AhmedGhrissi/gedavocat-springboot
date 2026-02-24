@@ -2,6 +2,7 @@ package com.gedavocat.service;
 
 import com.gedavocat.model.Case;
 import com.gedavocat.model.Case.CaseStatus;
+import com.gedavocat.model.Permission;
 import com.gedavocat.model.Client;
 import com.gedavocat.repository.AppointmentRepository;
 import com.gedavocat.repository.CaseRepository;
@@ -10,22 +11,28 @@ import com.gedavocat.repository.ClientRepository;
 import com.gedavocat.repository.DocumentRepository;
 import com.gedavocat.repository.RpvaCommunicationRepository;
 import com.gedavocat.repository.SignatureRepository;
+import com.gedavocat.repository.PermissionRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
+import java.util.Objects;
 
 /**
  * Service de gestion des dossiers
  */
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class CaseService {
     
     private final CaseRepository caseRepository;
+    private final PermissionRepository permissionRepository;
     private final ClientRepository clientRepository;
     private final AuditService auditService;
     private final AppointmentRepository appointmentRepository;
@@ -33,6 +40,48 @@ public class CaseService {
     private final CaseShareLinkRepository caseShareLinkRepository;
     private final SignatureRepository signatureRepository;
     private final DocumentRepository documentRepository;
+    
+    /**
+     * Récupère les dossiers pour lesquels un collaborateur (lawyer) a une permission active
+     */
+    @Transactional(readOnly = true)
+    public List<Case> getCasesByCollaborator(String collaboratorId) {
+        List<Permission> perms = permissionRepository.findActiveByLawyerId(collaboratorId);
+        // Collect case IDs while still inside the transaction/session to avoid touching proxies later
+        List<String> caseIds = perms.stream()
+                .map(Permission::getCaseEntity)
+                .filter(Objects::nonNull)
+                .map(Case::getId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .collect(Collectors.toList());
+        // Load full case entities (with client) from repository
+        List<Case> cases = caseIds.stream()
+                .map(id -> caseRepository.findByIdWithClient(id).orElse(null))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+        // Force-initialize lawyer and client while we are still inside the transaction
+        try {
+            for (Case c : cases) {
+                if (c.getLawyer() != null) {
+                    c.getLawyer().getId();
+                    c.getLawyer().getName();
+                }
+                if (c.getClient() != null) {
+                    c.getClient().getId();
+                    c.getClient().getName();
+                }
+            }
+        } catch (Exception ignore) {}
+        return cases;
+    }
+
+    /**
+     * Vérifie si un collaborateur a accès en lecture à un dossier
+     */
+    public boolean hasCollaboratorAccess(String caseId, String collaboratorId) {
+        return permissionRepository.hasReadAccess(caseId, collaboratorId);
+    }
     
     /**
      * Récupère tous les dossiers d'un avocat
@@ -51,9 +100,23 @@ public class CaseService {
     /**
      * Récupère un dossier par ID
      */
+    @Transactional(readOnly = true)
     public Case getCaseById(String caseId) {
-        return caseRepository.findByIdWithClient(caseId)
+        Case c = caseRepository.findByIdWithClient(caseId)
                 .orElseThrow(() -> new RuntimeException("Dossier non trouvé"));
+        // Force-initialize relations while inside transaction to avoid LazyInitializationException later
+        try {
+            if (c.getLawyer() != null) {
+                c.getLawyer().getId();
+                c.getLawyer().getName();
+                c.getLawyer().getEmail();
+            }
+            if (c.getClient() != null) {
+                c.getClient().getId();
+                c.getClient().getName();
+            }
+        } catch (Exception ignore) {}
+        return c;
     }
     
     /**
@@ -75,15 +138,10 @@ public class CaseService {
      */
     @Transactional
     public Case createCase(Case caseEntity, String lawyerId) {
-        System.out.println("=== DEBUG CaseService.createCase START ===");
-        System.out.println("LawyerId: " + lawyerId);
-        System.out.println("Case name: " + caseEntity.getName());
-        System.out.println("Client ID: " + (caseEntity.getClient() != null ? caseEntity.getClient().getId() : "null"));
+        log.debug("Création d'un dossier pour l'avocat: {}", lawyerId);
         
         Client client = clientRepository.findById(caseEntity.getClient().getId())
                 .orElseThrow(() -> new RuntimeException("Client non trouvé"));
-        
-        System.out.println("Client trouvé: " + client.getName());
         
         // Vérifier que le client appartient à l'avocat
         if (!client.getLawyer().getId().equals(lawyerId)) {
@@ -100,24 +158,19 @@ public class CaseService {
         caseEntity.setStatus(CaseStatus.OPEN);
         caseEntity.setCreatedAt(LocalDateTime.now());
         
-        System.out.println("Avant save - Case ID: " + caseEntity.getId());
-        System.out.println("Avant save - Status: " + caseEntity.getStatus());
-        
         Case savedCase = caseRepository.save(caseEntity);
         
-        System.out.println("Après save - Case ID: " + savedCase.getId());
-        System.out.println("=== Dossier enregistré en base de données ===");
+        log.info("Dossier créé: {} ({})", savedCase.getName(), savedCase.getId());
         
         // Audit
         try {
             auditService.log("CASE_CREATED", "Case", savedCase.getId(), 
                 "Création du dossier: " + savedCase.getName(), lawyerId);
         } catch (Exception e) {
-            System.err.println("Erreur lors de l'audit: " + e.getMessage());
+            log.error("Erreur lors de l'audit de création du dossier: {}", e.getMessage());
             // Ne pas bloquer la création si l'audit échoue
         }
         
-        System.out.println("=== DEBUG CaseService.createCase END ===");
         return savedCase;
     }
     
