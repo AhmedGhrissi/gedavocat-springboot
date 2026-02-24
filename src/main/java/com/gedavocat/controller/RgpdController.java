@@ -3,12 +3,10 @@ package com.gedavocat.controller;
 import com.gedavocat.model.User;
 import com.gedavocat.model.Case;
 import com.gedavocat.model.Client;
-import com.gedavocat.model.Document;
 import com.gedavocat.model.AuditLog;
 import com.gedavocat.repository.UserRepository;
 import com.gedavocat.repository.CaseRepository;
 import com.gedavocat.repository.ClientRepository;
-import com.gedavocat.repository.DocumentRepository;
 import com.gedavocat.repository.AuditLogRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -41,7 +39,6 @@ public class RgpdController {
     private final UserRepository userRepository;
     private final CaseRepository caseRepository;
     private final ClientRepository clientRepository;
-    private final DocumentRepository documentRepository;
     private final AuditLogRepository auditLogRepository;
 
     /**

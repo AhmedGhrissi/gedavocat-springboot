@@ -4,7 +4,6 @@ import com.gedavocat.model.Case;
 import com.gedavocat.model.CaseShareLink;
 import com.gedavocat.model.User;
 import com.gedavocat.repository.CaseShareLinkRepository;
-import com.gedavocat.service.CaseService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,7 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * Service de partage de dossier entre avocats via lien temporaire.

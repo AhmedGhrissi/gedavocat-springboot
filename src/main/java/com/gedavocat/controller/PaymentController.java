@@ -133,6 +133,7 @@ public class PaymentController {
             Boolean isPaid = (Boolean) payload.get("is_paid");
 
             if (Boolean.TRUE.equals(isPaid)) {
+                @SuppressWarnings("unchecked")
                 Map<String, String> metadata = (Map<String, String>) payload.get("metadata");
                 String userId = metadata.get("user_id");
                 String planStr = metadata.get("plan");

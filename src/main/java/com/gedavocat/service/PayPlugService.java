@@ -18,6 +18,7 @@ import java.util.*;
  * Documentation : https://docs.payplug.com/
  */
 @Service
+@SuppressWarnings({"unchecked", "rawtypes"})
 public class PayPlugService {
 
     @Value("${payplug.secret.key:}")

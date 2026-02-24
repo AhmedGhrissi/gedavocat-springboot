@@ -6,7 +6,6 @@ import com.gedavocat.model.User;
 import com.gedavocat.repository.AppointmentRepository;
 import com.gedavocat.repository.CaseRepository;
 import com.gedavocat.repository.ClientRepository;
-import com.gedavocat.repository.RpvaCommunicationRepository;
 import com.gedavocat.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -27,7 +26,6 @@ public class ClientService {
     private final UserRepository userRepository;
     private final AuditService auditService;
     private final AppointmentRepository appointmentRepository;
-    private final RpvaCommunicationRepository rpvaCommunicationRepository;
     private final CaseRepository caseRepository;
     private final CaseService caseService;
     
