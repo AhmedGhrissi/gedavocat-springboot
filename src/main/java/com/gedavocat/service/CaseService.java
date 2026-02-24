@@ -11,6 +11,7 @@ import com.gedavocat.repository.DocumentRepository;
 import com.gedavocat.repository.RpvaCommunicationRepository;
 import com.gedavocat.repository.SignatureRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +23,7 @@ import java.util.UUID;
  * Service de gestion des dossiers
  */
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class CaseService {
     
@@ -75,15 +77,10 @@ public class CaseService {
      */
     @Transactional
     public Case createCase(Case caseEntity, String lawyerId) {
-        System.out.println("=== DEBUG CaseService.createCase START ===");
-        System.out.println("LawyerId: " + lawyerId);
-        System.out.println("Case name: " + caseEntity.getName());
-        System.out.println("Client ID: " + (caseEntity.getClient() != null ? caseEntity.getClient().getId() : "null"));
+        log.debug("Création d'un dossier pour l'avocat: {}", lawyerId);
         
         Client client = clientRepository.findById(caseEntity.getClient().getId())
                 .orElseThrow(() -> new RuntimeException("Client non trouvé"));
-        
-        System.out.println("Client trouvé: " + client.getName());
         
         // Vérifier que le client appartient à l'avocat
         if (!client.getLawyer().getId().equals(lawyerId)) {
@@ -100,24 +97,19 @@ public class CaseService {
         caseEntity.setStatus(CaseStatus.OPEN);
         caseEntity.setCreatedAt(LocalDateTime.now());
         
-        System.out.println("Avant save - Case ID: " + caseEntity.getId());
-        System.out.println("Avant save - Status: " + caseEntity.getStatus());
-        
         Case savedCase = caseRepository.save(caseEntity);
         
-        System.out.println("Après save - Case ID: " + savedCase.getId());
-        System.out.println("=== Dossier enregistré en base de données ===");
+        log.info("Dossier créé: {} ({})", savedCase.getName(), savedCase.getId());
         
         // Audit
         try {
             auditService.log("CASE_CREATED", "Case", savedCase.getId(), 
                 "Création du dossier: " + savedCase.getName(), lawyerId);
         } catch (Exception e) {
-            System.err.println("Erreur lors de l'audit: " + e.getMessage());
+            log.error("Erreur lors de l'audit de création du dossier: {}", e.getMessage());
             // Ne pas bloquer la création si l'audit échoue
         }
         
-        System.out.println("=== DEBUG CaseService.createCase END ===");
         return savedCase;
     }
     

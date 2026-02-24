@@ -233,6 +233,12 @@ public class ClientController {
             model.addAttribute("error", "Le mot de passe doit contenir au moins 8 caractères.");
             return "clients/accept-invitation";
         }
+        // SEC-15 FIX : Mêmes exigences de complexité que l'inscription
+        if (!com.gedavocat.util.PasswordValidator.isValid(password)) {
+            model.addAttribute("token", token);
+            model.addAttribute("error", com.gedavocat.util.PasswordValidator.PASSWORD_REQUIREMENTS_MESSAGE);
+            return "clients/accept-invitation";
+        }
         try {
             invitationService.acceptInvitation(token, password);
             redirectAttributes.addFlashAttribute("message", "Compte créé avec succès ! Connectez-vous avec votre email.");

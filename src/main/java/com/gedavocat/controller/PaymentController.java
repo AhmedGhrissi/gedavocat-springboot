@@ -4,6 +4,7 @@ import com.gedavocat.model.User;
 import com.gedavocat.repository.UserRepository;
 import com.gedavocat.service.PayPlugService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -22,6 +23,7 @@ import java.util.Map;
 @Controller
 @RequestMapping("/payment")
 @RequiredArgsConstructor
+@Slf4j
 public class PaymentController {
 
     private final PayPlugService payPlugService;
@@ -72,7 +74,7 @@ public class PaymentController {
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Erreur lors du checkout paiement", e);
             redirectAttributes.addFlashAttribute("error", "Une erreur est survenue");
             return "redirect:/payment/pricing";
         }
@@ -153,13 +155,13 @@ public class PaymentController {
 
                 userRepository.save(user);
 
-                System.out.println("✅ Abonnement activé pour " + user.getEmail() + " - Plan: " + plan);
+                log.info("Abonnement activé pour {} - Plan: {}", user.getEmail(), plan);
             }
 
             return ResponseEntity.ok("OK");
 
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Erreur lors du traitement du webhook PayPlug", e);
             return ResponseEntity.status(500).body("ERROR");
         }
     }
@@ -201,7 +203,7 @@ public class PaymentController {
             return "redirect:/payment/manage";
 
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Erreur lors de l'annulation de l'abonnement", e);
             redirectAttributes.addFlashAttribute("error", "Erreur lors de l'annulation");
             return "redirect:/payment/manage";
         }

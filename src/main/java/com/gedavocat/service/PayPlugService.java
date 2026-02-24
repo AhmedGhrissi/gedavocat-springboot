@@ -1,5 +1,6 @@
 package com.gedavocat.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -18,6 +19,7 @@ import java.util.*;
  * Documentation : https://docs.payplug.com/
  */
 @Service
+@Slf4j
 @SuppressWarnings({"unchecked", "rawtypes"})
 public class PayPlugService {
 
@@ -27,6 +29,9 @@ public class PayPlugService {
     @Value("${payplug.api.url:https://api.payplug.com/v1}")
     private String apiUrl;
 
+    @Value("${app.base-url:http://localhost:8081}")
+    private String baseUrl;
+
     private final RestTemplate restTemplate = new RestTemplate();
 
     /**
@@ -34,9 +39,10 @@ public class PayPlugService {
      * Si aucune clé secrète n'est configurée, la vérification est ignorée (développement).
      */
     public boolean verifyWebhookSignature(String payload, String signature) {
+        // SEC-03 FIX : Rejeter TOUS les webhooks si la clé n'est pas configurée
         if (secretKey == null || secretKey.isEmpty() || secretKey.startsWith("sk_test_YOUR")) {
-            // Clé non configurée → accepter en dev (mais loguer un warning)
-            return true;
+            log.error("PayPlug non configuré — webhook rejeté (clé secrète manquante ou invalide)");
+            return false;
         }
         if (signature == null || signature.isEmpty()) {
             return false;
@@ -66,16 +72,16 @@ public class PayPlugService {
             request.put("amount", (int) (amount * 100)); // Centimes
             request.put("currency", "EUR");
 
-            // URL de retour
+            // SEC-06 FIX : Utiliser app.base-url au lieu d'URLs hardcodées
             Map<String, String> notificationUrl = new HashMap<>();
-            notificationUrl.put("url", "https://votredomaine.com/api/webhooks/payplug");
+            notificationUrl.put("url", baseUrl + "/api/webhooks/payplug");
             request.put("notification_url", notificationUrl);
 
             Map<String, String> returnUrl = new HashMap<>();
-            returnUrl.put("url", "https://votredomaine.com/payment/success");
+            returnUrl.put("url", baseUrl + "/payment/success");
             request.put("hosted_payment", Map.of(
-                "return_url", "https://votredomaine.com/payment/success",
-                "cancel_url", "https://votredomaine.com/payment/cancel"
+                "return_url", baseUrl + "/payment/success",
+                "cancel_url", baseUrl + "/payment/cancel"
             ));
 
             // Client
@@ -109,7 +115,7 @@ public class PayPlugService {
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Erreur lors de la création du paiement PayPlug", e);
         }
         return null;
     }
@@ -135,7 +141,7 @@ public class PayPlugService {
                 return Boolean.TRUE.equals(isPaid);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Erreur lors de la vérification du paiement PayPlug: {}", paymentId, e);
         }
         return false;
     }
@@ -165,7 +171,7 @@ public class PayPlugService {
             return response.getStatusCode() == HttpStatus.CREATED;
 
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Erreur lors du remboursement PayPlug: {}", paymentId, e);
         }
         return false;
     }
