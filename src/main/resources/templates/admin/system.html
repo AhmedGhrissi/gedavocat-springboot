@@ -10,14 +10,18 @@
 <div layout:fragment="content">
     <div class="container-fluid">
         <!-- En-tête -->
-        <div class="d-flex justify-content-between align-items-center mb-4 page-header">
-            <div>
-                <h2 class="mb-1 animate-fade-in-up">🖥️ Informations Système</h2>
-                <p class="text-muted">Détails techniques du serveur et de l'application</p>
+        <div class="hero-banner mb-4">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div style="position:relative;z-index:1">
+                    <h1 style="font-size:1.5rem;font-weight:800;letter-spacing:-0.025em;margin-bottom:4px;color:#fff">
+                        <i class="fas fa-server me-2"></i>Informations Système
+                    </h1>
+                    <p style="font-size:0.875rem;margin:0;color:rgba(255,255,255,0.8)">Détails techniques du serveur et de l'application</p>
+                </div>
+                <a href="/admin" style="background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.25);border-radius:14px;font-weight:600;backdrop-filter:blur(8px);padding:8px 18px;text-decoration:none">
+                    <i class="fas fa-arrow-left me-1"></i> Retour au dashboard
+                </a>
             </div>
-            <a href="/admin" class="btn btn-outline-secondary">
-                <i class="fas fa-arrow-left"></i> Retour au dashboard
-            </a>
         </div>
 
         <!-- Message d'erreur -->
