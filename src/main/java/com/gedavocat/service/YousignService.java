@@ -18,6 +18,7 @@ import java.util.Map;
 @Service
 @Slf4j
 @RequiredArgsConstructor
+@SuppressWarnings({"unchecked", "rawtypes"})
 public class YousignService {
     
     @Value("${yousign.api.key:}")

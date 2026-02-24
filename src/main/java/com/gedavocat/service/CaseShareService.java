@@ -4,7 +4,6 @@ import com.gedavocat.model.Case;
 import com.gedavocat.model.CaseShareLink;
 import com.gedavocat.model.User;
 import com.gedavocat.repository.CaseShareLinkRepository;
-import com.gedavocat.service.CaseService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,7 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * Service de partage de dossier entre avocats via lien temporaire.
@@ -80,6 +78,27 @@ public class CaseShareService {
     }
 
     /**
+     * Récupère un lien de partage par son token (lecture seule, sans incrémenter le compteur).
+     */
+    @Transactional(readOnly = true)
+    public CaseShareLink getLinkByToken(String token) {
+        return shareLinkRepository.findByToken(token)
+            .orElseThrow(() -> new RuntimeException("Lien de partage introuvable"));
+    }
+
+    /**
+     * Révoque un lien de partage par son token.
+     */
+    @Transactional
+    public void revokeByToken(String token) {
+        CaseShareLink link = shareLinkRepository.findByToken(token)
+            .orElseThrow(() -> new RuntimeException("Lien de partage introuvable"));
+        link.setRevoked(true);
+        shareLinkRepository.save(link);
+        log.info("[CaseShare] Lien révoqué par token pour dossier {}", link.getSharedCase().getId());
+    }
+
+    /**
      * Accède à un dossier partagé via token.
      * Incrémente le compteur d'accès.
      */
@@ -116,6 +135,20 @@ public class CaseShareService {
         }
         link.setRevoked(true);
         shareLinkRepository.save(link);
+    }
+
+    /**
+     * Construit l'URL publique d'accès pour un lien de partage.
+     *
+     * @param token   Token du lien
+     * @param emailTo Email du destinataire (pour déterminer le type d'URL)
+     * @return URL publique complète
+     */
+    public String buildPublicUrl(String token, String emailTo) {
+        if (emailTo != null && !emailTo.isBlank()) {
+            return baseUrl + "/collaborators/accept-invitation?token=" + token;
+        }
+        return baseUrl + "/cases/shared?token=" + token;
     }
 
     // =========================================================================

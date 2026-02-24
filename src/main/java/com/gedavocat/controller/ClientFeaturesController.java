@@ -125,6 +125,12 @@ public class ClientFeaturesController {
                 result.put("message", "Le nouveau mot de passe doit contenir au moins 8 caractères.");
                 return result;
             }
+            // SEC-15 FIX : Mêmes exigences de complexité que l'inscription
+            if (!com.gedavocat.util.PasswordValidator.isValid(newPassword)) {
+                result.put("success", false);
+                result.put("message", com.gedavocat.util.PasswordValidator.PASSWORD_REQUIREMENTS_MESSAGE);
+                return result;
+            }
             if (!newPassword.equals(confirmNewPassword)) {
                 result.put("success", false);
                 result.put("message", "Les mots de passe ne correspondent pas.");
