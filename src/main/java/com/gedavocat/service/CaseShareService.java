@@ -78,6 +78,27 @@ public class CaseShareService {
     }
 
     /**
+     * Récupère un lien de partage par son token (lecture seule, sans incrémenter le compteur).
+     */
+    @Transactional(readOnly = true)
+    public CaseShareLink getLinkByToken(String token) {
+        return shareLinkRepository.findByToken(token)
+            .orElseThrow(() -> new RuntimeException("Lien de partage introuvable"));
+    }
+
+    /**
+     * Révoque un lien de partage par son token.
+     */
+    @Transactional
+    public void revokeByToken(String token) {
+        CaseShareLink link = shareLinkRepository.findByToken(token)
+            .orElseThrow(() -> new RuntimeException("Lien de partage introuvable"));
+        link.setRevoked(true);
+        shareLinkRepository.save(link);
+        log.info("[CaseShare] Lien révoqué par token pour dossier {}", link.getSharedCase().getId());
+    }
+
+    /**
      * Accède à un dossier partagé via token.
      * Incrémente le compteur d'accès.
      */
