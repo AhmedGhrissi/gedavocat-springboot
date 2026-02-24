@@ -48,6 +48,7 @@ public class SecurityConfig {
 						"/robots.txt", "/sitemap.xml",
 							"/forgot-password", "/reset-password", "/verify-email", "/verify-email/resend",
 							"/clients/accept-invitation",
+							"/collaborators/accept-invitation", "/collaborators/invitation-info",
 							"/cases/shared", "/cases/shared-expired",
 							"/legal/**")
 						.permitAll()
