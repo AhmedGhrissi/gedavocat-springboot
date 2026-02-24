@@ -189,7 +189,7 @@ public class ClientPortalController {
 
     /**
      * Upload d'un document par le client.
-     * Si le fichier est un PDF, un filigrane "COPIE" est ajouté avant stockage.
+     * Filigrane COPIE appliqué de manière persistante sur les PDF au moment de l'upload.
      */
     @PostMapping("/{caseId}/upload")
     public String uploadDocument(
@@ -213,22 +213,9 @@ public class ClientPortalController {
                 return "redirect:/my-cases";
             }
 
-            MultipartFile fileToUpload = file;
-
-            // Appliquer le filigrane "COPIE" sur les PDF
-            if ("application/pdf".equalsIgnoreCase(file.getContentType())) {
-                byte[] watermarked = watermarkService.addWatermark(
-                        file.getInputStream(), WatermarkService.WATERMARK_COPIE);
-                if (watermarked != null) {
-                    fileToUpload = new ByteArrayMultipartFile(
-                            file.getName(),
-                            file.getOriginalFilename(),
-                            file.getContentType(),
-                            watermarked);
-                }
-            }
-
-            documentService.uploadDocument(caseId, fileToUpload, user.getId(), "CLIENT");
+            // Filigrane COPIE persistant sur les PDF
+            MultipartFile fileToStore = applyWatermarkIfPdf(file, WatermarkService.WATERMARK_COPIE);
+            documentService.uploadDocument(caseId, fileToStore, user.getId(), "CLIENT");
             redirectAttributes.addFlashAttribute("message", "Document uploadé avec succès.");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Erreur lors de l'upload : " + e.getMessage());
@@ -238,7 +225,7 @@ public class ClientPortalController {
 
     /**
      * Upload AJAX (utilisé par le scanner).
-     * Même logique que l'upload standard — filigrane COPIE sur les PDF.
+     * Filigrane COPIE appliqué de manière persistante sur les PDF au moment de l'upload.
      * Retourne JSON : {"success": true/false, "message": "..."}
      */
     @PostMapping("/{caseId}/upload-ajax")
@@ -261,21 +248,9 @@ public class ClientPortalController {
                 return ResponseEntity.ok(Map.of("success", false, "message", "Accès non autorisé à ce dossier."));
             }
 
-            MultipartFile fileToUpload = file;
-
-            if ("application/pdf".equalsIgnoreCase(file.getContentType())) {
-                byte[] watermarked = watermarkService.addWatermark(
-                        file.getInputStream(), WatermarkService.WATERMARK_COPIE);
-                if (watermarked != null) {
-                    fileToUpload = new ByteArrayMultipartFile(
-                            file.getName(),
-                            file.getOriginalFilename(),
-                            file.getContentType(),
-                            watermarked);
-                }
-            }
-
-            documentService.uploadDocument(caseId, fileToUpload, user.getId(), "CLIENT");
+            // Filigrane COPIE persistant sur les PDF
+            MultipartFile fileToStore = applyWatermarkIfPdf(file, WatermarkService.WATERMARK_COPIE);
+            documentService.uploadDocument(caseId, fileToStore, user.getId(), "CLIENT");
             return ResponseEntity.ok(Map.of("success", true, "message", "Document scanné et enregistré."));
 
         } catch (Exception e) {
@@ -285,7 +260,7 @@ public class ClientPortalController {
 
     /**
      * Téléchargement d'un document par le client.
-     * Un filigrane "CONFIDENTIEL" est appliqué à la volée sur les PDF.
+     * Le filigrane est déjà appliqué sur le fichier stocké (persistant).
      */
     @GetMapping("/documents/{documentId}/download")
     public ResponseEntity<Resource> downloadDocument(
@@ -311,16 +286,6 @@ public class ClientPortalController {
             Path filePath = documentService.downloadDocument(documentId, user.getId());
             byte[] fileBytes = Files.readAllBytes(filePath);
 
-            // Appliquer le filigrane "CONFIDENTIEL" sur les PDF
-            if (watermarkService.isPdf(fileBytes)) {
-                byte[] watermarked = watermarkService.addWatermark(
-                        new ByteArrayInputStream(fileBytes),
-                        WatermarkService.WATERMARK_CONFIDENTIEL);
-                if (watermarked != null) {
-                    fileBytes = watermarked;
-                }
-            }
-
             return ResponseEntity.ok()
                     .contentType(MediaType.parseMediaType(document.getMimetype()))
                     .header(HttpHeaders.CONTENT_DISPOSITION,
@@ -330,6 +295,66 @@ public class ClientPortalController {
         } catch (Exception e) {
             throw new RuntimeException("Erreur lors du téléchargement : " + e.getMessage());
         }
+    }
+
+    /**
+     * Prévisualisation d'un document par le client (affichage inline).
+     * Le filigrane est déjà appliqué sur le fichier stocké (persistant).
+     */
+    @GetMapping("/documents/{documentId}/preview")
+    public ResponseEntity<Resource> previewDocument(
+            @PathVariable String documentId,
+            Authentication authentication
+    ) {
+        try {
+            User user = getCurrentUser(authentication);
+            java.util.Optional<Client> clientOpt = clientRepository.findByClientUserId(user.getId());
+            if (clientOpt.isEmpty()) {
+                return ResponseEntity.status(403).build();
+            }
+            Client client = clientOpt.get();
+
+            Document document = documentService.getDocumentById(documentId);
+
+            if (document.getCaseEntity().getClient() == null ||
+                    !document.getCaseEntity().getClient().getId().equals(client.getId())) {
+                return ResponseEntity.status(403).build();
+            }
+
+            Path filePath = documentService.downloadDocument(documentId, user.getId());
+            byte[] fileBytes = Files.readAllBytes(filePath);
+
+            return ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType(document.getMimetype()))
+                    .header(HttpHeaders.CONTENT_DISPOSITION,
+                            "inline; filename=\"" + sanitizeFilename(document.getOriginalName()) + "\"")
+                    .body(new ByteArrayResource(fileBytes));
+
+        } catch (Exception e) {
+            throw new RuntimeException("Erreur lors de la prévisualisation : " + e.getMessage());
+        }
+    }
+
+    /**
+     * Applique un filigrane sur un PDF. Retourne le fichier d'origine si
+     * ce n'est pas un PDF ou si le filigrane échoue.
+     */
+    private MultipartFile applyWatermarkIfPdf(MultipartFile file, String watermarkText) {
+        try {
+            byte[] bytes = file.getBytes();
+            if (watermarkService.isPdf(bytes)) {
+                byte[] watermarked = watermarkService.addWatermark(
+                        new ByteArrayInputStream(bytes), watermarkText);
+                if (watermarked != null) {
+                    return new ByteArrayMultipartFile(
+                            file.getName(), file.getOriginalFilename(),
+                            file.getContentType(), watermarked);
+                }
+            }
+        } catch (Exception e) {
+            // En cas d'erreur, on stocke le fichier original
+        }
+        return file;
     }
 
     private User getCurrentUser(Authentication authentication) {
@@ -384,14 +409,6 @@ public class ClientPortalController {
                     try {
                         Path filePath = documentService.downloadDocument(doc.getId(), user.getId());
                         byte[] fileBytes = Files.readAllBytes(filePath);
-
-                        // Appliquer filigrane CONFIDENTIEL sur les PDF
-                        if (watermarkService.isPdf(fileBytes)) {
-                            byte[] watermarked = watermarkService.addWatermark(
-                                    new ByteArrayInputStream(fileBytes),
-                                    WatermarkService.WATERMARK_CONFIDENTIEL);
-                            if (watermarked != null) fileBytes = watermarked;
-                        }
 
                         ZipEntry entry = new ZipEntry(sanitizeFilename(doc.getOriginalName()));
                         zos.putNextEntry(entry);

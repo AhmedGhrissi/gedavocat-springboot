@@ -109,7 +109,7 @@
                                     </div>
                                     <div th:if="${link.valid}">
                                         <input type="text" class="form-control form-control-sm mt-1"
-                                               th:value="${'https://docavocat.fr/cases/shared?token=' + link.token}"
+                                               th:value="${@environment.getProperty('app.base-url', 'https://docavocat.fr') + '/cases/shared?token=' + link.token}"
                                                readonly onclick="this.select()">
                                     </div>
                                 </div>

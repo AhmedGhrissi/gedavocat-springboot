@@ -34,13 +34,23 @@
                             <span th:text="${doc.fileSize != null ? #numbers.formatDecimal(doc.fileSize / 1024.0, 1, 2) + ' KB' : ''}"></span>
                             • Version <span th:text="${doc.version}">1</span>
                             • Ajouté le <span th:text="${#temporals.format(doc.createdAt, 'dd/MM/yyyy HH:mm')}"></span>
+                            <span th:if="${doc.uploaderRole != null}" class="badge bg-light text-dark ms-1" 
+                                  th:text="${doc.uploaderRole == 'CLIENT' ? 'Par vous' : 'Par l''avocat'}"></span>
                         </small>
                     </div>
-                    <!-- Route portail client : filigrane CONFIDENTIEL appliqué automatiquement -->
-                    <a th:href="@{/my-cases/documents/{id}/download(id=${doc.id})}" 
-                       class="btn btn-primary">
-                        <i class="fas fa-download"></i> Télécharger
-                    </a>
+                    <div class="d-flex gap-1">
+                        <!-- Bouton Prévisualiser (PDF et images seulement) -->
+                        <a th:if="${doc.mimetype != null and (doc.mimetype.startsWith('application/pdf') or doc.mimetype.startsWith('image/'))}" 
+                           th:href="@{/my-cases/documents/{id}/preview(id=${doc.id})}" 
+                           class="btn btn-outline-primary" target="_blank" title="Prévisualiser">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                        <!-- Route portail client : filigrane appliqué selon le rôle du déposant -->
+                        <a th:href="@{/my-cases/documents/{id}/download(id=${doc.id})}" 
+                           class="btn btn-primary">
+                            <i class="fas fa-download"></i> Télécharger
+                        </a>
+                    </div>
                 </div>
             </div>
 
