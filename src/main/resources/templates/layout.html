@@ -128,13 +128,14 @@
 
             <!-- Collaborateur : accès restreint (dashboard + dossiers partagés) -->
             <div sec:authorize="hasRole('LAWYER_SECONDARY')">
-                <a th:href="@{/dashboard}" class="nav-link">
-                    <i class="fas fa-home"></i>
-                    <span>Tableau de bord</span>
-                </a>
-                <a th:href="@{/cases}" class="nav-link">
+                <!-- Collaborator: single entry pointing to collaborator portal. Avoid linking to accept-invitation (requires token) -->
+                <a th:href="@{/my-cases-collab}" class="nav-link">
                     <i class="fas fa-folder"></i>
-                    <span>Dossiers partagés</span>
+                    <span>Mes dossiers</span>
+                </a>
+                <a th:href="@{/my-cases-collab/profile}" class="nav-link">
+                    <i class="fas fa-user-edit"></i>
+                    <span>Mon profil</span>
                 </a>
             </div>
 
@@ -774,7 +775,7 @@
                         credentials: 'same-origin'
                     })
                     .then(r => r.json())
-                    .then(data => {
+                    .then data => {
                         showAlert(data.message || (data.success ? 'Mot de passe modifié !' : 'Erreur'), data.success ? 'success' : 'danger');
                         if (data.success) pwdForm.reset();
                     })

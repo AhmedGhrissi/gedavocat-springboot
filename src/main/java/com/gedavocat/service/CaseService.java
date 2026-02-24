@@ -2,6 +2,7 @@ package com.gedavocat.service;
 
 import com.gedavocat.model.Case;
 import com.gedavocat.model.Case.CaseStatus;
+import com.gedavocat.model.Permission;
 import com.gedavocat.model.Client;
 import com.gedavocat.repository.AppointmentRepository;
 import com.gedavocat.repository.CaseRepository;
@@ -10,6 +11,7 @@ import com.gedavocat.repository.ClientRepository;
 import com.gedavocat.repository.DocumentRepository;
 import com.gedavocat.repository.RpvaCommunicationRepository;
 import com.gedavocat.repository.SignatureRepository;
+import com.gedavocat.repository.PermissionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,6 +19,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
+import java.util.Objects;
 
 /**
  * Service de gestion des dossiers
@@ -26,6 +30,7 @@ import java.util.UUID;
 public class CaseService {
     
     private final CaseRepository caseRepository;
+    private final PermissionRepository permissionRepository;
     private final ClientRepository clientRepository;
     private final AuditService auditService;
     private final AppointmentRepository appointmentRepository;
@@ -33,6 +38,48 @@ public class CaseService {
     private final CaseShareLinkRepository caseShareLinkRepository;
     private final SignatureRepository signatureRepository;
     private final DocumentRepository documentRepository;
+    
+    /**
+     * Récupère les dossiers pour lesquels un collaborateur (lawyer) a une permission active
+     */
+    @Transactional(readOnly = true)
+    public List<Case> getCasesByCollaborator(String collaboratorId) {
+        List<Permission> perms = permissionRepository.findActiveByLawyerId(collaboratorId);
+        // Collect case IDs while still inside the transaction/session to avoid touching proxies later
+        List<String> caseIds = perms.stream()
+                .map(Permission::getCaseEntity)
+                .filter(Objects::nonNull)
+                .map(Case::getId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .collect(Collectors.toList());
+        // Load full case entities (with client) from repository
+        List<Case> cases = caseIds.stream()
+                .map(id -> caseRepository.findByIdWithClient(id).orElse(null))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+        // Force-initialize lawyer and client while we are still inside the transaction
+        try {
+            for (Case c : cases) {
+                if (c.getLawyer() != null) {
+                    c.getLawyer().getId();
+                    c.getLawyer().getName();
+                }
+                if (c.getClient() != null) {
+                    c.getClient().getId();
+                    c.getClient().getName();
+                }
+            }
+        } catch (Exception ignore) {}
+        return cases;
+    }
+
+    /**
+     * Vérifie si un collaborateur a accès en lecture à un dossier
+     */
+    public boolean hasCollaboratorAccess(String caseId, String collaboratorId) {
+        return permissionRepository.hasReadAccess(caseId, collaboratorId);
+    }
     
     /**
      * Récupère tous les dossiers d'un avocat
@@ -51,9 +98,23 @@ public class CaseService {
     /**
      * Récupère un dossier par ID
      */
+    @Transactional(readOnly = true)
     public Case getCaseById(String caseId) {
-        return caseRepository.findByIdWithClient(caseId)
+        Case c = caseRepository.findByIdWithClient(caseId)
                 .orElseThrow(() -> new RuntimeException("Dossier non trouvé"));
+        // Force-initialize relations while inside transaction to avoid LazyInitializationException later
+        try {
+            if (c.getLawyer() != null) {
+                c.getLawyer().getId();
+                c.getLawyer().getName();
+                c.getLawyer().getEmail();
+            }
+            if (c.getClient() != null) {
+                c.getClient().getId();
+                c.getClient().getName();
+            }
+        } catch (Exception ignore) {}
+        return c;
     }
     
     /**
