@@ -138,7 +138,7 @@ public class AdminMetricsService {
         try {
             OperatingSystemMXBean osBean = ManagementFactory.getOperatingSystemMXBean();
             if (osBean instanceof com.sun.management.OperatingSystemMXBean) {
-                return ((com.sun.management.OperatingSystemMXBean) osBean).getSystemCpuLoad() * 100;
+                return ((com.sun.management.OperatingSystemMXBean) osBean).getCpuLoad() * 100;
             }
         } catch (Exception e) {
             log.warn("Impossible de récupérer l'utilisation CPU", e);

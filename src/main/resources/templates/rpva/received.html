@@ -7,8 +7,8 @@
 <body>
 <div layout:fragment="content">
     <div class="container-fluid">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2><i class="fas fa-inbox"></i> Communications reçues (RPVA)</h2>
+        <div class="d-flex justify-content-between align-items-center mb-4 page-header">
+            <h2 class="animate-fade-in-up"><i class="fas fa-inbox"></i> Communications reçues (RPVA)</h2>
             <a th:href="@{/rpva}" class="btn btn-outline-secondary">
                 <i class="fas fa-arrow-left"></i> Retour
             </a>
@@ -28,7 +28,9 @@
             </div>
             <div class="card-body">
                 <div th:if="${communications == null or #lists.isEmpty(communications)}" class="text-center text-muted py-5">
-                    <i class="fas fa-inbox fa-3x mb-3"></i>
+                    <div style="width:64px;height:64px;border-radius:50%;background:var(--bg-secondary);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+                        <i class="fas fa-inbox" style="font-size:24px;color:var(--text-tertiary);"></i>
+                    </div>
                     <p>Aucune communication reçue.</p>
                 </div>
                 <table th:if="${communications != null and not #lists.isEmpty(communications)}" class="table table-hover">

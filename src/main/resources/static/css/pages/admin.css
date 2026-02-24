@@ -1,39 +1,192 @@
-/* ── Admin pages shared styles ── */
+/* ══════════════════════════════════════════════════════════
+   ADMIN — Dashboard, users, logs, statistics, system, settings
+   Uses design-system.css tokens
+══════════════════════════════════════════════════════════ */
 
-/* Dashboard / System */
-.metric-card { transition: transform 0.2s; }
-.metric-card:hover { transform: translateY(-5px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
-.metric-icon { font-size: 2.5rem; opacity: 0.8; }
-.progress-custom { height: 10px; border-radius: 5px; }
-.status-badge { font-size: 0.75rem; padding: 0.35rem 0.65rem; }
-
-/* Statistics */
-.stat-card { transition: transform 0.2s; }
-.stat-card:hover { transform: translateY(-5px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
-.chart-container { position: relative; height: 300px; margin-top: 20px; }
-
-/* Logs */
-.log-entry {
-    font-family: 'Courier New', monospace;
-    font-size: 0.85rem; padding: 0.5rem;
-    border-left: 3px solid #e2e8f0;
-    margin-bottom: 0.25rem;
-    border-radius: 0 4px 4px 0;
+/* ── Metric cards ── */
+.metric-card {
+    background: var(--surface);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-xl);
+    padding: 24px;
+    box-shadow: var(--shadow-xs);
+    transition: var(--transition-base);
+    position: relative;
+    overflow: hidden;
 }
-.log-entry:hover { background-color: #f8fafc; }
-.log-ERROR { border-left-color: #ef4444; background-color: #fef2f2; }
-.log-WARN  { border-left-color: #f59e0b; background-color: #fffbeb; }
-.log-INFO  { border-left-color: #0ea5e9; background-color: #f0f9ff; }
-.log-DEBUG { border-left-color: #64748b; background-color: #f8fafc; }
-.log-timestamp { color: var(--text-secondary); font-weight: bold; }
-.log-level { font-weight: bold; padding: 2px 6px; border-radius: 3px; font-size: 0.75rem; }
-.log-level-ERROR { background-color: #ef4444; color: white; }
-.log-level-WARN  { background-color: #f59e0b; color: white; }
-.log-level-INFO  { background-color: #0ea5e9; color: white; }
-.log-level-DEBUG { background-color: #64748b; color: white; }
+.metric-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--brand-500), var(--brand-700));
+    opacity: 0;
+    transition: opacity var(--transition-base);
+}
+.metric-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+}
+.metric-card:hover::after { opacity: 1; }
+.metric-icon {
+    font-size: 2.5rem;
+    opacity: 0.85;
+    color: var(--brand-500);
+}
+.progress-custom {
+    height: 8px;
+    border-radius: 9999px;
+    background: var(--bg-tertiary);
+    overflow: hidden;
+}
+
+/* ── Status badge ── */
+.status-badge {
+    font-size: 0.75rem;
+    padding: 4px 10px;
+    border-radius: 9999px;
+    font-weight: 600;
+}
+
+/* ── Statistics ── */
+.stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-xl);
+    padding: 24px;
+    box-shadow: var(--shadow-xs);
+    transition: var(--transition-base);
+}
+.stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+}
+.chart-container {
+    position: relative;
+    height: 300px;
+    margin-top: 20px;
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+}
+
+/* ── Logs viewer ── */
 .log-viewer {
-    max-height: 600px; overflow-y: auto;
-    background: #f8fafc;
-    border-radius: 8px; padding: 1rem;
-    border: 1px solid #e2e8f0;
+    max-height: 600px;
+    overflow-y: auto;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    padding: 1rem;
+    border: 1px solid var(--border-light);
+    font-family: 'SF Mono', 'Fira Code', 'Courier New', monospace;
+}
+.log-entry {
+    font-family: inherit;
+    font-size: 0.8125rem;
+    padding: 8px 12px;
+    border-left: 3px solid var(--border-light);
+    margin-bottom: 4px;
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    transition: var(--transition-fast);
+    line-height: 1.5;
+}
+.log-entry:hover { background: var(--bg-tertiary); }
+
+.log-ERROR { border-left-color: #ef4444; background: rgba(239,68,68,0.04); }
+.log-WARN  { border-left-color: #f59e0b; background: rgba(245,158,11,0.04); }
+.log-INFO  { border-left-color: #0ea5e9; background: rgba(14,165,233,0.04); }
+.log-DEBUG { border-left-color: var(--text-tertiary); background: var(--bg-secondary); }
+
+.log-timestamp {
+    color: var(--text-secondary);
+    font-weight: 600;
+    font-size: 0.75rem;
+}
+.log-level {
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: var(--radius-sm);
+    font-size: 0.6875rem;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+}
+.log-level-ERROR { background: #ef4444; color: #fff; }
+.log-level-WARN  { background: #f59e0b; color: #fff; }
+.log-level-INFO  { background: #0ea5e9; color: #fff; }
+.log-level-DEBUG { background: var(--text-tertiary); color: #fff; }
+
+/* ── Admin data table enhancements ── */
+.admin-table {
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+}
+.admin-table th {
+    background: var(--bg-secondary);
+    font-weight: 600;
+    font-size: 0.8125rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-secondary);
+}
+
+/* ── Admin card sections ── */
+.admin-section-card {
+    background: var(--surface);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-xl);
+    padding: 28px;
+    box-shadow: var(--shadow-xs);
+    margin-bottom: 24px;
+}
+.admin-section-card h4,
+.admin-section-card h5 {
+    font-weight: 700;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+.admin-section-card h4 i,
+.admin-section-card h5 i {
+    color: var(--brand-500);
+}
+
+/* ── Database page ── */
+.db-stat {
+    background: var(--surface);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-xl);
+    padding: 20px;
+    text-align: center;
+    box-shadow: var(--shadow-xs);
+}
+.db-stat h3 {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--brand-600);
+    margin-bottom: 4px;
+}
+.db-stat p {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+/* ── Dark mode ── */
+.dark .metric-card { background: var(--surface); border-color: var(--border-default); }
+.dark .stat-card { background: var(--surface); border-color: var(--border-default); }
+.dark .log-viewer { background: var(--bg-tertiary); border-color: var(--border-default); }
+.dark .log-ERROR { background: rgba(239,68,68,0.08); }
+.dark .log-WARN  { background: rgba(245,158,11,0.08); }
+.dark .log-INFO  { background: rgba(14,165,233,0.08); }
+.dark .log-DEBUG { background: rgba(100,116,139,0.08); }
+.dark .admin-section-card { background: var(--surface); border-color: var(--border-default); }
+.dark .db-stat { background: var(--surface); border-color: var(--border-default); }
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+    .metric-card { padding: 16px; }
+    .log-viewer { max-height: 400px; }
+    .admin-section-card { padding: 20px; }
 }

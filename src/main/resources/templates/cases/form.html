@@ -2,17 +2,19 @@
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout}">
-<head><title th:text="${isEdit ? 'Modifier le dossier' : 'Nouveau dossier'}">Dossier</title>
+<head>
+    <link rel="stylesheet" th:href="@{/css/pages/cases.css}">
+    <title th:text="${isEdit ? 'Modifier le dossier' : 'Nouveau dossier'}">Dossier</title>
 </head>
 <body>
     <div layout:fragment="content">
         <div class="container">
             <div class="row justify-content-center mt-4">
                 <div class="col-md-8">
-                    <div class="card">
-                        <div class="card-header">
-                            <h3 class="mb-0">
-                                <i class="fas fa-folder-plus"></i>
+                    <div class="case-form-card card animate-fade-in-up">
+                        <div class="card-header" style="background:var(--bg-secondary);border-bottom:1px solid var(--border-light)">
+                            <h3 class="mb-0" style="font-size:1.25rem;font-weight:700;color:var(--text-primary)">
+                                <i class="fas fa-folder-plus" style="color:var(--brand-500)"></i>
                                 <span th:text="${isEdit ? 'Modifier le dossier' : 'Nouveau dossier'}">Dossier</span>
                             </h3>
                         </div>

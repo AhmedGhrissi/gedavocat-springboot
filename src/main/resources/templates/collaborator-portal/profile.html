@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+
+<th:block layout:fragment="extra-css">
+    <link rel="stylesheet" th:href="@{/css/pages/collaborator-portal.css}">
+</th:block>
+
+<head>
+    <link rel="stylesheet" th:href="@{/css/pages/client-portal.css}">
+<title>Profil Collaborateur</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="collab-page">
+        <div class="container-fluid">
+            <h1>Mon profil</h1>
+            <div class="card p-3">
+                <form th:action="@{/my-cases-collab/profile}" method="post">
+                    <div class="mb-3">
+                        <label class="form-label">Nom</label>
+                        <input class="form-control" type="text" th:value="${user.name}" readonly/>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input class="form-control" type="email" th:value="${user.email}" readonly/>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Téléphone</label>
+                        <input class="form-control" name="phone" type="text" th:value="${user?.phone}" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Numéro au barreau</label>
+                        <input class="form-control" name="barNumber" type="text" th:value="${user?.barNumber}" />
+                    </div>
+                    <div>
+                        <button class="btn btn-primary" type="submit">Enregistrer</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        </div>
+    </div>
+</body>
+</html>

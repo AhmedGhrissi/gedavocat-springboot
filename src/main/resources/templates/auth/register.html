@@ -6,65 +6,15 @@
     <title>Inscription — DocAvocat</title>
     <meta name="description" content="Créez votre compte DocAvocat et commencez à gérer votre cabinet d'avocat.">
     <meta name="robots" content="noindex, nofollow">
-    <meta name="theme-color" content="#667eea">
+    <meta name="theme-color" content="#6366f1">
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <link rel="shortcut icon" href="/favicon.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
-    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        *{box-sizing:border-box;margin:0;padding:0}
-        body{font-family:'Inter',-apple-system,sans-serif;background:#f1f5f9;color:#1e293b;min-height:100vh}
-        .register-page{display:flex;min-height:100vh}
-        .register-sidebar{width:400px;flex-shrink:0;background:linear-gradient(135deg,#1e1b4b 0%,#312e81 50%,#4c1d95 100%);padding:48px 40px;display:flex;flex-direction:column;position:relative;overflow:hidden}
-        .register-sidebar::before{content:'';position:absolute;top:-200px;right:-200px;width:500px;height:500px;background:radial-gradient(circle,rgba(102,126,234,.2) 0%,transparent 70%);pointer-events:none}
-        .brand{display:flex;align-items:center;gap:10px;margin-bottom:48px;position:relative;z-index:1}
-        .brand-icon{width:40px;height:40px;background:linear-gradient(135deg,#667eea,#764ba2);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px}
-        .brand span{font-size:18px;font-weight:700;color:#fff}
-        .plan-recap{position:relative;z-index:1;flex:1}
-        .plan-recap h2{color:#fff;font-size:24px;font-weight:700;margin-bottom:24px}
-        .plan-card{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:16px;padding:28px;backdrop-filter:blur(10px)}
-        .plan-card .plan-name{color:#a5b4fc;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px}
-        .plan-card .plan-title{color:#fff;font-size:22px;font-weight:800;margin-bottom:4px}
-        .plan-card .plan-price{color:#e0e7ff;font-size:15px;margin-bottom:16px}
-        .plan-card .plan-price strong{font-size:28px;color:#fff}
-        .plan-card ul{list-style:none;padding:0;margin:0}
-        .plan-card li{color:rgba(255,255,255,.85);font-size:13px;padding:5px 0;display:flex;align-items:center;gap:8px}
-        .plan-card li i{color:#a5b4fc;font-size:12px}
-        .sidebar-footer{position:relative;z-index:1;margin-top:auto;padding-top:32px}
-        .sidebar-footer a{color:rgba(255,255,255,.6);font-size:13px;text-decoration:none}
-        .sidebar-footer a:hover{color:#fff}
-        .register-main{flex:1;display:flex;align-items:center;justify-content:center;padding:48px 40px}
-        .register-form-box{width:100%;max-width:520px}
-        .register-form-box h1{font-size:28px;font-weight:800;margin-bottom:6px}
-        .register-form-box .subtitle{color:#64748b;font-size:15px;margin-bottom:32px}
-        .form-floating{margin-bottom:16px}
-        .form-floating .form-control{border:1px solid #e2e8f0;border-radius:10px;background:#fff;font-size:15px;height:52px}
-        .form-floating .form-control:focus{border-color:#667eea;box-shadow:0 0 0 3px rgba(102,126,234,.12)}
-        .form-floating label{color:#64748b}
-        .row.g-3 .form-floating{margin-bottom:0}
-        .alert{border-radius:10px;font-size:14px;display:flex;align-items:center;gap:8px;padding:14px 16px;margin-bottom:20px}
-        .alert-danger{background:#fef2f2;color:#dc2626;border:1px solid #fecaca}
-        .alert-success{background:#ecfdf5;color:#059669;border:1px solid #a7f3d0}
-        .alert-info{background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe}
-        .form-check{margin-bottom:12px}
-        .form-check-input:checked{background-color:#667eea;border-color:#667eea}
-        .form-check-label{font-size:13px;color:#475569}
-        .form-check-label a{color:#667eea;text-decoration:none}
-        .form-check-label a:hover{text-decoration:underline}
-        .btn-register{width:100%;padding:14px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px}
-        .btn-register:hover{box-shadow:0 4px 15px rgba(102,126,234,.4);transform:translateY(-1px)}
-        .auth-footer{text-align:center;margin-top:24px;font-size:14px;color:#64748b}
-        .auth-footer a{color:#667eea;text-decoration:none;font-weight:600}
-        .auth-footer a:hover{text-decoration:underline}
-        .pwd-row{position:relative}
-        .pwd-toggle{position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;color:#94a3b8;cursor:pointer;font-size:15px;z-index:5;padding:4px}
-        .text-muted-sm{font-size:12px;color:#94a3b8;margin-top:4px;margin-bottom:16px}
-        .invalid-feedback{font-size:12px}
-        @media(max-width:900px){.register-sidebar{display:none}.register-main{padding:32px 20px}}
-    </style>
+    <link rel="stylesheet" href="/css/pages/auth.css">
 </head>
 <body>
 <div class="register-page">
@@ -155,25 +105,25 @@
                 <div class="row g-3 mb-3">
                     <div class="col-md-6">
                         <div class="form-floating">
-                            <input type="text" id="firstName" th:field="*{firstName}" class="form-control" placeholder="Prénom" required>
+                            <input type="text" id="firstName" th:field="*{firstName}" class="form-control" placeholder="Prénom" required autocomplete="given-name">
                             <label for="firstName">Prénom *</label>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="form-floating">
-                            <input type="text" id="lastName" th:field="*{lastName}" class="form-control" placeholder="Nom" required>
+                            <input type="text" id="lastName" th:field="*{lastName}" class="form-control" placeholder="Nom" required autocomplete="family-name">
                             <label for="lastName">Nom *</label>
                         </div>
                     </div>
                 </div>
 
                 <div class="form-floating">
-                    <input type="email" id="email" th:field="*{email}" class="form-control" placeholder="Email" required>
+                    <input type="email" id="email" th:field="*{email}" class="form-control" placeholder="Email" required autocomplete="email">
                     <label for="email">Adresse email *</label>
                 </div>
 
                 <div class="form-floating">
-                    <input type="tel" id="phone" th:field="*{phone}" class="form-control" placeholder="Téléphone">
+                    <input type="tel" id="phone" th:field="*{phone}" class="form-control" placeholder="Téléphone" autocomplete="tel">
                     <label for="phone">Téléphone</label>
                 </div>
 
@@ -183,16 +133,16 @@
                 </div>
 
                 <div class="form-floating pwd-row">
-                    <input type="password" id="password" th:field="*{password}" class="form-control" placeholder="Mot de passe" required minlength="8">
+                    <input type="password" id="password" th:field="*{password}" class="form-control" placeholder="Mot de passe" required minlength="8" autocomplete="new-password">
                     <label for="password">Mot de passe *</label>
-                    <button type="button" class="pwd-toggle" onclick="togglePwd('password','pwdIcon1')" tabindex="-1"><i class="fas fa-eye" id="pwdIcon1"></i></button>
+                    <button type="button" class="pwd-toggle" onclick="togglePwd('password','pwdIcon1')" tabindex="-1" aria-label="Afficher le mot de passe"><i class="fas fa-eye" id="pwdIcon1"></i></button>
                 </div>
                 <div class="text-muted-sm">Minimum 8 caractères, avec majuscule, minuscule et chiffre</div>
 
                 <div class="form-floating pwd-row">
-                    <input type="password" id="confirmPassword" th:field="*{confirmPassword}" class="form-control" placeholder="Confirmer" required>
+                    <input type="password" id="confirmPassword" th:field="*{confirmPassword}" class="form-control" placeholder="Confirmer" required autocomplete="new-password">
                     <label for="confirmPassword">Confirmer le mot de passe *</label>
-                    <button type="button" class="pwd-toggle" onclick="togglePwd('confirmPassword','pwdIcon2')" tabindex="-1"><i class="fas fa-eye" id="pwdIcon2"></i></button>
+                    <button type="button" class="pwd-toggle" onclick="togglePwd('confirmPassword','pwdIcon2')" tabindex="-1" aria-label="Afficher le mot de passe"><i class="fas fa-eye" id="pwdIcon2"></i></button>
                 </div>
 
                 <!-- Hidden plan + billing -->
@@ -207,7 +157,7 @@
                     </label>
                 </div>
 
-                <div class="form-check" style="margin-bottom:24px">
+                <div class="form-check" style="margin-bottom: 24px;">
                     <input type="checkbox" id="gdprConsent" th:field="*{gdprConsent}" class="form-check-input" required>
                     <label for="gdprConsent" class="form-check-label">
                         J'accepte le traitement de mes données personnelles conformément au RGPD *
@@ -234,6 +184,14 @@ function togglePwd(fieldId, iconId) {
     if (f.type === 'password') { f.type = 'text'; i.classList.replace('fa-eye','fa-eye-slash'); }
     else { f.type = 'password'; i.classList.replace('fa-eye-slash','fa-eye'); }
 }
+
+// Dark mode: respect system preference or localStorage
+(function() {
+    var saved = localStorage.getItem('theme');
+    if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+    }
+})();
 </script>
 </body>
 </html>

@@ -10,38 +10,43 @@
     <div layout:fragment="content">
         <div class="container-fluid">
             <!-- Hero Banner -->
-            <div class="hero-banner">
-                <div class="hero-content">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <h1 style="font-size: 32px; font-weight: 700; margin-bottom: 12px;">
-                                <i class="fas fa-signature"></i> Signatures Électroniques
-                            </h1>
-                            <p style="font-size: 16px; opacity: 0.9; margin: 0;">
-                                Signez vos documents en toute sécurité avec Yousign
-                            </p>
-                        </div>
-                        <a th:href="@{/settings}" class="btn btn-light">
-                            <i class="fas fa-cog"></i> Configuration
-                        </a>
+            <div class="hero-banner mb-4">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                    <div style="position:relative;z-index:1">
+                        <h1 style="font-size:1.5rem;font-weight:800;letter-spacing:-0.025em;margin-bottom:4px;color:#fff">
+                            <i class="fas fa-signature me-2"></i>Signatures Électroniques
+                        </h1>
+                        <p style="font-size:0.875rem;margin:0;color:rgba(255,255,255,0.8)">
+                            Signez vos documents en toute sécurité avec Yousign
+                        </p>
                     </div>
-
-                    <div class="hero-stats">
-                        <div class="stat-box">
-                            <div class="stat-number" th:text="${#lists.size(pendingSignatures) + #lists.size(completedSignatures)}">0</div>
-                            <div class="stat-label">Total signatures</div>
+                    <a th:href="@{/settings}" class="btn" style="background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.25);border-radius:var(--radius-lg);font-weight:600;backdrop-filter:blur(8px);padding:8px 18px">
+                        <i class="fas fa-cog me-1"></i> Configuration
+                    </a>
+                </div>
+                <div class="row mt-3 stagger-children">
+                    <div class="col-6 col-md-3">
+                        <div class="stat-card" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);border-radius:var(--radius-lg);padding:12px 16px;backdrop-filter:blur(8px)">
+                            <div style="font-size:1.5rem;font-weight:800;color:#fff" th:text="${#lists.size(pendingSignatures) + #lists.size(completedSignatures)}">0</div>
+                            <div style="font-size:0.75rem;color:rgba(255,255,255,0.7)">Total signatures</div>
                         </div>
-                        <div class="stat-box">
-                            <div class="stat-number" th:text="${#lists.size(pendingSignatures)}">0</div>
-                            <div class="stat-label">En attente</div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="stat-card" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);border-radius:var(--radius-lg);padding:12px 16px;backdrop-filter:blur(8px)">
+                            <div style="font-size:1.5rem;font-weight:800;color:#fff" th:text="${#lists.size(pendingSignatures)}">0</div>
+                            <div style="font-size:0.75rem;color:rgba(255,255,255,0.7)">En attente</div>
                         </div>
-                        <div class="stat-box">
-                            <div class="stat-number" th:text="${#lists.size(completedSignatures)}">0</div>
-                            <div class="stat-label">Terminées</div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="stat-card" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);border-radius:var(--radius-lg);padding:12px 16px;backdrop-filter:blur(8px)">
+                            <div style="font-size:1.5rem;font-weight:800;color:#fff" th:text="${#lists.size(completedSignatures)}">0</div>
+                            <div style="font-size:0.75rem;color:rgba(255,255,255,0.7)">Terminées</div>
                         </div>
-                        <div class="stat-box">
-                            <div class="stat-number">5</div>
-                            <div class="stat-label">Gratuites/mois</div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="stat-card" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);border-radius:var(--radius-lg);padding:12px 16px;backdrop-filter:blur(8px)">
+                            <div style="font-size:1.5rem;font-weight:800;color:#fff">5</div>
+                            <div style="font-size:0.75rem;color:rgba(255,255,255,0.7)">Gratuites/mois</div>
                         </div>
                     </div>
                 </div>
@@ -69,10 +74,12 @@
             <!-- Signatures en attente -->
             <div id="pending-content" class="signature-grid">
                 <div th:if="${pendingSignatures == null or pendingSignatures.empty}" class="premium-empty">
-                    <i class="fas fa-file-signature"></i>
+                    <div class="icon-circle" style="width:64px;height:64px;border-radius:var(--radius-xl);background:var(--bg-tertiary);display:inline-flex;align-items:center;justify-content:center;margin-bottom:1rem">
+                        <i class="fas fa-file-signature"></i>
+                    </div>
                     <h3>Aucune signature en attente</h3>
                     <p>Créez votre première demande de signature électronique</p>
-                    <a th:href="@{/signatures/new}" class="btn btn-primary btn-lg">
+                    <a th:href="@{/signatures/new}" class="btn btn-primary btn-lg" style="border-radius:var(--radius-lg);font-weight:600">
                         <i class="fas fa-plus"></i> Nouvelle signature
                     </a>
                 </div>
@@ -90,14 +97,14 @@
                                     <span th:text="${sig.signerEmail}">email@example.com</span>
                                 </div>
                                 <div class="mt-2">
-                                    <span class="badge" style="background: rgba(102,126,234,0.2); color: #818cf8;" th:text="${sig.level != null ? sig.level : 'Avancée'}">Avancée</span>
+                                    <span class="badge" style="background: var(--bg-tertiary); color: var(--brand-500);" th:text="${sig.level != null ? sig.level : 'Avancée'}">Avancée</span>
                                 </div>
                             </div>
                         </div>
                         <span class="status-badge status-pending">En attente</span>
                     </div>
                     <div class="signature-footer">
-                        <div style="font-size: 13px; color: #64748b;">
+                        <div style="font-size: 13px; color: var(--text-secondary);">
                             <i class="far fa-clock"></i>
                             Envoyé le <span th:text="${#temporals.format(sig.createdAt, 'dd/MM/yyyy à HH:mm')}">01/01/2024</span>
                         </div>
@@ -119,7 +126,9 @@
             <!-- Signatures terminées -->
             <div id="completed-content" class="signature-grid" style="display: none;">
                 <div th:if="${completedSignatures == null or completedSignatures.empty}" class="premium-empty">
-                    <i class="fas fa-check-circle"></i>
+                    <div class="icon-circle" style="width:64px;height:64px;border-radius:var(--radius-xl);background:var(--bg-tertiary);display:inline-flex;align-items:center;justify-content:center;margin-bottom:1rem">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
                     <h3>Aucune signature terminée</h3>
                     <p>Vos signatures complétées apparaîtront ici</p>
                 </div>
@@ -137,7 +146,7 @@
                                     <span th:text="${sig.signerEmail}">email@example.com</span>
                                 </div>
                                 <div class="mt-2">
-                                    <span class="badge" style="background: rgba(16,185,129,0.15); color: #34d399;" th:text="${sig.level != null ? sig.level : 'Avancée'}">Avancée</span>
+                                    <span class="badge" style="background: var(--bg-tertiary); color: var(--success);" th:text="${sig.level != null ? sig.level : 'Avancée'}">Avancée</span>
                                 </div>
                             </div>
                         </div>
@@ -146,7 +155,7 @@
                         </span>
                     </div>
                     <div class="signature-footer">
-                        <div style="font-size: 13px; color: #64748b;">
+                        <div style="font-size: 13px; color: var(--text-secondary);">
                             <i class="fas fa-check"></i>
                             Signé le <span th:text="${sig.signedAt != null ? #temporals.format(sig.signedAt, 'dd/MM/yyyy à HH:mm') : '-'}">01/01/2024</span>
                         </div>

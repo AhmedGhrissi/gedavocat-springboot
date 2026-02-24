@@ -180,7 +180,7 @@ public class SecurityConfig {
 		// Désactivé : setAllowSemicolon et setAllowBackSlash — risque de path traversal
 		// firewall.setAllowSemicolon(true);
 		// firewall.setAllowBackSlash(true);
-		firewall.setAllowUrlEncodedDoubleSlash(true);
+		firewall.setAllowUrlEncodedDoubleSlash(false);
 		return firewall;
 	}
 

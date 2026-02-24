@@ -1,0 +1,39 @@
+/* Minimal overrides for collaborator portal to ensure alignment with client portal */
+.collab-page .client-header {
+    padding: 40px;
+    border-radius: 20px;
+    margin-bottom: 30px;
+}
+
+.collab-page .case-card {
+    /* Ensure same spacing as client portal */
+    padding: 25px;
+    border-radius: 15px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    border: 1px solid #e2e8f0;
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.collab-page .page-actions {
+    margin-top: 12px;
+}
+
+/* Do NOT override global container padding from layout; keep container-fluid neutral so content aligns with other pages */
+.collab-page .container-fluid {
+    padding-left: 0;
+    padding-right: 0;
+}
+
+/* Make sure cards and headers align with the global .page-content padding */
+.collab-page {
+    display: block;
+    padding: 0; /* layout.page-content already adds padding */
+}
+
+/* Slight tweak for mobile so lists don't appear squashed */
+@media (max-width: 768px) {
+    .collab-page .client-header { padding: 24px; }
+    .collab-page .case-card { padding: 18px; }
+}

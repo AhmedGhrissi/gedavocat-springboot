@@ -1,49 +1,157 @@
-/* ── Subscription / Payment management page styles ── */
+/* ══════════════════════════════════════════════════════════
+   PAYMENT — Subscription management page
+   Uses design-system.css tokens
+══════════════════════════════════════════════════════════ */
 
+/* ── Subscription hero card ── */
 .subscription-card {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 20px; padding: 40px;
-    color: white; margin-bottom: 30px;
+    background: linear-gradient(135deg, var(--brand-500) 0%, var(--brand-700) 100%);
+    border-radius: var(--radius-2xl);
+    padding: 40px;
+    color: #fff;
+    margin-bottom: 32px;
+    position: relative;
+    overflow: hidden;
 }
-.subscription-card h2 { font-size: 32px; font-weight: 800; margin-bottom: 10px; }
+.subscription-card::before {
+    content: '';
+    position: absolute;
+    top: -60%;
+    right: -10%;
+    width: 400px;
+    height: 400px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 50%;
+    pointer-events: none;
+}
+.subscription-card h2 {
+    font-size: 1.75rem;
+    font-weight: 800;
+    margin-bottom: 10px;
+    position: relative;
+    z-index: 1;
+    letter-spacing: -0.02em;
+}
 
+/* ── Status badges ── */
 .status-badge {
-    display: inline-block;
-    padding: 8px 20px; border-radius: 25px;
-    font-weight: 600; font-size: 14px; margin-top: 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 18px;
+    border-radius: 9999px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    margin-top: 10px;
+    position: relative;
+    z-index: 1;
 }
-.status-active    { background: #10b981; color: white; }
-.status-cancelled { background: #ef4444; color: white; }
-.status-expired   { background: #f59e0b; color: white; }
+.status-active    { background: rgba(16,185,129,0.9); color: #fff; }
+.status-cancelled { background: rgba(239,68,68,0.9); color: #fff; }
+.status-expired   { background: rgba(245,158,11,0.9); color: #fff; }
 
+/* ── Info card ── */
 .info-card {
-    background: #ffffff;
-    border-radius: 15px; padding: 25px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    background: var(--surface);
+    border-radius: var(--radius-xl);
+    padding: 28px;
+    box-shadow: var(--shadow-xs);
     margin-bottom: 20px;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--border-light);
+    transition: var(--transition-base);
 }
-.info-card h5 { font-weight: 700; margin-bottom: 15px; color: #1e293b; }
+.info-card:hover { box-shadow: var(--shadow-sm); }
+.info-card h5 {
+    font-weight: 700;
+    margin-bottom: 16px;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
 
+/* ── Info rows ── */
 .info-row {
-    display: flex; justify-content: space-between;
-    padding: 12px 0; border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border-light);
 }
 .info-row:last-child { border-bottom: none; }
-.info-label { color: #64748b; font-weight: 500; }
-.info-value { color: #1e293b; font-weight: 600; }
-
-.action-buttons { display: flex; gap: 15px; margin-top: 20px; flex-wrap: wrap; }
-.btn-upgrade {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white; border: none;
-    padding: 12px 30px; border-radius: 10px;
-    font-weight: 600; transition: transform 0.2s;
-    text-decoration: none; display: inline-flex; align-items: center; gap: 8px;
+.info-label {
+    color: var(--text-secondary);
+    font-weight: 500;
+    font-size: 0.875rem;
 }
-.btn-upgrade:hover { transform: translateY(-2px); color: white; }
+.info-value {
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+/* ── Action buttons ── */
+.action-buttons {
+    display: flex;
+    gap: 16px;
+    margin-top: 24px;
+    flex-wrap: wrap;
+}
+.btn-upgrade {
+    background: linear-gradient(135deg, var(--brand-500) 0%, var(--brand-700) 100%);
+    color: #fff;
+    border: none;
+    padding: 14px 32px;
+    border-radius: var(--radius-lg);
+    font-weight: 600;
+    transition: var(--transition-base);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+    overflow: hidden;
+}
+.btn-upgrade::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+    transition: left 0.5s;
+}
+.btn-upgrade:hover::before { left: 100%; }
+.btn-upgrade:hover {
+    transform: translateY(-2px);
+    color: #fff;
+    box-shadow: var(--shadow-lg), 0 0 20px rgba(99,102,241,0.3);
+}
 .btn-cancel-sub {
-    background: #ef4444; color: white; border: none;
-    padding: 12px 30px; border-radius: 10px; font-weight: 600;
+    background: rgba(239,68,68,0.08);
+    color: #dc2626;
+    border: 1px solid rgba(239,68,68,0.15);
+    padding: 14px 32px;
+    border-radius: var(--radius-lg);
+    font-weight: 600;
     cursor: pointer;
+    transition: var(--transition-fast);
+}
+.btn-cancel-sub:hover {
+    background: #ef4444;
+    color: #fff;
+    border-color: #ef4444;
+}
+
+/* ── Dark mode ── */
+.dark .subscription-card { background: linear-gradient(135deg, var(--brand-600) 0%, var(--brand-800) 100%); }
+.dark .info-card { background: var(--surface); border-color: var(--border-default); }
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+    .subscription-card { padding: 28px 20px; }
+    .action-buttons { flex-direction: column; }
+    .btn-upgrade,
+    .btn-cancel-sub { width: 100%; text-align: center; justify-content: center; }
 }

@@ -14,13 +14,13 @@
     <div layout:fragment="content">
         <div class="container-fluid">
             <!-- En-tête -->
-            <div class="case-header">
+            <div class="case-header page-header">
                 <div class="d-flex align-items-center gap-3 mb-3">
                     <a th:href="@{/my-cases}" class="btn btn-light">
                         <i class="fas fa-arrow-left"></i> Retour
                     </a>
                 </div>
-                <h1 th:text="${case.name}">Nom du dossier</h1>
+                <h1 class="animate-fade-in-up" th:text="${case.name}">Nom du dossier</h1>
                 <p style="font-size: 16px; opacity: 0.95;" th:text="${case.description}">Description</p>
             </div>
 
@@ -134,16 +134,18 @@
                                         <i class="fas fa-eye"></i>
                                     </a>
                                     <a th:href="@{/my-cases/documents/{id}/download(id=${doc.id})}" 
-                                       class="btn btn-sm btn-primary">
+                                       class="btn btn-sm btn-primary" style="border-radius:var(--radius-lg);font-weight:600">
                                         <i class="fas fa-download"></i> Télécharger
                                     </a>
                                 </div>
                             </div>
                         </div>
                         
-                        <div th:if="${documents == null or documents.empty}" class="text-center py-4 text-muted">
-                            <i class="fas fa-file fa-2x mb-2"></i>
-                            <p>Aucun document disponible pour le moment</p>
+                        <div th:if="${documents == null or documents.empty}" class="text-center py-4">
+                            <div style="width:64px;height:64px;border-radius:var(--radius-xl);background:var(--bg-tertiary);display:inline-flex;align-items:center;justify-content:center;margin-bottom:1rem">
+                                <i class="fas fa-file fa-2x" style="color:var(--text-tertiary)"></i>
+                            </div>
+                            <p class="text-muted">Aucun document disponible pour le moment</p>
                         </div>
                     </div>
                 </div>
@@ -177,9 +179,11 @@
                                     </div>
                                 </div>
                             </div>
-                            <div th:if="${appointments == null or appointments.empty}" class="text-center text-muted py-3">
-                                <i class="fas fa-calendar"></i>
-                                <p class="small mb-0 mt-1">Aucun rendez-vous</p>
+                            <div th:if="${appointments == null or appointments.empty}" class="text-center py-3">
+                                <div style="width:64px;height:64px;border-radius:var(--radius-xl);background:var(--bg-tertiary);display:inline-flex;align-items:center;justify-content:center;margin-bottom:1rem">
+                                    <i class="fas fa-calendar fa-2x" style="color:var(--text-tertiary)"></i>
+                                </div>
+                                <p class="small mb-0 mt-1 text-muted">Aucun rendez-vous</p>
                             </div>
                             <a th:href="@{/my-appointments}" class="btn btn-outline-primary btn-sm w-100 mt-2">
                                 <i class="fas fa-calendar"></i> Voir tous mes rendez-vous

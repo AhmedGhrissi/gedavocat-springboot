@@ -10,8 +10,8 @@
     <div layout:fragment="content">
         <div class="container-fluid">
             <!-- Hero -->
-            <div class="pricing-hero">
-                <h1>Choisissez votre plan</h1>
+            <div class="pricing-hero page-header">
+                <h1 class="animate-fade-in-up">Choisissez votre plan</h1>
                 <p>Gérez votre cabinet d'avocat avec efficacité. Annulez à tout moment.</p>
             </div>
 
@@ -122,7 +122,7 @@
                             <span>Support prioritaire</span>
                         </li>
                     </ul>
-                    <a th:href="@{/subscription/checkout(plan=CABINET,period=monthly)}" class="cta-button cta-primary">
+                    <a th:href="@{/subscription/checkout(plan=CABINET,period=monthly)}" class="cta-button cta-primary" style="border-radius:var(--radius-lg);font-weight:600">
                         Démarrer maintenant
                     </a>
                 </div>
@@ -181,7 +181,7 @@
 
             <!-- Payment Methods -->
             <div class="payment-methods">
-                <h3><i class="fas fa-shield-alt" style="color: #10b981;"></i> Moyens de paiement sécurisés</h3>
+                <h3><i class="fas fa-shield-alt" style="color: var(--success);"></i> Moyens de paiement sécurisés</h3>
                 <div class="methods-grid">
                     <div class="method-card">
                         <div class="method-icon">💳</div>
@@ -209,7 +209,7 @@
             <!-- Trust Section -->
             <div class="trust-section">
                 <h3 style="margin-bottom: 8px; color: #f1f5f9;">Paiement 100% sécurisé 🔒</h3>
-                <p style="color: #64748b; margin-bottom: 0;">Powered by Stripe - Leader mondial des paiements en ligne</p>
+                <p style="color: var(--text-secondary); margin-bottom: 0;">Powered by Stripe - Leader mondial des paiements en ligne</p>
                 <div class="trust-badges">
                     <div class="trust-badge">
                         <i class="fas fa-lock"></i>

@@ -7,7 +7,6 @@ import com.gedavocat.model.InvoiceItem;
 import com.gedavocat.model.Invoice.InvoiceStatus;
 import com.gedavocat.repository.ClientRepository;
 import com.gedavocat.repository.InvoiceRepository;
-import com.gedavocat.repository.InvoiceItemRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -21,7 +20,6 @@ import java.util.stream.Collectors;
 
 import com.lowagie.text.*;
 import com.lowagie.text.Font;
-import com.lowagie.text.Image;
 import com.lowagie.text.pdf.*;
 import com.lowagie.text.pdf.draw.LineSeparator;
 import java.awt.Color;
@@ -36,7 +34,6 @@ import java.io.ByteArrayOutputStream;
 public class InvoiceService {
 
     private final InvoiceRepository invoiceRepository;
-    private final InvoiceItemRepository invoiceItemRepository;
     private final ClientRepository clientRepository;
 
     /**
@@ -277,7 +274,6 @@ public byte[] generatePdf(String invoiceId) {
         doc.open();
 
         // ── Polices ──
-        Font fontTitre   = new Font(Font.HELVETICA, 20, Font.BOLD,   new Color(13, 27, 42));
         Font fontSection = new Font(Font.HELVETICA, 10, Font.BOLD,   new Color(13, 27, 42));
         Font fontNormal  = new Font(Font.HELVETICA,  9, Font.NORMAL, new Color(44, 62, 80));
         Font fontMuted   = new Font(Font.HELVETICA,  8, Font.NORMAL, new Color(107, 114, 128));

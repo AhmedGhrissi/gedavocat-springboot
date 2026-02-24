@@ -31,8 +31,8 @@ public class StripeService {
     @Value("${stripe.webhook.secret:}")
     private String webhookSecret;
 
-    @Value("${server.port:8081}")
-    private String serverPort;
+    @Value("${app.base-url:http://localhost:8081}")
+    private String baseUrl;
 
     /**
      * Initialisation de Stripe avec la clé API
@@ -65,9 +65,9 @@ public class StripeService {
         long amount = calculateAmount(plan, period);
         String planName = getPlanDisplayName(plan);
 
-        // URLs de retour
-        String successUrl = "http://localhost:" + serverPort + "/payment/success?session_id={CHECKOUT_SESSION_ID}";
-        String cancelUrl = "http://localhost:" + serverPort + "/payment/cancel";
+        // SEC-06 FIX : Utiliser app.base-url au lieu de localhost
+        String successUrl = baseUrl + "/payment/success?session_id={CHECKOUT_SESSION_ID}";
+        String cancelUrl = baseUrl + "/payment/cancel";
 
         // Créer les métadonnées
         Map<String, String> metadata = new HashMap<>();

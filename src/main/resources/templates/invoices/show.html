@@ -144,15 +144,15 @@
 <body>
 <div layout:fragment="content">
 
-  <div class="inv-header fade-in">
+  <div class="inv-header fade-in page-header">
     <div class="inv-header-inner">
       <div>
         <p class="inv-eyebrow"><i class="fas fa-file-invoice"></i> &nbsp;Facturation</p>
-        <h1 class="inv-title">Facture <strong th:text="${invoice.invoiceNumber}">FACT-2026-00001</strong></h1>
+        <h1 class="inv-title animate-fade-in-up">Facture <strong th:text="${invoice.invoiceNumber}">FACT-2026-00001</strong></h1>
       </div>
       <div class="inv-header-actions">
         <a th:href="@{/invoices/{id}/edit(id=${invoice.id})}" class="btn-gold"><i class="fas fa-pen"></i> Modifier</a>
-        <a th:href="@{/invoices/{id}/pdf(id=${invoice.id})}" class="btn-gold-solid" target="_blank"><i class="fas fa-file-pdf"></i> PDF</a>
+        <a th:href="@{/invoices/{id}/pdf(id=${invoice.id})}" class="btn-gold-solid" target="_blank" style="border-radius:var(--radius-lg);font-weight:600"><i class="fas fa-file-pdf"></i> PDF</a>
         <a href="/invoices" class="btn-ghost"><i class="fas fa-arrow-left"></i> Retour</a>
       </div>
     </div>

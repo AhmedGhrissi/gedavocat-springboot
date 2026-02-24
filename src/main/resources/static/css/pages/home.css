@@ -1,27 +1,88 @@
-/* ── Home page styles (standalone) ── */
+/* ══════════════════════════════════════════════════════════
+   HOME — Public home page (standalone)
+   Uses design-system.css tokens
+══════════════════════════════════════════════════════════ */
 
 .hero {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white; padding: 100px 20px; text-align: center;
+    background: linear-gradient(135deg, var(--brand-500) 0%, var(--brand-700) 100%);
+    color: #fff;
+    padding: 100px 20px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
 }
-.hero h1 { font-size: 3rem; margin-bottom: 1rem; }
-.hero p   { font-size: 1.5rem; margin-bottom: 2rem; }
+.hero::before {
+    content: '';
+    position: absolute;
+    top: -200px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 800px;
+    height: 800px;
+    background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 65%);
+    pointer-events: none;
+}
+.hero h1 {
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    margin-bottom: 1rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    position: relative;
+    z-index: 1;
+}
+.hero p {
+    font-size: clamp(1rem, 2vw, 1.375rem);
+    margin-bottom: 2rem;
+    opacity: 0.95;
+    position: relative;
+    z-index: 1;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
 
 .features {
-    padding: 60px 20px;
-    background: #f8fafc;
+    padding: 80px 20px;
+    background: var(--bg-secondary);
 }
 .features-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 2rem; margin-top: 3rem;
+    gap: 2rem;
+    margin-top: 3rem;
+    max-width: 1100px;
+    margin-left: auto;
+    margin-right: auto;
 }
 .feature-card {
-    text-align: center; padding: 2rem;
-    border-radius: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    transition: all 0.3s;
+    text-align: center;
+    padding: 2.5rem 2rem;
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-xs);
+    background: var(--surface);
+    border: 1px solid var(--border-light);
+    transition: var(--transition-base);
 }
-.feature-card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
-.feature-card i { font-size: 3rem; color: #667eea; margin-bottom: 1rem; }
+.feature-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--brand-200);
+}
+.feature-card i {
+    font-size: 2.5rem;
+    color: var(--brand-500);
+    margin-bottom: 1rem;
+    display: block;
+}
+
+/* ── Dark mode ── */
+.dark .features { background: var(--bg-primary); }
+.dark .feature-card { background: var(--surface); border-color: var(--border-default); }
+.dark .hero { background: linear-gradient(135deg, var(--brand-600) 0%, var(--brand-800) 100%); }
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+    .hero { padding: 60px 20px; }
+    .features { padding: 60px 20px; }
+    .features-grid { grid-template-columns: 1fr; }
+}

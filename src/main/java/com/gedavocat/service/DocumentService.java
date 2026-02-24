@@ -86,8 +86,8 @@ public class DocumentService {
             "text/plain", "text/csv", "application/rtf",
             "image/jpeg", "image/png", "image/gif", "image/bmp", "image/tiff", "image/webp",
             "application/zip", "application/x-rar-compressed", "application/x-7z-compressed",
-            "message/rfc822", "application/vnd.ms-outlook",
-            "application/octet-stream"
+            "message/rfc822", "application/vnd.ms-outlook"
+            // SEC-14 FIX : application/octet-stream retiré — type générique trop permissif
     );
 
     /**

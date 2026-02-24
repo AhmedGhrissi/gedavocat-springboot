@@ -1,69 +1,148 @@
-/* ── Settings page styles ── */
+/* ══════════════════════════════════════════════════════════
+   SETTINGS — User settings, API keys, Yousign config
+   Uses design-system.css tokens
+══════════════════════════════════════════════════════════ */
 
 .settings-container { max-width: 900px; margin: 0 auto; }
 
+/* ── Header ── */
 .settings-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 20px; padding: 40px;
-    color: white; margin-bottom: 30px; text-align: center;
+    background: linear-gradient(135deg, var(--brand-500) 0%, var(--brand-700) 100%);
+    border-radius: var(--radius-2xl);
+    padding: 40px;
+    color: #fff;
+    margin-bottom: 32px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
 }
-.settings-header h1 { font-size: 32px; font-weight: 800; margin-bottom: 10px; }
+.settings-header::before {
+    content: '';
+    position: absolute;
+    top: -60%;
+    right: -10%;
+    width: 400px;
+    height: 400px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 50%;
+    pointer-events: none;
+}
+.settings-header h1 {
+    font-size: 1.75rem;
+    font-weight: 800;
+    margin-bottom: 10px;
+    position: relative;
+    z-index: 1;
+    letter-spacing: -0.02em;
+}
 
+/* ── Tabs ── */
 .settings-tabs {
-    display: flex; gap: 8px; margin-bottom: 30px;
-    background: #f1f5f9; padding: 8px; border-radius: 12px;
+    display: flex;
+    gap: 8px;
+    margin-bottom: 32px;
+    background: var(--bg-tertiary);
+    padding: 6px;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-light);
 }
 .tab-btn {
-    flex: 1; padding: 12px 24px;
-    border: none; background: transparent;
-    border-radius: 8px; cursor: pointer;
-    font-weight: 600; color: #64748b;
-    transition: all 0.3s;
+    flex: 1;
+    padding: 12px 24px;
+    border: none;
+    background: transparent;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--text-secondary);
+    transition: var(--transition-base);
+    font-size: 0.875rem;
 }
+.tab-btn:hover { color: var(--text-primary); }
 .tab-btn.active {
-    background: #ffffff;
-    color: #667eea;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    background: var(--surface);
+    color: var(--brand-600);
+    box-shadow: var(--shadow-sm);
 }
 
+/* ── Settings card ── */
 .settings-card {
-    background: #ffffff;
-    border-radius: 15px; padding: 30px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-    margin-bottom: 25px;
-    border: 1px solid #e2e8f0;
+    background: var(--surface);
+    border-radius: var(--radius-xl);
+    padding: 32px;
+    box-shadow: var(--shadow-xs);
+    margin-bottom: 24px;
+    border: 1px solid var(--border-light);
+    transition: var(--transition-base);
 }
+.settings-card:hover { box-shadow: var(--shadow-sm); }
 .settings-card h3 {
-    font-size: 20px; font-weight: 700; margin-bottom: 15px;
+    font-size: 1.125rem;
+    font-weight: 700;
+    margin-bottom: 20px;
     color: var(--text-primary);
-    display: flex; align-items: center; gap: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
+.settings-card h3 i { color: var(--brand-500); font-size: 1rem; }
 
+/* ── Form spacing ── */
 .form-floating { margin-bottom: 20px; }
 
+/* ── Test button ── */
 .btn-test {
     background: rgba(14,165,233,0.08);
     color: #0284c7;
-    border: 1px solid rgba(14,165,233,0.2);
+    border: 1px solid rgba(14,165,233,0.15);
+    font-weight: 600;
+    border-radius: var(--radius-md);
+    transition: var(--transition-fast);
 }
 .btn-test:hover {
     background: rgba(14,165,233,0.15);
     color: #0369a1;
+    border-color: rgba(14,165,233,0.25);
 }
 
+/* ── Status indicators ── */
 .status-indicator {
-    display: inline-flex; align-items: center; gap: 8px;
-    padding: 8px 16px; border-radius: 20px;
-    font-size: 14px; font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    border-radius: 9999px;
+    font-size: 0.8125rem;
+    font-weight: 600;
 }
-.status-success { background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; }
-.status-warning { background: #fffbeb; color: #d97706; border: 1px solid #fde68a; }
+.status-success { background: rgba(16,185,129,0.08); color: #059669; border: 1px solid rgba(16,185,129,0.2); }
+.status-warning { background: rgba(245,158,11,0.08); color: #d97706; border: 1px solid rgba(245,158,11,0.2); }
 
+/* ── API key display ── */
 .api-key-display {
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px; padding: 12px;
-    font-family: monospace;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    padding: 12px 16px;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 0.8125rem;
     color: var(--text-secondary);
-    margin-bottom: 15px;
+    margin-bottom: 16px;
+    word-break: break-all;
+}
+
+/* ── Dark mode ── */
+.dark .settings-header { background: linear-gradient(135deg, var(--brand-600) 0%, var(--brand-800) 100%); }
+.dark .settings-tabs { background: var(--bg-tertiary); border-color: var(--border-default); }
+.dark .tab-btn.active { background: var(--surface); }
+.dark .settings-card { background: var(--surface); border-color: var(--border-default); }
+.dark .api-key-display { background: var(--bg-tertiary); border-color: var(--border-default); }
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+    .settings-header { padding: 28px 20px; }
+    .settings-header h1 { font-size: 1.5rem; }
+    .settings-tabs { flex-wrap: wrap; }
+    .tab-btn { padding: 10px 16px; font-size: 0.8125rem; }
+    .settings-card { padding: 20px; }
 }

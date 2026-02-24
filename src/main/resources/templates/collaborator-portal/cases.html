@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+
+<th:block layout:fragment="extra-css">
+    <link rel="stylesheet" th:href="@{/css/pages/collaborator-portal.css}">
+</th:block>
+
+<head>
+    <link rel="stylesheet" th:href="@{/css/pages/client-portal.css}">
+<title>Mes Dossiers (Collaborateur)</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="collab-page">
+         <div class="container-fluid">
+            <!-- En-tête -->
+            <div class="client-header">
+                <h1><i class="fas fa-folder-open"></i> Mes Dossiers</h1>
+                <p style="font-size: 16px; opacity: 0.95;">
+                    Consultez les dossiers dont vous êtes collaborateur
+                </p>
+            </div>
+
+            <!-- Liste des dossiers -->
+            <div class="row">
+                <div class="col-12">
+                    <div th:if="${cases != null and !cases.empty}">
+                        <div th:each="case : ${cases}" class="case-card mb-3">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div>
+                                    <h4 class="mb-2" th:text="${case.name}">Nom du dossier</h4>
+                                    <p class="text-muted mb-2" th:text="${case.description}">Description du dossier</p>
+                                    <small class="text-muted">
+                                        <i class="fas fa-calendar"></i>
+                                        Créé le <span th:text="${#temporals.format(case.createdAt, 'dd/MM/yyyy')}">01/01/2024</span>
+                                        <span class="ms-3">
+                                            <i class="fas fa-user-tie"></i>
+                                            Avocat : <span th:text="${case.lawyer != null ? case.lawyer.name : 'Non assigné'}">Me Dupont</span>
+                                        </span>
+                                    </small>
+                                </div>
+                                <span class="status-badge" 
+                                      th:classappend="'status-' + ${case.status}"
+                                      th:text="${case.status.displayName}">
+                                    Ouvert
+                                </span>
+                            </div>
+                            
+                            <div class="d-flex gap-2">
+                                <a th:href="@{/my-cases-collab/{id}(id=${case.id})}" 
+                                   class="btn btn-primary btn-sm">
+                                    <i class="fas fa-eye"></i> Voir le dossier
+                                </a>
+                                <a th:href="@{/my-cases-collab/{id}/documents(id=${case.id})}" 
+                                   class="btn btn-outline-secondary btn-sm">
+                                    <i class="fas fa-file-pdf"></i> Documents
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- État vide -->
+                    <div th:if="${cases == null or cases.empty}" class="text-center py-5">
+                        <i class="fas fa-folder-open fa-4x text-muted mb-3"></i>
+                        <h3>Aucun dossier</h3>
+                        <p class="text-muted">Vous n'avez actuellement aucun dossier en cours</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div>
+    </div>
+</body>
+</html>

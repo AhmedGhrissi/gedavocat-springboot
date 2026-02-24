@@ -9,6 +9,7 @@ import com.gedavocat.service.CaseShareService;
 import com.gedavocat.service.DocumentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -19,7 +20,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Contrôleur de partage de dossier entre avocats.
@@ -38,6 +41,9 @@ public class CaseShareController {
     private final CaseService caseService;
     private final DocumentService documentService;
     private final UserRepository userRepository;
+
+    @Value("${app.base-url:https://docavocat.fr}")
+    private String baseUrl;
 
     // =========================================================================
     // Pages protégées (avocat propriétaire)
@@ -59,8 +65,27 @@ public class CaseShareController {
 
         List<CaseShareLink> existingLinks = shareService.getLinksForCase(id);
 
+        // Build public URLs for each existing link so the UI shows the same link sent by email
+        Map<String, String> linkPublicUrls = new HashMap<>();
+        for (CaseShareLink link : existingLinks) {
+            String publicPath;
+            boolean userExists = false;
+            try {
+                if (link.getRecipientEmail() != null) {
+                    userExists = userRepository.findByEmail(link.getRecipientEmail()).isPresent();
+                }
+            } catch (Exception ignore) { }
+            if (userExists) {
+                publicPath = baseUrl + "/cases/shared?token=" + link.getToken();
+            } else {
+                publicPath = baseUrl + "/collaborators/accept-invitation?token=" + link.getToken();
+            }
+            linkPublicUrls.put(link.getId(), publicPath);
+        }
+
         model.addAttribute("case", caseEntity);
         model.addAttribute("existingLinks", existingLinks);
+        model.addAttribute("linkPublicUrls", linkPublicUrls);
         return "cases/share";
     }
 
@@ -82,8 +107,20 @@ public class CaseShareController {
             User user = getCurrentUser(authentication);
             CaseShareLink link = shareService.createShareLink(id, user, description, expiresAt, maxAccessCount, emailTo);
 
-            String shareUrl = "/cases/shared?token=" + link.getToken();
-            redirectAttributes.addFlashAttribute("shareUrl", shareUrl);
+            // Determine which public path to display based on whether the recipient is an existing user
+            String shareUrlPath = "/cases/shared?token=" + link.getToken();
+            if (emailTo != null && !emailTo.isBlank()) {
+                boolean userExists = false;
+                try {
+                    userExists = userRepository.findByEmail(emailTo).isPresent();
+                } catch (Exception ignore) { }
+                if (!userExists) {
+                    shareUrlPath = "/collaborators/accept-invitation?token=" + link.getToken();
+                }
+            }
+
+            // Only send the relative path in flash (template will prepend baseUrl)
+            redirectAttributes.addFlashAttribute("shareUrl", shareUrlPath);
             redirectAttributes.addFlashAttribute("message", "Lien de partage créé avec succès !");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Erreur : " + e.getMessage());
