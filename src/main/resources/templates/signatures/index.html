@@ -10,38 +10,43 @@
     <div layout:fragment="content">
         <div class="container-fluid">
             <!-- Hero Banner -->
-            <div class="hero-banner">
-                <div class="hero-content">
-                    <div class="d-flex justify-content-between align-items-start page-header">
-                        <div>
-                            <h1 class="animate-fade-in-up" style="font-size: 32px; font-weight: 700; margin-bottom: 12px;">
-                                <i class="fas fa-signature"></i> Signatures Électroniques
-                            </h1>
-                            <p style="font-size: 16px; opacity: 0.9; margin: 0;">
-                                Signez vos documents en toute sécurité avec Yousign
-                            </p>
-                        </div>
-                        <a th:href="@{/settings}" class="btn btn-light">
-                            <i class="fas fa-cog"></i> Configuration
-                        </a>
+            <div class="hero-banner mb-4">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                    <div style="position:relative;z-index:1">
+                        <h1 style="font-size:1.5rem;font-weight:800;letter-spacing:-0.025em;margin-bottom:4px;color:#fff">
+                            <i class="fas fa-signature me-2"></i>Signatures Électroniques
+                        </h1>
+                        <p style="font-size:0.875rem;margin:0;color:rgba(255,255,255,0.8)">
+                            Signez vos documents en toute sécurité avec Yousign
+                        </p>
                     </div>
-
-                    <div class="hero-stats">
-                        <div class="stat-box">
-                            <div class="stat-number" th:text="${#lists.size(pendingSignatures) + #lists.size(completedSignatures)}">0</div>
-                            <div class="stat-label">Total signatures</div>
+                    <a th:href="@{/settings}" class="btn" style="background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.25);border-radius:var(--radius-lg);font-weight:600;backdrop-filter:blur(8px);padding:8px 18px">
+                        <i class="fas fa-cog me-1"></i> Configuration
+                    </a>
+                </div>
+                <div class="row mt-3 stagger-children">
+                    <div class="col-6 col-md-3">
+                        <div class="stat-card" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);border-radius:var(--radius-lg);padding:12px 16px;backdrop-filter:blur(8px)">
+                            <div style="font-size:1.5rem;font-weight:800;color:#fff" th:text="${#lists.size(pendingSignatures) + #lists.size(completedSignatures)}">0</div>
+                            <div style="font-size:0.75rem;color:rgba(255,255,255,0.7)">Total signatures</div>
                         </div>
-                        <div class="stat-box">
-                            <div class="stat-number" th:text="${#lists.size(pendingSignatures)}">0</div>
-                            <div class="stat-label">En attente</div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="stat-card" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);border-radius:var(--radius-lg);padding:12px 16px;backdrop-filter:blur(8px)">
+                            <div style="font-size:1.5rem;font-weight:800;color:#fff" th:text="${#lists.size(pendingSignatures)}">0</div>
+                            <div style="font-size:0.75rem;color:rgba(255,255,255,0.7)">En attente</div>
                         </div>
-                        <div class="stat-box">
-                            <div class="stat-number" th:text="${#lists.size(completedSignatures)}">0</div>
-                            <div class="stat-label">Terminées</div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="stat-card" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);border-radius:var(--radius-lg);padding:12px 16px;backdrop-filter:blur(8px)">
+                            <div style="font-size:1.5rem;font-weight:800;color:#fff" th:text="${#lists.size(completedSignatures)}">0</div>
+                            <div style="font-size:0.75rem;color:rgba(255,255,255,0.7)">Terminées</div>
                         </div>
-                        <div class="stat-box">
-                            <div class="stat-number">5</div>
-                            <div class="stat-label">Gratuites/mois</div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="stat-card" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);border-radius:var(--radius-lg);padding:12px 16px;backdrop-filter:blur(8px)">
+                            <div style="font-size:1.5rem;font-weight:800;color:#fff">5</div>
+                            <div style="font-size:0.75rem;color:rgba(255,255,255,0.7)">Gratuites/mois</div>
                         </div>
                     </div>
                 </div>

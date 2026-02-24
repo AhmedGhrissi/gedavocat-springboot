@@ -1,68 +1,217 @@
-/* ══════════════════════════════════════════════════════════
-   CASES — List / View / Form pages
-   Uses design-system.css tokens
-══════════════════════════════════════════════════════════ */
+/* ===================================================================
+   DocAvocat — Cases v5.0
+   Extends design-system.css v5 (additive only, no conflicts)
+   Case status badges are in design-system.css
+   =================================================================== */
 
-/* ── Page header ── */
-.page-title {
-    font-size: 1.375rem;
-    font-weight: 800;
-    color: var(--text-primary);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    letter-spacing: -0.01em;
-}
-
-/* ── Filter card ── */
+/* ── Filter Card — Frosted Glass feel ── */
 .filter-card {
     background: var(--surface);
-    border: 1px solid var(--border-light);
+    border: 1px solid var(--border-default);
     border-radius: var(--radius-xl);
-    box-shadow: var(--shadow-xs);
+    box-shadow: var(--shadow-sm);
     padding: 24px;
-    transition: var(--transition-base);
+    transition: all var(--duration-normal) var(--ease-out);
+    position: relative;
+    overflow: hidden;
+}
+.filter-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--brand-500), var(--accent-500), #ec4899);
+    opacity: 0.7;
 }
 .filter-card:hover {
-    box-shadow: var(--shadow-sm);
+    box-shadow: var(--shadow-md);
 }
 
-/* ── Table links ── */
+/* ── Filter Buttons — Pill shape with gradient active ── */
+.filter-card .btn-group .btn,
+.filter-card .btn-sm {
+    border-radius: var(--radius-full) !important;
+    padding: 7px 16px;
+    font-weight: 600;
+    font-size: 0.8125rem;
+    transition: all 0.2s var(--ease-out);
+    border-color: var(--border-default);
+}
+.filter-card .btn-group .btn:hover,
+.filter-card .btn-sm:hover {
+    background: var(--surface-hover);
+    border-color: var(--brand-300);
+}
+.filter-card .btn-group .btn.active,
+.filter-card .btn-group .btn-primary {
+    background: linear-gradient(135deg, var(--brand-500), var(--accent-500)) !important;
+    border-color: transparent !important;
+    color: #fff !important;
+    box-shadow: 0 4px 12px rgba(99,102,241,0.3);
+}
+
+/* ── Search Input Enhancement ── */
+.filter-card .form-control {
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-default);
+    padding: 10px 16px;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+    background: var(--surface);
+}
+.filter-card .form-control:focus {
+    border-color: var(--brand-400);
+    box-shadow: 0 0 0 3px rgba(99,102,241,0.1), var(--shadow-sm);
+}
+
+/* ── Table Enhancement ── */
+.table {
+    border-collapse: separate;
+    border-spacing: 0;
+}
+.table thead th {
+    background: linear-gradient(135deg, var(--surface-hover), var(--surface));
+    border-bottom: 2px solid var(--border-default);
+    font-weight: 700;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-secondary);
+    padding: 12px 16px;
+    white-space: nowrap;
+}
+.table tbody tr {
+    transition: all 0.15s ease;
+    border-bottom: 1px solid var(--border-light);
+}
+.table tbody tr:hover {
+    background: var(--surface-hover);
+}
+.table tbody td {
+    padding: 14px 16px;
+    vertical-align: middle;
+    font-size: 0.875rem;
+    border-bottom: 1px solid var(--border-light);
+}
+
+/* ── Table Links ── */
 .table a.text-decoration-none {
     color: var(--brand-600);
     font-weight: 600;
-    transition: color var(--transition-fast);
+    transition: color 0.15s ease;
+    position: relative;
+}
+.table a.text-decoration-none::after {
+    content: '';
+    position: absolute;
+    bottom: -1px; left: 0;
+    width: 0;
+    height: 1.5px;
+    background: var(--brand-500);
+    transition: width 0.2s var(--ease-out);
 }
 .table a.text-decoration-none:hover {
     color: var(--brand-500);
 }
-
-/* ── Compact buttons ── */
-.btn-group .btn-sm {
-    border-radius: var(--radius-md) !important;
-    padding: 6px 10px;
-    font-weight: 500;
-    font-size: 0.8125rem;
-    transition: var(--transition-fast);
+.table a.text-decoration-none:hover::after {
+    width: 100%;
 }
 
-/* ── Status badges (case-specific) ── */
-.case-status {
-    display: inline-flex;
+/* ── Case Detail Cards ── */
+.detail-card {
+    background: var(--surface);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-xl);
+    padding: 28px;
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 24px;
+    transition: all var(--duration-normal) var(--ease-out);
+    position: relative;
+    overflow: hidden;
+}
+.detail-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--brand-500), var(--accent-500));
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+.detail-card:hover {
+    box-shadow: var(--shadow-card-hover);
+    transform: translateY(-2px);
+}
+.detail-card:hover::before { opacity: 1; }
+
+.detail-card h5 {
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 16px;
+    display: flex;
     align-items: center;
-    gap: 6px;
-    padding: 5px 14px;
-    border-radius: var(--radius-full, 9999px);
-    font-size: 0.8125rem;
-    font-weight: 600;
-    letter-spacing: 0.01em;
+    gap: 8px;
 }
-.case-status.open        { background: rgba(59,130,246,0.08); color: #2563eb; border: 1px solid rgba(59,130,246,0.2); }
-.case-status.in-progress { background: rgba(245,158,11,0.08); color: #d97706; border: 1px solid rgba(245,158,11,0.2); }
-.case-status.closed      { background: rgba(16,185,129,0.08); color: #059669; border: 1px solid rgba(16,185,129,0.2); }
-.case-status.archived    { background: var(--bg-tertiary); color: var(--text-tertiary); border: 1px solid var(--border-light); }
+.detail-card h5 i {
+    color: var(--brand-500);
+    font-size: 1rem;
+}
 
-/* ── Empty state ── */
+/* ── Info Rows — Hover highlight ── */
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border-light);
+    transition: background 0.15s ease;
+}
+.info-row:hover {
+    background: var(--surface-hover);
+    margin: 0 -12px;
+    padding-left: 12px;
+    padding-right: 12px;
+    border-radius: var(--radius-sm);
+}
+.info-row:last-child { border-bottom: none; }
+.info-label { color: var(--text-secondary); font-weight: 500; font-size: 0.875rem; }
+.info-value { color: var(--text-primary); font-weight: 600; font-size: 0.875rem; }
+
+/* ── Case Form ── */
+.case-form-card {
+    background: var(--surface);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-xl);
+    padding: 32px;
+    box-shadow: var(--shadow-sm);
+    position: relative;
+    overflow: hidden;
+}
+.case-form-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--brand-500), var(--accent-500), #ec4899);
+}
+
+/* ── Share Link Box ── */
+.share-link-box {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-lg);
+    padding: 16px;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+    word-break: break-all;
+    transition: border-color 0.2s ease;
+}
+.share-link-box:hover {
+    border-color: var(--brand-300);
+}
+
+/* ── Empty State (cases-specific) ── */
 .empty-state {
     text-align: center;
     padding: 80px 20px;
@@ -85,75 +234,18 @@
     line-height: 1.6;
 }
 
-/* ── Case view detail cards ── */
-.detail-card {
-    background: var(--surface);
-    border: 1px solid var(--border-light);
-    border-radius: var(--radius-xl);
-    padding: 28px;
-    box-shadow: var(--shadow-xs);
-    margin-bottom: 24px;
-    transition: var(--transition-base);
-}
-.detail-card:hover {
-    box-shadow: var(--shadow-sm);
-}
-.detail-card h5 {
-    font-weight: 700;
-    color: var(--text-primary);
-    margin-bottom: 16px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-.detail-card h5 i {
-    color: var(--brand-500);
-    font-size: 1rem;
-}
-
-/* ── Case info rows ── */
-.info-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 0;
-    border-bottom: 1px solid var(--border-light);
-}
-.info-row:last-child { border-bottom: none; }
-.info-label { color: var(--text-secondary); font-weight: 500; font-size: 0.875rem; }
-.info-value { color: var(--text-primary); font-weight: 600; font-size: 0.875rem; }
-
-/* ── Case form ── */
-.case-form-card {
-    background: var(--surface);
-    border: 1px solid var(--border-light);
-    border-radius: var(--radius-xl);
-    padding: 32px;
-    box-shadow: var(--shadow-sm);
-}
-
-/* ── Share link ── */
-.share-link-box {
-    background: var(--bg-secondary);
-    border: 1px solid var(--border-light);
-    border-radius: var(--radius-lg);
-    padding: 16px;
-    font-family: 'SF Mono', 'Fira Code', monospace;
-    font-size: 0.875rem;
-    color: var(--text-secondary);
-    word-break: break-all;
-}
-
-/* ── Dark mode ── */
+/* ── Dark Mode ── */
 .dark .filter-card { background: var(--surface); border-color: var(--border-default); }
 .dark .detail-card { background: var(--surface); border-color: var(--border-default); }
 .dark .case-form-card { background: var(--surface); border-color: var(--border-default); }
-.dark .share-link-box { background: var(--bg-tertiary); }
+.dark .share-link-box { background: var(--bg-tertiary); border-color: var(--border-default); }
 
 /* ── Responsive ── */
 @media (max-width: 768px) {
-    .page-title { font-size: 1.25rem; }
     .filter-card { padding: 16px; }
     .detail-card { padding: 20px; }
+    .case-form-card { padding: 20px; }
     .info-row { flex-direction: column; align-items: flex-start; gap: 4px; }
+    .table thead th { font-size: 0.6875rem; padding: 10px 12px; }
+    .table tbody td { padding: 10px 12px; }
 }
