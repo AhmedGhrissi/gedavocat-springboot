@@ -18,11 +18,10 @@ import java.util.List;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@SuppressWarnings("unused") // Méthodes préparées pour EmailService (TODO)
+@SuppressWarnings("unused") 
 public class AppointmentReminderService {
 
     private final AppointmentRepository appointmentRepository;
-    // TODO: Injecter EmailService quand il sera disponible
     // private final EmailService emailService;
 
     /**
@@ -72,7 +71,6 @@ public class AppointmentReminderService {
         // String subject = "Rappel: " + appointment.getTitle();
         // String message = buildReminderMessage(appointment, formattedDate);
         
-        // TODO: Utiliser EmailService pour envoyer l'email
         // emailService.sendEmail(lawyerEmail, subject, message);
         
         log.info("Rappel à envoyer à {} ({}) pour le rendez-vous du {}", 
@@ -83,7 +81,6 @@ public class AppointmentReminderService {
             String clientEmail = appointment.getClient().getEmail();
             // String clientMessage = buildClientReminderMessage(appointment, formattedDate);
             
-            // TODO: emailService.sendEmail(clientEmail, subject, clientMessage);
             log.info("Rappel client à envoyer à {}", clientEmail);
         }
     }
@@ -177,16 +174,11 @@ public class AppointmentReminderService {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy 'à' HH:mm");
             // formattedDate sera utilisé avec EmailService
             appointment.getAppointmentDate().format(formatter);
-            
-            // Préparés pour usage avec EmailService (TODO)
-            // String subject = "Nouveau rendez-vous: " + appointment.getTitle();
+                        // String subject = "Nouveau rendez-vous: " + appointment.getTitle();
             // String message = buildAppointmentCreatedMessage(appointment, formattedDate);
-            
-            // TODO: emailService.sendEmail(appointment.getLawyer().getEmail(), subject, message);
-            
+                        
             if (appointment.getClient() != null && appointment.getClient().getEmail() != null) {
                 // String clientMessage = buildClientAppointmentCreatedMessage(appointment, formattedDate);
-                // TODO: emailService.sendEmail(appointment.getClient().getEmail(), subject, clientMessage);
             }
             
         } catch (Exception e) {

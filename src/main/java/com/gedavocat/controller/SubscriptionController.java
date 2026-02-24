@@ -373,7 +373,6 @@ public class SubscriptionController {
                     
                     log.warn("⚠️ Paiement échoué pour: {}. Abonnement suspendu.", user.getEmail());
                     
-                    // TODO: Envoyer un email de notification à l'utilisateur
                 } else {
                     log.warn("⚠️ Aucun utilisateur trouvé pour le Stripe customer: {}", customerId);
                 }
