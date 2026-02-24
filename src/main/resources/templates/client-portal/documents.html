@@ -10,13 +10,13 @@
     <div layout:fragment="content">
         <div class="container-fluid">
             <!-- En-tête -->
-            <div class="documents-header">
+            <div class="documents-header page-header">
                 <div class="d-flex align-items-center gap-3 mb-3">
                     <a th:href="@{/my-cases/{id}(id=${case.id})}" class="btn btn-light">
                         <i class="fas fa-arrow-left"></i> Retour au dossier
                     </a>
                 </div>
-                <h1><i class="fas fa-file-pdf"></i> Documents</h1>
+                <h1 class="animate-fade-in-up"><i class="fas fa-file-pdf"></i> Documents</h1>
                 <p style="font-size: 16px; opacity: 0.95;">
                     Documents du dossier : <span th:text="${case.name}"></span>
                 </p>
@@ -47,7 +47,7 @@
                         </a>
                         <!-- Route portail client : filigrane appliqué selon le rôle du déposant -->
                         <a th:href="@{/my-cases/documents/{id}/download(id=${doc.id})}" 
-                           class="btn btn-primary">
+                           class="btn btn-primary" style="border-radius:var(--radius-lg);font-weight:600">
                             <i class="fas fa-download"></i> Télécharger
                         </a>
                     </div>
@@ -56,7 +56,9 @@
 
             <!-- État vide -->
             <div th:if="${documents == null or documents.empty}" class="text-center py-5">
-                <i class="fas fa-file-pdf fa-4x text-muted mb-3"></i>
+                <div style="width:64px;height:64px;border-radius:var(--radius-xl);background:var(--bg-tertiary);display:inline-flex;align-items:center;justify-content:center;margin-bottom:1rem">
+                    <i class="fas fa-file-pdf fa-2x" style="color:var(--text-tertiary)"></i>
+                </div>
                 <h3>Aucun document</h3>
                 <p class="text-muted">Ce dossier ne contient aucun document pour le moment</p>
             </div>

@@ -49,8 +49,8 @@
     <div class="container-fluid">
 
         <!-- En-tête -->
-        <div class="signatures-header">
-            <h1><i class="fas fa-signature"></i> Mes Signatures</h1>
+        <div class="signatures-header page-header">
+            <h1 class="animate-fade-in-up"><i class="fas fa-signature"></i> Mes Signatures</h1>
             <p style="font-size: 16px; opacity: .95;">
                 Documents nécessitant votre signature électronique.
             </p>
@@ -112,7 +112,9 @@
 
         <!-- État vide -->
         <div th:if="${signatures == null or signatures.empty}" class="text-center py-5">
-            <i class="fas fa-signature fa-4x text-muted mb-3"></i>
+            <div style="width:64px;height:64px;border-radius:var(--radius-xl);background:var(--bg-tertiary);display:inline-flex;align-items:center;justify-content:center;margin-bottom:1rem">
+                <i class="fas fa-signature fa-2x" style="color:var(--text-tertiary)"></i>
+            </div>
             <h3>Aucune demande de signature</h3>
             <p class="text-muted">Vous n'avez aucune demande de signature en cours.</p>
         </div>

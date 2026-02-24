@@ -13,7 +13,7 @@
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background: #f1f5f9;
-            color: #1e293b;
+            color: var(--text-primary);
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -37,11 +37,11 @@
         .error-title {
             font-size: 1.75rem;
             font-weight: 700;
-            color: #1e293b;
+            color: var(--text-primary);
             margin-bottom: 0.75rem;
         }
         .error-message {
-            color: #64748b;
+            color: var(--text-secondary);
             font-size: 1rem;
             margin-bottom: 2rem;
             line-height: 1.6;
@@ -66,7 +66,7 @@
             cursor: pointer;
         }
         .btn-primary {
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: linear-gradient(135deg, var(--brand-500), var(--brand-700));
             color: #fff;
         }
         .btn-primary:hover {
@@ -75,19 +75,19 @@
         }
         .btn-outline {
             background: #fff;
-            color: #64748b;
+            color: var(--text-secondary);
             border: 1px solid #e2e8f0;
         }
         .btn-outline:hover {
             background: #f8fafc;
-            color: #1e293b;
+            color: var(--text-primary);
         }
         .brand {
             margin-top: 2.5rem;
             font-size: 0.8rem;
-            color: #94a3b8;
+            color: var(--text-tertiary);
         }
-        .brand a { color: #667eea; text-decoration: none; }
+        .brand a { color: var(--brand-500); text-decoration: none; }
     </style>
 </head>
 <body>
@@ -95,7 +95,7 @@
         <div class="error-icon">
             <i class="fas fa-exclamation-triangle"></i>
         </div>
-        <h1 class="error-title" th:text="${status != null && status.toString().matches('\\d+') ?
+        <h1 class="error-title animate-fade-in-up" th:text="${status != null && status.toString().matches('\\d+') ?
             (status == 404 ? '404 — Page non trouvée' :
              status == 403 ? '403 — Accès refusé' :
              status == 500 ? '500 — Erreur interne' :

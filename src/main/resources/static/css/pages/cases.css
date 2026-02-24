@@ -1,20 +1,251 @@
-/* ── Cases list page styles ── */
+/* ===================================================================
+   DocAvocat — Cases v5.0
+   Extends design-system.css v5 (additive only, no conflicts)
+   Case status badges are in design-system.css
+   =================================================================== */
 
-.page-title { font-size: 22px; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 10px; }
-
-.table a.text-decoration-none { color: #4f46e5; font-weight: 500; }
-.table a.text-decoration-none:hover { color: #667eea; }
-
-.btn-group .btn-sm { border-radius: 8px !important; padding: 5px 9px; }
-
-.empty-state { text-align: center; padding: 60px 20px; }
-.empty-state i  { color: var(--text-secondary); }
-.empty-state h4 { color: var(--text-secondary); margin: 16px 0 8px; }
-.empty-state p  { color: var(--text-secondary); opacity: 0.7; }
-
+/* ── Filter Card — Frosted Glass feel ── */
 .filter-card {
-    background: #ffffff;
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    background: var(--surface);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-sm);
+    padding: 24px;
+    transition: all var(--duration-normal) var(--ease-out);
+    position: relative;
+    overflow: hidden;
+}
+.filter-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--brand-500), var(--accent-500), #ec4899);
+    opacity: 0.7;
+}
+.filter-card:hover {
+    box-shadow: var(--shadow-md);
+}
+
+/* ── Filter Buttons — Pill shape with gradient active ── */
+.filter-card .btn-group .btn,
+.filter-card .btn-sm {
+    border-radius: var(--radius-full) !important;
+    padding: 7px 16px;
+    font-weight: 600;
+    font-size: 0.8125rem;
+    transition: all 0.2s var(--ease-out);
+    border-color: var(--border-default);
+}
+.filter-card .btn-group .btn:hover,
+.filter-card .btn-sm:hover {
+    background: var(--surface-hover);
+    border-color: var(--brand-300);
+}
+.filter-card .btn-group .btn.active,
+.filter-card .btn-group .btn-primary {
+    background: linear-gradient(135deg, var(--brand-500), var(--accent-500)) !important;
+    border-color: transparent !important;
+    color: #fff !important;
+    box-shadow: 0 4px 12px rgba(99,102,241,0.3);
+}
+
+/* ── Search Input Enhancement ── */
+.filter-card .form-control {
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-default);
+    padding: 10px 16px;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+    background: var(--surface);
+}
+.filter-card .form-control:focus {
+    border-color: var(--brand-400);
+    box-shadow: 0 0 0 3px rgba(99,102,241,0.1), var(--shadow-sm);
+}
+
+/* ── Table Enhancement ── */
+.table {
+    border-collapse: separate;
+    border-spacing: 0;
+}
+.table thead th {
+    background: linear-gradient(135deg, var(--surface-hover), var(--surface));
+    border-bottom: 2px solid var(--border-default);
+    font-weight: 700;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-secondary);
+    padding: 12px 16px;
+    white-space: nowrap;
+}
+.table tbody tr {
+    transition: all 0.15s ease;
+    border-bottom: 1px solid var(--border-light);
+}
+.table tbody tr:hover {
+    background: var(--surface-hover);
+}
+.table tbody td {
+    padding: 14px 16px;
+    vertical-align: middle;
+    font-size: 0.875rem;
+    border-bottom: 1px solid var(--border-light);
+}
+
+/* ── Table Links ── */
+.table a.text-decoration-none {
+    color: var(--brand-600);
+    font-weight: 600;
+    transition: color 0.15s ease;
+    position: relative;
+}
+.table a.text-decoration-none::after {
+    content: '';
+    position: absolute;
+    bottom: -1px; left: 0;
+    width: 0;
+    height: 1.5px;
+    background: var(--brand-500);
+    transition: width 0.2s var(--ease-out);
+}
+.table a.text-decoration-none:hover {
+    color: var(--brand-500);
+}
+.table a.text-decoration-none:hover::after {
+    width: 100%;
+}
+
+/* ── Case Detail Cards ── */
+.detail-card {
+    background: var(--surface);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-xl);
+    padding: 28px;
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 24px;
+    transition: all var(--duration-normal) var(--ease-out);
+    position: relative;
+    overflow: hidden;
+}
+.detail-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--brand-500), var(--accent-500));
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+.detail-card:hover {
+    box-shadow: var(--shadow-card-hover);
+    transform: translateY(-2px);
+}
+.detail-card:hover::before { opacity: 1; }
+
+.detail-card h5 {
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.detail-card h5 i {
+    color: var(--brand-500);
+    font-size: 1rem;
+}
+
+/* ── Info Rows — Hover highlight ── */
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border-light);
+    transition: background 0.15s ease;
+}
+.info-row:hover {
+    background: var(--surface-hover);
+    margin: 0 -12px;
+    padding-left: 12px;
+    padding-right: 12px;
+    border-radius: var(--radius-sm);
+}
+.info-row:last-child { border-bottom: none; }
+.info-label { color: var(--text-secondary); font-weight: 500; font-size: 0.875rem; }
+.info-value { color: var(--text-primary); font-weight: 600; font-size: 0.875rem; }
+
+/* ── Case Form ── */
+.case-form-card {
+    background: var(--surface);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-xl);
+    padding: 32px;
+    box-shadow: var(--shadow-sm);
+    position: relative;
+    overflow: hidden;
+}
+.case-form-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--brand-500), var(--accent-500), #ec4899);
+}
+
+/* ── Share Link Box ── */
+.share-link-box {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-lg);
+    padding: 16px;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+    word-break: break-all;
+    transition: border-color 0.2s ease;
+}
+.share-link-box:hover {
+    border-color: var(--brand-300);
+}
+
+/* ── Empty State (cases-specific) ── */
+.empty-state {
+    text-align: center;
+    padding: 80px 20px;
+}
+.empty-state i {
+    font-size: 3.5rem;
+    color: var(--text-tertiary);
+    margin-bottom: 16px;
+    display: block;
+}
+.empty-state h4 {
+    color: var(--text-secondary);
+    font-weight: 700;
+    margin: 16px 0 8px;
+}
+.empty-state p {
+    color: var(--text-tertiary);
+    max-width: 400px;
+    margin: 0 auto;
+    line-height: 1.6;
+}
+
+/* ── Dark Mode ── */
+.dark .filter-card { background: var(--surface); border-color: var(--border-default); }
+.dark .detail-card { background: var(--surface); border-color: var(--border-default); }
+.dark .case-form-card { background: var(--surface); border-color: var(--border-default); }
+.dark .share-link-box { background: var(--bg-tertiary); border-color: var(--border-default); }
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+    .filter-card { padding: 16px; }
+    .detail-card { padding: 20px; }
+    .case-form-card { padding: 20px; }
+    .info-row { flex-direction: column; align-items: flex-start; gap: 4px; }
+    .table thead th { font-size: 0.6875rem; padding: 10px 12px; }
+    .table tbody td { padding: 10px 12px; }
 }

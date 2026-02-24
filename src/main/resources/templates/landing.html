@@ -124,7 +124,7 @@
     <!-- Navigation -->
     <nav class="navbar">
         <div class="nav-container">
-            <a href="/" class="logo"><i class="fas fa-scale-balanced" style="font-size:1rem; -webkit-text-fill-color:initial; color:#667eea; margin-right:6px;"></i>DocAvocat</a>
+            <a href="/" class="logo"><i class="fas fa-scale-balanced" style="font-size:1rem; -webkit-text-fill-color:initial; color:var(--brand-500); margin-right:6px;"></i>DocAvocat</a>
             <div class="nav-buttons">
                 <a th:href="@{/login}" class="btn btn-outline">Se connecter</a>
                 <a th:href="@{/subscription/pricing}" class="btn btn-primary">S'inscrire</a>
@@ -134,7 +134,7 @@
 
     <!-- Hero Section -->
     <section class="hero">
-        <h1>Gérez vos documents juridiques<br>en toute simplicité</h1>
+        <h1 class="animate-fade-in-up">Gérez vos documents juridiques<br>en toute simplicité</h1>
         <p>La solution complète pour les cabinets d'avocats : gestion documentaire, signatures électroniques, communications e-Barreau (RPVA)</p>
         <div class="hero-cta">
             <a th:href="@{/subscription/pricing}" class="btn btn-primary"><i class="fas fa-rocket"></i> Commencer gratuitement</a>
