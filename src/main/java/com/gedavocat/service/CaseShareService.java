@@ -137,6 +137,20 @@ public class CaseShareService {
         shareLinkRepository.save(link);
     }
 
+    /**
+     * Construit l'URL publique d'accès pour un lien de partage.
+     *
+     * @param token   Token du lien
+     * @param emailTo Email du destinataire (pour déterminer le type d'URL)
+     * @return URL publique complète
+     */
+    public String buildPublicUrl(String token, String emailTo) {
+        if (emailTo != null && !emailTo.isBlank()) {
+            return baseUrl + "/collaborators/accept-invitation?token=" + token;
+        }
+        return baseUrl + "/cases/shared?token=" + token;
+    }
+
     // =========================================================================
     // Email
     // =========================================================================
