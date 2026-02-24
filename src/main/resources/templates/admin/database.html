@@ -10,9 +10,9 @@
 <div layout:fragment="content">
     <div class="container-fluid">
         <!-- En-tête -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-4 page-header">
             <div>
-                <h2 class="mb-1">🗄️ Base de données</h2>
+                <h2 class="mb-1 animate-fade-in-up">🗄️ Base de données</h2>
                 <p class="text-muted">Informations et gestion de la base de données</p>
             </div>
         </div>
@@ -158,7 +158,7 @@
                                         <i class="fas fa-download fa-3x text-primary mb-3"></i>
                                         <h6>Sauvegarde mysqldump</h6>
                                         <p class="text-muted small">Lance un dump complet de la base MySQL</p>
-                                        <button class="btn btn-sm btn-primary" onclick="runBackup(this)">
+                                        <button class="btn btn-sm btn-primary" style="border-radius:var(--radius-lg);font-weight:600" onclick="runBackup(this)">
                                             <i class="fas fa-download"></i> Sauvegarder
                                         </button>
                                     </div>

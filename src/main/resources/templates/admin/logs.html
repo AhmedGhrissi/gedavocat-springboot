@@ -10,9 +10,9 @@
 <div layout:fragment="content">
     <div class="container-fluid">
         <!-- En-tête -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-4 page-header">
             <div>
-                <h2 class="mb-1">📋 Logs système</h2>
+                <h2 class="mb-1 animate-fade-in-up">📋 Logs système</h2>
                 <p class="text-muted">Consultation et recherche dans les logs de l'application</p>
             </div>
         </div>
@@ -137,7 +137,7 @@
                         </select>
                     </div>
                     <div class="col-md-3 d-flex align-items-end gap-2">
-                        <button type="submit" class="btn btn-primary flex-fill">
+                        <button type="submit" class="btn btn-primary flex-fill" style="border-radius:var(--radius-lg);font-weight:600">
                             <i class="fas fa-search"></i> Filtrer
                         </button>
                         <a href="/admin/logs" class="btn btn-secondary">
@@ -159,7 +159,9 @@
             <div class="card-body p-0">
                 <div class="log-viewer">
                     <div th:if="${logs == null or logs.empty}" class="text-center text-muted py-5">
-                        <i class="fas fa-inbox fa-3x mb-3"></i>
+                        <div style="width:64px;height:64px;border-radius:50%;background:var(--bg-tertiary);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;">
+                            <i class="fas fa-inbox" style="font-size:1.5rem;color:var(--text-tertiary)"></i>
+                        </div>
                         <p>Aucun log trouvé</p>
                     </div>
                     

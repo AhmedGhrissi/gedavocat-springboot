@@ -20,21 +20,21 @@
             </div>
 
             <!-- En-tête -->
-            <div class="d-flex justify-content-between align-items-center mt-3 mb-3">
-                <div>
-                    <h1 style="font-size:24px;font-weight:700;margin-bottom:4px">
-                        <i class="fas fa-folder-open"></i> Dossiers
+            <div class="page-header d-flex justify-content-between align-items-center mt-3 mb-3">
+                <div class="animate-fade-in-up">
+                    <h1 style="font-size:1.5rem;font-weight:700;margin-bottom:4px;color:var(--text-primary)">
+                        <i class="fas fa-folder-open" style="color:var(--brand-500)"></i> Dossiers
                     </h1>
-                    <p class="text-muted mb-0" style="font-size:14px"
+                    <p class="text-muted mb-0" style="font-size:0.875rem;color:var(--text-secondary)"
                        th:text="${cases != null ? cases.size() + ' dossier(s)' : '0 dossier(s)'}">0 dossier(s)</p>
                 </div>
-                <a th:href="@{/cases/new}" class="btn btn-primary">
+                <a th:href="@{/cases/new}" class="btn btn-primary" style="border-radius:var(--radius-lg);font-weight:600">
                     <i class="fas fa-folder-plus"></i> Nouveau dossier
                 </a>
             </div>
 
             <!-- Filtres par statut (boutons) + recherche -->
-            <div class="card mb-3">
+            <div class="filter-card card mb-3 animate-fade-in-up">
                 <div class="card-body py-3">
                     <div class="d-flex flex-wrap align-items-center gap-3">
                         <!-- Boutons filtres statut -->
@@ -63,7 +63,7 @@
             </div>
 
             <!-- Liste des dossiers -->
-            <div class="card">
+            <div class="card animate-fade-in-up">
                 <div class="card-body p-0">
                     <div class="table-responsive" th:if="${cases != null and !cases.empty}">
                         <table class="table table-hover align-middle mb-0">
@@ -81,39 +81,38 @@
                                     <td style="padding-left:20px">
                                         <a th:href="@{/cases/{id}(id=${case.id})}" 
                                            th:text="${case.name}" 
-                                           class="text-decoration-none fw-semibold">Dossier</a>
+                                           class="text-decoration-none fw-semibold" style="color:var(--brand-600)">Dossier</a>
                                         <div th:if="${case.description}" 
-                                             class="text-muted" 
-                                             style="font-size:12px;max-width:300px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"
+                                             style="font-size:0.75rem;max-width:300px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text-tertiary)"
                                              th:text="${case.description}">Description</div>
                                     </td>
                                     <td>
                                         <span th:if="${case.client != null}">
                                             <a th:href="@{/clients/{id}(id=${case.client.id})}" 
                                                th:text="${case.client.name}" 
-                                               class="text-decoration-none">Client</a>
+                                               class="text-decoration-none" style="color:var(--text-primary)">Client</a>
                                         </span>
-                                        <span th:if="${case.client == null}" class="text-muted">—</span>
+                                        <span th:if="${case.client == null}" style="color:var(--text-tertiary)">—</span>
                                     </td>
                                     <td>
-                                        <span class="badge" 
-                                              th:classappend="${case.status.name() == 'OPEN' ? 'bg-success' : (case.status.name() == 'IN_PROGRESS' ? 'bg-info' : (case.status.name() == 'CLOSED' ? 'bg-warning' : 'bg-secondary'))}"
+                                        <span class="case-status"
+                                              th:classappend="${case.status.name() == 'OPEN' ? 'open' : (case.status.name() == 'IN_PROGRESS' ? 'in-progress' : (case.status.name() == 'CLOSED' ? 'closed' : 'archived'))}"
                                               th:text="${case.status.displayName}">Statut</span>
                                     </td>
-                                    <td style="font-size:13px" th:text="${case.createdAt != null ? #temporals.format(case.createdAt, 'dd/MM/yyyy') : '-'}">Date</td>
+                                    <td style="font-size:0.8125rem;color:var(--text-secondary)" th:text="${case.createdAt != null ? #temporals.format(case.createdAt, 'dd/MM/yyyy') : '-'}">Date</td>
                                     <td>
                                         <div class="d-flex gap-1">
-                                            <a th:href="@{/cases/{id}(id=${case.id})}" class="btn btn-sm btn-outline-info" title="Voir">
+                                            <a th:href="@{/cases/{id}(id=${case.id})}" class="btn btn-sm btn-outline-info" title="Voir" style="border-radius:var(--radius-md)">
                                                 <i class="fas fa-eye"></i>
                                             </a>
-                                            <a th:href="@{/cases/{id}/edit(id=${case.id})}" class="btn btn-sm btn-outline-warning" title="Modifier">
+                                            <a th:href="@{/cases/{id}/edit(id=${case.id})}" class="btn btn-sm btn-outline-warning" title="Modifier" style="border-radius:var(--radius-md)">
                                                 <i class="fas fa-edit"></i>
                                             </a>
-                                            <a th:href="@{/cases/{id}(id=${case.id})}" class="btn btn-sm btn-outline-primary" title="Documents">
+                                            <a th:href="@{/cases/{id}(id=${case.id})}" class="btn btn-sm btn-outline-primary" title="Documents" style="border-radius:var(--radius-md)">
                                                 <i class="fas fa-file-alt"></i>
                                             </a>
                                             <form th:action="@{/cases/{id}/delete(id=${case.id})}" method="post" style="display:inline">
-                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Supprimer"
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Supprimer" style="border-radius:var(--radius-md)"
                                                         onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce dossier ?')">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
@@ -126,15 +125,17 @@
                     </div>
                     
                     <div th:if="${cases == null or cases.empty}" class="text-center py-5">
-                        <i class="fas fa-folder-open fa-3x mb-3" style="color:#94a3b8"></i>
-                        <h5>Aucun dossier trouvé</h5>
-                        <p class="text-muted" th:if="${search != null and !search.isEmpty()}">
+                        <div style="width:64px;height:64px;border-radius:var(--radius-xl);background:var(--bg-tertiary);display:inline-flex;align-items:center;justify-content:center;margin-bottom:1rem">
+                            <i class="fas fa-folder-open fa-2x" style="color:var(--text-tertiary)"></i>
+                        </div>
+                        <h5 style="color:var(--text-primary);font-weight:600">Aucun dossier trouvé</h5>
+                        <p style="color:var(--text-secondary)" th:if="${search != null and !search.isEmpty()}">
                             Aucun résultat pour « <span th:text="${search}"></span> »
                         </p>
-                        <p class="text-muted" th:if="${search == null or search.isEmpty()}">
+                        <p style="color:var(--text-secondary)" th:if="${search == null or search.isEmpty()}">
                             Vous n'avez pas encore créé de dossier
                         </p>
-                        <a th:href="@{/cases/new}" class="btn btn-primary mt-2">
+                        <a th:href="@{/cases/new}" class="btn btn-primary mt-2" style="border-radius:var(--radius-lg);font-weight:600">
                             <i class="fas fa-folder-plus"></i> Créer votre premier dossier
                         </a>
                     </div>

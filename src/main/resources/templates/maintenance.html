@@ -9,7 +9,7 @@
 
         body {
             font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            background: linear-gradient(135deg, var(--text-primary) 0%, #0f172a 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -67,14 +67,14 @@
             font-weight: 800;
             line-height: 1.2;
             margin-bottom: 20px;
-            background: linear-gradient(90deg, #e2e8f0, #94a3b8);
+            background: linear-gradient(90deg, #e2e8f0, var(--text-tertiary));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
         p {
             font-size: 17px;
-            color: #94a3b8;
+            color: var(--text-tertiary);
             line-height: 1.7;
             margin-bottom: 12px;
         }
@@ -97,7 +97,7 @@
 
         .info-box p {
             font-size: 14px;
-            color: #64748b;
+            color: var(--text-secondary);
             margin: 0;
         }
 
@@ -143,7 +143,7 @@
 
         <div class="badge">Maintenance en cours</div>
 
-        <h1>Site temporairement<br>indisponible</h1>
+        <h1 class="animate-fade-in-up">Site temporairement<br>indisponible</h1>
 
         <p>Notre équipe effectue des opérations de maintenance<br>pour améliorer votre expérience.</p>
         <p>Nous serons de retour très prochainement.</p>

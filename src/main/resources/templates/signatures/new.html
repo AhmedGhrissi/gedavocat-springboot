@@ -12,7 +12,7 @@
             <div class="signature-form-container">
                 <!-- En-tête -->
                 <div class="page-header">
-                    <h1><i class="fas fa-signature"></i> Nouvelle signature électronique</h1>
+                    <h1 class="animate-fade-in-up"><i class="fas fa-signature"></i> Nouvelle signature électronique</h1>
                     <p style="font-size: 16px; opacity: 0.95;">
                         Envoyez un document à signer électroniquement via Yousign
                     </p>
@@ -54,7 +54,7 @@
                             <div th:unless="${document != null}" class="document-selector" onclick="document.getElementById('documentSelect').click()">
                                 <i class="fas fa-cloud-upload-alt"></i>
                                 <h4>Sélectionner un document</h4>
-                                <p style="color: #64748b; margin: 0;">Choisissez un document PDF depuis vos dossiers</p>
+                                <p style="color: var(--text-secondary); margin: 0;">Choisissez un document PDF depuis vos dossiers</p>
                                 <select id="documentSelect" name="documentId" class="form-control mt-3" required style="max-width: 400px; margin: 20px auto 0;">
                                     <option value="">-- Choisir un document --</option>
                                     <option th:each="doc : ${documents}"
@@ -246,7 +246,7 @@
                         <a th:href="@{/signatures}" class="btn-cancel">
                             <i class="fas fa-times"></i> Annuler
                         </a>
-                        <button type="submit" class="btn-submit">
+                        <button type="submit" class="btn-submit" style="border-radius:var(--radius-lg);font-weight:600">
                             <i class="fas fa-paper-plane"></i>
                             Envoyer la demande de signature
                         </button>

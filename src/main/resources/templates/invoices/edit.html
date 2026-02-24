@@ -106,7 +106,7 @@
     <div class="page-header-inner">
       <div>
         <p class="page-eyebrow"><i class="fas fa-pen"></i> &nbsp;Facturation</p>
-        <h1 class="page-title">Modifier <strong th:text="${invoice.invoiceNumber}">FACT-2026-00001</strong></h1>
+        <h1 class="page-title animate-fade-in-up">Modifier <strong th:text="${invoice.invoiceNumber}">FACT-2026-00001</strong></h1>
       </div>
       <div style="display:flex;gap:.75rem">
         <a th:href="@{/invoices/{id}(id=${invoice.id})}" class="btn-ghost"><i class="fas fa-times"></i> Annuler</a>
@@ -215,7 +215,7 @@
       </div>
 
       <div class="save-btn-wrap fade-in-up">
-        <button type="submit" class="save-btn"><i class="fas fa-save"></i> Enregistrer les modifications</button>
+        <button type="submit" class="save-btn" style="border-radius:var(--radius-lg);font-weight:600"><i class="fas fa-save"></i> Enregistrer les modifications</button>
         <a th:href="@{/invoices/{id}(id=${invoice.id})}" class="cancel-link">Annuler sans sauvegarder</a>
       </div>
     </div>

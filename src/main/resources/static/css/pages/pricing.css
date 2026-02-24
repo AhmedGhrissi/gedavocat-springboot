@@ -1,155 +1,378 @@
-/* ── Pricing / Subscription page styles ── */
+/* ══════════════════════════════════════════════════════════
+   PRICING / SUBSCRIPTION — Uses design-system.css tokens
+   Ultra-modern 2025+ design
+══════════════════════════════════════════════════════════ */
 
-/* Hero */
+/* ── Hero ── */
 .pricing-hero {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 20px; padding: 60px 40px;
-    text-align: center; color: white; margin-bottom: 48px;
-    position: relative; overflow: hidden;
+    background: linear-gradient(135deg, var(--brand-500) 0%, var(--brand-700) 100%);
+    border-radius: var(--radius-2xl);
+    padding: 3.75rem 2.5rem;
+    text-align: center;
+    color: #fff;
+    margin-bottom: 3rem;
+    position: relative;
+    overflow: hidden;
 }
 .pricing-hero::before {
-    content: '💳'; position: absolute;
-    font-size: 200px; opacity: 0.1; right: -30px; top: -40px;
+    content: '';
+    position: absolute;
+    width: 280px;
+    height: 280px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.08);
+    right: -60px;
+    top: -60px;
+    pointer-events: none;
 }
-.pricing-hero h1 { font-size: 42px; font-weight: 800; margin-bottom: 16px; position: relative; }
-.pricing-hero p  { font-size: 18px; opacity: 0.95; max-width: 600px; margin: 0 auto; position: relative; }
+.pricing-hero::after {
+    content: '';
+    position: absolute;
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.05);
+    left: -40px;
+    bottom: -40px;
+    pointer-events: none;
+}
+.pricing-hero h1 {
+    font-size: clamp(1.75rem, 4vw, 2.625rem);
+    font-weight: 800;
+    margin-bottom: 1rem;
+    position: relative;
+    letter-spacing: -0.03em;
+}
+.pricing-hero p {
+    font-size: 1.125rem;
+    opacity: 0.92;
+    max-width: 600px;
+    margin: 0 auto;
+    position: relative;
+    line-height: 1.7;
+}
 
-/* Period Toggle */
+/* ── Period Toggle ── */
 .period-toggle {
-    display: flex; justify-content: center; gap: 8px;
-    margin-bottom: 48px;
-    background: #f1f5f9; padding: 8px; border-radius: 12px;
-    max-width: 300px; margin-left: auto; margin-right: auto;
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-bottom: 3rem;
+    background: var(--bg-tertiary);
+    padding: 0.5rem;
+    border-radius: var(--radius-lg);
+    max-width: 300px;
+    margin-left: auto;
+    margin-right: auto;
+    border: 1px solid var(--border-light);
 }
 .period-btn {
-    flex: 1; padding: 12px 24px;
-    border: none; background: transparent;
-    border-radius: 8px; cursor: pointer;
-    font-weight: 600; color: #64748b; transition: all 0.3s;
+    flex: 1;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    background: transparent;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--text-secondary);
+    transition: var(--transition-base);
+    font-family: inherit;
+    font-size: 0.875rem;
 }
 .period-btn.active {
-    background: #ffffff;
-    color: #667eea; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    background: var(--surface);
+    color: var(--brand-600);
+    box-shadow: var(--shadow-sm);
 }
 .save-badge {
-    background: #10b981; color: white;
-    padding: 2px 8px; border-radius: 12px;
-    font-size: 11px; font-weight: 700; margin-left: 4px;
+    background: var(--success);
+    color: #fff;
+    padding: 2px 8px;
+    border-radius: 9999px;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    margin-left: 4px;
 }
 
-/* Pricing Grid */
+/* ── Pricing Grid ── */
 .pricing-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-    gap: 32px; max-width: 1200px; margin: 0 auto 48px;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    max-width: 1200px;
+    margin: 0 auto 3rem;
 }
 .pricing-card {
-    background: #ffffff;
-    border-radius: 20px; padding: 40px 32px;
-    border: 2px solid #e2e8f0;
-    position: relative; transition: all 0.3s;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    background: var(--surface);
+    border-radius: var(--radius-2xl);
+    padding: 2.5rem 2rem;
+    border: 2px solid var(--border-default);
+    position: relative;
+    transition: var(--transition-base);
+    box-shadow: var(--shadow-xs);
 }
 .pricing-card:hover {
     transform: translateY(-8px);
-    box-shadow: 0 20px 40px rgba(102,126,234,0.1);
+    box-shadow: 0 20px 40px rgba(99,102,241,0.1);
 }
 .pricing-card.featured {
-    border-color: #667eea;
-    background: linear-gradient(135deg, rgba(102,126,234,0.04), rgba(118,75,162,0.03));
+    border-color: var(--brand-500);
+    background: linear-gradient(135deg, rgba(99,102,241,0.04), rgba(139,92,246,0.03));
 }
 
 .featured-badge {
-    position: absolute; top: -16px; left: 50%; transform: translateX(-50%);
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    color: white; padding: 8px 24px; border-radius: 20px;
-    font-size: 13px; font-weight: 700;
-    box-shadow: 0 4px 12px rgba(102,126,234,0.4);
+    position: absolute;
+    top: -16px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, var(--brand-500), var(--brand-700));
+    color: #fff;
+    padding: 0.5rem 1.5rem;
+    border-radius: 9999px;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    box-shadow: 0 4px 12px rgba(99,102,241,0.4);
+    white-space: nowrap;
 }
-.plan-name { font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 12px; }
-.plan-description { color: #64748b; font-size: 14px; margin-bottom: 24px; line-height: 1.6; }
-.price-container { margin-bottom: 32px; }
+.plan-name {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.75rem;
+}
+.plan-description {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    margin-bottom: 1.5rem;
+    line-height: 1.7;
+}
+.price-container { margin-bottom: 2rem; }
 .price {
-    font-size: 48px; font-weight: 800;
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+    font-size: 3rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--brand-500), var(--brand-700));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
     display: inline-block;
+    letter-spacing: -0.03em;
 }
-.price-period { color: #64748b; font-size: 16px; font-weight: 500; }
-.old-price { text-decoration: line-through; color: #94a3b8; font-size: 20px; margin-left: 8px; }
+.price-period {
+    color: var(--text-secondary);
+    font-size: 1rem;
+    font-weight: 500;
+}
+.old-price {
+    text-decoration: line-through;
+    color: var(--text-tertiary);
+    font-size: 1.25rem;
+    margin-left: 0.5rem;
+}
 
-/* Features list */
-.features-list { list-style: none; padding: 0; margin: 0 0 32px 0; }
+/* ── Features list ── */
+.features-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 2rem 0;
+}
 .feature-item {
-    display: flex; align-items: start; gap: 12px;
-    margin-bottom: 16px; font-size: 15px;
-    color: #64748b;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    font-size: 0.9375rem;
+    color: var(--text-secondary);
 }
 .feature-icon {
-    width: 24px; height: 24px; border-radius: 50%;
-    background: #ecfdf5; color: #059669;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0; font-size: 12px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: rgba(16,185,129,0.1);
+    color: #059669;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 0.75rem;
 }
-.feature-icon.disabled { background: #f1f5f9; color: #94a3b8; }
+.feature-icon.disabled {
+    background: var(--bg-tertiary);
+    color: var(--text-tertiary);
+}
 
-/* CTA Buttons */
+/* ── CTA Buttons ── */
 .cta-button {
-    width: 100%; padding: 16px; border-radius: 12px; border: none;
-    font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.3s;
-    text-decoration: none; display: block; text-align: center;
+    width: 100%;
+    padding: 1rem;
+    border-radius: var(--radius-lg);
+    border: none;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: var(--transition-base);
+    text-decoration: none;
+    display: block;
+    text-align: center;
+    font-family: inherit;
+    position: relative;
+    overflow: hidden;
 }
 .cta-primary {
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    color: white; box-shadow: 0 4px 12px rgba(102,126,234,0.3);
+    background: linear-gradient(135deg, var(--brand-500), var(--brand-700));
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(99,102,241,0.3);
 }
-.cta-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(102,126,234,0.4); color: white; }
-.cta-secondary { background: #f8fafc; color: #667eea; border: 2px solid #667eea; }
-.cta-secondary:hover { background: #667eea; color: white; }
+.cta-primary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+    transition: left 0.5s;
+}
+.cta-primary:hover::before { left: 100%; }
+.cta-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(99,102,241,0.4);
+    color: #fff;
+}
+.cta-secondary {
+    background: var(--bg-secondary);
+    color: var(--brand-600);
+    border: 2px solid var(--brand-500);
+}
+.cta-secondary:hover {
+    background: var(--brand-500);
+    color: #fff;
+}
 
-/* Payment Methods */
+/* ── Payment Methods ── */
 .payment-methods {
-    background: #ffffff;
-    border-radius: 20px; padding: 40px;
-    border: 1px solid #e2e8f0;
-    max-width: 800px; margin: 0 auto 48px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    background: var(--surface);
+    border-radius: var(--radius-2xl);
+    padding: 2.5rem;
+    border: 1px solid var(--border-default);
+    max-width: 800px;
+    margin: 0 auto 3rem;
+    box-shadow: var(--shadow-xs);
 }
-.payment-methods h3 { text-align: center; margin-bottom: 32px; color: #1e293b; }
+.payment-methods h3 {
+    text-align: center;
+    margin-bottom: 2rem;
+    color: var(--text-primary);
+    font-weight: 700;
+}
 .methods-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: 16px;
+    gap: 1rem;
 }
 .method-card {
-    background: #f8fafc;
-    border-radius: 12px; padding: 20px; text-align: center;
-    border: 1px solid #e2e8f0; transition: all 0.3s;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem;
+    text-align: center;
+    border: 1px solid var(--border-default);
+    transition: var(--transition-base);
 }
-.method-card:hover { border-color: #667eea; transform: translateY(-4px); }
-.method-icon { font-size: 32px; margin-bottom: 8px; }
-.method-name { font-size: 13px; font-weight: 600; color: #64748b; }
+.method-card:hover {
+    border-color: var(--brand-400);
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-sm);
+}
+.method-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+.method-name {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
 
-/* Trust badges */
+/* ── Trust Badges ── */
 .trust-section {
-    text-align: center; padding: 40px 20px;
-    background: #f8fafc;
-    border-radius: 16px; margin-bottom: 48px;
-    border: 1px solid #e2e8f0;
+    text-align: center;
+    padding: 2.5rem 1.25rem;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-xl);
+    margin-bottom: 3rem;
+    border: 1px solid var(--border-default);
 }
 .trust-badges {
-    display: flex; justify-content: center; gap: 40px; flex-wrap: wrap; margin-top: 24px;
+    display: flex;
+    justify-content: center;
+    gap: 2.5rem;
+    flex-wrap: wrap;
+    margin-top: 1.5rem;
 }
-.trust-badge { display: flex; align-items: center; gap: 12px; color: #64748b; }
-.trust-badge i { font-size: 24px; color: #10b981; }
+.trust-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+.trust-badge i {
+    font-size: 1.5rem;
+    color: var(--success);
+}
 
-/* FAQ */
+/* ── FAQ ── */
 .faq-section { max-width: 800px; margin: 0 auto; }
 .faq-item {
-    background: #ffffff;
-    border-radius: 12px; padding: 24px; margin-bottom: 16px;
-    border: 1px solid #e2e8f0;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    border: 1px solid var(--border-default);
+    box-shadow: var(--shadow-xs);
+    transition: var(--transition-base);
 }
-.faq-question { font-weight: 700; color: #1e293b; margin-bottom: 8px; }
-.faq-answer   { color: #64748b; line-height: 1.6; }
+.faq-item:hover {
+    border-color: var(--border-light);
+    box-shadow: var(--shadow-sm);
+}
+.faq-question {
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+.faq-answer {
+    color: var(--text-secondary);
+    line-height: 1.7;
+    font-size: 0.9375rem;
+}
+
+/* ══════════════════════════════════════════════════════════
+   DARK MODE
+══════════════════════════════════════════════════════════ */
+.dark .pricing-card { border-color: var(--border-default); }
+.dark .pricing-card:hover {
+    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+}
+.dark .pricing-card.featured {
+    border-color: var(--brand-500);
+    background: linear-gradient(135deg, rgba(99,102,241,0.08), rgba(139,92,246,0.05));
+}
+.dark .period-btn.active {
+    background: var(--surface);
+    color: var(--brand-400);
+}
+.dark .feature-icon {
+    background: rgba(16,185,129,0.15);
+    color: #34d399;
+}
+.dark .method-card:hover { border-color: var(--brand-400); }
+.dark .cta-secondary:hover { background: var(--brand-600); }
+
+/* ══════════════════════════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+    .pricing-hero { padding: 2.5rem 1.5rem; border-radius: var(--radius-xl); }
+    .pricing-grid { grid-template-columns: 1fr; gap: 1.5rem; }
+    .pricing-card { padding: 2rem 1.5rem; }
+    .payment-methods { padding: 1.5rem; }
+    .trust-badges { gap: 1.5rem; }
+    .price { font-size: 2.5rem; }
+}

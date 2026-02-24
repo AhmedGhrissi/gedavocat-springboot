@@ -10,8 +10,8 @@
     <div layout:fragment="content">
         <div class="container-fluid">
             <!-- En-tête -->
-            <div class="documents-header">
-                <h1><i class="fas fa-file-alt"></i> Tous mes documents</h1>
+            <div class="documents-header page-header">
+                <h1 class="animate-fade-in-up"><i class="fas fa-file-alt"></i> Tous mes documents</h1>
                 <p style="font-size: 16px; opacity: 0.95;">Vue d'ensemble de vos documents par dossier</p>
                 <div class="mt-3">
                     <button class="btn btn-light btn-lg" data-bs-toggle="modal" data-bs-target="#selectCaseModal">
@@ -23,17 +23,17 @@
             <!-- Statistiques -->
             <div class="stats-grid">
                 <div class="stat-card">
-                    <i class="fas fa-file" style="color: #667eea;"></i>
+                    <i class="fas fa-file" style="color: var(--brand-500);"></i>
                     <h3 th:text="${documents != null ? documents.size() : 0}">0</h3>
                     <p>Documents totaux</p>
                 </div>
                 <div class="stat-card">
-                    <i class="fas fa-folder" style="color: #10b981;"></i>
+                    <i class="fas fa-folder" style="color: var(--success);"></i>
                     <h3 th:text="${documents != null ? #lists.size(#sets.toSet(documents.![caseEntity.id])) : 0}">0</h3>
                     <p>Dossiers avec documents</p>
                 </div>
                 <div class="stat-card">
-                    <i class="fas fa-clock" style="color: #f59e0b;"></i>
+                    <i class="fas fa-clock" style="color: var(--warning);"></i>
                     <h3 th:text="${documents != null and !documents.empty ? #temporals.format(documents[0].createdAt, 'dd/MM') : '-'}">-</h3>
                     <p>Dernier ajout</p>
                 </div>
@@ -89,10 +89,12 @@
 
             <!-- État vide -->
             <div th:if="${documents == null or documents.empty}" class="empty-state">
-                <i class="fas fa-file-plus"></i>
+                <div style="border-radius:var(--radius-xl);background:var(--bg-tertiary);display:inline-flex;align-items:center;justify-content:center;width:80px;height:80px;margin-bottom:1rem;">
+                    <i class="fas fa-file-plus fa-2x" style="color:var(--brand-500);"></i>
+                </div>
                 <h3>Aucun document</h3>
                 <p>Vous n'avez encore uploadé aucun document</p>
-                <a th:href="@{/cases}" class="btn btn-primary mt-3">
+                <a th:href="@{/cases}" class="btn btn-primary mt-3" style="font-weight:600;border-radius:var(--radius-lg);">
                     <i class="fas fa-folder"></i> Voir mes dossiers
                 </a>
             </div>
@@ -102,7 +104,7 @@
         <div class="modal fade" id="selectCaseModal" tabindex="-1" aria-labelledby="selectCaseModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
-                    <div class="modal-header bg-gradient text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <div class="modal-header bg-gradient text-white" style="background: linear-gradient(135deg, var(--brand-500) 0%, var(--brand-700) 100%);">
                         <h5 class="modal-title" id="selectCaseModalLabel">
                             <i class="fas fa-folder-plus"></i> Sélectionner un dossier
                         </h5>
@@ -116,9 +118,9 @@
                             <div th:each="case : ${cases}" class="case-item" 
                                  th:data-case-id="${case.id}"
                                  onclick="navigateToCase(this)">
-                                <i class="fas fa-folder" style="color: #667eea;"></i>
+                                <i class="fas fa-folder" style="color: var(--brand-500);"></i>
                                 <span th:text="${case.name}">Nom du dossier</span>
-                                <i class="fas fa-chevron-right ms-auto" style="color: #cbd5e1;"></i>
+                                <i class="fas fa-chevron-right ms-auto" style="color: var(--text-tertiary);"></i>
                             </div>
                         </div>
                         
@@ -133,7 +135,7 @@
                         <div th:if="${cases == null or cases.empty}" class="text-center py-4">
                             <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
                             <p class="text-muted">Aucun dossier disponible</p>
-                            <a th:href="@{/cases/new}" class="btn btn-primary">
+                            <a th:href="@{/cases/new}" class="btn btn-primary" style="font-weight:600;border-radius:var(--radius-lg);">
                                 <i class="fas fa-plus"></i> Créer un dossier
                             </a>
                         </div>

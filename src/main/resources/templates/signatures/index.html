@@ -12,9 +12,9 @@
             <!-- Hero Banner -->
             <div class="hero-banner">
                 <div class="hero-content">
-                    <div class="d-flex justify-content-between align-items-start">
+                    <div class="d-flex justify-content-between align-items-start page-header">
                         <div>
-                            <h1 style="font-size: 32px; font-weight: 700; margin-bottom: 12px;">
+                            <h1 class="animate-fade-in-up" style="font-size: 32px; font-weight: 700; margin-bottom: 12px;">
                                 <i class="fas fa-signature"></i> Signatures Électroniques
                             </h1>
                             <p style="font-size: 16px; opacity: 0.9; margin: 0;">
@@ -69,10 +69,12 @@
             <!-- Signatures en attente -->
             <div id="pending-content" class="signature-grid">
                 <div th:if="${pendingSignatures == null or pendingSignatures.empty}" class="premium-empty">
-                    <i class="fas fa-file-signature"></i>
+                    <div class="icon-circle" style="width:64px;height:64px;border-radius:var(--radius-xl);background:var(--bg-tertiary);display:inline-flex;align-items:center;justify-content:center;margin-bottom:1rem">
+                        <i class="fas fa-file-signature"></i>
+                    </div>
                     <h3>Aucune signature en attente</h3>
                     <p>Créez votre première demande de signature électronique</p>
-                    <a th:href="@{/signatures/new}" class="btn btn-primary btn-lg">
+                    <a th:href="@{/signatures/new}" class="btn btn-primary btn-lg" style="border-radius:var(--radius-lg);font-weight:600">
                         <i class="fas fa-plus"></i> Nouvelle signature
                     </a>
                 </div>
@@ -90,14 +92,14 @@
                                     <span th:text="${sig.signerEmail}">email@example.com</span>
                                 </div>
                                 <div class="mt-2">
-                                    <span class="badge" style="background: rgba(102,126,234,0.2); color: #818cf8;" th:text="${sig.level != null ? sig.level : 'Avancée'}">Avancée</span>
+                                    <span class="badge" style="background: var(--bg-tertiary); color: var(--brand-500);" th:text="${sig.level != null ? sig.level : 'Avancée'}">Avancée</span>
                                 </div>
                             </div>
                         </div>
                         <span class="status-badge status-pending">En attente</span>
                     </div>
                     <div class="signature-footer">
-                        <div style="font-size: 13px; color: #64748b;">
+                        <div style="font-size: 13px; color: var(--text-secondary);">
                             <i class="far fa-clock"></i>
                             Envoyé le <span th:text="${#temporals.format(sig.createdAt, 'dd/MM/yyyy à HH:mm')}">01/01/2024</span>
                         </div>
@@ -119,7 +121,9 @@
             <!-- Signatures terminées -->
             <div id="completed-content" class="signature-grid" style="display: none;">
                 <div th:if="${completedSignatures == null or completedSignatures.empty}" class="premium-empty">
-                    <i class="fas fa-check-circle"></i>
+                    <div class="icon-circle" style="width:64px;height:64px;border-radius:var(--radius-xl);background:var(--bg-tertiary);display:inline-flex;align-items:center;justify-content:center;margin-bottom:1rem">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
                     <h3>Aucune signature terminée</h3>
                     <p>Vos signatures complétées apparaîtront ici</p>
                 </div>
@@ -137,7 +141,7 @@
                                     <span th:text="${sig.signerEmail}">email@example.com</span>
                                 </div>
                                 <div class="mt-2">
-                                    <span class="badge" style="background: rgba(16,185,129,0.15); color: #34d399;" th:text="${sig.level != null ? sig.level : 'Avancée'}">Avancée</span>
+                                    <span class="badge" style="background: var(--bg-tertiary); color: var(--success);" th:text="${sig.level != null ? sig.level : 'Avancée'}">Avancée</span>
                                 </div>
                             </div>
                         </div>
@@ -146,7 +150,7 @@
                         </span>
                     </div>
                     <div class="signature-footer">
-                        <div style="font-size: 13px; color: #64748b;">
+                        <div style="font-size: 13px; color: var(--text-secondary);">
                             <i class="fas fa-check"></i>
                             Signé le <span th:text="${sig.signedAt != null ? #temporals.format(sig.signedAt, 'dd/MM/yyyy à HH:mm') : '-'}">01/01/2024</span>
                         </div>

@@ -7,8 +7,8 @@
 <body>
     <div layout:fragment="content">
         <div class="container">
-            <h1 class="mt-3 mb-3">
-                <i class="fas fa-user"></i> 
+            <h1 class="mt-3 mb-3 animate-fade-in-up" style="font-size:1.5rem;font-weight:700;color:var(--text-primary)">
+                <i class="fas fa-user" style="color:var(--brand-500)"></i> 
                 <span th:text="${client.id != null ? 'Modifier le client' : 'Nouveau client'}">Client</span>
             </h1>
             
