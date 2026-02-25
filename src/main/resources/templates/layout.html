@@ -834,6 +834,169 @@
         }
     </script>
 
+    <!-- ═══════════ Global Custom Modal (replaces native confirm/alert) ═══════════ -->
+    <div id="appModalOverlay" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(15,23,42,0.5);backdrop-filter:blur(6px);transition:opacity .2s ease;opacity:0;">
+        <div style="display:flex;align-items:center;justify-content:center;min-height:100vh;padding:1rem;">
+            <div id="appModalBox" style="background:var(--surface,#fff);border:1px solid var(--border-default,#e2e8f0);border-radius:var(--radius-2xl,18px);box-shadow:var(--shadow-xl,0 24px 60px rgba(0,0,0,.12));max-width:440px;width:100%;overflow:hidden;transform:scale(.92) translateY(10px);transition:transform .25s cubic-bezier(.16,1,.3,1),opacity .25s ease;opacity:0;position:relative;">
+                <!-- Gradient top bar -->
+                <div style="height:3px;background:linear-gradient(90deg,var(--brand-500,#6366f1),var(--accent-500,#a855f7),#ec4899);"></div>
+                <div style="padding:28px 28px 0 28px;text-align:center;">
+                    <div id="appModalIcon" style="width:52px;height:52px;border-radius:var(--radius-lg,14px);display:inline-flex;align-items:center;justify-content:center;margin-bottom:16px;font-size:22px;"></div>
+                    <h5 id="appModalTitle" style="font-weight:700;color:var(--text-primary,#0f172a);margin-bottom:8px;font-size:1.05rem;"></h5>
+                    <p id="appModalMessage" style="color:var(--text-secondary,#475569);font-size:.9rem;line-height:1.5;margin-bottom:0;white-space:pre-line;"></p>
+                </div>
+                <div id="appModalFooter" style="padding:20px 28px 24px 28px;display:flex;justify-content:center;gap:10px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    (function() {
+        var overlay = document.getElementById('appModalOverlay');
+        var box     = document.getElementById('appModalBox');
+        var icon    = document.getElementById('appModalIcon');
+        var title   = document.getElementById('appModalTitle');
+        var msg     = document.getElementById('appModalMessage');
+        var footer  = document.getElementById('appModalFooter');
+        var _resolve = null;
+
+        function showModal() {
+            overlay.style.display = 'block';
+            requestAnimationFrame(function() {
+                overlay.style.opacity = '1';
+                box.style.opacity = '1';
+                box.style.transform = 'scale(1) translateY(0)';
+            });
+        }
+        function hideModal(result) {
+            overlay.style.opacity = '0';
+            box.style.opacity = '0';
+            box.style.transform = 'scale(.92) translateY(10px)';
+            setTimeout(function() { overlay.style.display = 'none'; }, 220);
+            if (_resolve) { _resolve(result); _resolve = null; }
+        }
+
+        // Close on overlay click
+        overlay.addEventListener('click', function(e) {
+            if (e.target === overlay || e.target === overlay.firstElementChild) hideModal(false);
+        });
+        // Close on Escape
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && overlay.style.display !== 'none') hideModal(false);
+        });
+
+        /**
+         * appConfirm(message, options?)
+         * options: { title, type: 'danger'|'warning'|'info', confirmText, cancelText }
+         * Returns Promise<boolean>
+         */
+        window.appConfirm = function(message, options) {
+            options = options || {};
+            var type = options.type || 'warning';
+            var icons  = { danger: 'fas fa-exclamation-triangle', warning: 'fas fa-question-circle', info: 'fas fa-info-circle', success: 'fas fa-check-circle' };
+            var colors = { danger: 'var(--danger-50,#fef2f2)', warning: 'var(--warning-50,#fffbeb)', info: 'var(--info-50,#f0f9ff)', success: 'var(--success-50,#f0fdf4)' };
+            var iconColors = { danger: 'var(--danger-500,#ef4444)', warning: 'var(--warning-500,#f59e0b)', info: 'var(--info-500,#0ea5e9)', success: 'var(--success-500,#22c55e)' };
+
+            icon.style.background = colors[type] || colors.warning;
+            icon.style.color = iconColors[type] || iconColors.warning;
+            icon.innerHTML = '<i class="' + (icons[type] || icons.warning) + '"></i>';
+            title.textContent = options.title || (type === 'danger' ? 'Confirmation' : 'Confirmation');
+            msg.textContent = message;
+
+            var btnClass = type === 'danger' ? 'btn btn-danger' : 'btn btn-primary';
+            footer.innerHTML =
+                '<button type="button" class="btn btn-secondary" id="appModalCancel" style="min-width:100px;">' + (options.cancelText || 'Annuler') + '</button>' +
+                '<button type="button" class="' + btnClass + '" id="appModalOk" style="min-width:100px;">' + (options.confirmText || 'Confirmer') + '</button>';
+
+            document.getElementById('appModalOk').addEventListener('click', function() { hideModal(true); });
+            document.getElementById('appModalCancel').addEventListener('click', function() { hideModal(false); });
+
+            showModal();
+            document.getElementById('appModalOk').focus();
+
+            return new Promise(function(resolve) { _resolve = resolve; });
+        };
+
+        /**
+         * appAlert(message, type?, title?)
+         * type: 'success'|'danger'|'warning'|'info'
+         * Returns Promise<void>
+         */
+        window.appAlert = function(message, type, alertTitle) {
+            type = type || 'info';
+            var icons  = { danger: 'fas fa-exclamation-circle', warning: 'fas fa-exclamation-triangle', info: 'fas fa-info-circle', success: 'fas fa-check-circle' };
+            var colors = { danger: 'var(--danger-50,#fef2f2)', warning: 'var(--warning-50,#fffbeb)', info: 'var(--info-50,#f0f9ff)', success: 'var(--success-50,#f0fdf4)' };
+            var iconColors = { danger: 'var(--danger-500,#ef4444)', warning: 'var(--warning-500,#f59e0b)', info: 'var(--info-500,#0ea5e9)', success: 'var(--success-500,#22c55e)' };
+            var titles = { danger: 'Erreur', warning: 'Attention', info: 'Information', success: 'Succès' };
+
+            icon.style.background = colors[type] || colors.info;
+            icon.style.color = iconColors[type] || iconColors.info;
+            icon.innerHTML = '<i class="' + (icons[type] || icons.info) + '"></i>';
+            title.textContent = alertTitle || titles[type] || 'Information';
+            msg.textContent = message;
+
+            var btnClass = type === 'danger' ? 'btn btn-danger' : (type === 'success' ? 'btn btn-success' : 'btn btn-primary');
+            footer.innerHTML = '<button type="button" class="' + btnClass + '" id="appModalOk" style="min-width:120px;">OK</button>';
+            document.getElementById('appModalOk').addEventListener('click', function() { hideModal(true); });
+
+            showModal();
+            document.getElementById('appModalOk').focus();
+
+            return new Promise(function(resolve) { _resolve = resolve; });
+        };
+
+        /* ── Auto-handle [data-confirm] on forms and buttons ── */
+        document.addEventListener('click', function(e) {
+            var btn = e.target.closest('[data-confirm]');
+            if (!btn) return;
+            var message = btn.getAttribute('data-confirm');
+            var type = btn.getAttribute('data-confirm-type') || 'warning';
+            var form = btn.closest('form');
+
+            e.preventDefault();
+            e.stopImmediatePropagation();
+
+            appConfirm(message, { type: type }).then(function(ok) {
+                if (!ok) return;
+                if (form) {
+                    // Remove data-confirm to avoid re-trigger, then submit
+                    btn.removeAttribute('data-confirm');
+                    form.submit();
+                } else if (btn.tagName === 'A') {
+                    window.location.href = btn.href;
+                }
+            });
+        }, true);
+
+        document.addEventListener('submit', function(e) {
+            var form = e.target;
+            var confirmMsg = form.getAttribute('data-confirm');
+            if (!confirmMsg) return;
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            appConfirm(confirmMsg, { type: form.getAttribute('data-confirm-type') || 'warning' }).then(function(ok) {
+                if (!ok) return;
+                form.removeAttribute('data-confirm');
+                form.submit();
+            });
+        }, true);
+
+        /* ── Also handle [data-confirm-delete] from main.js ── */
+        document.addEventListener('click', function(e) {
+            var btn = e.target.closest('[data-confirm-delete]');
+            if (!btn) return;
+            var message = btn.getAttribute('data-confirm-delete') || 'Êtes-vous sûr de vouloir supprimer cet élément ?';
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            appConfirm(message, { type: 'danger' }).then(function(ok) {
+                if (!ok) return;
+                btn.removeAttribute('data-confirm-delete');
+                btn.click();
+            });
+        }, true);
+    })();
+    </script>
+
     <!-- Dark Mode Toggle -->
     <script>
         (function() {

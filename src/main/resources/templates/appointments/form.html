@@ -243,7 +243,7 @@
                         </form>
                         <form th:action="@{/appointments/{id}/cancel(id=${appointment.id})}" method="post" class="d-inline">
                             <button type="submit" class="btn btn-sm btn-warning w-100 mb-2"
-                                    onclick="return confirm('Annuler ce rendez-vous ?')">
+                                    data-confirm="Annuler ce rendez-vous ?" data-confirm-type="warning">
                                 <i class="fas fa-ban"></i> Annuler
                             </button>
                         </form>
@@ -255,7 +255,7 @@
                         <hr>
                         <form th:action="@{/appointments/{id}/delete(id=${appointment.id})}" method="post" class="d-inline">
                             <button type="submit" class="btn btn-sm btn-danger w-100"
-                                    onclick="return confirm('Supprimer définitivement ce rendez-vous ?')">
+                                    data-confirm="Supprimer définitivement ce rendez-vous ?" data-confirm-type="danger">
                                 <i class="fas fa-trash"></i> Supprimer
                             </button>
                         </form>

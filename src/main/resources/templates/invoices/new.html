@@ -220,26 +220,26 @@
             const data = collectFormData();
 
             if (!data.clientId) {
-                alert('Veuillez sélectionner un client.');
+                appAlert('Veuillez sélectionner un client.', 'warning');
                 return;
             }
             if (!data.items || data.items.length === 0) {
-                alert('Veuillez ajouter au moins une prestation.');
+                appAlert('Veuillez ajouter au moins une prestation.', 'warning');
                 return;
             }
 
             // Validation des items
             for (let i = 0; i < data.items.length; i++) {
                 if (!data.items[i].description || data.items[i].description.trim() === '') {
-                    alert('Veuillez renseigner la description de la prestation n°' + (i + 1) + '.');
+                    appAlert('Veuillez renseigner la description de la prestation n°' + (i + 1) + '.', 'warning');
                     return;
                 }
                 if (isNaN(data.items[i].quantity) || data.items[i].quantity <= 0) {
-                    alert('La quantité de la prestation n°' + (i + 1) + ' doit être supérieure à 0.');
+                    appAlert('La quantité de la prestation n°' + (i + 1) + ' doit être supérieure à 0.', 'warning');
                     return;
                 }
                 if (isNaN(data.items[i].unitPriceHT) || data.items[i].unitPriceHT < 0) {
-                    alert('Le prix unitaire HT de la prestation n°' + (i + 1) + ' est invalide.');
+                    appAlert('Le prix unitaire HT de la prestation n°' + (i + 1) + ' est invalide.', 'warning');
                     return;
                 }
             }
@@ -261,12 +261,12 @@
                 return response.json();
             })
             .then(data => {
-                alert('Facture créée avec succès !');
+                appAlert('Facture créée avec succès !', 'success');
                 window.location.href = '/invoices';
             })
             .catch(error => {
                 console.error('Erreur:', error);
-                alert('Erreur lors de la création de la facture : ' + error.message);
+                appAlert('Erreur lors de la création de la facture : ' + error.message, 'danger');
             });
         });
 

@@ -349,13 +349,14 @@
       fetch('/api/invoices/'+invoiceId+'/mark-as-paid', {
         method:'PATCH', headers:{'Content-Type':'application/json','X-CSRF-TOKEN':csrf},
         body: JSON.stringify({paymentMethod: document.getElementById('paymentMethod').value || null})
-      }).then(r => r.ok ? location.reload() : alert('Erreur'));
+      }).then(r => r.ok ? location.reload() : appAlert('Erreur', 'danger'));
     }
     function deleteInvoice(id) {
-      if(confirm('Supprimer définitivement cette facture ?')) {
+      appConfirm('Supprimer définitivement cette facture ?', { type: 'danger', confirmText: 'Supprimer' }).then(function(ok) {
+      if (!ok) return;
         fetch('/api/invoices/'+id, {method:'DELETE', headers:{'X-CSRF-TOKEN':csrf}})
-          .then(r => r.ok ? location.href='/invoices' : alert('Erreur'));
-      }
+          .then(r => r.ok ? location.href='/invoices' : appAlert('Erreur', 'danger'));
+      });
     }
   </script>
 </div>

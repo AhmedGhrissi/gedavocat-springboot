@@ -52,7 +52,7 @@
                     </form>
                     <form th:action="@{/cases/{id}/delete(id=${case.id})}" method="post" style="display:inline">
                         <button type="submit" class="btn btn-sm btn-outline-danger"
-                                onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce dossier ?')">
+                                data-confirm="Êtes-vous sûr de vouloir supprimer ce dossier ?" data-confirm-type="danger">
                             <i class="fas fa-trash"></i>
                         </button>
                     </form>
@@ -175,7 +175,7 @@
                                                 </a>
                                                 <form th:action="@{/documents/{id}/delete(id=${doc.id})}" method="post" style="display:inline"
                                                       sec:authorize="hasRole('LAWYER')"
-                                                      onsubmit="return confirm('Supprimer ce document ?')">
+                                                      data-confirm="Supprimer ce document ?" data-confirm-type="danger">
                                                     <button type="submit" class="btn btn-sm btn-outline-danger" title="Supprimer">
                                                         <i class="fas fa-trash"></i>
                                                     </button>
@@ -223,7 +223,7 @@
                                         <span class="badge bg-info" style="font-size:10px" th:if="${perm.expiresAt != null}"
                                               th:text="'Exp. ' + ${#temporals.format(perm.expiresAt, 'dd/MM')}">Exp.</span>
                                         <form th:action="@{/cases/{caseId}/permissions/{permId}/revoke(caseId=${case.id}, permId=${perm.id})}" method="post" style="margin:0"
-                                              onsubmit="return confirm('Révoquer l\'accès de ce collaborateur ?')">
+                                              data-confirm="Révoquer l'accès de ce collaborateur ?" data-confirm-type="danger">
                                             <button type="submit" class="btn btn-outline-danger btn-sm" style="padding:2px 6px;font-size:11px" title="Révoquer l'accès">
                                                 <i class="fas fa-user-times"></i>
                                             </button>
@@ -330,13 +330,13 @@
                         toggle.disabled = false;
                         if (!data.success) {
                             toggle.checked = !shared;
-                            alert('Erreur : ' + (data.error || 'Erreur inconnue'));
+                            appAlert('Erreur : ' + (data.error || 'Erreur inconnue'), 'danger');
                         }
                     })
                     .catch(function(err) {
                         toggle.disabled = false;
                         toggle.checked = !shared;
-                        alert('Erreur réseau');
+                        appAlert('Erreur réseau', 'danger');
                     });
                 });
             });
@@ -349,7 +349,8 @@
                     const label = role === 'LAWYER_SECONDARY' ? 'collaborateur' : 'huissier';
                     const action = shared ? 'partager' : 'départager';
 
-                    if (!confirm('Voulez-vous ' + action + ' tous les documents avec le ' + label + ' ?')) return;
+                    appConfirm('Voulez-vous ' + action + ' tous les documents avec le ' + label + ' ?').then(function(ok) {
+                    if (!ok) return;
 
                     fetch('/api/document-shares/bulk-toggle?caseId=' + encodeURIComponent(caseId)
                         + '&role=' + encodeURIComponent(role)
@@ -365,10 +366,11 @@
                                 cb.checked = shared;
                             });
                         } else {
-                            alert('Erreur : ' + (data.error || 'Erreur inconnue'));
+                            appAlert('Erreur : ' + (data.error || 'Erreur inconnue'), 'danger');
                         }
                     })
-                    .catch(function() { alert('Erreur réseau'); });
+                    .catch(function() { appAlert('Erreur réseau', 'danger'); });
+                    }); // end appConfirm
                 });
             });
         })();

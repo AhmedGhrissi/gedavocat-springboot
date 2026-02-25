@@ -45,17 +45,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 5000);
     });
     
-    // Confirmation avant suppression
-    const deleteButtons = document.querySelectorAll('[data-confirm-delete]');
-    deleteButtons.forEach(button => {
-        button.addEventListener('click', function(e) {
-            const message = this.getAttribute('data-confirm-delete') || 
-                          'Êtes-vous sûr de vouloir supprimer cet élément ?';
-            if (!confirm(message)) {
-                e.preventDefault();
-            }
-        });
-    });
+    // Confirmation avant suppression — handled by appConfirm in layout.html
     
     // Validation de formulaire
     const forms = document.querySelectorAll('.needs-validation');

@@ -183,7 +183,7 @@
                                                       th:if="${appointment.status.name() != 'CANCELLED'}">
                                                     <button type="submit" class="btn btn-outline-danger" 
                                                             title="Annuler"
-                                                            onclick="return confirm('Annuler ce rendez-vous ?')">
+                                                            data-confirm="Annuler ce rendez-vous ?" data-confirm-type="warning">
                                                         <i class="fas fa-times"></i>
                                                     </button>
                                                 </form>

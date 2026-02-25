@@ -215,7 +215,7 @@
                                         <label for="confirmDeleteEmail">Confirmez votre email pour supprimer</label>
                                     </div>
                                     <button type="submit" class="btn btn-danger"
-                                            onclick="return confirm('Êtes-vous sûr de vouloir supprimer définitivement votre compte ?')">
+                                            data-confirm="Êtes-vous sûr de vouloir supprimer définitivement votre compte ?" data-confirm-type="danger">
                                         <i class="fas fa-exclamation-triangle me-1"></i> Supprimer définitivement mon compte
                                     </button>
                                 </form>
@@ -266,11 +266,11 @@
                 })
                 .then(r => r.json())
                 .then(data => {
-                    alert(data.message || 'Test terminé');
+                    appAlert(data.message || 'Test terminé', data.success !== false ? 'success' : 'danger');
                     window.location.reload();
                 })
                 .catch(() => {
-                    alert('Erreur lors du test de connexion');
+                    appAlert('Erreur lors du test de connexion', 'danger');
                     btn.disabled = false;
                     btn.innerHTML = '<i class="fas fa-vial"></i> Tester la connexion';
                 });
@@ -282,7 +282,7 @@
                 const cp = document.getElementById('confirmPassword').value;
                 if (np !== cp) {
                     e.preventDefault();
-                    alert('Les mots de passe ne correspondent pas.');
+                    appAlert('Les mots de passe ne correspondent pas.', 'warning');
                 }
             });
         </script>

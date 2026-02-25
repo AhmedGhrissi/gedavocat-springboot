@@ -310,8 +310,8 @@
     function submitForm(e) {
       e.preventDefault();
       const data = collectData();
-      if(!data.clientId)         { alert('Veuillez sélectionner un client.'); return; }
-      if(!data.items.length)     { alert('Veuillez ajouter au moins une prestation.'); return; }
+      if(!data.clientId)         { appAlert('Veuillez sélectionner un client.', 'warning'); return; }
+      if(!data.items.length)     { appAlert('Veuillez ajouter au moins une prestation.', 'warning'); return; }
       fetch('/api/invoices/'+invoiceId, {
         method:'PUT',
         headers:{'Content-Type':'application/json','X-CSRF-TOKEN':csrf},
@@ -320,7 +320,7 @@
         if(!r.ok) return r.text().then(t=>{throw new Error(t);});
         return r.json();
       }).then(()=>{ location.href='/invoices/'+invoiceId; })
-        .catch(err=>alert('Erreur : '+err.message));
+        .catch(err=>appAlert('Erreur : '+err.message, 'danger'));
     }
 
     window.addEventListener('DOMContentLoaded', ()=>{

@@ -271,7 +271,8 @@
     }
 
     function runWithProgress(btnEl, endpoint, confirmMsg) {
-        if (!confirm(confirmMsg)) return;
+        appConfirm(confirmMsg).then(function(ok) {
+        if (!ok) return;
         const originalHtml = btnEl.innerHTML;
         btnEl.disabled = true;
         btnEl.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> En cours...';
@@ -280,6 +281,7 @@
             .then(d => showToast(d.message || 'Terminé', d.success !== false))
             .catch(() => showToast('Erreur réseau', false))
             .finally(() => { btnEl.disabled = false; btnEl.innerHTML = originalHtml; });
+        });
     }
 
     function runGc(btn)        { runWithProgress(btn, '/api/admin/gc',               'Forcer le Garbage Collector JVM ?'); }

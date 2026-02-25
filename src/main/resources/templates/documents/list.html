@@ -86,7 +86,7 @@
                         </a>
                         <form th:action="@{/documents/{id}/delete(id=${doc.id})}" method="post" style="display: inline;">
                             <button type="submit" class="btn-icon btn-delete" title="Supprimer"
-                                    onclick="return confirm('Supprimer ce document ?')">
+                                    data-confirm="Supprimer ce document ?" data-confirm-type="danger">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </form>
@@ -238,7 +238,7 @@
                         uploadForm.action = uploadForm.action.replace('__CASE_ID__', selectedCaseId);
                     } else {
                         e.preventDefault();
-                        alert('Veuillez sélectionner un dossier');
+                        appAlert('Veuillez sélectionner un dossier', 'warning');
                         return false;
                     }
                 }

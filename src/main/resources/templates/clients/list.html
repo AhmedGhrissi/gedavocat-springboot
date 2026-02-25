@@ -116,7 +116,7 @@
                                             </a>
                                             <form th:action="@{/clients/{id}/delete(id=${client.id})}" method="post" style="display:inline">
                                                 <button type="submit" class="btn btn-sm btn-outline-danger" title="Supprimer"
-                                                        onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce client et tous ses dossiers ?')">
+                                                        data-confirm="Êtes-vous sûr de vouloir supprimer ce client et tous ses dossiers ?" data-confirm-type="danger">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
                                             </form>

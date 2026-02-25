@@ -320,7 +320,8 @@
     }
 
     function runGc(btn) {
-        if (!confirm('Forcer le Garbage Collector JVM ?')) return;
+        appConfirm('Forcer le Garbage Collector JVM ?').then(function(ok) {
+        if (!ok) return;
         const orig = btn.innerHTML;
         btn.disabled = true;
         btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> En cours...';
@@ -329,6 +330,7 @@
             .then(d => { showToastSys(d.message || 'GC terminé', true); window.location.reload(); })
             .catch(() => showToastSys('Erreur lors du GC', false))
             .finally(() => { btn.disabled = false; btn.innerHTML = orig; });
+        });
     }
     </script>
 </div>

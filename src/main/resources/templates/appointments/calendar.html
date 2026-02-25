@@ -470,7 +470,7 @@
                     })
                     .catch(error => {
                         console.error('Erreur lors du chargement des événements:', error);
-                        alert('Erreur lors du chargement du calendrier. Veuillez actualiser la page.');
+                        appAlert('Erreur lors du chargement du calendrier. Veuillez actualiser la page.', 'danger');
                         failureCallback(error);
                     });
             },

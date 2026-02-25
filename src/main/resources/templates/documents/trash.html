@@ -70,7 +70,9 @@
                         </form>
                         <form th:action="@{/documents/{id}/delete-permanent(id=${doc.id})}" method="post" style="display: inline;">
                             <button type="submit" class="btn-icon btn-delete" title="Supprimer définitivement"
-                                    onclick="return confirm('⚠️ ATTENTION : Cette action est irréversible !\n\nVoulez-vous vraiment supprimer définitivement ce document ?')">
+                                    data-confirm="⚠️ ATTENTION : Cette action est irréversible !
+
+Voulez-vous vraiment supprimer définitivement ce document ?" data-confirm-type="danger">
                                 <i class="fas fa-trash-alt"></i>
                             </button>
                         </form>

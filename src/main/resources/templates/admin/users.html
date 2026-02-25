@@ -663,7 +663,7 @@
                     })
                     .catch(function (err) {
                         console.error('adminLoadUser fetch error:', err);
-                        alert('Erreur lors du chargement : ' + err.message);
+                        appAlert('Erreur lors du chargement : ' + err.message, 'danger');
                         var target = mode === 'view' ? 'viewUserSpinner' : 'editUserSpinner';
                         document.getElementById(target).innerHTML = '<div class="alert alert-danger">Erreur de chargement</div>';
                     });
@@ -671,7 +671,8 @@
 
             /* ===================== Suppression ===================== */
             function confirmDelete(userId, userName) {
-                if (confirm('Supprimer définitivement l\'utilisateur ' + userName + ' ?\n⚠️ Cette action est irréversible.')) {
+                appConfirm('Supprimer définitivement l\'utilisateur ' + userName + ' ?\n⚠️ Cette action est irréversible.', { type: 'danger', confirmText: 'Supprimer' }).then(function(ok) {
+                if (ok) {
                     var csrfToken  = getCsrfToken();
                     var csrfHeader = getCsrfHeader();
                     var headers = {};
@@ -683,8 +684,9 @@
                         headers: headers
                     })
                     .then(function () { window.location.href = '/admin/users'; })
-                    .catch(function (err) { alert('Erreur réseau : ' + err.message); });
+                    .catch(function (err) { appAlert('Erreur réseau : ' + err.message, 'danger'); });
                 }
+                });
             }
         })();
     </script>

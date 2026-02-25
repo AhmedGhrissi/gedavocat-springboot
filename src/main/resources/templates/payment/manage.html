@@ -97,7 +97,7 @@
                           th:action="@{/subscription/cancel-subscription}" 
                           method="post" 
                           style="display: inline;"
-                          onsubmit="return confirm('Êtes-vous sûr de vouloir annuler votre abonnement ?');">
+                          data-confirm="Êtes-vous sûr de vouloir annuler votre abonnement ?" data-confirm-type="danger">
                         <button type="submit" class="btn btn-cancel">
                             <i class="fas fa-times-circle"></i> Annuler l'abonnement
                         </button>

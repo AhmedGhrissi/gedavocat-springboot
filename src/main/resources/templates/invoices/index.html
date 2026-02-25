@@ -292,7 +292,8 @@
 
     <script>
         function deleteInvoice(invoiceId) {
-            if (confirm('Êtes-vous sûr de vouloir supprimer cette facture ?')) {
+            appConfirm('Êtes-vous sûr de vouloir supprimer cette facture ?', { type: 'danger', confirmText: 'Supprimer' }).then(function(ok) {
+            if (!ok) return;
                 fetch('/api/invoices/' + invoiceId, {
                     method: 'DELETE',
                     headers: {
@@ -303,14 +304,14 @@
                     if (response.ok) {
                         window.location.reload();
                     } else {
-                        alert('Erreur lors de la suppression');
+                        appAlert('Erreur lors de la suppression', 'danger');
                     }
                 })
                 .catch(error => {
                     console.error('Erreur:', error);
-                    alert('Erreur lors de la suppression');
+                    appAlert('Erreur lors de la suppression', 'danger');
                 });
-            }
+            });
         }
     </script>
 </div>

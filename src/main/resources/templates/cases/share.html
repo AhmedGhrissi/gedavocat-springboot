@@ -136,7 +136,7 @@
                                       th:action="@{/cases/{id}/share/{linkId}/revoke(id=${case.id}, linkId=${link.id})}"
                                       method="post" class="ms-2">
                                     <button type="submit" class="btn btn-sm btn-outline-danger"
-                                            onclick="return confirm('Révoquer ce lien ?')">
+                                            data-confirm="Révoquer ce lien ?" data-confirm-type="danger">
                                         <i class="fas fa-ban"></i> Révoquer
                                     </button>
                                 </form>
@@ -153,7 +153,7 @@
             const input = document.getElementById('generatedLink');
             input.select();
             document.execCommand('copy');
-            alert('Lien copié dans le presse-papiers !');
+            appAlert('Lien copié dans le presse-papiers !', 'success');
         }
     </script>
 </div>
