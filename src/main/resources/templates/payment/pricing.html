@@ -28,30 +28,34 @@
 
             <!-- Pricing Cards -->
             <div class="pricing-grid">
-                <!-- SOLO -->
+                <!-- ESSENTIEL -->
                 <div class="pricing-card">
-                    <div class="plan-name">Solo</div>
+                    <div class="plan-name">Essentiel</div>
                     <div class="plan-description">
                         Parfait pour les avocats indépendants démarrant leur activité
                     </div>
                     <div class="price-container">
-                        <span class="price monthly-price">29€</span>
-                        <span class="price yearly-price" style="display: none;">23€</span>
+                        <span class="price monthly-price">49€</span>
+                        <span class="price yearly-price" style="display: none;">39€</span>
                         <span class="price-period">/mois</span>
-                        <span class="old-price yearly-price" style="display: none;">29€</span>
+                        <span class="old-price yearly-price" style="display: none;">49€</span>
                     </div>
                     <ul class="features-list">
                         <li class="feature-item">
                             <div class="feature-icon"><i class="fas fa-check"></i></div>
-                            <span><strong>5 clients</strong> maximum</span>
+                            <span><strong>10 clients</strong> maximum</span>
                         </li>
                         <li class="feature-item">
                             <div class="feature-icon"><i class="fas fa-check"></i></div>
-                            <span><strong>10 dossiers</strong> actifs</span>
+                            <span><strong>15 dossiers</strong> actifs</span>
                         </li>
                         <li class="feature-item">
                             <div class="feature-icon"><i class="fas fa-check"></i></div>
-                            <span><strong>5 GB</strong> de stockage</span>
+                            <span><strong>5 Go</strong> de stockage</span>
+                        </li>
+                        <li class="feature-item">
+                            <div class="feature-icon"><i class="fas fa-check"></i></div>
+                            <span><strong>5 signatures/mois</strong> (Yousign)</span>
                         </li>
                         <li class="feature-item">
                             <div class="feature-icon"><i class="fas fa-check"></i></div>
@@ -63,24 +67,20 @@
                         </li>
                         <li class="feature-item">
                             <div class="feature-icon disabled"><i class="fas fa-times"></i></div>
-                            <span style="color: #cbd5e1;">Signatures électroniques</span>
-                        </li>
-                        <li class="feature-item">
-                            <div class="feature-icon disabled"><i class="fas fa-times"></i></div>
                             <span style="color: #cbd5e1;">RPVA / e-Barreau</span>
                         </li>
                     </ul>
-                    <a th:href="@{/subscription/checkout(plan=SOLO,period=monthly)}" class="cta-button cta-secondary">
-                        Commencer gratuitement
+                    <a th:href="@{/subscription/checkout(plan=ESSENTIEL,period=monthly)}" class="cta-button cta-secondary">
+                        Essai gratuit 14 jours
                     </a>
                 </div>
 
-                <!-- CABINET (Featured) -->
+                <!-- PROFESSIONNEL (Featured) -->
                 <div class="pricing-card featured">
-                    <div class="featured-badge">⭐ Recommandé</div>
-                    <div class="plan-name">Cabinet</div>
+                    <div class="featured-badge">Le plus populaire</div>
+                    <div class="plan-name">Professionnel</div>
                     <div class="plan-description">
-                        Pour les cabinets établis avec plusieurs collaborateurs
+                        Pour les cabinets établis avec collaborateurs et huissiers
                     </div>
                     <div class="price-container">
                         <span class="price monthly-price">99€</span>
@@ -91,7 +91,7 @@
                     <ul class="features-list">
                         <li class="feature-item">
                             <div class="feature-icon"><i class="fas fa-check"></i></div>
-                            <span><strong>50 clients</strong> maximum</span>
+                            <span><strong>75 clients</strong> maximum</span>
                         </li>
                         <li class="feature-item">
                             <div class="feature-icon"><i class="fas fa-check"></i></div>
@@ -99,15 +99,11 @@
                         </li>
                         <li class="feature-item">
                             <div class="feature-icon"><i class="fas fa-check"></i></div>
-                            <span><strong>100 GB</strong> de stockage</span>
+                            <span><strong>50 Go</strong> de stockage</span>
                         </li>
                         <li class="feature-item">
                             <div class="feature-icon"><i class="fas fa-check"></i></div>
-                            <span>Gestion documentaire avancée</span>
-                        </li>
-                        <li class="feature-item">
-                            <div class="feature-icon"><i class="fas fa-check"></i></div>
-                            <span><strong>5 signatures/mois</strong> (Yousign)</span>
+                            <span><strong>30 signatures/mois</strong> (Yousign)</span>
                         </li>
                         <li class="feature-item">
                             <div class="feature-icon"><i class="fas fa-check"></i></div>
@@ -115,29 +111,33 @@
                         </li>
                         <li class="feature-item">
                             <div class="feature-icon"><i class="fas fa-check"></i></div>
-                            <span><strong>3 utilisateurs</strong> inclus</span>
+                            <span><strong>3 collaborateurs</strong> + 2 huissiers</span>
+                        </li>
+                        <li class="feature-item">
+                            <div class="feature-icon"><i class="fas fa-check"></i></div>
+                            <span>Rappels email automatiques</span>
                         </li>
                         <li class="feature-item">
                             <div class="feature-icon"><i class="fas fa-check"></i></div>
                             <span>Support prioritaire</span>
                         </li>
                     </ul>
-                    <a th:href="@{/subscription/checkout(plan=CABINET,period=monthly)}" class="cta-button cta-primary" style="border-radius:var(--radius-lg);font-weight:600">
-                        Démarrer maintenant
+                    <a th:href="@{/subscription/checkout(plan=PROFESSIONNEL,period=monthly)}" class="cta-button cta-primary" style="border-radius:var(--radius-lg);font-weight:600">
+                        Essai gratuit 14 jours
                     </a>
                 </div>
 
-                <!-- ENTERPRISE -->
+                <!-- CABINET+ -->
                 <div class="pricing-card">
-                    <div class="plan-name">Entreprise</div>
+                    <div class="plan-name">Cabinet+</div>
                     <div class="plan-description">
-                        Pour les grands cabinets avec besoins personnalisés
+                        Pour les grands cabinets avec besoins illimités
                     </div>
                     <div class="price-container">
-                        <span class="price monthly-price">299€</span>
-                        <span class="price yearly-price" style="display: none;">239€</span>
+                        <span class="price monthly-price">199€</span>
+                        <span class="price yearly-price" style="display: none;">159€</span>
                         <span class="price-period">/mois</span>
-                        <span class="old-price yearly-price" style="display: none;">299€</span>
+                        <span class="old-price yearly-price" style="display: none;">199€</span>
                     </div>
                     <ul class="features-list">
                         <li class="feature-item">
@@ -150,31 +150,31 @@
                         </li>
                         <li class="feature-item">
                             <div class="feature-icon"><i class="fas fa-check"></i></div>
-                            <span><strong>1 TB</strong> de stockage</span>
+                            <span><strong>500 Go</strong> de stockage</span>
                         </li>
                         <li class="feature-item">
                             <div class="feature-icon"><i class="fas fa-check"></i></div>
-                            <span>Toutes fonctionnalités Cabinet</span>
+                            <span><strong>Signatures illimitées</strong></span>
                         </li>
                         <li class="feature-item">
                             <div class="feature-icon"><i class="fas fa-check"></i></div>
-                            <span><strong>30 signatures/mois</strong> incluses</span>
+                            <span>Toutes fonctionnalités Professionnel</span>
                         </li>
                         <li class="feature-item">
                             <div class="feature-icon"><i class="fas fa-check"></i></div>
-                            <span><strong>Utilisateurs illimités</strong></span>
+                            <span><strong>Collaborateurs illimités</strong></span>
                         </li>
                         <li class="feature-item">
                             <div class="feature-icon"><i class="fas fa-check"></i></div>
-                            <span>API personnalisée</span>
+                            <span>Formation personnalisée incluse</span>
                         </li>
                         <li class="feature-item">
                             <div class="feature-icon"><i class="fas fa-check"></i></div>
-                            <span>Support dédié 24/7</span>
+                            <span>Support dédié prioritaire</span>
                         </li>
                     </ul>
-                    <a th:href="@{/contact}" class="cta-button cta-secondary">
-                        Nous contacter
+                    <a th:href="@{/subscription/checkout(plan=CABINET_PLUS,period=monthly)}" class="cta-button cta-secondary">
+                        Essai gratuit 14 jours
                     </a>
                 </div>
             </div>
@@ -265,7 +265,7 @@
                 <div class="faq-item">
                     <div class="faq-question">📧 Quel support proposez-vous ?</div>
                     <div class="faq-answer">
-                        Support email pour Solo, support prioritaire pour Cabinet, support dédié 24/7 pour Entreprise.
+                        Support email pour Essentiel, support prioritaire pour Professionnel, support dédié prioritaire pour Cabinet+.
                     </div>
                 </div>
             </div>
@@ -300,19 +300,23 @@
             }
             
             function updateCheckoutLinks(period) {
-                // SOLO
-                const soloBtn = document.querySelector('a[href*="plan=SOLO"]');
-                if (soloBtn) {
-                    soloBtn.href = `/subscription/checkout?plan=SOLO&period=${period}`;
+                // ESSENTIEL
+                const essentielBtn = document.querySelector('a[href*="plan=ESSENTIEL"]');
+                if (essentielBtn) {
+                    essentielBtn.href = `/subscription/checkout?plan=ESSENTIEL&period=${period}`;
                 }
                 
-                // CABINET
-                const cabinetBtn = document.querySelector('a[href*="plan=CABINET"]');
-                if (cabinetBtn) {
-                    cabinetBtn.href = `/subscription/checkout?plan=CABINET&period=${period}`;
+                // PROFESSIONNEL
+                const professionnelBtn = document.querySelector('a[href*="plan=PROFESSIONNEL"]');
+                if (professionnelBtn) {
+                    professionnelBtn.href = `/subscription/checkout?plan=PROFESSIONNEL&period=${period}`;
                 }
                 
-                // ENTERPRISE - pas de changement, c'est un lien de contact
+                // CABINET_PLUS
+                const cabinetPlusBtn = document.querySelector('a[href*="plan=CABINET_PLUS"]');
+                if (cabinetPlusBtn) {
+                    cabinetPlusBtn.href = `/subscription/checkout?plan=CABINET_PLUS&period=${period}`;
+                }
             }
         </script>
     </div>

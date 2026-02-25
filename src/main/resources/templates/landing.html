@@ -80,9 +80,9 @@
           "url": "https://docavocat.fr",
           "description": "Solution SaaS de gestion électronique de documents pour cabinets d'avocats. Gérez vos dossiers, clients, documents et communiquez via RPVA e-Barreau.",
           "offers": [
-            { "@type": "Offer", "name": "Solo",       "price": "29.99",  "priceCurrency": "EUR", "description": "Jusqu'à 10 clients, stockage 5 GB, gestion documentaire",                          "url": "https://docavocat.fr/register?plan=SOLO" },
-            { "@type": "Offer", "name": "Cabinet",    "price": "99.99",  "priceCurrency": "EUR", "description": "Jusqu'à 100 clients, 50 GB, signatures électroniques, RPVA",               "url": "https://docavocat.fr/register?plan=CABINET" },
-            { "@type": "Offer", "name": "Enterprise", "price": "299.99", "priceCurrency": "EUR", "description": "Clients illimités, 500 GB, API complète, support 24/7, formation", "url": "https://docavocat.fr/register?plan=ENTERPRISE" }
+            { "@type": "Offer", "name": "Essentiel",       "price": "49",  "priceCurrency": "EUR", "description": "Jusqu'à 10 clients, stockage 5 Go, 5 signatures/mois",                          "url": "https://docavocat.fr/register?plan=ESSENTIEL" },
+            { "@type": "Offer", "name": "Professionnel",    "price": "99",  "priceCurrency": "EUR", "description": "Jusqu'à 75 clients, 50 Go, 30 signatures/mois, RPVA, 3 collaborateurs",               "url": "https://docavocat.fr/register?plan=PROFESSIONNEL" },
+            { "@type": "Offer", "name": "Cabinet+", "price": "199", "priceCurrency": "EUR", "description": "Clients illimités, 500 Go, signatures illimitées, formation incluse", "url": "https://docavocat.fr/register?plan=CABINET_PLUS" }
           ],
           "featureList": [
             "Gestion des dossiers juridiques",
@@ -103,7 +103,7 @@
           "@type": "FAQPage",
           "mainEntity": [
             { "@type": "Question", "name": "DocAvocat est-il conforme aux exigences du barreau ?",      "acceptedAnswer": { "@type": "Answer", "text": "Oui, DocAvocat intègre les communications RPVA (Réseau Privé Virtuel des Avocats) et est conçu pour répondre aux exigences de confidentialité et sécurité imposées par les barreaux français." } },
-            { "@type": "Question", "name": "Puis-je signer des documents électroniquement ?",           "acceptedAnswer": { "@type": "Answer", "text": "Oui, les formules Cabinet et Enterprise incluent la signature électronique qualifiée via Yousign, conforme au règlement eIDAS." } },
+            { "@type": "Question", "name": "Puis-je signer des documents électroniquement ?",           "acceptedAnswer": { "@type": "Answer", "text": "Oui, toutes les formules incluent la signature électronique qualifiée via Yousign, conforme au règlement eIDAS. Essentiel inclut 5 signatures/mois, Professionnel 30/mois, et Cabinet+ en illimité." } },
             { "@type": "Question", "name": "Mes données sont-elles sécurisées ?",                       "acceptedAnswer": { "@type": "Answer", "text": "DocAvocat garantit la conformité RGPD, le chiffrement des données et l'hébergement en France. Vos données restent confidentielles et sous votre contrôle exclusif." } },
             { "@type": "Question", "name": "Y a-t-il une période d'essai gratuite ?",                   "acceptedAnswer": { "@type": "Answer", "text": "Oui, chaque formule bénéficie de 14 jours d'essai gratuit sans engagement et sans carte bancaire requise." } },
             { "@type": "Question", "name": "Puis-je importer mes anciens dossiers et documents ?",      "acceptedAnswer": { "@type": "Answer", "text": "Oui, DocAvocat permet l'import de documents PDF, Word et images. Notre équipe support vous accompagne lors de la migration." } }
@@ -161,56 +161,58 @@
             
             <div class="pricing-grid">
                 
-                <!-- Plan Solo -->
+                <!-- Plan Essentiel -->
                 <div class="pricing-card">
-                    <div class="plan-name">Solo</div>
+                    <div class="plan-name">Essentiel</div>
                     <div class="plan-price">
-                        <span class="lp-monthly">29€<small>/mois</small></span>
-                        <span class="lp-yearly" style="display:none;">23€<small>/mois</small> <small style="text-decoration:line-through;color:#a0aec0;font-size:1rem;">29€</small></span>
+                        <span class="lp-monthly">49€<small>/mois</small></span>
+                        <span class="lp-yearly" style="display:none;">39€<small>/mois</small> <small style="text-decoration:line-through;color:#a0aec0;font-size:1rem;">49€</small></span>
                     </div>
                     <ul class="plan-features">
-                        <li>Jusqu'à 5 clients</li>
-                        <li>Stockage 5 GB</li>
+                        <li>Jusqu'à 10 clients</li>
+                        <li>Stockage 5 Go</li>
+                        <li>5 signatures/mois</li>
                         <li>Gestion documentaire</li>
                         <li>Support email</li>
                     </ul>
-                    <a th:href="@{/register(plan=SOLO,billing=monthly)}" class="btn-select">Choisir Solo</a>
+                    <a th:href="@{/register(plan=ESSENTIEL,billing=monthly)}" class="btn-select">Choisir Essentiel</a>
                 </div>
 
-                <!-- Plan Cabinet (Popular) -->
+                <!-- Plan Professionnel (Popular) -->
                 <div class="pricing-card popular">
-                    <span class="popular-badge">⭐ Populaire</span>
-                    <div class="plan-name">Cabinet</div>
+                    <span class="popular-badge">Le plus populaire</span>
+                    <div class="plan-name">Professionnel</div>
                     <div class="plan-price">
                         <span class="lp-monthly">99€<small>/mois</small></span>
                         <span class="lp-yearly" style="display:none;">79€<small>/mois</small> <small style="text-decoration:line-through;color:#a0aec0;font-size:1rem;">99€</small></span>
                     </div>
                     <ul class="plan-features">
-                        <li>Jusqu'à 50 clients</li>
-                        <li>Stockage 100 GB</li>
-                        <li>Signatures électroniques (Yousign)</li>
-                        <li>Communications RPVA</li>
+                        <li>Jusqu'à 75 clients</li>
+                        <li>Stockage 50 Go</li>
+                        <li>30 signatures/mois (Yousign)</li>
+                        <li>RPVA / e-Barreau</li>
+                        <li>3 collaborateurs + 2 huissiers</li>
                         <li>Support prioritaire</li>
                     </ul>
-                    <a th:href="@{/register(plan=CABINET,billing=monthly)}" class="btn-select">Choisir Cabinet</a>
+                    <a th:href="@{/register(plan=PROFESSIONNEL,billing=monthly)}" class="btn-select">Choisir Professionnel</a>
                 </div>
 
-                <!-- Plan Enterprise -->
+                <!-- Plan Cabinet+ -->
                 <div class="pricing-card">
-                    <div class="plan-name">Entreprise</div>
+                    <div class="plan-name">Cabinet+</div>
                     <div class="plan-price">
-                        <span class="lp-monthly">299€<small>/mois</small></span>
-                        <span class="lp-yearly" style="display:none;">239€<small>/mois</small> <small style="text-decoration:line-through;color:#a0aec0;font-size:1rem;">299€</small></span>
+                        <span class="lp-monthly">199€<small>/mois</small></span>
+                        <span class="lp-yearly" style="display:none;">159€<small>/mois</small> <small style="text-decoration:line-through;color:#a0aec0;font-size:1rem;">199€</small></span>
                     </div>
                     <ul class="plan-features">
                         <li>Clients illimités</li>
-                        <li>Stockage 1 TB</li>
-                        <li>Toutes les fonctionnalités</li>
-                        <li>API complète</li>
-                        <li>Support dédié 24/7</li>
+                        <li>Stockage 500 Go</li>
+                        <li>Signatures illimitées</li>
+                        <li>Collaborateurs illimités</li>
                         <li>Formation personnalisée</li>
+                        <li>Support dédié prioritaire</li>
                     </ul>
-                    <a th:href="@{/register(plan=ENTERPRISE,billing=monthly)}" class="btn-select">Choisir Entreprise</a>
+                    <a th:href="@{/register(plan=CABINET_PLUS,billing=monthly)}" class="btn-select">Choisir Cabinet+</a>
                 </div>
 
             </div>

@@ -29,14 +29,14 @@ public class StripePaymentService {
     @Value("${stripe.webhook.secret:}")
     private String webhookSecret;
     
-    @Value("${app.subscription.solo.price:29.99}")
-    private double soloPlanPrice;
+    @Value("${app.subscription.essentiel.price:49}")
+    private double essentielPlanPrice;
     
-    @Value("${app.subscription.cabinet.price:99.99}")
-    private double cabinetPlanPrice;
+    @Value("${app.subscription.professionnel.price:99}")
+    private double professionnelPlanPrice;
     
-    @Value("${app.subscription.enterprise.price:299.99}")
-    private double enterprisePlanPrice;
+    @Value("${app.subscription.cabinet-plus.price:199}")
+    private double cabinetPlusPlanPrice;
     
     private final UserRepository userRepository;
     
@@ -192,13 +192,13 @@ public class StripePaymentService {
             
             // Définir les limites selon le plan
             switch (planType.toLowerCase()) {
-                case "solo":
+                case "essentiel":
                     user.setMaxClients(10);
                     break;
-                case "cabinet":
-                    user.setMaxClients(100);
+                case "professionnel":
+                    user.setMaxClients(75);
                     break;
-                case "enterprise":
+                case "cabinet_plus":
                     user.setMaxClients(Integer.MAX_VALUE);
                     break;
             }
@@ -276,9 +276,9 @@ public class StripePaymentService {
      */
     private double getPriceForPlan(String planType) {
         switch (planType.toLowerCase()) {
-            case "solo": return soloPlanPrice;
-            case "cabinet": return cabinetPlanPrice;
-            case "enterprise": return enterprisePlanPrice;
+            case "essentiel": return essentielPlanPrice;
+            case "professionnel": return professionnelPlanPrice;
+            case "cabinet_plus": return cabinetPlusPlanPrice;
             default: throw new IllegalArgumentException("Plan inconnu: " + planType);
         }
     }
@@ -288,14 +288,14 @@ public class StripePaymentService {
      */
     private String getDescriptionForPlan(String planType) {
         switch (planType.toLowerCase()) {
-            case "solo":
-                return "Plan Solo - Jusqu'à 10 clients - 10 GB de stockage";
-            case "cabinet":
-                return "Plan Cabinet - Jusqu'à 100 clients - 100 GB de stockage";
-            case "enterprise":
-                return "Plan Enterprise - Clients illimités - 1 TB de stockage";
+            case "essentiel":
+                return "Plan Essentiel - Jusqu'à 10 clients - 5 Go de stockage";
+            case "professionnel":
+                return "Plan Professionnel - Jusqu'à 75 clients - 50 Go de stockage - RPVA";
+            case "cabinet_plus":
+                return "Plan Cabinet+ - Clients illimités - 500 Go de stockage - Support dédié";
             default:
-                return "Abonnement GED Avocat";
+                return "Abonnement DocAvocat";
         }
     }
     

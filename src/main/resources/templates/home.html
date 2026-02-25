@@ -175,59 +175,59 @@
         </div>
         <div class="pricing-grid">
             <div class="pricing-card">
-                <div class="plan-name">Solo</div>
+                <div class="plan-name">Essentiel</div>
                 <div class="plan-desc">Pour l'avocat indépendant</div>
-                <div class="price-original" id="originalSolo"></div>
-                <div class="price" id="priceSolo">29,99 € <span>/mois</span></div>
-                <div class="price-period" id="periodSolo">Facturation mensuelle</div>
+                <div class="price-original" id="originalEssentiel"></div>
+                <div class="price" id="priceEssentiel">49 € <span>/mois</span></div>
+                <div class="price-period" id="periodEssentiel">Facturation mensuelle</div>
                 <ul>
                     <li><i class="fas fa-check"></i> Jusqu'à 10 clients</li>
-                    <li><i class="fas fa-check"></i> Gestion des dossiers</li>
+                    <li><i class="fas fa-check"></i> 15 dossiers actifs</li>
                     <li><i class="fas fa-check"></i> Stockage documents 5 Go</li>
-                    <li><i class="fas fa-check"></i> 10 signatures / mois</li>
+                    <li><i class="fas fa-check"></i> 5 signatures / mois</li>
                     <li><i class="fas fa-check"></i> Calendrier & rendez-vous</li>
                     <li><i class="fas fa-check"></i> Facturation</li>
                     <li class="disabled"><i class="fas fa-times"></i> Partage collaborateur</li>
                     <li class="disabled"><i class="fas fa-times"></i> RPVA e-Barreau</li>
                 </ul>
-                <a th:href="@{/register(plan=SOLO,billing=monthly)}" class="btn btn-outline btn-lg btn-subscribe" data-plan="SOLO">Commencer maintenant</a>
+                <a th:href="@{/register(plan=ESSENTIEL,billing=monthly)}" class="btn btn-outline btn-lg btn-subscribe" data-plan="ESSENTIEL">Essai gratuit 14 jours</a>
             </div>
             <div class="pricing-card popular">
                 <div class="popular-badge">LE PLUS POPULAIRE</div>
-                <div class="plan-name">Cabinet</div>
+                <div class="plan-name">Professionnel</div>
                 <div class="plan-desc">Pour les cabinets en croissance</div>
-                <div class="price-original" id="originalCabinet"></div>
-                <div class="price" id="priceCabinet">99,99 € <span>/mois</span></div>
-                <div class="price-period" id="periodCabinet">Facturation mensuelle</div>
+                <div class="price-original" id="originalProfessionnel"></div>
+                <div class="price" id="priceProfessionnel">99 € <span>/mois</span></div>
+                <div class="price-period" id="periodProfessionnel">Facturation mensuelle</div>
                 <ul>
-                    <li><i class="fas fa-check"></i> Jusqu'à 100 clients</li>
-                    <li><i class="fas fa-check"></i> Gestion des dossiers</li>
+                    <li><i class="fas fa-check"></i> Jusqu'à 75 clients</li>
+                    <li><i class="fas fa-check"></i> Dossiers illimités</li>
                     <li><i class="fas fa-check"></i> Stockage documents 50 Go</li>
-                    <li><i class="fas fa-check"></i> 50 signatures / mois</li>
+                    <li><i class="fas fa-check"></i> 30 signatures / mois</li>
                     <li><i class="fas fa-check"></i> Calendrier & rendez-vous</li>
                     <li><i class="fas fa-check"></i> Facturation</li>
-                    <li><i class="fas fa-check"></i> Partage collaborateur</li>
+                    <li><i class="fas fa-check"></i> 3 collaborateurs + 2 huissiers</li>
                     <li><i class="fas fa-check"></i> RPVA e-Barreau</li>
                 </ul>
-                <a th:href="@{/register(plan=CABINET,billing=monthly)}" class="btn btn-primary btn-lg btn-subscribe" data-plan="CABINET">Commencer maintenant</a>
+                <a th:href="@{/register(plan=PROFESSIONNEL,billing=monthly)}" class="btn btn-primary btn-lg btn-subscribe" data-plan="PROFESSIONNEL">Essai gratuit 14 jours</a>
             </div>
             <div class="pricing-card">
-                <div class="plan-name">Entreprise</div>
+                <div class="plan-name">Cabinet+</div>
                 <div class="plan-desc">Pour les grands cabinets</div>
-                <div class="price-original" id="originalEnterprise"></div>
-                <div class="price" id="priceEnterprise">299,99 € <span>/mois</span></div>
-                <div class="price-period" id="periodEnterprise">Facturation mensuelle</div>
+                <div class="price-original" id="originalCabinetPlus"></div>
+                <div class="price" id="priceCabinetPlus">199 € <span>/mois</span></div>
+                <div class="price-period" id="periodCabinetPlus">Facturation mensuelle</div>
                 <ul>
                     <li><i class="fas fa-check"></i> Clients illimités</li>
-                    <li><i class="fas fa-check"></i> Gestion des dossiers</li>
-                    <li><i class="fas fa-check"></i> Stockage illimité</li>
+                    <li><i class="fas fa-check"></i> Dossiers illimités</li>
+                    <li><i class="fas fa-check"></i> Stockage 500 Go</li>
                     <li><i class="fas fa-check"></i> Signatures illimitées</li>
                     <li><i class="fas fa-check"></i> Calendrier & rendez-vous</li>
                     <li><i class="fas fa-check"></i> Facturation</li>
-                    <li><i class="fas fa-check"></i> Partage collaborateur</li>
+                    <li><i class="fas fa-check"></i> Collaborateurs illimités</li>
                     <li><i class="fas fa-check"></i> RPVA e-Barreau</li>
                 </ul>
-                <a th:href="@{/register(plan=ENTERPRISE,billing=monthly)}" class="btn btn-outline btn-lg btn-subscribe" data-plan="ENTERPRISE">Commencer maintenant</a>
+                <a th:href="@{/register(plan=CABINET_PLUS,billing=monthly)}" class="btn btn-outline btn-lg btn-subscribe" data-plan="CABINET_PLUS">Essai gratuit 14 jours</a>
             </div>
         </div>
     </div>
@@ -246,26 +246,27 @@
 
 <script>
 let isAnnual = false;
-const prices = { SOLO:{monthly:29.99,annual:23.99}, CABINET:{monthly:99.99,annual:79.99}, ENTERPRISE:{monthly:299.99,annual:239.99} };
+const prices = { ESSENTIEL:{monthly:49,annual:39}, PROFESSIONNEL:{monthly:99,annual:79}, CABINET_PLUS:{monthly:199,annual:159} };
+const planIds = {ESSENTIEL:'Essentiel',PROFESSIONNEL:'Professionnel',CABINET_PLUS:'CabinetPlus'};
 function toggleBilling(){
     isAnnual=!isAnnual;
     document.getElementById('billingToggle').classList.toggle('annual',isAnnual);
     document.getElementById('labelMonthly').classList.toggle('active',!isAnnual);
     document.getElementById('labelAnnual').classList.toggle('active',isAnnual);
-    ['Solo','Cabinet','Enterprise'].forEach(function(plan){
-        var key=plan.toUpperCase();
-        var priceEl=document.getElementById('price'+plan);
-        var originalEl=document.getElementById('original'+plan);
-        var periodEl=document.getElementById('period'+plan);
+    Object.keys(prices).forEach(function(key){
+        var id=planIds[key];
+        var priceEl=document.getElementById('price'+id);
+        var originalEl=document.getElementById('original'+id);
+        var periodEl=document.getElementById('period'+id);
         if(isAnnual){
             var m=prices[key].monthly, a=prices[key].annual;
-            originalEl.textContent=m.toFixed(2).replace('.',',')+' \u20AC/mois';
+            originalEl.textContent=m+' \u20AC/mois';
             originalEl.classList.add('show');
-            priceEl.innerHTML=a.toFixed(2).replace('.',',')+' \u20AC <span>/mois</span>';
-            periodEl.textContent='Facturation annuelle \u2014 '+(a*12).toFixed(2).replace('.',',')+' \u20AC/an';
+            priceEl.innerHTML=a+' \u20AC <span>/mois</span>';
+            periodEl.textContent='Facturation annuelle \u2014 '+(a*12)+' \u20AC/an';
         } else {
             originalEl.classList.remove('show');
-            priceEl.innerHTML=prices[key].monthly.toFixed(2).replace('.',',')+' \u20AC <span>/mois</span>';
+            priceEl.innerHTML=prices[key].monthly+' \u20AC <span>/mois</span>';
             periodEl.textContent='Facturation mensuelle';
         }
     });

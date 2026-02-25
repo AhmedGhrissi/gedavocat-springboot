@@ -44,7 +44,7 @@ public class RegisterRequest {
     private String role = "LAWYER"; // Par défaut: avocat
     
     // Nouveau champ pour le plan d'abonnement
-    private String subscriptionPlan; // SOLO, CABINET, ENTERPRISE
+    private String subscriptionPlan; // ESSENTIEL, PROFESSIONNEL, CABINET_PLUS
     
     private Boolean termsAccepted = false;
     private Boolean gdprConsent = false;

@@ -191,14 +191,14 @@ public class StripeService {
         long baseAmount;
 
         switch (plan.toUpperCase()) {
-            case "SOLO":
-                baseAmount = 29;
+            case "ESSENTIEL":
+                baseAmount = 49;
                 break;
-            case "CABINET":
+            case "PROFESSIONNEL":
                 baseAmount = 99;
                 break;
-            case "ENTERPRISE":
-                baseAmount = 299;
+            case "CABINET_PLUS":
+                baseAmount = 199;
                 break;
             default:
                 return 0;
@@ -217,12 +217,12 @@ public class StripeService {
      */
     private String getPlanDisplayName(String plan) {
         switch (plan.toUpperCase()) {
-            case "SOLO":
-                return "Solo";
-            case "CABINET":
-                return "Cabinet";
-            case "ENTERPRISE":
-                return "Enterprise";
+            case "ESSENTIEL":
+                return "Essentiel";
+            case "PROFESSIONNEL":
+                return "Professionnel";
+            case "CABINET_PLUS":
+                return "Cabinet+";
             default:
                 return "Inconnu";
         }

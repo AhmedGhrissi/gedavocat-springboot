@@ -27,58 +27,58 @@
         <div class="plan-recap">
             <h2>Votre offre</h2>
             <div class="plan-card">
-                <!-- Solo -->
-                <div th:if="${selectedPlan == 'SOLO' or selectedPlan == null}">
-                    <div class="plan-name">Plan Solo</div>
+                <!-- Essentiel -->
+                <div th:if="${selectedPlan == 'ESSENTIEL' or selectedPlan == null}">
+                    <div class="plan-name">Plan Essentiel</div>
                     <div class="plan-title">Avocat indépendant</div>
                     <div class="plan-price" th:if="${selectedBilling == 'annual'}">
-                        <strong>23,99 €</strong>/mois <small>(facturé annuellement)</small>
+                        <strong>39 €</strong>/mois <small>(facturé annuellement)</small>
                     </div>
                     <div class="plan-price" th:if="${selectedBilling != 'annual'}">
-                        <strong>29,99 €</strong>/mois
+                        <strong>49 €</strong>/mois
                     </div>
                     <ul>
                         <li><i class="fas fa-check"></i> Jusqu'à 10 clients</li>
-                        <li><i class="fas fa-check"></i> Gestion des dossiers</li>
-                        <li><i class="fas fa-check"></i> 10 signatures / mois</li>
+                        <li><i class="fas fa-check"></i> 15 dossiers actifs</li>
+                        <li><i class="fas fa-check"></i> 5 signatures / mois</li>
                         <li><i class="fas fa-check"></i> Calendrier & rendez-vous</li>
                         <li><i class="fas fa-check"></i> Facturation</li>
                     </ul>
                 </div>
-                <!-- Cabinet -->
-                <div th:if="${selectedPlan == 'CABINET'}">
-                    <div class="plan-name">Plan Cabinet</div>
+                <!-- Professionnel -->
+                <div th:if="${selectedPlan == 'PROFESSIONNEL'}">
+                    <div class="plan-name">Plan Professionnel</div>
                     <div class="plan-title">Cabinet en croissance</div>
                     <div class="plan-price" th:if="${selectedBilling == 'annual'}">
-                        <strong>79,99 €</strong>/mois <small>(facturé annuellement)</small>
+                        <strong>79 €</strong>/mois <small>(facturé annuellement)</small>
                     </div>
                     <div class="plan-price" th:if="${selectedBilling != 'annual'}">
-                        <strong>99,99 €</strong>/mois
+                        <strong>99 €</strong>/mois
                     </div>
                     <ul>
-                        <li><i class="fas fa-check"></i> Jusqu'à 100 clients</li>
-                        <li><i class="fas fa-check"></i> Gestion des dossiers</li>
-                        <li><i class="fas fa-check"></i> 50 signatures / mois</li>
-                        <li><i class="fas fa-check"></i> Partage collaborateur</li>
+                        <li><i class="fas fa-check"></i> Jusqu'à 75 clients</li>
+                        <li><i class="fas fa-check"></i> Dossiers illimités</li>
+                        <li><i class="fas fa-check"></i> 30 signatures / mois</li>
+                        <li><i class="fas fa-check"></i> 3 collaborateurs + 2 huissiers</li>
                         <li><i class="fas fa-check"></i> RPVA e-Barreau</li>
                     </ul>
                 </div>
-                <!-- Enterprise -->
-                <div th:if="${selectedPlan == 'ENTERPRISE'}">
-                    <div class="plan-name">Plan Entreprise</div>
+                <!-- Cabinet+ -->
+                <div th:if="${selectedPlan == 'CABINET_PLUS'}">
+                    <div class="plan-name">Plan Cabinet+</div>
                     <div class="plan-title">Grand cabinet</div>
                     <div class="plan-price" th:if="${selectedBilling == 'annual'}">
-                        <strong>239,99 €</strong>/mois <small>(facturé annuellement)</small>
+                        <strong>159 €</strong>/mois <small>(facturé annuellement)</small>
                     </div>
                     <div class="plan-price" th:if="${selectedBilling != 'annual'}">
-                        <strong>299,99 €</strong>/mois
+                        <strong>199 €</strong>/mois
                     </div>
                     <ul>
                         <li><i class="fas fa-check"></i> Clients illimités</li>
-                        <li><i class="fas fa-check"></i> Stockage illimité</li>
+                        <li><i class="fas fa-check"></i> Stockage 500 Go</li>
                         <li><i class="fas fa-check"></i> Signatures illimitées</li>
-                        <li><i class="fas fa-check"></i> Partage collaborateur</li>
-                        <li><i class="fas fa-check"></i> RPVA e-Barreau</li>
+                        <li><i class="fas fa-check"></i> Collaborateurs illimités</li>
+                        <li><i class="fas fa-check"></i> Formation personnalisée</li>
                     </ul>
                 </div>
             </div>

@@ -183,9 +183,9 @@ public class User {
     }
 
     public enum SubscriptionPlan {
-        SOLO("Solo", 29.99, 10),
-        CABINET("Cabinet", 99.99, 100),
-        ENTERPRISE("Enterprise", 299.99, Integer.MAX_VALUE);
+        ESSENTIEL("Essentiel", 49.0, 10),
+        PROFESSIONNEL("Professionnel", 99.0, 75),
+        CABINET_PLUS("Cabinet+", 199.0, Integer.MAX_VALUE);
 
         private final String displayName;
         private final double price;

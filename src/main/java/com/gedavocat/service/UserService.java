@@ -192,7 +192,7 @@ public class UserService {
 
         // Pour les avocats, définir un abonnement par défaut
         if (UserRole.valueOf(role) == UserRole.LAWYER) {
-            user.setSubscriptionPlan(User.SubscriptionPlan.SOLO);
+            user.setSubscriptionPlan(User.SubscriptionPlan.ESSENTIEL);
             user.setSubscriptionStatus(User.SubscriptionStatus.ACTIVE);
             user.setMaxClients(10);
             user.setSubscriptionStartDate(LocalDateTime.now());

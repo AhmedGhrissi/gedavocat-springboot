@@ -222,8 +222,8 @@
                                 </td>
                                 <td>
                                     <span th:if="${user.subscriptionPlan != null}" 
-                                          th:text="${user.subscriptionPlan}"
-                                          class="badge bg-success">SOLO</span>
+                                          th:text="${user.subscriptionPlan.displayName}"
+                                          class="badge bg-success">Essentiel</span>
                                     <span th:unless="${user.subscriptionPlan != null}" class="text-muted">-</span>
                                 </td>
                                 <td th:text="${user.updatedAt != null ? #temporals.format(user.updatedAt, 'dd/MM/yyyy HH:mm') : 'N/A'}">
@@ -506,7 +506,7 @@
                         <!-- Info abonnement (avocat uniquement) -->
                         <div id="subscriptionInfo" class="alert alert-info mb-0">
                             <i class="fas fa-info-circle"></i>
-                            L'avocat sera créé avec un abonnement <strong>SOLO</strong> actif (10 clients max).
+                            L'avocat sera créé avec un abonnement <strong>Essentiel</strong> actif (10 clients max).
                         </div>
                     </div>
                     <div class="modal-footer">
