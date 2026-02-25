@@ -26,6 +26,7 @@ public class AppointmentService {
 
     private final AppointmentRepository appointmentRepository;
     private final UserRepository userRepository;
+    private final AppointmentReminderService appointmentReminderService;
 
     /**
      * Crée un nouveau rendez-vous
@@ -49,7 +50,16 @@ public class AppointmentService {
             throw new RuntimeException("Conflit d'horaire: un autre rendez-vous existe déjà à cette heure");
         }
 
-        return appointmentRepository.save(appointment);
+        Appointment saved = appointmentRepository.save(appointment);
+
+        // Envoyer les notifications (email) de manière asynchrone
+        try {
+            appointmentReminderService.sendAppointmentCreatedNotification(saved);
+        } catch (Exception e) {
+            log.error("Erreur notification création rendez-vous: {}", e.getMessage());
+        }
+
+        return saved;
     }
 
     /**
@@ -205,6 +215,14 @@ public class AppointmentService {
             .orElseThrow(() -> new RuntimeException("Rendez-vous non trouvé"));
 
         appointment.setStatus(Appointment.AppointmentStatus.COMPLETED);
+        return appointmentRepository.save(appointment);
+    }
+
+    /**
+     * Sauvegarde directe d'un rendez-vous (pour mises à jour simples)
+     */
+    @Transactional
+    public Appointment saveAppointment(Appointment appointment) {
         return appointmentRepository.save(appointment);
     }
 

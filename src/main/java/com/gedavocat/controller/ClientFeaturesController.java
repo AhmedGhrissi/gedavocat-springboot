@@ -8,6 +8,7 @@ import com.gedavocat.repository.ClientRepository;
 import com.gedavocat.repository.SignatureRepository;
 import com.gedavocat.repository.UserRepository;
 import com.gedavocat.service.AppointmentService;
+import com.gedavocat.service.EmailService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -16,7 +17,10 @@ import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -36,6 +40,7 @@ public class ClientFeaturesController {
     private final ClientRepository clientRepository;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
 
     // =========================================================================
     // Rendez-vous
@@ -97,6 +102,115 @@ public class ClientFeaturesController {
         model.addAttribute("signatures", signatures);
         model.addAttribute("user", user);
         return "client-portal/signatures";
+    }
+
+    // =========================================================================
+    // Confirmation de rendez-vous par le client
+    // =========================================================================
+
+    @PostMapping("/my-appointments/{id}/confirm")
+    @Transactional
+    public String confirmAppointment(@PathVariable String id,
+                                     Authentication authentication,
+                                     RedirectAttributes redirectAttributes) {
+        User user = getCurrentUser(authentication);
+        var clientOpt = clientRepository.findByClientUserId(user.getId());
+        if (clientOpt.isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "Profil client non activé.");
+            return "redirect:/my-appointments";
+        }
+        Client client = clientOpt.get();
+
+        var aptOpt = appointmentService.getAppointmentById(id);
+        if (aptOpt.isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "Rendez-vous non trouvé.");
+            return "redirect:/my-appointments";
+        }
+        Appointment apt = aptOpt.get();
+
+        // Vérifier que le rendez-vous appartient à ce client
+        if (apt.getClient() == null || !apt.getClient().getId().equals(client.getId())) {
+            redirectAttributes.addFlashAttribute("error", "Accès non autorisé.");
+            return "redirect:/my-appointments";
+        }
+
+        apt.setStatus(Appointment.AppointmentStatus.CONFIRMED);
+        apt.setClientConfirmedAt(LocalDateTime.now());
+        apt.setRescheduleRequestedBy(null);
+        apt.setProposedDate(null);
+        apt.setRescheduleMessage(null);
+        appointmentService.saveAppointment(apt);
+
+        // Notifier l'avocat par email
+        try {
+            DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy 'à' HH:mm");
+            emailService.sendEmail(apt.getLawyer().getEmail(),
+                "Rendez-vous confirmé par " + client.getName(),
+                "Bonjour,\n\nLe client " + client.getName() + " a confirmé le rendez-vous :\n\n" +
+                apt.getTitle() + "\n" + apt.getAppointmentDate().format(fmt) + "\n\n---\nDocAvocat");
+        } catch (Exception ignored) {}
+
+        redirectAttributes.addFlashAttribute("success", "Rendez-vous confirmé avec succès.");
+        return "redirect:/my-appointments";
+    }
+
+    // =========================================================================
+    // Demande de report par le client
+    // =========================================================================
+
+    @PostMapping("/my-appointments/{id}/request-reschedule")
+    @Transactional
+    public String requestReschedule(@PathVariable String id,
+                                    @RequestParam(required = false) String proposedDate,
+                                    @RequestParam(required = false) String rescheduleMessage,
+                                    Authentication authentication,
+                                    RedirectAttributes redirectAttributes) {
+        User user = getCurrentUser(authentication);
+        var clientOpt = clientRepository.findByClientUserId(user.getId());
+        if (clientOpt.isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "Profil client non activé.");
+            return "redirect:/my-appointments";
+        }
+        Client client = clientOpt.get();
+
+        var aptOpt = appointmentService.getAppointmentById(id);
+        if (aptOpt.isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "Rendez-vous non trouvé.");
+            return "redirect:/my-appointments";
+        }
+        Appointment apt = aptOpt.get();
+
+        if (apt.getClient() == null || !apt.getClient().getId().equals(client.getId())) {
+            redirectAttributes.addFlashAttribute("error", "Accès non autorisé.");
+            return "redirect:/my-appointments";
+        }
+
+        apt.setStatus(Appointment.AppointmentStatus.RESCHEDULED);
+        apt.setRescheduleRequestedBy("CLIENT");
+        apt.setRescheduleMessage(rescheduleMessage);
+        if (proposedDate != null && !proposedDate.isEmpty()) {
+            apt.setProposedDate(LocalDateTime.parse(proposedDate));
+        }
+        appointmentService.saveAppointment(apt);
+
+        // Notifier l'avocat
+        try {
+            DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy 'à' HH:mm");
+            String body = "Bonjour,\n\nLe client " + client.getName() + " demande le report du rendez-vous :\n\n" +
+                apt.getTitle() + " - " + apt.getAppointmentDate().format(fmt) + "\n";
+            if (rescheduleMessage != null && !rescheduleMessage.isEmpty()) {
+                body += "\nMotif : " + rescheduleMessage + "\n";
+            }
+            if (apt.getProposedDate() != null) {
+                body += "\nDate proposée : " + apt.getProposedDate().format(fmt) + "\n";
+            }
+            body += "\n---\nDocAvocat";
+            emailService.sendEmail(apt.getLawyer().getEmail(),
+                "Demande de report : " + apt.getTitle(), body);
+        } catch (Exception ignored) {}
+
+        redirectAttributes.addFlashAttribute("success", "Votre demande de report a été envoyée à votre avocat.");
+        return "redirect:/my-appointments";
     }
 
     // =========================================================================

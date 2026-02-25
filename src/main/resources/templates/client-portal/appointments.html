@@ -64,6 +64,17 @@
 
         <!-- Rendez-vous à venir -->
         <h5 class="fw-bold mb-3"><i class="fas fa-clock text-primary"></i> À venir</h5>
+
+        <!-- Messages flash -->
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle"></i> <span th:text="${success}">Succès</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-triangle"></i> <span th:text="${error}">Erreur</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
         <div th:if="${appointments != null and !appointments.empty}" class="mb-4">
             <div th:each="apt : ${appointments}"
                  th:if="${apt.appointmentDate != null and apt.appointmentDate.isAfter(#temporals.createNow())}"
@@ -96,6 +107,51 @@
                             <i class="fas fa-video"></i> Rejoindre la visioconférence
                         </a>
                     </div>
+
+                    <!-- Actions : Confirmer / Demander report -->
+                    <div class="mt-2 d-flex gap-2 flex-wrap">
+                        <!-- Bouton Confirmer (uniquement si SCHEDULED) -->
+                        <form th:if="${apt.status?.name() == 'SCHEDULED'}"
+                              th:action="@{/my-appointments/{id}/confirm(id=${apt.id})}" method="post" class="d-inline">
+                            <button type="submit" class="btn btn-sm btn-success">
+                                <i class="fas fa-check"></i> Confirmer
+                            </button>
+                        </form>
+                        <!-- Bouton Demander report (sauf si déjà CANCELLED/COMPLETED/RESCHEDULED) -->
+                        <button th:if="${apt.status?.name() != 'CANCELLED' and apt.status?.name() != 'COMPLETED' and apt.status?.name() != 'RESCHEDULED'}"
+                                type="button" class="btn btn-sm btn-outline-warning"
+                                data-bs-toggle="modal" th:data-bs-target="'#rescheduleModal-' + ${apt.id}">
+                            <i class="fas fa-calendar-times"></i> Demander un report
+                        </button>
+                        <!-- Info si report demandé -->
+                        <span th:if="${apt.status?.name() == 'RESCHEDULED' and apt.rescheduleRequestedBy == 'CLIENT'}"
+                              class="badge bg-warning text-dark align-self-center">
+                            <i class="fas fa-clock"></i> Report demandé – en attente
+                        </span>
+                        <span th:if="${apt.status?.name() == 'RESCHEDULED' and apt.rescheduleRequestedBy == 'LAWYER'}"
+                              class="badge bg-info align-self-center">
+                            <i class="fas fa-exchange-alt"></i> Nouvelle date proposée par l'avocat
+                        </span>
+                    </div>
+
+                    <!-- Afficher la proposition de l'avocat -->
+                    <div th:if="${apt.status?.name() == 'RESCHEDULED' and apt.rescheduleRequestedBy == 'LAWYER' and apt.proposedDate != null}"
+                         class="mt-2 p-2" style="background:#f0f0ff;border-radius:8px;">
+                        <small class="text-muted">Nouvelle date proposée :</small>
+                        <strong th:text="${#temporals.format(apt.proposedDate, 'dd/MM/yyyy HH:mm')}">01/01 10:00</strong>
+                        <div th:if="${apt.rescheduleMessage}" class="text-muted small mt-1" th:text="${apt.rescheduleMessage}">Message</div>
+                        <div class="mt-1 d-flex gap-2">
+                            <form th:action="@{/my-appointments/{id}/confirm(id=${apt.id})}" method="post" class="d-inline">
+                                <button type="submit" class="btn btn-sm btn-success">
+                                    <i class="fas fa-check"></i> Accepter
+                                </button>
+                            </form>
+                            <button type="button" class="btn btn-sm btn-outline-warning"
+                                    data-bs-toggle="modal" th:data-bs-target="'#rescheduleModal-' + ${apt.id}">
+                                <i class="fas fa-calendar-times"></i> Proposer une autre date
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 <div>
@@ -103,8 +159,38 @@
                           th:classappend="${apt.status?.name() == 'CONFIRMED' ? 'status-confirmed' :
                                            (apt.status?.name() == 'SCHEDULED' ? 'status-scheduled' :
                                            (apt.status?.name() == 'COMPLETED' ? 'status-completed' :
-                                           (apt.status?.name() == 'CANCELLED' ? 'status-cancelled' : 'status-scheduled')))}"
+                                           (apt.status?.name() == 'CANCELLED' ? 'status-cancelled' :
+                                           (apt.status?.name() == 'RESCHEDULED' ? 'status-no_show' : 'status-scheduled'))))}"
                           th:text="${apt.status?.displayName ?: 'Planifié'}">Planifié</span>
+                </div>
+
+                <!-- Modal de demande de report -->
+                <div class="modal fade" th:id="'rescheduleModal-' + ${apt.id}" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header bg-warning">
+                                <h5 class="modal-title"><i class="fas fa-calendar-times"></i> Demander un report</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <form th:action="@{/my-appointments/{id}/request-reschedule(id=${apt.id})}" method="post">
+                                <div class="modal-body">
+                                    <div class="mb-3">
+                                        <label class="form-label">Date souhaitée (optionnel)</label>
+                                        <input type="datetime-local" name="proposedDate" class="form-control">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Motif / Message</label>
+                                        <textarea name="rescheduleMessage" class="form-control" rows="3"
+                                                  placeholder="Expliquez la raison du report..."></textarea>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                                    <button type="submit" class="btn btn-warning"><i class="fas fa-paper-plane"></i> Envoyer la demande</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

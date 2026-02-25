@@ -29,7 +29,6 @@ public class ClientService {
     private final AuditService auditService;
     private final AppointmentRepository appointmentRepository;
     private final CaseRepository caseRepository;
-    private final CaseService caseService;
     
     /**
      * Récupère tous les clients d'un avocat
@@ -147,15 +146,18 @@ public class ClientService {
     }
     
     /**
-     * Supprimer un client par ID seul (interne / admin / tests)
+     * Supprimer un client par ID seul (interne / admin / tests).
+     * Les dossiers liés sont archivés (pas supprimés).
      */
     @Transactional
     public void deleteClient(String clientId) {
         Client client = getClientById(clientId);
-        // Supprimer les dossiers liés (dépendances FK cascade) via caseService
+        // Archiver les dossiers liés au lieu de les supprimer
         List<Case> cases = caseRepository.findByClientId(clientId);
         for (Case c : cases) {
-            caseService.deleteCase(c.getId(), c.getLawyer().getId());
+            c.setStatus(Case.CaseStatus.ARCHIVED);
+            c.setUpdatedAt(LocalDateTime.now());
+            caseRepository.save(c);
         }
         // Supprimer les références restantes dans les rendez-vous
         appointmentRepository.clearClientByClientId(clientId);
@@ -163,7 +165,8 @@ public class ClientService {
     }
 
     /**
-     * Supprimer un client avec vérification d'appartenance à l'avocat
+     * Supprimer un client avec vérification d'appartenance à l'avocat.
+     * Les dossiers liés sont archivés (pas supprimés).
      */
     @Transactional
     public void deleteClient(String clientId, String lawyerId) {
@@ -174,17 +177,19 @@ public class ClientService {
         }
 
         String clientName = client.getName();
-        // Supprimer les dossiers liés (dépendances FK cascade) avant suppression du client
+        // Archiver les dossiers liés au lieu de les supprimer
         List<Case> cases = caseRepository.findByClientId(clientId);
         for (Case c : cases) {
-            caseService.deleteCase(c.getId(), lawyerId);
+            c.setStatus(Case.CaseStatus.ARCHIVED);
+            c.setUpdatedAt(LocalDateTime.now());
+            caseRepository.save(c);
         }
         // Supprimer les références restantes dans les rendez-vous
         appointmentRepository.clearClientByClientId(clientId);
         clientRepository.delete(client);
 
         auditService.log("CLIENT_DELETED", "Client", clientId,
-            "Suppression du client: " + clientName, lawyerId);
+            "Suppression du client: " + clientName + " (" + cases.size() + " dossier(s) archivé(s))", lawyerId);
     }
     
     /**

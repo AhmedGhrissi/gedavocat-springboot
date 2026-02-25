@@ -107,6 +107,21 @@ public class Appointment {
     @Column(name = "video_conference_link", length = 500)
     private String videoConferenceLink;
 
+    // Confirmation par le client
+    @Column(name = "client_confirmed_at")
+    private LocalDateTime clientConfirmedAt;
+
+    // Report / négociation de date
+    @Column(name = "reschedule_requested_by", length = 20)
+    private String rescheduleRequestedBy; // "CLIENT" ou "LAWYER"
+
+    @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
+    @Column(name = "proposed_date")
+    private LocalDateTime proposedDate;
+
+    @Column(name = "reschedule_message", length = 500)
+    private String rescheduleMessage;
+
     // Couleur pour l'affichage dans le calendrier
     @Column(length = 7)
     private String color = "#3788d8";

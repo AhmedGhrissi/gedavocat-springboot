@@ -63,6 +63,9 @@ public class DashboardController {
         } else if (user.isCollaborator()) {
             // Les collaborateurs ont leur propre portail
             return "redirect:/my-cases-collab";
+        } else if (user.isHuissier()) {
+            // Les huissiers ont leur propre portail
+            return "redirect:/my-cases-huissier";
         } else {
             buildEmptyDashboard(model);
         }

@@ -20,9 +20,10 @@
                 <a href="/appointments/list" class="btn btn-outline-primary me-2">
                     <i class="fas fa-list"></i> Vue liste
                 </a>
-                <a href="/appointments/new" class="btn btn-primary" style="border-radius:var(--radius-lg);font-weight:600">
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newAppointmentModal"
+                        style="border-radius:var(--radius-lg);font-weight:600">
                     <i class="fas fa-plus"></i> Nouveau rendez-vous
-                </a>
+                </button>
             </div>
         </div>
 
@@ -190,6 +191,115 @@
         </div>
 
     </div>
+
+    <!-- Modal Nouveau Rendez-vous -->
+    <div class="modal fade" id="newAppointmentModal" tabindex="-1" aria-labelledby="newAppointmentModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="newAppointmentModalLabel"><i class="fas fa-calendar-plus"></i> Nouveau rendez-vous</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <form action="/appointments/create" method="post">
+                    <div class="modal-body">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Type <span class="text-danger">*</span></label>
+                                <select name="type" class="form-select" required id="modalType">
+                                    <option th:each="type : ${T(com.gedavocat.model.Appointment.AppointmentType).values()}"
+                                            th:value="${type}" th:text="${type.displayName}">Type</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Statut</label>
+                                <select name="status" class="form-select">
+                                    <option th:each="st : ${T(com.gedavocat.model.Appointment.AppointmentStatus).values()}"
+                                            th:value="${st}" th:text="${st.displayName}"
+                                            th:selected="${st.name() == 'SCHEDULED'}">Statut</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Titre <span class="text-danger">*</span></label>
+                            <input type="text" name="title" class="form-control" required
+                                   placeholder="Ex: Consultation client, Audience tribunal...">
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Début <span class="text-danger">*</span></label>
+                                <input type="datetime-local" name="appointmentDate" class="form-control" required id="modalStartDate">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Fin</label>
+                                <input type="datetime-local" name="endDate" class="form-control" id="modalEndDate">
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Client</label>
+                                <select name="clientId" class="form-select">
+                                    <option value="">Aucun client</option>
+                                    <option th:each="client : ${clients}" th:value="${client.id}" th:text="${client.name}">Client</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Dossier</label>
+                                <select name="caseId" class="form-select">
+                                    <option value="">Aucun dossier</option>
+                                    <option th:each="c : ${cases}" th:value="${c.id}" th:text="${c.name}">Dossier</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Lieu</label>
+                            <input type="text" name="location" class="form-control" placeholder="Ex: Cabinet, Palais de justice...">
+                        </div>
+                        <div id="modalCourtInfo" style="display:none">
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <label class="form-label">Tribunal</label>
+                                    <input type="text" name="courtName" class="form-control">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Salle</label>
+                                    <input type="text" name="courtRoom" class="form-control">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Juge</label>
+                                    <input type="text" name="judgeName" class="form-control">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea name="description" class="form-control" rows="2" placeholder="Détails..."></textarea>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input type="checkbox" name="sendReminder" class="form-check-input" value="true" checked>
+                                    <label class="form-check-label">Envoyer un rappel</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Rappel avant (min)</label>
+                                <input type="number" name="reminderMinutesBefore" class="form-control" value="60" min="0" step="15">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Lien visio</label>
+                            <input type="url" name="videoConferenceLink" class="form-control" placeholder="https://meet.google.com/...">
+                        </div>
+                        <input type="hidden" name="color" value="#3788d8">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Créer</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
     
     <!-- Scripts spécifiques pour le calendrier -->
     <!-- FullCalendar JS (v6 : CSS + locales inclus dans le bundle global) -->
@@ -264,22 +374,24 @@
             },
             eventClick: function(info) {
                 info.jsEvent.preventDefault();
-                if (confirm('Voulez-vous modifier ce rendez-vous ?\n\n' + info.event.title)) {
-                    window.location.href = '/appointments/' + info.event.id + '/edit';
-                }
+                window.location.href = '/appointments/' + info.event.id + '/edit';
             },
             dateClick: function(info) {
-                // En vue mois, dateStr = "2026-02-21" ; en vue semaine/jour, dateStr inclut déjà l'heure
-                var dateTime = info.dateStr.includes('T') ? info.dateStr.split('+')[0] : info.dateStr + 'T09:00:00';
-                if (confirm('Créer un nouveau rendez-vous le ' + new Date(info.date).toLocaleDateString('fr-FR') + ' ?')) {
-                    window.location.href = '/appointments/new?date=' + dateTime;
-                }
+                var dateTime = info.dateStr.includes('T') ? info.dateStr.split('+')[0] : info.dateStr + 'T09:00';
+                document.getElementById('modalStartDate').value = dateTime;
+                // Auto-set end date 1 hour later
+                var start = new Date(info.date);
+                start.setHours(start.getHours() + 1);
+                var endStr = start.toISOString().slice(0, 16);
+                document.getElementById('modalEndDate').value = endStr;
+                new bootstrap.Modal(document.getElementById('newAppointmentModal')).show();
             },
             select: function(info) {
-                var dateTime = info.startStr;
-                if (confirm('Créer un nouveau rendez-vous pour cette période ?')) {
-                    window.location.href = '/appointments/new?date=' + dateTime;
-                }
+                var startStr = info.startStr.includes('T') ? info.startStr.split('+')[0] : info.startStr + 'T09:00';
+                var endStr = info.endStr.includes('T') ? info.endStr.split('+')[0] : info.endStr + 'T10:00';
+                document.getElementById('modalStartDate').value = startStr.slice(0, 16);
+                document.getElementById('modalEndDate').value = endStr.slice(0, 16);
+                new bootstrap.Modal(document.getElementById('newAppointmentModal')).show();
                 calendar.unselect();
             },
             eventDidMount: function(info) {
@@ -303,6 +415,14 @@
         window.addEventListener('resize', function() {
             calendar.updateSize();
         });
+
+        // Toggle court info in modal
+        var modalType = document.getElementById('modalType');
+        if (modalType) {
+            modalType.addEventListener('change', function() {
+                document.getElementById('modalCourtInfo').style.display = this.value === 'COURT_HEARING' ? 'block' : 'none';
+            });
+        }
     });
     </script>
 </div>

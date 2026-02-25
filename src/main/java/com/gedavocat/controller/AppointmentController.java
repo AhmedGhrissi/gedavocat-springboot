@@ -6,6 +6,7 @@ import com.gedavocat.repository.CaseRepository;
 import com.gedavocat.repository.ClientRepository;
 import com.gedavocat.repository.UserRepository;
 import com.gedavocat.service.AppointmentService;
+import com.gedavocat.service.EmailService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -36,6 +37,7 @@ public class AppointmentController {
     private final UserRepository userRepository;
     private final ClientRepository clientRepository;
     private final CaseRepository caseRepository;
+    private final EmailService emailService;
 
     /**
      * Page principale du calendrier
@@ -75,6 +77,8 @@ public class AppointmentController {
         model.addAttribute("stats", stats);
         model.addAttribute("currentMonth", currentMonth);
         model.addAttribute("currentDate", LocalDate.now());
+        model.addAttribute("clients", clientRepository.findByLawyerId(user.getId()));
+        model.addAttribute("cases", caseRepository.findByLawyerId(user.getId()));
         
         return "appointments/calendar";
     }
@@ -381,6 +385,138 @@ public class AppointmentController {
             redirectAttributes.addFlashAttribute("error", "Erreur: " + e.getMessage());
         }
         
+        return "redirect:/appointments";
+    }
+
+    /**
+     * Accepter la demande de report (avocat accepte la date proposée par le client)
+     */
+    @PostMapping("/{id}/accept-reschedule")
+    @Transactional
+    public String acceptReschedule(@PathVariable String id, Authentication authentication,
+                                   RedirectAttributes redirectAttributes) {
+        try {
+            User user = getCurrentUser(authentication);
+            Appointment appointment = appointmentService.getAppointmentById(id)
+                .orElseThrow(() -> new RuntimeException("Rendez-vous non trouvé"));
+
+            if (!appointment.getLawyer().getId().equals(user.getId())) {
+                redirectAttributes.addFlashAttribute("error", "Accès non autorisé");
+                return "redirect:/appointments";
+            }
+
+            // Si le client a proposé une date, on l'applique
+            if (appointment.getProposedDate() != null) {
+                appointment.setAppointmentDate(appointment.getProposedDate());
+            }
+            appointment.setStatus(Appointment.AppointmentStatus.CONFIRMED);
+            appointment.setRescheduleRequestedBy(null);
+            appointment.setProposedDate(null);
+            appointment.setRescheduleMessage(null);
+            appointmentService.saveAppointment(appointment);
+
+            // Notifier le client
+            if (appointment.getClient() != null && appointment.getClient().getEmail() != null) {
+                java.time.format.DateTimeFormatter fmt = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy 'à' HH:mm");
+                emailService.sendEmail(appointment.getClient().getEmail(),
+                    "Report accepté : " + appointment.getTitle(),
+                    "Bonjour,\n\nVotre demande de report a été acceptée.\n\n" +
+                    "Nouveau rendez-vous : " + appointment.getAppointmentDate().format(fmt) + "\n\n---\nDocAvocat");
+            }
+
+            redirectAttributes.addFlashAttribute("success", "Report accepté et rendez-vous confirmé.");
+        } catch (Exception e) {
+            log.error("Erreur acceptation report", e);
+            redirectAttributes.addFlashAttribute("error", "Erreur: " + e.getMessage());
+        }
+        return "redirect:/appointments";
+    }
+
+    /**
+     * Refuser la demande de report (remettre en SCHEDULED)
+     */
+    @PostMapping("/{id}/refuse-reschedule")
+    @Transactional
+    public String refuseReschedule(@PathVariable String id, Authentication authentication,
+                                   RedirectAttributes redirectAttributes) {
+        try {
+            User user = getCurrentUser(authentication);
+            Appointment appointment = appointmentService.getAppointmentById(id)
+                .orElseThrow(() -> new RuntimeException("Rendez-vous non trouvé"));
+
+            if (!appointment.getLawyer().getId().equals(user.getId())) {
+                redirectAttributes.addFlashAttribute("error", "Accès non autorisé");
+                return "redirect:/appointments";
+            }
+
+            appointment.setStatus(Appointment.AppointmentStatus.SCHEDULED);
+            appointment.setRescheduleRequestedBy(null);
+            appointment.setProposedDate(null);
+            appointment.setRescheduleMessage(null);
+            appointmentService.saveAppointment(appointment);
+
+            // Notifier le client
+            if (appointment.getClient() != null && appointment.getClient().getEmail() != null) {
+                java.time.format.DateTimeFormatter fmt = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy 'à' HH:mm");
+                emailService.sendEmail(appointment.getClient().getEmail(),
+                    "Demande de report refusée : " + appointment.getTitle(),
+                    "Bonjour,\n\nVotre demande de report a été refusée.\n\n" +
+                    "Le rendez-vous est maintenu le : " + appointment.getAppointmentDate().format(fmt) + "\n\n---\nDocAvocat");
+            }
+
+            redirectAttributes.addFlashAttribute("success", "Demande de report refusée. Rendez-vous maintenu.");
+        } catch (Exception e) {
+            log.error("Erreur refus report", e);
+            redirectAttributes.addFlashAttribute("error", "Erreur: " + e.getMessage());
+        }
+        return "redirect:/appointments";
+    }
+
+    /**
+     * Proposer une nouvelle date (avocat contre-propose)
+     */
+    @PostMapping("/{id}/propose-date")
+    @Transactional
+    public String proposeDate(@PathVariable String id,
+                              @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime proposedDate,
+                              @RequestParam(required = false) String rescheduleMessage,
+                              Authentication authentication,
+                              RedirectAttributes redirectAttributes) {
+        try {
+            User user = getCurrentUser(authentication);
+            Appointment appointment = appointmentService.getAppointmentById(id)
+                .orElseThrow(() -> new RuntimeException("Rendez-vous non trouvé"));
+
+            if (!appointment.getLawyer().getId().equals(user.getId())) {
+                redirectAttributes.addFlashAttribute("error", "Accès non autorisé");
+                return "redirect:/appointments";
+            }
+
+            appointment.setStatus(Appointment.AppointmentStatus.RESCHEDULED);
+            appointment.setRescheduleRequestedBy("LAWYER");
+            appointment.setProposedDate(proposedDate);
+            appointment.setRescheduleMessage(rescheduleMessage);
+            appointmentService.saveAppointment(appointment);
+
+            // Notifier le client
+            if (appointment.getClient() != null && appointment.getClient().getEmail() != null) {
+                java.time.format.DateTimeFormatter fmt = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy 'à' HH:mm");
+                String body = "Bonjour,\n\nVotre avocat propose une nouvelle date pour le rendez-vous :\n\n" +
+                    appointment.getTitle() + "\n" +
+                    "Date proposée : " + proposedDate.format(fmt) + "\n";
+                if (rescheduleMessage != null && !rescheduleMessage.isEmpty()) {
+                    body += "\nMessage : " + rescheduleMessage + "\n";
+                }
+                body += "\nConnectez-vous à votre espace client pour accepter ou proposer une autre date.\n\n---\nDocAvocat";
+                emailService.sendEmail(appointment.getClient().getEmail(),
+                    "Nouvelle date proposée : " + appointment.getTitle(), body);
+            }
+
+            redirectAttributes.addFlashAttribute("success", "Nouvelle date proposée au client.");
+        } catch (Exception e) {
+            log.error("Erreur proposition de date", e);
+            redirectAttributes.addFlashAttribute("error", "Erreur: " + e.getMessage());
+        }
         return "redirect:/appointments";
     }
 

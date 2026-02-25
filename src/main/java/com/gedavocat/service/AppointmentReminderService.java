@@ -22,7 +22,7 @@ import java.util.List;
 public class AppointmentReminderService {
 
     private final AppointmentRepository appointmentRepository;
-    // private final EmailService emailService;
+    private final EmailService emailService;
 
     /**
      * Tâche planifiée pour envoyer les rappels toutes les 15 minutes
@@ -67,21 +67,22 @@ public class AppointmentReminderService {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy 'à' HH:mm");
         String formattedDate = appointment.getAppointmentDate().format(formatter);
         
-        // Préparer le sujet et message (utilisés quand EmailService sera implémenté)
-        // String subject = "Rappel: " + appointment.getTitle();
-        // String message = buildReminderMessage(appointment, formattedDate);
+        // Envoyer le rappel à l'avocat
+        String subject = "Rappel: " + appointment.getTitle();
+        String message = buildReminderMessage(appointment, formattedDate);
+        emailService.sendEmail(lawyerEmail, subject, message);
         
-        // emailService.sendEmail(lawyerEmail, subject, message);
-        
-        log.info("Rappel à envoyer à {} ({}) pour le rendez-vous du {}", 
+        log.info("Rappel envoyé à {} ({}) pour le rendez-vous du {}", 
             lawyerName, lawyerEmail, formattedDate);
         
         // Si un client est associé, lui envoyer aussi un rappel
         if (appointment.getClient() != null && appointment.getClient().getEmail() != null) {
             String clientEmail = appointment.getClient().getEmail();
-            // String clientMessage = buildClientReminderMessage(appointment, formattedDate);
+            String clientSubject = "Rappel: Votre rendez-vous du " + formattedDate;
+            String clientMessage = buildClientReminderMessage(appointment, formattedDate);
+            emailService.sendEmail(clientEmail, clientSubject, clientMessage);
             
-            log.info("Rappel client à envoyer à {}", clientEmail);
+            log.info("Rappel client envoyé à {}", clientEmail);
         }
     }
 
@@ -172,13 +173,18 @@ public class AppointmentReminderService {
         
         try {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy 'à' HH:mm");
-            // formattedDate sera utilisé avec EmailService
-            appointment.getAppointmentDate().format(formatter);
-                        // String subject = "Nouveau rendez-vous: " + appointment.getTitle();
-            // String message = buildAppointmentCreatedMessage(appointment, formattedDate);
+            String formattedDate = appointment.getAppointmentDate().format(formatter);
+
+            // Notifier l'avocat
+            String subject = "Nouveau rendez-vous: " + appointment.getTitle();
+            String message = buildAppointmentCreatedMessage(appointment, formattedDate);
+            emailService.sendEmail(appointment.getLawyer().getEmail(), subject, message);
                         
+            // Notifier le client s'il est associé
             if (appointment.getClient() != null && appointment.getClient().getEmail() != null) {
-                // String clientMessage = buildClientAppointmentCreatedMessage(appointment, formattedDate);
+                String clientSubject = "Nouveau rendez-vous planifié le " + formattedDate;
+                String clientMessage = buildClientAppointmentCreatedMessage(appointment, formattedDate);
+                emailService.sendEmail(appointment.getClient().getEmail(), clientSubject, clientMessage);
             }
             
         } catch (Exception e) {

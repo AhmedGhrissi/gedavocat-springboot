@@ -4,8 +4,10 @@ import com.gedavocat.model.Appointment;
 import com.gedavocat.model.Case;
 import com.gedavocat.model.Client;
 import com.gedavocat.model.Document;
+import com.gedavocat.model.Permission;
 import com.gedavocat.model.User;
 import com.gedavocat.repository.ClientRepository;
+import com.gedavocat.repository.PermissionRepository;
 import com.gedavocat.repository.UserRepository;
 import com.gedavocat.service.AppointmentService;
 import com.gedavocat.service.CaseService;
@@ -53,6 +55,7 @@ public class ClientPortalController {
     private final UserRepository userRepository;
     private final WatermarkService watermarkService;
     private final AppointmentService appointmentService;
+    private final PermissionRepository permissionRepository;
 
     /**
      * Liste des dossiers du client connecté
@@ -141,10 +144,25 @@ public class ClientPortalController {
             caseEntity.getLawyer().getName();
             caseEntity.getLawyer().getEmail();
         }
+
+        // Récupérer les intervenants partageant ce dossier (collaborateurs, huissiers)
+        List<Permission> activePermissions;
+        try {
+            activePermissions = permissionRepository.findActiveByCaseId(caseId);
+            for (Permission p : activePermissions) {
+                if (p.getLawyer() != null) {
+                    p.getLawyer().getName();
+                    p.getLawyer().getRole();
+                }
+            }
+        } catch (Exception e) {
+            activePermissions = Collections.emptyList();
+        }
         
         model.addAttribute("case", caseEntity);
         model.addAttribute("documents", documents);
         model.addAttribute("appointments", appointments);
+        model.addAttribute("activePermissions", activePermissions);
         model.addAttribute("user", user);
         model.addAttribute("client", client);
         
