@@ -122,10 +122,13 @@ public class YousignService {
             ));
             String mappedLevel = mapSignatureLevel(signatureLevel);
             signerBody.put("signature_level", mappedLevel);
-            // Pour qualified_electronic_signature, pas d'authentication_mode
-            if (!"qualified_electronic_signature".equals(mappedLevel)) {
+            // electronic_signature → no_otp, advanced → otp (SMS), qualified → rien
+            if ("electronic_signature".equals(mappedLevel)) {
                 signerBody.put("signature_authentication_mode", "no_otp");
+            } else if ("advanced_electronic_signature".equals(mappedLevel)) {
+                signerBody.put("signature_authentication_mode", "otp");
             }
+            // qualified_electronic_signature : pas de signature_authentication_mode
             signerBody.put("fields", List.of(Map.of(
                 "document_id", uploadedDocumentId,
                 "type", "signature",
