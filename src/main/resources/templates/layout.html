@@ -813,15 +813,6 @@
         }
     </script>
 
-    <!-- Fix Bootstrap modals trapped in .page-content stacking context -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            document.querySelectorAll('.page-content .modal').forEach(function(modal) {
-                document.body.appendChild(modal);
-            });
-        });
-    </script>
-
     <!-- Dark Mode Toggle -->
     <script>
         (function() {
