@@ -10,6 +10,7 @@ import com.gedavocat.repository.UserRepository;
 import com.gedavocat.service.AppointmentService;
 import com.gedavocat.service.CaseService;
 import com.gedavocat.service.DocumentService;
+import com.gedavocat.service.DocumentShareService;
 import com.gedavocat.service.WatermarkService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.ByteArrayResource;
@@ -47,6 +48,7 @@ public class CollaboratorPortalController {
 
     private final CaseService caseService;
     private final DocumentService documentService;
+    private final DocumentShareService documentShareService;
     private final UserRepository userRepository;
     private final WatermarkService watermarkService;
     private final AppointmentService appointmentService;
@@ -96,7 +98,9 @@ public class CollaboratorPortalController {
             return "collaborator-portal/pending";
         }
 
-        List<Document> documents = documentService.getLatestVersions(caseId);
+        // Filter: only show documents shared with LAWYER_SECONDARY
+        List<Document> allDocs = documentService.getLatestVersions(caseId);
+        List<Document> documents = documentShareService.filterSharedDocuments(caseId, allDocs, User.UserRole.LAWYER_SECONDARY);
 
         List<Appointment> appointments;
         try {
@@ -130,7 +134,8 @@ public class CollaboratorPortalController {
             model.addAttribute("errorMessage", "Vous n'avez pas accès à ce dossier.");
             return "collaborator-portal/pending";
         }
-        List<Document> documents = documentService.getLatestVersions(caseId);
+        List<Document> documents = documentShareService.filterSharedDocuments(caseId,
+                documentService.getLatestVersions(caseId), User.UserRole.LAWYER_SECONDARY);
         model.addAttribute("documents", documents);
         model.addAttribute("case", caseEntity);
         model.addAttribute("user", user);

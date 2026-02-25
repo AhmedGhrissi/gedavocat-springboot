@@ -168,7 +168,8 @@ public class User {
         ADMIN("Administrateur"),
         LAWYER("Avocat"),
         CLIENT("Client"),
-        LAWYER_SECONDARY("Collaborateur");
+        LAWYER_SECONDARY("Collaborateur"),
+        HUISSIER("Huissier");
 
         private final String displayName;
 
@@ -257,6 +258,13 @@ public class User {
      */
     public boolean isCollaborator() {
         return this.role == UserRole.LAWYER_SECONDARY;
+    }
+
+    /**
+     * Vérifier si l'utilisateur est huissier
+     */
+    public boolean isHuissier() {
+        return this.role == UserRole.HUISSIER;
     }
 
     /**

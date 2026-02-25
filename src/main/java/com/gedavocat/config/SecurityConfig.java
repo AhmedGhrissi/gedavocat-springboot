@@ -49,6 +49,7 @@ public class SecurityConfig {
 							"/forgot-password", "/reset-password", "/verify-email", "/verify-email/resend",
 							"/clients/accept-invitation",
 							"/collaborators/accept-invitation", "/collaborators/invitation-info",
+						"/huissiers/accept-invitation", "/huissiers/invitation-info",
 							"/cases/shared", "/cases/shared-expired",
 							"/legal/**")
 						.permitAll()
@@ -71,6 +72,9 @@ public class SecurityConfig {
 						.hasAnyRole("LAWYER", "ADMIN", "LAWYER_SECONDARY")
 						.requestMatchers("/documents/**", "/api/documents/**")
 						.hasAnyRole("LAWYER", "ADMIN")
+
+						// Portail huissier
+						.requestMatchers("/my-cases-huissier/**").hasRole("HUISSIER")
 
 						// Pages client
 						.requestMatchers("/my-cases/**", "/my-documents/**", "/my-appointments", "/my-signatures").hasAnyRole("CLIENT", "LAWYER", "ADMIN")
@@ -144,6 +148,10 @@ public class SecurityConfig {
 								}
 								if (roles.contains("ROLE_LAWYER_SECONDARY")) {
 									response.sendRedirect("/my-cases-collab");
+									return;
+								}
+								if (roles.contains("ROLE_HUISSIER")) {
+									response.sendRedirect("/my-cases-huissier");
 									return;
 								}
 								// Par défaut, envoyer vers le dashboard (avocat / autre)

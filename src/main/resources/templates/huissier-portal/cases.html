@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+
+<th:block layout:fragment="extra-css">
+    <link rel="stylesheet" th:href="@{/css/pages/collaborator-portal.css}">
+</th:block>
+
+<head>
+    <link rel="stylesheet" th:href="@{/css/pages/client-portal.css}">
+<title>Mes Dossiers (Huissier)</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="collab-page">
+         <div class="container-fluid">
+            <!-- En-tête -->
+            <div class="client-header">
+                <h1><i class="fas fa-gavel"></i> Mes Dossiers</h1>
+                <p style="font-size: 16px; opacity: 0.95;">
+                    Consultez les dossiers qui vous ont été partagés
+                </p>
+            </div>
+
+            <!-- Liste des dossiers -->
+            <div class="row">
+                <div class="col-12">
+                    <div th:if="${cases != null and !cases.empty}">
+                        <div th:each="case : ${cases}" class="case-card mb-3">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div>
+                                    <h4 class="mb-2" th:text="${case.name}">Nom du dossier</h4>
+                                    <p class="text-muted mb-2" th:text="${case.description}">Description du dossier</p>
+                                    <small class="text-muted">
+                                        <i class="fas fa-calendar"></i>
+                                        Créé le <span th:text="${#temporals.format(case.createdAt, 'dd/MM/yyyy')}">01/01/2024</span>
+                                        <span class="ms-3">
+                                            <i class="fas fa-user-tie"></i>
+                                            Avocat : <span th:text="${case.lawyer != null ? case.lawyer.name : 'Non assigné'}">Me Dupont</span>
+                                        </span>
+                                        <span class="ms-3" th:if="${expirations != null and expirations.containsKey(case.id)}">
+                                            <i class="fas fa-clock text-warning"></i>
+                                            Accès jusqu'au <span class="text-warning fw-bold" th:text="${#temporals.format(expirations.get(case.id), 'dd/MM/yyyy HH:mm')}">01/01/2025</span>
+                                        </span>
+                                        <span class="ms-3" th:if="${expirations == null or !expirations.containsKey(case.id)}">
+                                            <i class="fas fa-infinity text-success"></i>
+                                            <span class="text-success">Accès permanent</span>
+                                        </span>
+                                    </small>
+                                </div>
+                                <span class="status-badge" 
+                                      th:classappend="'status-' + ${case.status}"
+                                      th:text="${case.status.displayName}">
+                                    Ouvert
+                                </span>
+                            </div>
+                            
+                            <div class="d-flex gap-2">
+                                <a th:href="@{/my-cases-huissier/{id}(id=${case.id})}" 
+                                   class="btn btn-primary btn-sm">
+                                    <i class="fas fa-eye"></i> Voir le dossier
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- État vide -->
+                    <div th:if="${cases == null or cases.empty}" class="text-center py-5">
+                        <i class="fas fa-folder-open fa-4x text-muted mb-3"></i>
+                        <h3>Aucun dossier</h3>
+                        <p class="text-muted">Vous n'avez actuellement aucun dossier partagé</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div>
+    </div>
+</body>
+</html>

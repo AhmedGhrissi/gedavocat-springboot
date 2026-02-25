@@ -139,6 +139,18 @@
                 </a>
             </div>
 
+            <!-- Huissier : accès restreint aux dossiers partagés -->
+            <div sec:authorize="hasRole('HUISSIER')">
+                <a th:href="@{/my-cases-huissier}" class="nav-link">
+                    <i class="fas fa-folder"></i>
+                    <span>Mes dossiers</span>
+                </a>
+                <a th:href="@{/my-cases-huissier/profile}" class="nav-link">
+                    <i class="fas fa-user-edit"></i>
+                    <span>Mon profil</span>
+                </a>
+            </div>
+
             <!-- Client : portail client -->
             <div sec:authorize="hasRole('CLIENT')">
                 <a th:href="@{/my-cases}" class="nav-link">

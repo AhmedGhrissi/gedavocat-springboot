@@ -10,6 +10,7 @@ import com.gedavocat.service.AppointmentService;
 import com.gedavocat.service.CaseService;
 import com.gedavocat.service.ClientService;
 import com.gedavocat.service.DocumentService;
+import com.gedavocat.service.DocumentShareService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -22,6 +23,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Contrôleur de gestion des dossiers
@@ -39,6 +42,7 @@ public class CaseController {
     private final AppointmentService appointmentService;
     private final PermissionRepository permissionRepository;
     private final UserRepository userRepository;
+    private final DocumentShareService documentShareService;
 
     /**
      * Liste des dossiers
@@ -207,6 +211,32 @@ public class CaseController {
             model.addAttribute("appointments", appointments);
         } catch (Exception e) {
             model.addAttribute("appointments", java.util.Collections.emptyList());
+        }
+
+        // Partages de documents (pour afficher les toggles collab/huissier)
+        try {
+            Map<String, Set<String>> shareMap = documentShareService.getShareMapForCase(id);
+            model.addAttribute("shareMap", shareMap);
+        } catch (Exception e) {
+            model.addAttribute("shareMap", java.util.Collections.emptyMap());
+        }
+
+        // Vérifier si des collaborateurs/huissiers existent sur ce dossier
+        try {
+            var perms = permissionRepository.findActiveByCaseId(id);
+            boolean hasCollab = false;
+            boolean hasHuissier = false;
+            for (var p : perms) {
+                if (p.getLawyer() != null) {
+                    if (p.getLawyer().getRole() == User.UserRole.LAWYER_SECONDARY) hasCollab = true;
+                    if (p.getLawyer().getRole() == User.UserRole.HUISSIER) hasHuissier = true;
+                }
+            }
+            model.addAttribute("hasCollab", hasCollab);
+            model.addAttribute("hasHuissier", hasHuissier);
+        } catch (Exception e) {
+            model.addAttribute("hasCollab", false);
+            model.addAttribute("hasHuissier", false);
         }
 
         return "cases/view";

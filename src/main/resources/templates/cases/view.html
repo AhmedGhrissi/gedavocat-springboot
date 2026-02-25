@@ -100,9 +100,17 @@
 
                     <!-- Documents -->
                     <div class="card mb-3">
-                        <div class="card-header d-flex justify-content-between align-items-center">
+                        <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
                             <h6 class="mb-0"><i class="fas fa-file-alt me-1"></i> Documents</h6>
-                            <div class="d-flex gap-2">
+                            <div class="d-flex gap-2 flex-wrap">
+                                <div class="btn-group btn-group-sm" sec:authorize="hasRole('LAWYER')">
+                                    <button type="button" class="btn btn-outline-info bulk-share-btn" data-role="LAWYER_SECONDARY" data-shared="true" title="Tout partager avec collab">
+                                        <i class="fas fa-user-friends"></i> Tout Collab
+                                    </button>
+                                    <button type="button" class="btn btn-outline-warning bulk-share-btn" data-role="HUISSIER" data-shared="true" title="Tout partager avec huissier">
+                                        <i class="fas fa-gavel"></i> Tout Huissier
+                                    </button>
+                                </div>
                                 <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#uploadModal">
                                     <i class="fas fa-upload"></i> Uploader
                                 </button>
@@ -124,6 +132,7 @@
                                             <th>Taille</th>
                                             <th>Version</th>
                                             <th>Date</th>
+                                            <th sec:authorize="hasRole('LAWYER')">Partage</th>
                                             <th>Actions</th>
                                         </tr>
                                     </thead>
@@ -137,6 +146,24 @@
                                             <td style="font-size:12px" th:text="${doc.fileSize != null ? #numbers.formatDecimal(doc.fileSize / 1024.0, 1, 2) + ' KB' : '—'}">Taille</td>
                                             <td><span class="badge bg-secondary">v<span th:text="${doc.version}">1</span></span></td>
                                             <td style="font-size:12px" th:text="${#temporals.format(doc.createdAt, 'dd/MM/yyyy')}">Date</td>
+                                            <td sec:authorize="hasRole('LAWYER')">
+                                                <div class="d-flex gap-2">
+                                                    <div class="form-check form-switch" title="Partager avec collaborateur">
+                                                        <input class="form-check-input doc-share-toggle" type="checkbox"
+                                                               th:data-doc-id="${doc.id}"
+                                                               data-role="LAWYER_SECONDARY"
+                                                               th:checked="${shareMap != null and shareMap.containsKey(doc.id) and shareMap[doc.id].contains('LAWYER_SECONDARY')}">
+                                                        <label class="form-check-label" style="font-size:10px">Collab</label>
+                                                    </div>
+                                                    <div class="form-check form-switch" title="Partager avec huissier">
+                                                        <input class="form-check-input doc-share-toggle" type="checkbox"
+                                                               th:data-doc-id="${doc.id}"
+                                                               data-role="HUISSIER"
+                                                               th:checked="${shareMap != null and shareMap.containsKey(doc.id) and shareMap[doc.id].contains('HUISSIER')}">
+                                                        <label class="form-check-label" style="font-size:10px">Huissier</label>
+                                                    </div>
+                                                </div>
+                                            </td>
                                             <td>
                                                 <a th:if="${doc.mimetype != null and (doc.mimetype.startsWith('application/pdf') or doc.mimetype.startsWith('image/'))}" 
                                                    th:href="@{/documents/{id}/preview(id=${doc.id})}" 
@@ -173,10 +200,10 @@
 
                 <!-- Colonne latérale -->
                 <div class="col-lg-4">
-                    <!-- Collaborateurs (partage) -->
+                    <!-- Collaborateurs & Huissiers (partage) -->
                     <div class="card mb-3" sec:authorize="hasRole('LAWYER')">
                         <div class="card-header d-flex justify-content-between align-items-center">
-                            <h6 class="mb-0"><i class="fas fa-users me-1"></i> Collaborateurs</h6>
+                            <h6 class="mb-0"><i class="fas fa-users me-1"></i> Intervenants</h6>
                             <a th:href="@{/cases/{id}/share(id=${case.id})}" class="btn btn-sm btn-outline-primary">
                                 <i class="fas fa-share-alt"></i> Partager
                             </a>
@@ -185,7 +212,11 @@
                             <div th:if="${permissions != null and !#lists.isEmpty(permissions)}">
                                 <div th:each="perm : ${permissions}" class="d-flex align-items-center justify-content-between mb-2 p-2" style="background:var(--bg-secondary);border-radius:var(--radius-md);border:1px solid var(--border-light)">
                                     <div>
-                                        <div style="font-size:0.8125rem;font-weight:600;color:var(--text-primary)" th:text="${perm.lawyer.firstName + ' ' + perm.lawyer.lastName}">Collaborateur</div>
+                                        <div class="d-flex align-items-center gap-1">
+                                            <span style="font-size:0.8125rem;font-weight:600;color:var(--text-primary)" th:text="${perm.lawyer.firstName + ' ' + perm.lawyer.lastName}">Collaborateur</span>
+                                            <span class="badge bg-info" style="font-size:9px" th:if="${perm.lawyer.role.name() == 'LAWYER_SECONDARY'}">Collab</span>
+                                            <span class="badge bg-warning text-dark" style="font-size:9px" th:if="${perm.lawyer.role.name() == 'HUISSIER'}">Huissier</span>
+                                        </div>
                                         <div style="font-size:0.6875rem;color:var(--text-tertiary)" th:text="${perm.lawyer.email}">email</div>
                                     </div>
                                     <div class="d-flex align-items-center gap-2">
@@ -272,6 +303,76 @@
                 </div>
             </div>
         </div>
+
+        <!-- JavaScript pour le partage de documents -->
+        <script th:inline="javascript" sec:authorize="hasRole('LAWYER')">
+        (function() {
+            const caseId = /*[[${case.id}]]*/ '';
+
+            // Toggle individuel
+            document.querySelectorAll('.doc-share-toggle').forEach(function(cb) {
+                cb.addEventListener('change', function() {
+                    const docId = this.dataset.docId;
+                    const role = this.dataset.role;
+                    const shared = this.checked;
+                    const toggle = this;
+                    toggle.disabled = true;
+
+                    fetch('/api/document-shares/toggle?documentId=' + encodeURIComponent(docId)
+                        + '&caseId=' + encodeURIComponent(caseId)
+                        + '&role=' + encodeURIComponent(role)
+                        + '&shared=' + shared, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+                    })
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        toggle.disabled = false;
+                        if (!data.success) {
+                            toggle.checked = !shared;
+                            alert('Erreur : ' + (data.error || 'Erreur inconnue'));
+                        }
+                    })
+                    .catch(function(err) {
+                        toggle.disabled = false;
+                        toggle.checked = !shared;
+                        alert('Erreur réseau');
+                    });
+                });
+            });
+
+            // Bulk toggle buttons
+            document.querySelectorAll('.bulk-share-btn').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    const role = this.dataset.role;
+                    const shared = this.dataset.shared === 'true';
+                    const label = role === 'LAWYER_SECONDARY' ? 'collaborateur' : 'huissier';
+                    const action = shared ? 'partager' : 'départager';
+
+                    if (!confirm('Voulez-vous ' + action + ' tous les documents avec le ' + label + ' ?')) return;
+
+                    fetch('/api/document-shares/bulk-toggle?caseId=' + encodeURIComponent(caseId)
+                        + '&role=' + encodeURIComponent(role)
+                        + '&shared=' + shared, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+                    })
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        if (data.success) {
+                            // Update all toggles for this role
+                            document.querySelectorAll('.doc-share-toggle[data-role="' + role + '"]').forEach(function(cb) {
+                                cb.checked = shared;
+                            });
+                        } else {
+                            alert('Erreur : ' + (data.error || 'Erreur inconnue'));
+                        }
+                    })
+                    .catch(function() { alert('Erreur réseau'); });
+                });
+            });
+        })();
+        </script>
 
     </div>
 </body>

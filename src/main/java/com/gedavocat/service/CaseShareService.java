@@ -55,7 +55,8 @@ public class CaseShareService {
             String description,
             LocalDateTime expiresAt,
             Integer maxAccessCount,
-            String emailTo
+            String emailTo,
+            User.UserRole recipientRole
     ) {
         Case caseEntity = caseService.getCaseById(caseId);
 
@@ -106,6 +107,7 @@ public class CaseShareService {
         link.setDescription(description);
         link.setExpiresAt(expiresAt);
         link.setMaxAccessCount(maxAccessCount);
+        link.setRecipientRole(recipientRole != null ? recipientRole : User.UserRole.LAWYER_SECONDARY);
 
         // If an email recipient is provided, store it and mark invitedAt so collaborator flow works
         if (emailTo != null && !emailTo.isBlank()) {
@@ -127,7 +129,7 @@ public class CaseShareService {
 
         // Envoyer par email si destinataire fourni
         if (emailTo != null && !emailTo.isBlank()) {
-            sendShareEmail(emailTo, owner, caseEntity, saved.getToken(), description);
+            sendShareEmail(emailTo, owner, caseEntity, saved.getToken(), description, recipientRole);
         }
 
         return saved;
@@ -231,9 +233,12 @@ public class CaseShareService {
      * @param emailTo Email du destinataire (pour déterminer le type d'URL)
      * @return URL publique complète
      */
-    public String buildPublicUrl(String token, String emailTo) {
+    public String buildPublicUrl(String token, String emailTo, User.UserRole recipientRole) {
         if (emailTo != null && !emailTo.isBlank()) {
-            return baseUrl + "/collaborators/accept-invitation?token=" + token;
+            String invitePath = recipientRole == User.UserRole.HUISSIER
+                    ? "/huissiers/accept-invitation"
+                    : "/collaborators/accept-invitation";
+            return baseUrl + invitePath + "?token=" + token;
         }
         return baseUrl + "/cases/shared?token=" + token;
     }
@@ -242,15 +247,15 @@ public class CaseShareService {
     // Email
     // =========================================================================
 
-    private void sendShareEmail(String to, User owner, Case caseEntity, String token, String description) {
+    private void sendShareEmail(String to, User owner, Case caseEntity, String token, String description, User.UserRole recipientRole) {
         try {
-            // If an email recipient was provided, this is an invitation to join as a collaborator
-            // -> point them to the collaborator accept-invitation page so they can create an account
             String link;
             if (to != null && !to.isBlank()) {
-                link = baseUrl + "/collaborators/accept-invitation?token=" + token;
+                String invitePath = recipientRole == User.UserRole.HUISSIER
+                        ? "/huissiers/accept-invitation"
+                        : "/collaborators/accept-invitation";
+                link = baseUrl + invitePath + "?token=" + token;
             } else {
-                // otherwise, send the public shared-case view
                 link = baseUrl + "/cases/shared?token=" + token;
             }
 

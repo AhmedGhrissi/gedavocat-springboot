@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+
+<th:block layout:fragment="extra-css">
+    <link rel="stylesheet" th:href="@{/css/pages/collaborator-portal.css}">
+</th:block>
+
+<head>
+    <link rel="stylesheet" th:href="@{/css/pages/client-portal.css}">
+<title th:text="${case.name}">Détail du dossier</title>
+<style>
+    .apt-mini { background: #f8fafc; border-radius: 10px; padding: .75rem 1rem; margin-bottom: .5rem; }
+    .apt-mini .apt-time { font-weight: 600; color: #6366f1; }
+</style>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="collab-page">
+        <div class="container-fluid">
+            <div class="case-header">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <a th:href="@{/my-cases-huissier}" class="btn btn-light">
+                        <i class="fas fa-arrow-left"></i> Retour
+                    </a>
+                </div>
+                <h1 th:text="${case.name}">Nom du dossier</h1>
+                <p style="font-size: 16px; opacity: 0.95;" th:text="${case.description}">Description</p>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="info-card">
+                        <h4 class="mb-3"><i class="fas fa-info-circle"></i> Informations</h4>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="text-muted">Statut</label>
+                                <div>
+                                    <span class="badge bg-primary" th:text="${case.status.displayName}">Ouvert</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="text-muted">Date de création</label>
+                                <div th:text="${#temporals.format(case.createdAt, 'dd/MM/yyyy HH:mm')}">01/01/2024</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="info-card">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h4 class="mb-0">
+                                <i class="fas fa-file-pdf"></i> Documents partagés
+                                <span class="badge bg-secondary" th:text="${documents.size()}">0</span>
+                            </h4>
+                        </div>
+
+                        <div th:if="${message}" class="alert alert-success alert-dismissible fade show" role="alert">
+                            <span th:text="${message}"></span>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <span th:text="${error}"></span>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+
+                        <div th:if="${documents != null and !documents.empty}">
+                            <div th:each="doc : ${documents}" class="document-item">
+                                <div class="doc-icon">
+                                    <i class="fas fa-file-pdf"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="fw-bold" th:text="${doc.originalName}">Document.pdf</div>
+                                    <small class="text-muted">
+                                        <span th:text="${doc.fileSize != null ? #numbers.formatDecimal(doc.fileSize / 1024.0, 1, 2) + ' KB' : ''}"></span>
+                                        • Ajouté le <span th:text="${#temporals.format(doc.createdAt, 'dd/MM/yyyy')}"></span>
+                                    </small>
+                                </div>
+                                <div class="d-flex gap-1">
+                                    <!-- Téléchargement / prévisualisation non disponibles pour les huissiers -->
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div th:if="${documents == null or documents.empty}" class="text-center py-4 text-muted">
+                            <i class="fas fa-file fa-2x mb-2"></i>
+                            <p>Aucun document partagé pour le moment</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-body">
+                            <h5 class="fw-bold mb-3"><i class="fas fa-calendar-check text-primary"></i> Rendez-vous</h5>
+                            <div th:if="${appointments != null and !appointments.empty}">
+                                <div th:each="apt : ${appointments}" class="apt-mini">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <div class="apt-time" th:text="${#temporals.format(apt.appointmentDate, 'dd/MM/yyyy HH:mm')}">01/01 10:00</div>
+                                            <div class="fw-bold" th:text="${apt.title}">RDV</div>
+                                        </div>
+                                        <span class="badge" th:text="${apt.status?.displayName ?: 'Planifié'}"></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div th:if="${appointments == null or appointments.empty}" class="text-center text-muted py-3">
+                                <i class="fas fa-calendar"></i>
+                                <p class="small mb-0 mt-1">Aucun rendez-vous</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -80,7 +80,11 @@ public class CaseShareController {
             if (userExists) {
                 publicPath = baseUrl + "/cases/shared?token=" + link.getToken();
             } else {
-                publicPath = baseUrl + "/collaborators/accept-invitation?token=" + link.getToken();
+                // Route based on recipientRole
+                String invitePath = link.getRecipientRole() == User.UserRole.HUISSIER
+                        ? "/huissiers/accept-invitation"
+                        : "/collaborators/accept-invitation";
+                publicPath = baseUrl + invitePath + "?token=" + link.getToken();
             }
             linkPublicUrls.put(link.getId(), publicPath);
         }
@@ -102,15 +106,17 @@ public class CaseShareController {
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm") LocalDateTime expiresAt,
             @RequestParam(required = false) Integer maxAccessCount,
             @RequestParam(required = false) String emailTo,
+            @RequestParam(required = false, defaultValue = "LAWYER_SECONDARY") String recipientRole,
             Authentication authentication,
             RedirectAttributes redirectAttributes
     ) {
         try {
             User user = getCurrentUser(authentication);
-            CaseShareLink link = shareService.createShareLink(id, user, description, expiresAt, maxAccessCount, emailTo);
+            User.UserRole role = User.UserRole.valueOf(recipientRole);
+            CaseShareLink link = shareService.createShareLink(id, user, description, expiresAt, maxAccessCount, emailTo, role);
 
             // Build the full public URL (same logic used in email)
-            String fullPublicUrl = shareService.buildPublicUrl(link.getToken(), emailTo);
+            String fullPublicUrl = shareService.buildPublicUrl(link.getToken(), emailTo, role);
             redirectAttributes.addFlashAttribute("shareFullUrl", fullPublicUrl);
             redirectAttributes.addFlashAttribute("message", "Lien de partage créé avec succès !");
         } catch (Exception e) {
@@ -157,11 +163,14 @@ public class CaseShareController {
             CaseShareLink link = shareService.accessByToken(token);
 
             // Si le lien a un destinataire email et qu'il n'a pas encore de compte →
-            // rediriger vers la page de création de compte collaborateur
+            // rediriger vers la page de création de compte collaborateur ou huissier
             if (link.getRecipientEmail() != null && !link.getRecipientEmail().isBlank()) {
                 boolean accountExists = userRepository.findByEmail(link.getRecipientEmail()).isPresent();
                 if (!accountExists) {
-                    return "redirect:/collaborators/accept-invitation?token=" + token;
+                    String invitePath = link.getRecipientRole() == User.UserRole.HUISSIER
+                            ? "/huissiers/accept-invitation"
+                            : "/collaborators/accept-invitation";
+                    return "redirect:" + invitePath + "?token=" + token;
                 }
             }
 

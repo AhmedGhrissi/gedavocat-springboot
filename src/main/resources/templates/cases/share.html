@@ -50,6 +50,23 @@
                     <div class="card-body">
                         <form th:action="@{/cases/{id}/share(id=${case.id})}" method="post">
                             <div class="mb-3">
+                                <label class="form-label">Type de destinataire</label>
+                                <div class="d-flex gap-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="recipientRole" value="LAWYER_SECONDARY" id="roleCollab" checked>
+                                        <label class="form-check-label" for="roleCollab">
+                                            <i class="fas fa-user-friends text-info"></i> Collaborateur
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="recipientRole" value="HUISSIER" id="roleHuissier">
+                                        <label class="form-check-label" for="roleHuissier">
+                                            <i class="fas fa-gavel text-warning"></i> Huissier
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
                                 <label class="form-label">Destinataire (email, optionnel)</label>
                                 <input type="email" name="emailTo" class="form-control"
                                        placeholder="confrere@cabinet.fr">
@@ -96,6 +113,8 @@
                                     <span class="badge" th:classappend="${link.valid ? 'bg-success' : 'bg-secondary'}">
                                         <span th:text="${link.valid ? 'Actif' : (link.revoked ? 'Révoqué' : 'Expiré')}">Statut</span>
                                     </span>
+                                    <span class="badge bg-info ms-1" th:if="${link.recipientRole != null and link.recipientRole.name() == 'LAWYER_SECONDARY'}">Collab</span>
+                                    <span class="badge bg-warning text-dark ms-1" th:if="${link.recipientRole != null and link.recipientRole.name() == 'HUISSIER'}">Huissier</span>
                                     <div class="mt-1">
                                         <small class="text-muted" th:if="${link.description}" th:text="${link.description}">Note</small>
                                     </div>

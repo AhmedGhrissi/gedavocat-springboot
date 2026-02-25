@@ -114,6 +114,8 @@
                             <option value="ADMIN"   th:selected="${filterRole == 'ADMIN'}">Administrateur</option>
                             <option value="LAWYER"  th:selected="${filterRole == 'LAWYER'}">Avocat</option>
                             <option value="CLIENT"  th:selected="${filterRole == 'CLIENT'}">Client</option>
+                            <option value="LAWYER_SECONDARY"  th:selected="${filterRole == 'LAWYER_SECONDARY'}">Collaborateur</option>
+                            <option value="HUISSIER"  th:selected="${filterRole == 'HUISSIER'}">Huissier</option>
                         </select>
                     </div>
                     <div class="col-md-3">
@@ -403,6 +405,7 @@
                                     <option value="LAWYER">Avocat</option>
                                     <option value="CLIENT">Client</option>
                                     <option value="LAWYER_SECONDARY">Collaborateur</option>
+                                    <option value="HUISSIER">Huissier</option>
                                 </select>
                             </div>
                             <div class="mb-3">

@@ -47,6 +47,11 @@ public class CaseShareLink {
     @Column(name = "recipient_email", length = 255)
     private String recipientEmail;
 
+    /** Rôle cible du destinataire (LAWYER_SECONDARY ou HUISSIER) */
+    @Column(name = "recipient_role", length = 20)
+    @Enumerated(EnumType.STRING)
+    private User.UserRole recipientRole;
+
     /** Date d'envoi de l'invitation */
     @Column(name = "invited_at")
     private LocalDateTime invitedAt;
