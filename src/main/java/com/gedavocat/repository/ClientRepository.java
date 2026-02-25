@@ -62,4 +62,9 @@ public interface ClientRepository extends JpaRepository<Client, String> {
      * Trouve un client par son token d'invitation
      */
     Optional<Client> findByInvitationId(String invitationId);
+
+    @org.springframework.data.jpa.repository.Modifying(clearAutomatically = true)
+    @org.springframework.transaction.annotation.Transactional
+    @org.springframework.data.jpa.repository.Query("UPDATE Client c SET c.clientUser = null WHERE c.clientUser.id = :userId")
+    void clearClientUserById(@org.springframework.data.repository.query.Param("userId") String userId);
 }

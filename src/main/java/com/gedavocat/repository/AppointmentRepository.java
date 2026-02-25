@@ -160,4 +160,9 @@ public interface AppointmentRepository extends JpaRepository<Appointment, String
     @Transactional
     @Query("UPDATE Appointment a SET a.relatedCase = null WHERE a.relatedCase.id IN (SELECT c.id FROM Case c WHERE c.client.id = :clientId)")
     void clearRelatedCaseByClientId(@Param("clientId") String clientId);
+
+    @Modifying(clearAutomatically = true)
+    @Transactional
+    @Query("DELETE FROM Appointment a WHERE a.lawyer.id = :lawyerId")
+    void deleteByLawyerId(@Param("lawyerId") String lawyerId);
 }

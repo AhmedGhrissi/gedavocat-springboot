@@ -74,4 +74,13 @@ public interface PermissionRepository extends JpaRepository<Permission, String> 
            "AND p.isActive = TRUE AND p.revokedAt IS NULL")
     java.util.List<Permission> findActiveWithLawyerByCaseId(@Param("caseId") String caseId);
 
+    @org.springframework.data.jpa.repository.Modifying(clearAutomatically = true)
+    @org.springframework.transaction.annotation.Transactional
+    @Query("DELETE FROM Permission p WHERE p.lawyer.id = :userId")
+    void deleteByLawyerId(@Param("userId") String userId);
+
+    @org.springframework.data.jpa.repository.Modifying(clearAutomatically = true)
+    @org.springframework.transaction.annotation.Transactional
+    @Query("DELETE FROM Permission p WHERE p.grantedBy.id = :userId")
+    void deleteByGrantedById(@Param("userId") String userId);
 }

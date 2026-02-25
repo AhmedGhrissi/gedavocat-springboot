@@ -73,4 +73,9 @@ public interface RpvaCommunicationRepository extends JpaRepository<RpvaCommunica
      */
     @Query("SELECT r FROM RpvaCommunication r WHERE r.sentBy.id = :userId ORDER BY r.createdAt DESC")
     List<RpvaCommunication> findRecentByUserId(@Param("userId") String userId);
+
+    @org.springframework.data.jpa.repository.Modifying(clearAutomatically = true)
+    @org.springframework.transaction.annotation.Transactional
+    @Query("DELETE FROM RpvaCommunication r WHERE r.sentBy.id = :userId")
+    void deleteBySentById(@Param("userId") String userId);
 }

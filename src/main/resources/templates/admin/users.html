@@ -650,14 +650,12 @@
                 fetch('/admin/users/' + userId + '/delete', {
                     method: 'POST',
                     credentials: 'same-origin',
+                    redirect: 'manual',
                     headers: { [csrfHeader]: csrfToken }
                 })
                 .then(r => {
-                    if (r.ok || r.redirected) {
-                        window.location = '/admin/users';
-                    } else {
-                        alert('Erreur suppression : HTTP ' + r.status);
-                    }
+                    // redirect: manual preserves flash attributes for the next navigation
+                    window.location.href = '/admin/users';
                 })
                 .catch(err => alert('Erreur réseau : ' + err.message));
             }

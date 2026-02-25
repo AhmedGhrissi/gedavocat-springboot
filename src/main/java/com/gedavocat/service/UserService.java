@@ -2,7 +2,7 @@ package com.gedavocat.service;
 
 import com.gedavocat.model.User;
 import com.gedavocat.model.User.UserRole;
-import com.gedavocat.repository.UserRepository;
+import com.gedavocat.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -23,6 +23,13 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final PermissionRepository permissionRepository;
+    private final AppointmentRepository appointmentRepository;
+    private final CaseShareLinkRepository caseShareLinkRepository;
+    private final PaymentRepository paymentRepository;
+    private final SignatureRepository signatureRepository;
+    private final RpvaCommunicationRepository rpvaCommunicationRepository;
+    private final ClientRepository clientRepository;
 
     /**
      * Récupère tous les utilisateurs
@@ -57,11 +64,29 @@ public class UserService {
     }
 
     /**
-     * Supprime un utilisateur
+     * Supprime un utilisateur et toutes ses données liées.
+     * Nettoie les FK non cascadées avant de supprimer.
      */
     @Transactional
     public void deleteUser(String id) {
+        log.info("[Admin] Suppression de l'utilisateur {}", id);
+        try {
+            // 1. Clean up FK references that are NOT cascaded from User
+            permissionRepository.deleteByLawyerId(id);
+            permissionRepository.deleteByGrantedById(id);
+            appointmentRepository.deleteByLawyerId(id);
+            caseShareLinkRepository.deleteByOwnerId(id);
+            paymentRepository.deleteByUserId(id);
+            signatureRepository.deleteByRequestedById(id);
+            rpvaCommunicationRepository.deleteBySentById(id);
+            // Clear nullable FK (Client.clientUser)
+            clientRepository.clearClientUserById(id);
+        } catch (Exception e) {
+            log.warn("[Admin] Erreur nettoyage des données liées pour {} : {}", id, e.getMessage());
+        }
+        // 2. Delete user (cascades to Case, Client, AuditLog)
         userRepository.deleteById(id);
+        log.info("[Admin] Utilisateur {} supprimé avec succès", id);
     }
 
     /**
