@@ -3,7 +3,6 @@ package com.gedavocat.controller;
 import com.gedavocat.model.Appointment;
 import com.gedavocat.model.Case;
 import com.gedavocat.model.Document;
-import com.gedavocat.model.Permission;
 import com.gedavocat.model.User;
 import com.gedavocat.repository.PermissionRepository;
 import com.gedavocat.repository.UserRepository;
@@ -13,10 +12,7 @@ import com.gedavocat.service.DocumentService;
 import com.gedavocat.service.DocumentShareService;
 import com.gedavocat.service.WatermarkService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import com.gedavocat.util.ByteArrayMultipartFile;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -28,13 +24,8 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
 
 /**
  * Contrôleur pour le portail Collaborateur
@@ -200,15 +191,6 @@ public class CollaboratorPortalController {
         String email = authentication.getName();
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
-    }
-
-    private String sanitizeFilename(String filename) {
-        if (filename == null || filename.isEmpty()) return "document";
-        String sanitized = filename.replace("\\", "/");
-        int lastSlash = sanitized.lastIndexOf('/');
-        if (lastSlash >= 0) sanitized = sanitized.substring(lastSlash + 1);
-        sanitized = sanitized.replaceAll("[\\r\\n\"]", "_");
-        return sanitized.isEmpty() ? "document" : sanitized;
     }
 
     /**
