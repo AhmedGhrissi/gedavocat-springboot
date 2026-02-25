@@ -203,10 +203,10 @@ public class CollaboratorInvitationController {
             p.setCanWrite(false);
             p.setCanUpload(false);
             p.setIsActive(true);
-            // Propager la date d'expiration du lien de partage vers la permission
-            if (link.getExpiresAt() != null) {
-                p.setExpiresAt(link.getExpiresAt());
-            }
+            // Ne PAS copier la date d'expiration du lien de partage vers la permission.
+            // La permission du collaborateur doit rester active indéfiniment (ou jusqu'à révocation manuelle).
+            // L'expiration du lien de partage ne concerne que l'invitation, pas l'accès au dossier.
+            p.setExpiresAt(null);
             Permission savedPerm = permissionRepository.save(p);
             // Diagnostic logging: ensure permission persisted and IDs recorded
             try {

@@ -65,10 +65,12 @@ public class SecurityConfig {
 						.requestMatchers("/invoices/my-invoices").hasAnyRole("CLIENT", "LAWYER", "ADMIN")
 						.requestMatchers("/invoices/**", "/api/invoices/**").hasAnyRole("LAWYER", "ADMIN")
 						
-						// Pages avocat et admin
-						.requestMatchers("/dashboard", "/clients/**", "/cases/**", "/documents/**", "/signatures/**",
-							"/rpva/**", "/permissions/**", "/api/clients/**", "/api/cases/**", "/api/documents/**")
+						// Pages avocat et admin (collaborateurs bloqués pour documents)
+						.requestMatchers("/dashboard", "/clients/**", "/cases/**", "/signatures/**",
+							"/rpva/**", "/permissions/**", "/api/clients/**", "/api/cases/**")
 						.hasAnyRole("LAWYER", "ADMIN", "LAWYER_SECONDARY")
+						.requestMatchers("/documents/**", "/api/documents/**")
+						.hasAnyRole("LAWYER", "ADMIN")
 
 						// Pages client
 						.requestMatchers("/my-cases/**", "/my-documents/**", "/my-appointments", "/my-signatures").hasAnyRole("CLIENT", "LAWYER", "ADMIN")

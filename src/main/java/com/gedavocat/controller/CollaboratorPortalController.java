@@ -157,46 +157,20 @@ public class CollaboratorPortalController {
         return "redirect:/my-cases-collab/" + caseId;
     }
 
+    /**
+     * Téléchargement interdit pour les collaborateurs.
+     */
     @GetMapping("/documents/{documentId}/download")
     public ResponseEntity<Resource> downloadDocument(@PathVariable String documentId, Authentication authentication) {
-        try {
-            User user = getCurrentUser(authentication);
-            Document document = documentService.getDocumentById(documentId);
-            String caseIdFromDoc = document.getCaseEntity() != null ? document.getCaseEntity().getId() : null;
-            if (caseIdFromDoc == null || !caseService.hasCollaboratorAccess(caseIdFromDoc, user.getId())) {
-                return ResponseEntity.status(403).build();
-            }
-            Path filePath = documentService.downloadDocument(documentId, user.getId());
-            byte[] fileBytes = Files.readAllBytes(filePath);
-            return ResponseEntity.ok()
-                    .contentType(MediaType.parseMediaType(document.getMimetype()))
-                    .header(HttpHeaders.CONTENT_DISPOSITION,
-                            "attachment; filename=\"" + sanitizeFilename(document.getOriginalName()) + "\"")
-                    .body(new ByteArrayResource(fileBytes));
-        } catch (Exception e) {
-            throw new RuntimeException("Erreur lors du téléchargement : " + e.getMessage());
-        }
+        return ResponseEntity.status(403).build();
     }
 
+    /**
+     * Prévisualisation interdite pour les collaborateurs.
+     */
     @GetMapping("/documents/{documentId}/preview")
     public ResponseEntity<Resource> previewDocument(@PathVariable String documentId, Authentication authentication) {
-        try {
-            User user = getCurrentUser(authentication);
-            Document document = documentService.getDocumentById(documentId);
-            String caseIdFromDoc = document.getCaseEntity() != null ? document.getCaseEntity().getId() : null;
-            if (caseIdFromDoc == null || !caseService.hasCollaboratorAccess(caseIdFromDoc, user.getId())) {
-                return ResponseEntity.status(403).build();
-            }
-            Path filePath = documentService.downloadDocument(documentId, user.getId());
-            byte[] fileBytes = Files.readAllBytes(filePath);
-            return ResponseEntity.ok()
-                    .contentType(MediaType.parseMediaType(document.getMimetype()))
-                    .header(HttpHeaders.CONTENT_DISPOSITION,
-                            "inline; filename=\"" + sanitizeFilename(document.getOriginalName()) + "\"")
-                    .body(new ByteArrayResource(fileBytes));
-        } catch (Exception e) {
-            throw new RuntimeException("Erreur lors de la prévisualisation : " + e.getMessage());
-        }
+        return ResponseEntity.status(403).build();
     }
 
     private MultipartFile applyWatermarkIfPdf(MultipartFile file, String watermarkText) {
@@ -232,42 +206,12 @@ public class CollaboratorPortalController {
         return sanitized.isEmpty() ? "document" : sanitized;
     }
 
+    /**
+     * Export ZIP interdit pour les collaborateurs.
+     */
     @GetMapping("/{caseId}/export-zip")
     public ResponseEntity<Resource> exportCaseDocumentsZip(@PathVariable String caseId, Authentication authentication) {
-        try {
-            User user = getCurrentUser(authentication);
-            Case caseEntity = caseService.getCaseById(caseId);
-            if (!caseService.hasCollaboratorAccess(caseId, user.getId())) {
-                return ResponseEntity.status(403).build();
-            }
-
-            List<Document> documents = documentService.getLatestVersions(caseId);
-            if (documents.isEmpty()) return ResponseEntity.noContent().build();
-
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            try (ZipOutputStream zos = new ZipOutputStream(baos)) {
-                for (Document doc : documents) {
-                    try {
-                        Path filePath = documentService.downloadDocument(doc.getId(), user.getId());
-                        byte[] fileBytes = Files.readAllBytes(filePath);
-                        ZipEntry entry = new ZipEntry(sanitizeFilename(doc.getOriginalName()));
-                        zos.putNextEntry(entry);
-                        zos.write(fileBytes);
-                        zos.closeEntry();
-                    } catch (Exception ignored) {
-                    }
-                }
-            }
-
-            String zipName = "Dossier_" + caseEntity.getName().replaceAll("[^a-zA-Z0-9àâéèêëïîôùûüç_\\- ]", "").trim() + ".zip";
-            return ResponseEntity.ok()
-                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + zipName + "\"")
-                    .body(new ByteArrayResource(baos.toByteArray()));
-
-        } catch (Exception e) {
-            throw new RuntimeException("Erreur lors de l'export ZIP : " + e.getMessage());
-        }
+        return ResponseEntity.status(403).build();
     }
 
     // =====================
