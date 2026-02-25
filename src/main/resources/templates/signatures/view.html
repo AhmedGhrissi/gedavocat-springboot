@@ -36,31 +36,28 @@
                     <div class="card-header bg-white d-flex justify-content-between align-items-center">
                         <h5 class="mb-0"><i class="fas fa-info-circle"></i> Informations</h5>
                         <span class="badge"
-                              th:classappend="${signature.status == 'COMPLETED'} ? 'bg-success' :
-                                             (${signature.status == 'FAILED'} ? 'bg-danger' :
-                                             (${signature.status == 'EXPIRED'} ? 'bg-warning text-dark' : 'bg-primary'))"
-                              th:text="${signature.status}">-</span>
+                              th:classappend="${signature.status.name() == 'SIGNED'} ? 'bg-success' :
+                                             (${signature.status.name() == 'REJECTED'} ? 'bg-danger' :
+                                             (${signature.status.name() == 'EXPIRED'} ? 'bg-warning text-dark' : 'bg-primary'))"
+                              th:text="${signature.status.displayName}">-</span>
                     </div>
                     <div class="card-body">
                         <dl class="row">
                             <dt class="col-sm-4">Titre / Document</dt>
-                            <dd class="col-sm-8" th:text="${signature.title ?: (signature.document?.originalFilename ?: signature.yousignDocumentId ?: '-')}">-</dd>
+                            <dd class="col-sm-8" th:text="${signature.documentName ?: '-'}">-</dd>
 
                             <dt class="col-sm-4">Signataire</dt>
                             <dd class="col-sm-8" th:text="${signature.signerName + ' &lt;' + signature.signerEmail + '&gt;'}">-</dd>
-
-                            <dt class="col-sm-4">Téléphone</dt>
-                            <dd class="col-sm-8" th:text="${signature.signerPhone ?: '-'}">-</dd>
 
                             <dt class="col-sm-4">Niveau de signature</dt>
                             <dd class="col-sm-8" th:text="${signature.level ?: 'Avancée (eIDAS)'}">-</dd>
 
                             <dt class="col-sm-4">Dossier</dt>
                             <dd class="col-sm-8">
-                                <a th:if="${signature.case != null}"
-                                   th:href="@{/cases/{id}(id=${signature.case.id})}"
-                                   th:text="${signature.case.title}">-</a>
-                                <span th:if="${signature.case == null}">Aucun</span>
+                                <a th:if="${signature.caseEntity != null}"
+                                   th:href="@{/cases/{id}(id=${signature.caseEntity.id})}"
+                                   th:text="${signature.caseEntity.name}">-</a>
+                                <span th:if="${signature.caseEntity == null}">Aucun</span>
                             </dd>
 
                             <dt class="col-sm-4">Créée le</dt>
@@ -87,26 +84,30 @@
                     <div class="card-body d-grid gap-2">
 
                         <!-- Télécharger le document signé (si complété) -->
-                        <a th:if="${signature.status == 'COMPLETED'}"
+                        <a th:if="${signature.status.name() == 'SIGNED'}"
                            th:href="@{/signatures/{id}/download(id=${signature.id})}"
                            class="btn btn-success" style="border-radius:var(--radius-lg);font-weight:600">
                             <i class="fas fa-download"></i> Télécharger le document signé
                         </a>
 
                         <!-- Relancer le signataire (si en attente) -->
-                        <form th:if="${signature.status == 'PENDING'}"
+                        <form th:if="${signature.status.name() == 'PENDING'}"
                               th:action="@{/signatures/{id}/remind(id=${signature.id})}" method="post">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
                             <button type="submit" class="btn btn-warning w-100" style="border-radius:var(--radius-lg);font-weight:600">
                                 <i class="fas fa-bell"></i> Relancer le signataire
                             </button>
                         </form>
 
-                        <!-- Lien de signature (si en attente) -->
-                        <a th:if="${signature.status == 'PENDING' and signature.signatureLink != null}"
-                           th:href="${signature.signatureLink}" target="_blank"
-                           class="btn btn-outline-primary">
-                            <i class="fas fa-external-link-alt"></i> Ouvrir le lien de signature
-                        </a>
+                        <!-- Annuler (si en attente) -->
+                        <form th:if="${signature.status.name() == 'PENDING'}"
+                              th:action="@{/signatures/{id}/cancel(id=${signature.id})}" method="post">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                            <button type="submit" class="btn btn-outline-danger w-100" style="border-radius:var(--radius-lg);font-weight:600"
+                                    data-confirm="Voulez-vous vraiment annuler cette demande de signature ?">
+                                <i class="fas fa-times"></i> Annuler la demande
+                            </button>
+                        </form>
 
                         <a th:href="@{/signatures}" class="btn btn-outline-secondary">
                             <i class="fas fa-list"></i> Toutes les signatures

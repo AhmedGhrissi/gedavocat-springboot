@@ -3,6 +3,8 @@ package com.gedavocat.controller;
 import com.gedavocat.model.Document;
 import com.gedavocat.model.Signature;
 import com.gedavocat.model.User;
+import com.gedavocat.model.Case;
+import com.gedavocat.repository.CaseRepository;
 import com.gedavocat.repository.DocumentRepository;
 import com.gedavocat.repository.SignatureRepository;
 import com.gedavocat.repository.UserRepository;
@@ -36,6 +38,7 @@ public class SignatureController {
     private final DocumentRepository documentRepository;
     private final UserRepository userRepository;
     private final SignatureRepository signatureRepository;
+    private final CaseRepository caseRepository;
 
     /**
      * Page principale des signatures
@@ -49,12 +52,11 @@ public class SignatureController {
         model.addAttribute("isConfigured", yousignService.isConfigured());
 
         // Récupérer les signatures en cours et terminées depuis la base
-        List<Signature> pendingSignatures = signatureRepository.findByRequestedById(user.getId())
-            .stream()
+        List<Signature> allSignatures = signatureRepository.findByRequestedByIdWithCase(user.getId());
+        List<Signature> pendingSignatures = allSignatures.stream()
             .filter(s -> s.getStatus() == Signature.SignatureStatus.PENDING)
             .toList();
-        List<Signature> completedSignatures = signatureRepository.findByRequestedById(user.getId())
-            .stream()
+        List<Signature> completedSignatures = allSignatures.stream()
             .filter(s -> s.getStatus() == Signature.SignatureStatus.SIGNED)
             .toList();
         
@@ -83,9 +85,13 @@ public class SignatureController {
 
         model.addAttribute("user", user);
 
-        // Documents de l'avocat connecté uniquement (sécurité)
-        List<Document> allDocuments = documentRepository.findByLawyerId(user.getId());
+        // Documents de l'avocat connecté uniquement (sécurité) — avec le Case chargé
+        List<Document> allDocuments = documentRepository.findByLawyerIdWithCase(user.getId());
         model.addAttribute("documents", allDocuments);
+
+        // Dossiers de l'avocat pour le filtre par dossier
+        List<com.gedavocat.model.Case> cases = caseRepository.findAllByLawyerIdWithClient(user.getId());
+        model.addAttribute("cases", cases);
 
         // Si un document est spécifié, le pré-remplir
         if (documentId != null) {
@@ -150,6 +156,10 @@ public class SignatureController {
             signature.setLevel(signatureLevel);
             signature.setStatus(Signature.SignatureStatus.PENDING);
             signature.setRequestedBy(user);
+            // Lier au dossier via le document
+            if (document.getCaseEntity() != null) {
+                signature.setCaseEntity(document.getCaseEntity());
+            }
             signatureRepository.save(signature);
 
             redirectAttributes.addFlashAttribute("message",

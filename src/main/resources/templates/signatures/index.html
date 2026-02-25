@@ -96,8 +96,11 @@
                                     <i class="fas fa-user"></i>
                                     <span th:text="${sig.signerEmail}">email@example.com</span>
                                 </div>
-                                <div class="mt-2">
+                                <div class="mt-2" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
                                     <span class="badge" style="background: var(--bg-tertiary); color: var(--brand-500);" th:text="${sig.level != null ? sig.level : 'Avancée'}">Avancée</span>
+                                    <span th:if="${sig.caseEntity != null}" class="badge" style="background:var(--bg-tertiary);color:var(--text-secondary);">
+                                        <i class="fas fa-folder me-1"></i><span th:text="${sig.caseEntity.name}">Dossier</span>
+                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -145,8 +148,11 @@
                                     <i class="fas fa-user"></i>
                                     <span th:text="${sig.signerEmail}">email@example.com</span>
                                 </div>
-                                <div class="mt-2">
+                                <div class="mt-2" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
                                     <span class="badge" style="background: var(--bg-tertiary); color: var(--success);" th:text="${sig.level != null ? sig.level : 'Avancée'}">Avancée</span>
+                                    <span th:if="${sig.caseEntity != null}" class="badge" style="background:var(--bg-tertiary);color:var(--text-secondary);">
+                                        <i class="fas fa-folder me-1"></i><span th:text="${sig.caseEntity.name}">Dossier</span>
+                                    </span>
                                 </div>
                             </div>
                         </div>

@@ -35,6 +35,20 @@
 
                         <div class="form-group">
                             <label class="form-label">
+                                Dossier <span class="text-muted">(optionnel — filtre les documents)</span>
+                            </label>
+                            <select id="caseFilter" class="form-control" onchange="filterDocumentsByCase()">
+                                <option value="">-- Tous les dossiers --</option>
+                                <option th:each="c : ${cases}"
+                                        th:value="${c.id}"
+                                        th:text="${c.name + (c.client != null ? ' — ' + c.client.firstName + ' ' + c.client.lastName : '')}">
+                                    Dossier
+                                </option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">
                                 Document à signer <span class="required">*</span>
                             </label>
                             
@@ -51,15 +65,14 @@
                                 <input type="hidden" name="documentId" th:value="${document.id}" required>
                             </div>
 
-                            <div th:unless="${document != null}" class="document-selector" onclick="document.getElementById('documentSelect').click()">
-                                <i class="fas fa-cloud-upload-alt"></i>
-                                <h4>Sélectionner un document</h4>
-                                <p style="color: var(--text-secondary); margin: 0;">Choisissez un document PDF depuis vos dossiers</p>
-                                <select id="documentSelect" name="documentId" class="form-control mt-3" required style="max-width: 400px; margin: 20px auto 0;">
-                                    <option value="">-- Choisir un document --</option>
+                            <div th:unless="${document != null}">
+                                <select id="documentSelect" name="documentId" class="form-control" required
+                                        style="padding: 14px 16px; border-radius: var(--radius-lg, 12px); font-size: 15px;">
+                                    <option value="">-- Choisir un document PDF --</option>
                                     <option th:each="doc : ${documents}"
                                             th:value="${doc.id}"
-                                            th:text="${doc.originalName}"
+                                            th:text="${doc.originalName + (doc.caseEntity != null ? ' (' + doc.caseEntity.name + ')' : '')}"
+                                            th:data-case-id="${doc.caseEntity != null ? doc.caseEntity.id : ''}"
                                             th:if="${doc.mimetype == 'application/pdf' or doc.filename.endsWith('.pdf')}">
                                         Document.pdf
                                     </option>
@@ -254,6 +267,23 @@
                 </form>
             </div>
         </div>
+
+        <script>
+        function filterDocumentsByCase() {
+            var caseId = document.getElementById('caseFilter').value;
+            var select = document.getElementById('documentSelect');
+            if (!select) return;
+            var options = select.querySelectorAll('option[data-case-id]');
+            options.forEach(function(opt) {
+                if (!caseId || opt.getAttribute('data-case-id') === caseId) {
+                    opt.style.display = '';
+                } else {
+                    opt.style.display = 'none';
+                    if (opt.selected) { opt.selected = false; select.value = ''; }
+                }
+            });
+        }
+        </script>
     </div>
 </body>
 </html>

@@ -26,8 +26,8 @@ import java.util.UUID;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString(exclude = {"document", "requestedBy"})
-@EqualsAndHashCode(exclude = {"document", "requestedBy"})
+@ToString(exclude = {"document", "requestedBy", "caseEntity"})
+@EqualsAndHashCode(exclude = {"document", "requestedBy", "caseEntity"})
 public class Signature {
     
     @Id
@@ -48,6 +48,10 @@ public class Signature {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "document_id", nullable = false)
     private Document document;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "case_id")
+    private Case caseEntity;
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "requested_by", nullable = false)

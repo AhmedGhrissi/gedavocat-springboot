@@ -23,6 +23,12 @@ public interface SignatureRepository extends JpaRepository<Signature, String> {
      * Trouve les signatures d'un utilisateur
      */
     List<Signature> findByRequestedById(String userId);
+
+    /**
+     * Trouve les signatures d'un utilisateur avec le dossier chargé
+     */
+    @Query("SELECT s FROM Signature s LEFT JOIN FETCH s.caseEntity LEFT JOIN FETCH s.document WHERE s.requestedBy.id = :userId ORDER BY s.createdAt DESC")
+    List<Signature> findByRequestedByIdWithCase(@Param("userId") String userId);
     
     /**
      * Trouve une signature par son ID Yousign
