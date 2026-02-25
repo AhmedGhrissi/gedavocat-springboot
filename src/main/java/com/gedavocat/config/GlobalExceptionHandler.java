@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.ModelAndView;
@@ -112,6 +113,20 @@ public class GlobalExceptionHandler {
         ModelAndView mav = new ModelAndView("error");
         mav.addObject("status", "400 - Erreur de validation");
         mav.addObject("message", ex.getMessage());
+        mav.setStatus(HttpStatus.BAD_REQUEST);
+        return mav;
+    }
+
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public Object handleMissingParam(MissingServletRequestParameterException ex, HttpServletRequest request) {
+        log.warn("Paramètre manquant sur {} : {}", request.getRequestURI(), ex.getMessage());
+        if (isApiRequest(request)) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", "Paramètre requis manquant: " + ex.getParameterName(), "status", 400));
+        }
+        ModelAndView mav = new ModelAndView("error");
+        mav.addObject("status", "400 - Paramètre manquant");
+        mav.addObject("message", "Un paramètre requis est manquant.");
         mav.setStatus(HttpStatus.BAD_REQUEST);
         return mav;
     }

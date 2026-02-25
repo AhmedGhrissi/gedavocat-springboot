@@ -1,5 +1,6 @@
 package com.gedavocat.controller;
 
+import com.gedavocat.model.Case;
 import com.gedavocat.model.CaseShareLink;
 import com.gedavocat.model.User;
 import com.gedavocat.repository.UserRepository;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -57,7 +59,9 @@ public class CaseShareController {
         User user = getCurrentUser(authentication);
         Case caseEntity = caseService.getCaseById(id);
 
-        if (!caseEntity.getLawyer().getId().equals(user.getId())) {
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        if (!isAdmin && !caseEntity.getLawyer().getId().equals(user.getId())) {
             throw new RuntimeException("Accès non autorisé");
         }
 
@@ -144,7 +148,11 @@ public class CaseShareController {
      * Accès en lecture au dossier partagé via token
      */
     @GetMapping("/cases/shared")
-    public String accessSharedCase(@RequestParam String token, Model model) {
+    public String accessSharedCase(@RequestParam(required = false) String token, Model model) {
+        if (token == null || token.isBlank()) {
+            model.addAttribute("error", "Token de partage manquant");
+            return "cases/shared-expired";
+        }
         try {
             CaseShareLink link = shareService.accessByToken(token);
 
