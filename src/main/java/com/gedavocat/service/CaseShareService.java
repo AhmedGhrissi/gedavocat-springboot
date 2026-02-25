@@ -140,10 +140,9 @@ public class CaseShareService {
     public CaseShareLink getLinkByToken(String token) {
         CaseShareLink link = shareLinkRepository.findByToken(token)
             .orElseThrow(() -> new RuntimeException("Lien de partage introuvable"));
-        // Initialize lazy associations while still in transaction/session to avoid LazyInitializationException in controllers/views
+        // Initialize lazy associations while still in transaction/session to avoid LazyInitializationException
         try {
             if (link.getSharedCase() != null) {
-                // access a few useful fields
                 link.getSharedCase().getName();
                 if (link.getSharedCase().getClient() != null) link.getSharedCase().getClient().getName();
                 if (link.getSharedCase().getLawyer() != null) link.getSharedCase().getLawyer().getName();

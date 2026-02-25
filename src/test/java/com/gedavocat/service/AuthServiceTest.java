@@ -162,10 +162,10 @@ class AuthServiceTest {
 
         when(userRepository.existsByEmail("jean.dupont@gedavocat.com")).thenReturn(true);
 
-        // When / Then
+        // When / Then — SEC-08 FIX : message générique pour éviter l'énumération
         assertThatThrownBy(() -> authService.register(request))
             .isInstanceOf(RuntimeException.class)
-            .hasMessageContaining("existe déjà");
+            .hasMessageContaining("Erreur lors de l'inscription");
     }
 
     @Test

@@ -20,7 +20,6 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 @Controller
@@ -124,6 +123,7 @@ public class DashboardController {
     }
 
     // ------------------------------------------------------------------
+    @SuppressWarnings("unused") // Gardée pour réactivation future du dashboard client
     private void buildClientDashboard(User user, Model model) {
 
         List<Case> cases = new ArrayList<>();
@@ -214,11 +214,6 @@ public class DashboardController {
     }
 
     // ------------------------------------------------------------------
-    // Méthode gardée pour compatibilité
-    private List<RecentActivity> createMockActivities() {
-        return new ArrayList<>();
-    }
-    
     // Classe interne pour les activités récentes
     public static class RecentActivity {
         private String title;

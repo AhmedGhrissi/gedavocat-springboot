@@ -107,7 +107,6 @@ public class CaseShareController {
             User user = getCurrentUser(authentication);
             CaseShareLink link = shareService.createShareLink(id, user, description, expiresAt, maxAccessCount, emailTo);
 
-
             // Build the full public URL (same logic used in email)
             String fullPublicUrl = shareService.buildPublicUrl(emailTo, link.getToken());
             redirectAttributes.addFlashAttribute("shareFullUrl", fullPublicUrl);
@@ -153,9 +152,15 @@ public class CaseShareController {
             CaseShareLink link = shareService.accessByToken(token);
             Case caseEntity = link.getSharedCase();
 
-            // Charger les données nécessaires
+            // Charger les données nécessaires (OSIV=false, donc init lazy dans la transaction)
             caseEntity.getName(); // init lazy
             if (caseEntity.getClient() != null) caseEntity.getClient().getName();
+            if (caseEntity.getLawyer() != null) caseEntity.getLawyer().getName();
+            // Init owner du lien (utilisé dans le template shared-view)
+            if (link.getOwner() != null) {
+                link.getOwner().getFirstName();
+                link.getOwner().getLastName();
+            }
 
             model.addAttribute("case", caseEntity);
             model.addAttribute("documents", documentService.getLatestVersions(caseEntity.getId()));
