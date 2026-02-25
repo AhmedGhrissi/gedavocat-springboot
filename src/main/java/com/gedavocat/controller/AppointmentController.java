@@ -64,16 +64,19 @@ public class AppointmentController {
         var stats = appointmentService.getStatistics(user.getId());
         List<Appointment> upcomingAppointments = appointmentService.getUpcomingAppointments(user.getId());
         List<Appointment> todayAppointments = appointmentService.getTodayAppointments(user.getId());
+        List<Appointment> rescheduledAppointments = appointmentService.getRescheduledAppointments(user.getId());
         
         // Force-initialiser les proxies lazy (open-in-view=false)
         initializeAppointmentProxies(appointments);
         initializeAppointmentProxies(upcomingAppointments);
         initializeAppointmentProxies(todayAppointments);
+        initializeAppointmentProxies(rescheduledAppointments);
         
         model.addAttribute("user", user);
         model.addAttribute("appointments", appointments);
         model.addAttribute("upcomingAppointments", upcomingAppointments);
         model.addAttribute("todayAppointments", todayAppointments);
+        model.addAttribute("rescheduledAppointments", rescheduledAppointments);
         model.addAttribute("stats", stats);
         model.addAttribute("currentMonth", currentMonth);
         model.addAttribute("currentDate", LocalDate.now());

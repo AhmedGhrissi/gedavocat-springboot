@@ -15,9 +15,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -102,6 +104,82 @@ public class HuissierPortalController {
         model.addAttribute("user", user);
 
         return "huissier-portal/case-detail";
+    }
+
+    // =====================
+    // Calendrier huissier
+    // =====================
+
+    @GetMapping("/calendar")
+    @Transactional(readOnly = true)
+    public String calendar(Model model, Authentication authentication) {
+        User user = getCurrentUser(authentication);
+        List<Case> myCases = caseService.getCasesByCollaborator(user.getId());
+
+        List<Appointment> allAppointments = new ArrayList<>();
+        for (Case c : myCases) {
+            try {
+                List<Appointment> caseAppointments = appointmentService.getAppointmentsByCase(c.getId());
+                allAppointments.addAll(caseAppointments);
+            } catch (Exception ignore) {}
+        }
+        for (Appointment a : allAppointments) {
+            if (a.getClient() != null) a.getClient().getName();
+            if (a.getRelatedCase() != null) a.getRelatedCase().getName();
+            if (a.getLawyer() != null) a.getLawyer().getFirstName();
+        }
+
+        java.time.LocalDate today = java.time.LocalDate.now();
+        List<Appointment> upcoming = allAppointments.stream()
+                .filter(a -> a.getAppointmentDate() != null && a.getAppointmentDate().isAfter(java.time.LocalDateTime.now()))
+                .sorted(java.util.Comparator.comparing(Appointment::getAppointmentDate))
+                .limit(10)
+                .toList();
+        List<Appointment> todayAppointments = allAppointments.stream()
+                .filter(a -> a.getAppointmentDate() != null && a.getAppointmentDate().toLocalDate().equals(today))
+                .sorted(java.util.Comparator.comparing(Appointment::getAppointmentDate))
+                .toList();
+
+        model.addAttribute("user", user);
+        model.addAttribute("appointments", allAppointments);
+        model.addAttribute("upcomingAppointments", upcoming);
+        model.addAttribute("todayAppointments", todayAppointments);
+        model.addAttribute("currentMonth", java.time.YearMonth.now());
+        model.addAttribute("currentDate", today);
+        return "huissier-portal/calendar";
+    }
+
+    @GetMapping("/calendar/api/events")
+    @ResponseBody
+    @Transactional(readOnly = true)
+    public List<java.util.Map<String, Object>> calendarEvents(Authentication authentication,
+            @RequestParam @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) java.time.LocalDate start,
+            @RequestParam @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) java.time.LocalDate end) {
+        User user = getCurrentUser(authentication);
+        List<Case> myCases = caseService.getCasesByCollaborator(user.getId());
+
+        List<java.util.Map<String, Object>> events = new ArrayList<>();
+        for (Case c : myCases) {
+            try {
+                List<Appointment> caseAppointments = appointmentService.getAppointmentsByCase(c.getId());
+                for (Appointment a : caseAppointments) {
+                    if (a.getAppointmentDate() == null) continue;
+                    java.time.LocalDate aptDate = a.getAppointmentDate().toLocalDate();
+                    if (!aptDate.isBefore(start) && aptDate.isBefore(end)) {
+                        java.util.Map<String, Object> event = new java.util.LinkedHashMap<>();
+                        event.put("id", a.getId());
+                        event.put("title", a.getTitle());
+                        event.put("start", a.getAppointmentDate().toString());
+                        if (a.getEndDate() != null) event.put("end", a.getEndDate().toString());
+                        event.put("color", a.getColor());
+                        event.put("type", a.getType().getDisplayName());
+                        event.put("status", a.getStatus().name());
+                        events.add(event);
+                    }
+                }
+            } catch (Exception ignore) {}
+        }
+        return events;
     }
 
     // =====================

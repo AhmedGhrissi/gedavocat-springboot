@@ -86,6 +86,11 @@ public interface AppointmentRepository extends JpaRepository<Appointment, String
     long countByLawyerIdAndStatus(String lawyerId, Appointment.AppointmentStatus status);
 
     /**
+     * Trouve les rendez-vous d'un avocat par statut
+     */
+    List<Appointment> findByLawyerIdAndStatusOrderByAppointmentDateDesc(String lawyerId, Appointment.AppointmentStatus status);
+
+    /**
      * Trouve les audiences au tribunal pour un avocat
      */
     @Query("SELECT a FROM Appointment a WHERE a.lawyer.id = :lawyerId " +

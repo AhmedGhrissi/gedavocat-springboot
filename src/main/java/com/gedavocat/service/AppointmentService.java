@@ -163,6 +163,14 @@ public class AppointmentService {
     }
 
     /**
+     * Récupère les rendez-vous en attente de report pour un avocat
+     */
+    public List<Appointment> getRescheduledAppointments(String lawyerId) {
+        return appointmentRepository.findByLawyerIdAndStatusOrderByAppointmentDateDesc(
+            lawyerId, Appointment.AppointmentStatus.RESCHEDULED);
+    }
+
+    /**
      * Récupère les rendez-vous liés à un dossier
      */
     public List<Appointment> getAppointmentsByCase(String caseId) {
@@ -267,8 +275,10 @@ public class AppointmentService {
             lawyerId, Appointment.AppointmentStatus.COMPLETED);
         long cancelled = appointmentRepository.countByLawyerIdAndStatus(
             lawyerId, Appointment.AppointmentStatus.CANCELLED);
+        long rescheduled = appointmentRepository.countByLawyerIdAndStatus(
+            lawyerId, Appointment.AppointmentStatus.RESCHEDULED);
 
-        return new AppointmentStats(scheduled, confirmed, completed, cancelled);
+        return new AppointmentStats(scheduled, confirmed, completed, cancelled, rescheduled);
     }
 
     /**
@@ -278,6 +288,7 @@ public class AppointmentService {
         long scheduled,
         long confirmed,
         long completed,
-        long cancelled
+        long cancelled,
+        long rescheduled
     ) {}
 }

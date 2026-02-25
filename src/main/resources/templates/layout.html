@@ -133,6 +133,10 @@
                     <i class="fas fa-folder"></i>
                     <span>Mes dossiers</span>
                 </a>
+                <a th:href="@{/my-cases-collab/calendar}" class="nav-link">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>Calendrier</span>
+                </a>
                 <a th:href="@{/my-cases-collab/profile}" class="nav-link">
                     <i class="fas fa-user-edit"></i>
                     <span>Mon profil</span>
@@ -144,6 +148,10 @@
                 <a th:href="@{/my-cases-huissier}" class="nav-link">
                     <i class="fas fa-folder"></i>
                     <span>Mes dossiers</span>
+                </a>
+                <a th:href="@{/my-cases-huissier/calendar}" class="nav-link">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>Calendrier</span>
                 </a>
                 <a th:href="@{/my-cases-huissier/profile}" class="nav-link">
                     <i class="fas fa-user-edit"></i>
@@ -209,7 +217,7 @@
                                 <i class="fas fa-cog me-2"></i> Paramètres
                             </a>
                         </li>
-                        <li sec:authorize="!hasRole('CLIENT')">
+                        <li sec:authorize="hasAnyRole('LAWYER','ADMIN')">
                             <a class="dropdown-item" th:href="@{/payment/manage}">
                                 <i class="fas fa-credit-card me-2"></i> Mon abonnement
                             </a>
@@ -280,12 +288,12 @@
                                 <i class="fas fa-user"></i> Profil
                             </button>
                         </li>
-                        <li class="nav-item" role="presentation" sec:authorize="!hasRole('CLIENT')">
+                        <li class="nav-item" role="presentation" sec:authorize="hasAnyRole('LAWYER','ADMIN')">
                             <button class="nav-link" id="yousign-tab" data-bs-toggle="tab" data-bs-target="#yousign-pane" type="button" role="tab">
                                 <i class="fas fa-signature"></i> Yousign
                             </button>
                         </li>
-                        <li class="nav-item" role="presentation" sec:authorize="!hasRole('CLIENT')">
+                        <li class="nav-item" role="presentation" sec:authorize="hasAnyRole('LAWYER','ADMIN')">
                             <button class="nav-link" id="security-tab" data-bs-toggle="tab" data-bs-target="#security-pane" type="button" role="tab">
                                 <i class="fas fa-shield-alt"></i> Sécurité
                             </button>
@@ -328,7 +336,7 @@
                                             <label for="modalPhone">Téléphone</label>
                                         </div>
                                     </div>
-                                    <div class="col-md-6" sec:authorize="!hasRole('CLIENT')">
+                                    <div class="col-md-6" sec:authorize="hasAnyRole('LAWYER','ADMIN')">
                                         <div class="form-floating">
                                             <input type="text" id="modalBarNumber" name="barNumber" 
                                                    class="form-control" placeholder="Numéro au barreau">
@@ -413,7 +421,7 @@
                             <hr class="my-4">
 
                             <h6><i class="fas fa-shield-alt"></i> Informations du compte</h6>
-                            <div class="row g-3" sec:authorize="!hasRole('CLIENT')">
+                            <div class="row g-3" sec:authorize="hasAnyRole('LAWYER','ADMIN')">
                                 <div class="col-md-6">
                                     <div class="card">
                                         <div class="card-body text-center">
@@ -432,7 +440,7 @@
                                 </div>
                             </div>
 
-                            <div class="mt-3 text-center" sec:authorize="!hasRole('CLIENT')">
+                            <div class="mt-3 text-center" sec:authorize="hasAnyRole('LAWYER','ADMIN')">
                                 <a th:href="@{/payment/manage}" class="btn btn-outline-primary" data-bs-dismiss="modal">
                                     <i class="fas fa-crown"></i> Gérer mon abonnement
                                 </a>

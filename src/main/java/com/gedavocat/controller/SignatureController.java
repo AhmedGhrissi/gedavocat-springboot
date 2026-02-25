@@ -15,6 +15,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -102,6 +103,7 @@ public class SignatureController {
      * Créer une demande de signature
      */
     @PostMapping("/create")
+    @Transactional
     public String createSignature(
             @RequestParam String documentId,
             @RequestParam String signerName,
