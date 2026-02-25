@@ -25,6 +25,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import lombok.extern.slf4j.Slf4j;
+
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -35,6 +38,7 @@ import java.util.Map;
 @RequestMapping("/signatures")
 @RequiredArgsConstructor
 @PreAuthorize("hasAnyRole('LAWYER', 'ADMIN')")
+@Slf4j
 public class SignatureController {
 
     private final YousignService yousignService;
@@ -49,6 +53,7 @@ public class SignatureController {
      * Page principale des signatures
      */
     @GetMapping
+    @Transactional
     public String listSignatures(@AuthenticationPrincipal UserDetails userDetails, Model model) {
         User user = userRepository.findByEmail(userDetails.getUsername())
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
@@ -58,6 +63,14 @@ public class SignatureController {
 
         // Récupérer les signatures en cours et terminées depuis la base
         List<Signature> allSignatures = signatureRepository.findByRequestedByIdWithCase(user.getId());
+
+        // Synchroniser le statut des signatures PENDING depuis Yousign
+        for (Signature sig : allSignatures) {
+            if (sig.getStatus() == Signature.SignatureStatus.PENDING) {
+                syncSignatureStatus(sig);
+            }
+        }
+
         List<Signature> pendingSignatures = allSignatures.stream()
             .filter(s -> s.getStatus() == Signature.SignatureStatus.PENDING)
             .toList();
@@ -270,6 +283,11 @@ public class SignatureController {
                 return "redirect:/signatures";
             }
 
+            // Synchroniser le statut depuis Yousign si la signature est en attente
+            if (signature.getStatus() == Signature.SignatureStatus.PENDING) {
+                syncSignatureStatus(signature);
+            }
+
             model.addAttribute("user", user);
             model.addAttribute("signature", signature);
 
@@ -380,6 +398,68 @@ public class SignatureController {
             redirectAttributes.addFlashAttribute("error", "Erreur lors de la relance: " + e.getMessage());
         }
         return "redirect:/signatures";
+    }
+
+    /**
+     * Synchroniser le statut d'une signature depuis l'API Yousign
+     * Yousign statuses: draft, ongoing, done, declined, expired, canceled
+     */
+    private void syncSignatureStatus(Signature signature) {
+        if (signature.getYousignSignatureRequestId() == null || !yousignService.isConfigured()) {
+            return;
+        }
+        try {
+            Map<String, Object> yousignData = yousignService.getSignatureStatus(
+                    signature.getYousignSignatureRequestId());
+            if (yousignData == null) return;
+
+            String yousignStatus = (String) yousignData.get("status");
+            if (yousignStatus == null) return;
+
+            Signature.SignatureStatus newStatus = mapYousignStatus(yousignStatus);
+            if (newStatus != null && newStatus != signature.getStatus()) {
+                Signature.SignatureStatus oldStatus = signature.getStatus();
+                signature.setStatus(newStatus);
+                if (newStatus == Signature.SignatureStatus.SIGNED) {
+                    signature.setSignedAt(LocalDateTime.now());
+                }
+                signatureRepository.save(signature);
+                log.info("Signature {} : statut mis à jour {} → {}",
+                        signature.getId(), oldStatus, newStatus);
+
+                // Notifications
+                if (newStatus == Signature.SignatureStatus.SIGNED) {
+                    notificationService.notifySignatureSigned(
+                            signature.getRequestedBy(),
+                            signature.getSignerName(),
+                            signature.getDocumentName(),
+                            signature.getId());
+                } else if (newStatus == Signature.SignatureStatus.REJECTED) {
+                    notificationService.notifySignatureRejected(
+                            signature.getRequestedBy(),
+                            signature.getSignerName(),
+                            signature.getDocumentName(),
+                            signature.getId());
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Impossible de synchroniser le statut de la signature {} : {}",
+                    signature.getId(), e.getMessage());
+        }
+    }
+
+    /**
+     * Mapper les statuts Yousign vers les statuts locaux
+     */
+    private Signature.SignatureStatus mapYousignStatus(String yousignStatus) {
+        return switch (yousignStatus) {
+            case "draft" -> Signature.SignatureStatus.DRAFT;
+            case "ongoing", "approval" -> Signature.SignatureStatus.PENDING;
+            case "done" -> Signature.SignatureStatus.SIGNED;
+            case "declined", "canceled" -> Signature.SignatureStatus.REJECTED;
+            case "expired", "deleted" -> Signature.SignatureStatus.EXPIRED;
+            default -> null;
+        };
     }
 
     /**
