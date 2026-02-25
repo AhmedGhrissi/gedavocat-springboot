@@ -38,7 +38,8 @@ public interface PermissionRepository extends JpaRepository<Permission, String> 
      * Trouve les permissions actives d'un avocat
      */
     @Query("SELECT p FROM Permission p WHERE p.lawyer.id = :lawyerId " +
-           "AND p.isActive = TRUE AND p.revokedAt IS NULL")
+           "AND p.isActive = TRUE AND p.revokedAt IS NULL " +
+           "AND (p.expiresAt IS NULL OR p.expiresAt > CURRENT_TIMESTAMP)")
     List<Permission> findActiveByLawyerId(@Param("lawyerId") String lawyerId);
     
     /**
@@ -46,7 +47,8 @@ public interface PermissionRepository extends JpaRepository<Permission, String> 
      */
     @Query("SELECT CASE WHEN COUNT(p) > 0 THEN TRUE ELSE FALSE END FROM Permission p " +
            "WHERE p.caseEntity.id = :caseId AND p.lawyer.id = :lawyerId " +
-           "AND p.isActive = TRUE AND p.canRead = TRUE AND p.revokedAt IS NULL")
+           "AND p.isActive = TRUE AND p.canRead = TRUE AND p.revokedAt IS NULL " +
+           "AND (p.expiresAt IS NULL OR p.expiresAt > CURRENT_TIMESTAMP)")
     boolean hasReadAccess(@Param("caseId") String caseId, @Param("lawyerId") String lawyerId);
     
     /**
@@ -54,7 +56,8 @@ public interface PermissionRepository extends JpaRepository<Permission, String> 
      */
     @Query("SELECT CASE WHEN COUNT(p) > 0 THEN TRUE ELSE FALSE END FROM Permission p " +
            "WHERE p.caseEntity.id = :caseId AND p.lawyer.id = :lawyerId " +
-           "AND p.isActive = TRUE AND p.canWrite = TRUE AND p.revokedAt IS NULL")
+           "AND p.isActive = TRUE AND p.canWrite = TRUE AND p.revokedAt IS NULL " +
+           "AND (p.expiresAt IS NULL OR p.expiresAt > CURRENT_TIMESTAMP)")
     boolean hasWriteAccess(@Param("caseId") String caseId, @Param("lawyerId") String lawyerId);
     
     /**

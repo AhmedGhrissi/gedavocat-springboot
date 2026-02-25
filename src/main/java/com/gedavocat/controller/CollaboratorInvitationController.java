@@ -79,6 +79,7 @@ public class CollaboratorInvitationController {
                                            @RequestParam(required = false) String email,
                                            @RequestParam(required = false) String firstName,
                                            @RequestParam(required = false) String lastName,
+                                           @RequestParam(required = false) String barNumber,
                                            RedirectAttributes redirectAttributes,
                                            Model model) {
         if (!password.equals(confirmPassword)) {
@@ -169,6 +170,11 @@ public class CollaboratorInvitationController {
             user.setEmailVerified(true);
             user.setAccountEnabled(true);
 
+            // set bar number if provided
+            if (barNumber != null && !barNumber.trim().isEmpty()) {
+                user.setBarNumber(barNumber.trim());
+            }
+
             // set names: prefer provided firstName/lastName, else derive from email local-part
             String fn = (firstName != null ? firstName.trim() : "");
             String ln = (lastName != null ? lastName.trim() : "");
@@ -197,6 +203,10 @@ public class CollaboratorInvitationController {
             p.setCanWrite(false);
             p.setCanUpload(false);
             p.setIsActive(true);
+            // Propager la date d'expiration du lien de partage vers la permission
+            if (link.getExpiresAt() != null) {
+                p.setExpiresAt(link.getExpiresAt());
+            }
             Permission savedPerm = permissionRepository.save(p);
             // Diagnostic logging: ensure permission persisted and IDs recorded
             try {

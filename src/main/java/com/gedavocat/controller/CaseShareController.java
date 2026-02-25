@@ -108,7 +108,7 @@ public class CaseShareController {
             CaseShareLink link = shareService.createShareLink(id, user, description, expiresAt, maxAccessCount, emailTo);
 
             // Build the full public URL (same logic used in email)
-            String fullPublicUrl = shareService.buildPublicUrl(emailTo, link.getToken());
+            String fullPublicUrl = shareService.buildPublicUrl(link.getToken(), emailTo);
             redirectAttributes.addFlashAttribute("shareFullUrl", fullPublicUrl);
             redirectAttributes.addFlashAttribute("message", "Lien de partage créé avec succès !");
         } catch (Exception e) {

@@ -3,7 +3,9 @@ package com.gedavocat.controller;
 import com.gedavocat.model.Appointment;
 import com.gedavocat.model.Case;
 import com.gedavocat.model.Document;
+import com.gedavocat.model.Permission;
 import com.gedavocat.model.User;
+import com.gedavocat.repository.PermissionRepository;
 import com.gedavocat.repository.UserRepository;
 import com.gedavocat.service.AppointmentService;
 import com.gedavocat.service.CaseService;
@@ -48,6 +50,7 @@ public class CollaboratorPortalController {
     private final UserRepository userRepository;
     private final WatermarkService watermarkService;
     private final AppointmentService appointmentService;
+    private final PermissionRepository permissionRepository;
 
 
 
@@ -66,6 +69,18 @@ public class CollaboratorPortalController {
 
         model.addAttribute("cases", myCases);
         model.addAttribute("user", user);
+
+        // Build a map caseId -> expiresAt for display in the portal
+        java.util.Map<String, java.time.LocalDateTime> expirations = new java.util.HashMap<>();
+        try {
+            List<com.gedavocat.model.Permission> perms = permissionRepository.findActiveByLawyerId(user.getId());
+            for (com.gedavocat.model.Permission p : perms) {
+                if (p.getCaseEntity() != null && p.getExpiresAt() != null) {
+                    expirations.put(p.getCaseEntity().getId(), p.getExpiresAt());
+                }
+            }
+        } catch (Exception ignore) {}
+        model.addAttribute("expirations", expirations);
 
         return "collaborator-portal/cases";
     }
