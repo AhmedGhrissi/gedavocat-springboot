@@ -29,9 +29,9 @@ public class AuthService {
     
     @Transactional
     public AuthResponse register(RegisterRequest request) {
-        // Vérifier si l'email existe déjà
+        // SEC-08 FIX : Message générique pour éviter l'énumération d'utilisateurs
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("Un utilisateur avec cet email existe déjà");
+            throw new RuntimeException("Erreur lors de l'inscription. Vérifiez vos informations.");
         }
         
         // Vérifier la confirmation du mot de passe

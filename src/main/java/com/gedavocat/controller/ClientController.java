@@ -200,6 +200,7 @@ public class ClientController {
     /**
      * Affiche le formulaire d'acceptation d'invitation
      */
+    @PreAuthorize("permitAll()")
     @GetMapping("/accept-invitation")
     public String acceptInvitationForm(@RequestParam String token, Model model) {
         var entry = invitationService.validateToken(token);
@@ -215,6 +216,7 @@ public class ClientController {
     /**
      * Traite l'acceptation de l'invitation (création du compte)
      */
+    @PreAuthorize("permitAll()")
     @PostMapping("/accept-invitation")
     public String processAcceptInvitation(
             @RequestParam String token,
@@ -231,6 +233,12 @@ public class ClientController {
         if (password.length() < 8) {
             model.addAttribute("token", token);
             model.addAttribute("error", "Le mot de passe doit contenir au moins 8 caractères.");
+            return "clients/accept-invitation";
+        }
+        // SEC-15 FIX : Mêmes exigences de complexité que l'inscription
+        if (!com.gedavocat.util.PasswordValidator.isValid(password)) {
+            model.addAttribute("token", token);
+            model.addAttribute("error", com.gedavocat.util.PasswordValidator.PASSWORD_REQUIREMENTS_MESSAGE);
             return "clients/accept-invitation";
         }
         try {

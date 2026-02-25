@@ -6,9 +6,9 @@ import com.gedavocat.model.User;
 import com.gedavocat.repository.AppointmentRepository;
 import com.gedavocat.repository.CaseRepository;
 import com.gedavocat.repository.ClientRepository;
-import com.gedavocat.repository.RpvaCommunicationRepository;
 import com.gedavocat.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +20,7 @@ import java.util.UUID;
  * Service de gestion des clients
  */
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class ClientService {
     
@@ -27,7 +28,6 @@ public class ClientService {
     private final UserRepository userRepository;
     private final AuditService auditService;
     private final AppointmentRepository appointmentRepository;
-    private final RpvaCommunicationRepository rpvaCommunicationRepository;
     private final CaseRepository caseRepository;
     private final CaseService caseService;
     
@@ -69,15 +69,10 @@ public class ClientService {
      */
     @Transactional
     public Client createClient(Client client, String lawyerId) {
-        System.out.println("=== DEBUG ClientService.createClient START ===");
-        System.out.println("LawyerId: " + lawyerId);
-        System.out.println("Client name: " + client.getName());
-        System.out.println("Client email: " + client.getEmail());
+        log.debug("Création d'un client pour l'avocat: {}", lawyerId);
         
         User lawyer = userRepository.findById(lawyerId)
                 .orElseThrow(() -> new RuntimeException("Avocat non trouvé"));
-        
-        System.out.println("Avocat trouvé: " + lawyer.getEmail());
         
         // Vérifier si l'email existe déjà pour cet avocat
         if (clientRepository.existsByLawyerIdAndEmail(lawyerId, client.getEmail())) {
@@ -86,7 +81,6 @@ public class ClientService {
         
         // Vérifier la limite de clients selon l'abonnement
         long clientCount = clientRepository.countByLawyerId(lawyerId);
-        System.out.println("Nombre de clients existants: " + clientCount);
         if (lawyer.getMaxClients() != null && clientCount >= lawyer.getMaxClients()) {
             throw new RuntimeException("Limite de clients atteinte pour votre abonnement");
         }
@@ -99,23 +93,19 @@ public class ClientService {
         client.setLawyer(lawyer);
         client.setCreatedAt(LocalDateTime.now());
         
-        System.out.println("Avant save - Client ID: " + client.getId());
-        
         Client savedClient = clientRepository.save(client);
         
-        System.out.println("Après save - Client ID: " + savedClient.getId());
-        System.out.println("=== Client enregistré en base de données ===");
+        log.info("Client créé: {} ({})", savedClient.getName(), savedClient.getId());
         
         // Audit
         try {
             auditService.log("CLIENT_CREATED", "Client", savedClient.getId(), 
                 "Création du client: " + savedClient.getName(), lawyerId);
         } catch (Exception e) {
-            System.err.println("Erreur lors de l'audit: " + e.getMessage());
+            log.error("Erreur lors de l'audit de création du client: {}", e.getMessage());
             // Ne pas bloquer la création si l'audit échoue
         }
         
-        System.out.println("=== DEBUG ClientService.createClient END ===");
         return savedClient;
     }
     
@@ -124,9 +114,7 @@ public class ClientService {
      */
     @Transactional
     public Client updateClient(String clientId, Client updatedClient, String lawyerId) {
-        System.out.println("=== DEBUG ClientService.updateClient START ===");
-        System.out.println("ClientId: " + clientId);
-        System.out.println("Updated name: " + updatedClient.getName());
+        log.debug("Mise à jour du client: {}", clientId);
         
         Client client = getClientById(clientId);
         
@@ -142,23 +130,19 @@ public class ClientService {
         client.setAccessEndsAt(updatedClient.getAccessEndsAt());
         client.setUpdatedAt(LocalDateTime.now());
         
-        System.out.println("Avant save - Client ID: " + client.getId());
-        
         Client saved = clientRepository.save(client);
         
-        System.out.println("Après save - Client ID: " + saved.getId());
-        System.out.println("=== Client mis à jour en base de données ===");
+        log.info("Client mis à jour: {} ({})", saved.getName(), saved.getId());
         
         // Audit
         try {
             auditService.log("CLIENT_UPDATED", "Client", saved.getId(), 
                 "Modification du client: " + saved.getName(), lawyerId);
         } catch (Exception e) {
-            System.err.println("Erreur lors de l'audit: " + e.getMessage());
+            log.error("Erreur lors de l'audit de mise à jour du client: {}", e.getMessage());
             // Ne pas bloquer la mise à jour si l'audit échoue
         }
         
-        System.out.println("=== DEBUG ClientService.updateClient END ===");
         return saved;
     }
     

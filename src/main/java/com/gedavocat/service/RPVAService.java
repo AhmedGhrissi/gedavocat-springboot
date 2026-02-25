@@ -19,6 +19,7 @@ import java.util.Map;
 @Service
 @Slf4j
 @RequiredArgsConstructor
+@SuppressWarnings({"unchecked", "rawtypes"})
 public class RPVAService {
     
     @Value("${rpva.api.url:https://api.e-barreau.fr}")

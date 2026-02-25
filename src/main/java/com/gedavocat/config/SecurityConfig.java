@@ -48,6 +48,7 @@ public class SecurityConfig {
 						"/robots.txt", "/sitemap.xml",
 							"/forgot-password", "/reset-password", "/verify-email", "/verify-email/resend",
 							"/clients/accept-invitation",
+							"/collaborators/accept-invitation", "/collaborators/invitation-info",
 							"/cases/shared", "/cases/shared-expired",
 							"/legal/**")
 						.permitAll()
@@ -184,7 +185,7 @@ public class SecurityConfig {
 		// Désactivé : setAllowSemicolon et setAllowBackSlash — risque de path traversal
 		// firewall.setAllowSemicolon(true);
 		// firewall.setAllowBackSlash(true);
-		firewall.setAllowUrlEncodedDoubleSlash(true);
+		firewall.setAllowUrlEncodedDoubleSlash(false);
 		return firewall;
 	}
 

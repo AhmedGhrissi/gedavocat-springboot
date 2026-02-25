@@ -65,4 +65,9 @@ public interface PaymentRepository extends JpaRepository<Payment, String> {
      */
     @Query("SELECT p FROM Payment p WHERE p.user.id = :userId AND p.status = 'PAID' ORDER BY p.paidAt DESC")
     List<Payment> findLastSuccessfulPaymentByUserId(@Param("userId") String userId);
+
+    @org.springframework.data.jpa.repository.Modifying(clearAutomatically = true)
+    @org.springframework.transaction.annotation.Transactional
+    @Query("DELETE FROM Payment p WHERE p.user.id = :userId")
+    void deleteByUserId(@Param("userId") String userId);
 }

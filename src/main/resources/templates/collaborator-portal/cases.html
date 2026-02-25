@@ -39,6 +39,14 @@
                                             <i class="fas fa-user-tie"></i>
                                             Avocat : <span th:text="${case.lawyer != null ? case.lawyer.name : 'Non assigné'}">Me Dupont</span>
                                         </span>
+                                        <span class="ms-3" th:if="${expirations != null and expirations.containsKey(case.id)}">
+                                            <i class="fas fa-clock text-warning"></i>
+                                            Accès jusqu'au <span class="text-warning fw-bold" th:text="${#temporals.format(expirations.get(case.id), 'dd/MM/yyyy HH:mm')}">01/01/2025</span>
+                                        </span>
+                                        <span class="ms-3" th:if="${expirations == null or !expirations.containsKey(case.id)}">
+                                            <i class="fas fa-infinity text-success"></i>
+                                            <span class="text-success">Accès permanent</span>
+                                        </span>
                                     </small>
                                 </div>
                                 <span class="status-badge" 

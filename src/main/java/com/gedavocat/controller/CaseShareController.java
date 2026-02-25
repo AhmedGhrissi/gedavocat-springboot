@@ -14,10 +14,10 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -59,7 +59,9 @@ public class CaseShareController {
         User user = getCurrentUser(authentication);
         Case caseEntity = caseService.getCaseById(id);
 
-        if (!caseEntity.getLawyer().getId().equals(user.getId())) {
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        if (!isAdmin && !caseEntity.getLawyer().getId().equals(user.getId())) {
             throw new RuntimeException("Accès non autorisé");
         }
 
@@ -107,9 +109,8 @@ public class CaseShareController {
             User user = getCurrentUser(authentication);
             CaseShareLink link = shareService.createShareLink(id, user, description, expiresAt, maxAccessCount, emailTo);
 
-
             // Build the full public URL (same logic used in email)
-            String fullPublicUrl = shareService.buildPublicUrl(emailTo, link.getToken());
+            String fullPublicUrl = shareService.buildPublicUrl(link.getToken(), emailTo);
             redirectAttributes.addFlashAttribute("shareFullUrl", fullPublicUrl);
             redirectAttributes.addFlashAttribute("message", "Lien de partage créé avec succès !");
         } catch (Exception e) {
@@ -147,18 +148,25 @@ public class CaseShareController {
      * Accès en lecture au dossier partagé via token
      */
     @GetMapping("/cases/shared")
-    @Transactional
-    public String accessSharedCase(@RequestParam String token, Model model) {
+    public String accessSharedCase(@RequestParam(required = false) String token, Model model) {
+        if (token == null || token.isBlank()) {
+            model.addAttribute("error", "Token de partage manquant");
+            return "cases/shared-expired";
+        }
         try {
             CaseShareLink link = shareService.accessByToken(token);
-            Case caseEntity = link.getSharedCase();
 
-            // Charger les données nécessaires
-            caseEntity.getName(); // init lazy
-            if (caseEntity.getClient() != null) caseEntity.getClient().getName();
+            // Si le lien a un destinataire email et qu'il n'a pas encore de compte →
+            // rediriger vers la page de création de compte collaborateur
+            if (link.getRecipientEmail() != null && !link.getRecipientEmail().isBlank()) {
+                boolean accountExists = userRepository.findByEmail(link.getRecipientEmail()).isPresent();
+                if (!accountExists) {
+                    return "redirect:/collaborators/accept-invitation?token=" + token;
+                }
+            }
 
-            model.addAttribute("case", caseEntity);
-            model.addAttribute("documents", documentService.getLatestVersions(caseEntity.getId()));
+            model.addAttribute("case", link.getSharedCase());
+            model.addAttribute("documents", documentService.getLatestVersions(link.getSharedCase().getId()));
             model.addAttribute("link", link);
             model.addAttribute("token", token);
             return "cases/shared-view";

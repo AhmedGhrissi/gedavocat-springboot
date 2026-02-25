@@ -65,4 +65,27 @@ class BCryptPasswordTest {
             assertThat(encoder.matches(pwd, hash)).isTrue();
         }
     }
+
+    @Test
+    @DisplayName("✓ Génération du hash pour Admin1234! et test $2b$ compatibilité")
+    void testAdmin1234Hash() {
+        String password = "Admin1234!";
+        String newHash = encoder.encode(password);
+        System.out.println("\n=== HASH ADMIN ===");
+        System.out.println("Password: " + password);
+        System.out.println("New hash: " + newHash);
+
+        // Test if $2b$ hash from production is compatible
+        String prodHash = "$2b$10$5U1hpYyYfczdEjw/YJU0fex3S.iLQjE5GRoKjSIA83e/fo4IuZASK";
+        boolean matches2b = encoder.matches(password, prodHash);
+        System.out.println("$2b$ hash matches Admin1234!: " + matches2b);
+
+        // Test $2a$ version of the same hash
+        String hash2a = prodHash.replace("$2b$", "$2a$");
+        boolean matches2a = encoder.matches(password, hash2a);
+        System.out.println("$2a$ hash matches Admin1234!: " + matches2a);
+        System.out.println("==================\n");
+
+        assertThat(encoder.matches(password, newHash)).isTrue();
+    }
 }

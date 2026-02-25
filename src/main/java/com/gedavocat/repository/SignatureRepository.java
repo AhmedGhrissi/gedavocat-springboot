@@ -57,4 +57,9 @@ public interface SignatureRepository extends JpaRepository<Signature, String> {
      * Trouve les signatures par email du signataire
      */
     List<Signature> findBySignerEmail(String signerEmail);
+
+    @org.springframework.data.jpa.repository.Modifying(clearAutomatically = true)
+    @org.springframework.transaction.annotation.Transactional
+    @Query("DELETE FROM Signature s WHERE s.requestedBy.id = :userId")
+    void deleteByRequestedById(@Param("userId") String userId);
 }

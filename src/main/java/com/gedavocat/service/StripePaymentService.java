@@ -20,6 +20,7 @@ import java.util.Map;
 @Service
 @Slf4j
 @RequiredArgsConstructor
+@SuppressWarnings("unchecked")
 public class StripePaymentService {
     
     @Value("${stripe.api.key:}")
@@ -104,7 +105,8 @@ public class StripePaymentService {
      */
     public Map<String, Object> createCustomerPortal(String userId, String returnUrl) {
         try {
-            User user = userRepository.findById(userId)
+            // Vérifier que l'utilisateur existe
+            userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
             
             // En production: créer le portail avec Stripe

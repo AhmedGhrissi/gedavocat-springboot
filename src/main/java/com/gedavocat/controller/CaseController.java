@@ -180,9 +180,9 @@ public class CaseController {
         model.addAttribute("documents", documentService.getLatestVersions(id));
         model.addAttribute("documentCount", documentService.getDocumentsByCase(id).size());
 
-        // Permissions (collaborateurs)
+        // Permissions (collaborateurs actifs uniquement)
         try {
-            var permissions = permissionRepository.findByCaseEntityId(id);
+            var permissions = permissionRepository.findActiveByCaseId(id);
             // Force-initialiser les proxies lazy (open-in-view=false)
             for (var perm : permissions) {
                 if (perm.getLawyer() != null) {
@@ -367,6 +367,44 @@ public class CaseController {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
         return "redirect:/cases";
+    }
+
+    /**
+     * Révoquer l'accès d'un collaborateur
+     */
+    @PostMapping("/{caseId}/permissions/{permissionId}/revoke")
+    @Transactional
+    public String revokePermission(
+            @PathVariable String caseId,
+            @PathVariable String permissionId,
+            Authentication authentication,
+            RedirectAttributes redirectAttributes
+    ) {
+        try {
+            User user = getCurrentUser(authentication);
+            Case caseEntity = caseService.getCaseById(caseId);
+
+            // Vérifier que l'utilisateur est propriétaire du dossier ou admin
+            if (!isAdmin(authentication) && !caseEntity.getLawyer().getId().equals(user.getId())) {
+                throw new RuntimeException("Accès non autorisé");
+            }
+
+            var permission = permissionRepository.findById(permissionId)
+                    .orElseThrow(() -> new RuntimeException("Permission introuvable"));
+
+            // Vérifier que la permission concerne bien ce dossier
+            if (!permission.getCaseEntity().getId().equals(caseId)) {
+                throw new RuntimeException("Permission incohérente avec le dossier");
+            }
+
+            permission.revoke();
+            permissionRepository.save(permission);
+
+            redirectAttributes.addFlashAttribute("message", "Accès collaborateur révoqué avec succès");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/cases/" + caseId;
     }
 
     private User getCurrentUser(Authentication authentication) {

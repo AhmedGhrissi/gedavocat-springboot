@@ -3,17 +3,16 @@ package com.gedavocat.controller;
 import com.gedavocat.model.User;
 import com.gedavocat.model.Case;
 import com.gedavocat.model.Client;
-import com.gedavocat.model.Document;
 import com.gedavocat.model.AuditLog;
 import com.gedavocat.repository.UserRepository;
 import com.gedavocat.repository.CaseRepository;
 import com.gedavocat.repository.ClientRepository;
-import com.gedavocat.repository.DocumentRepository;
 import com.gedavocat.repository.AuditLogRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -36,12 +35,12 @@ import java.util.*;
 @Controller
 @RequestMapping("/rgpd")
 @RequiredArgsConstructor
+@Slf4j
 public class RgpdController {
 
     private final UserRepository userRepository;
     private final CaseRepository caseRepository;
     private final ClientRepository clientRepository;
-    private final DocumentRepository documentRepository;
     private final AuditLogRepository auditLogRepository;
 
     /**
@@ -89,7 +88,10 @@ public class RgpdController {
                     caseMap.put("createdAt", c.getCreatedAt() != null ? c.getCreatedAt().toString() : null);
                     casesData.add(caseMap);
                 }
-            } catch (Exception ignored) {}
+            } catch (Exception e) {
+                log.warn("Export RGPD : erreur lors de la récupération des dossiers pour {}", user.getEmail(), e);
+                exportData.put("cases_warning", "Export incomplet : erreur lors de la récupération des dossiers");
+            }
             exportData.put("cases", casesData);
 
             // Clients (si avocat)
@@ -105,7 +107,10 @@ public class RgpdController {
                     clientMap.put("createdAt", cl.getCreatedAt() != null ? cl.getCreatedAt().toString() : null);
                     clientsData.add(clientMap);
                 }
-            } catch (Exception ignored) {}
+            } catch (Exception e) {
+                log.warn("Export RGPD : erreur lors de la récupération des clients pour {}", user.getEmail(), e);
+                exportData.put("clients_warning", "Export incomplet : erreur lors de la récupération des clients");
+            }
             exportData.put("clients", clientsData);
 
             // Logs d'audit
@@ -120,7 +125,10 @@ public class RgpdController {
                     logMap.put("createdAt", log.getCreatedAt() != null ? log.getCreatedAt().toString() : null);
                     logsData.add(logMap);
                 }
-            } catch (Exception ignored) {}
+            } catch (Exception e) {
+                log.warn("Export RGPD : erreur lors de la récupération des logs d'audit pour {}", user.getEmail(), e);
+                exportData.put("auditLogs_warning", "Export incomplet : erreur lors de la récupération des logs d'audit");
+            }
             exportData.put("auditLogs", logsData);
 
             ObjectMapper mapper = new ObjectMapper();

@@ -21,7 +21,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -162,7 +161,8 @@ public class RPVAController {
             RedirectAttributes redirectAttributes
     ) {
         try {
-            User user = userRepository.findByEmail(userDetails.getUsername())
+            // Vérifier que l'utilisateur existe
+            userRepository.findByEmail(userDetails.getUsername())
                     .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
 
             // Envoyer la communication
@@ -313,7 +313,7 @@ public class RPVAController {
                 "type", "PERSON"
             ));
 
-            Map<String, Object> result = rpvaService.registerCase(
+            rpvaService.registerCase(
                     caseEntity.getName(),
                     jurisdictionCode,
                     caseType,

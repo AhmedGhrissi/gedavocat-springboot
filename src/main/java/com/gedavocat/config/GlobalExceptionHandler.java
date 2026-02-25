@@ -1,5 +1,8 @@
 package com.gedavocat.config;
 
+import com.gedavocat.exception.BusinessValidationException;
+import com.gedavocat.exception.ForbiddenAccessException;
+import com.gedavocat.exception.ResourceNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -7,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.ModelAndView;
@@ -67,6 +71,62 @@ public class GlobalExceptionHandler {
         ModelAndView mav = new ModelAndView("error");
         mav.addObject("status", "400 - Données invalides");
         mav.addObject("message", "Les données soumises sont invalides. Veuillez vérifier votre saisie.");
+        mav.setStatus(HttpStatus.BAD_REQUEST);
+        return mav;
+    }
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public Object handleResourceNotFound(ResourceNotFoundException ex, HttpServletRequest request) {
+        log.warn("Ressource non trouvée: {} - {}", request.getRequestURI(), ex.getMessage());
+        if (isApiRequest(request)) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", ex.getMessage(), "status", 404));
+        }
+        ModelAndView mav = new ModelAndView("error");
+        mav.addObject("status", "404 - Non trouvé");
+        mav.addObject("message", ex.getMessage());
+        mav.setStatus(HttpStatus.NOT_FOUND);
+        return mav;
+    }
+
+    @ExceptionHandler(ForbiddenAccessException.class)
+    public Object handleForbiddenAccess(ForbiddenAccessException ex, HttpServletRequest request) {
+        log.warn("Accès interdit: {} - {} - IP: {}", request.getRequestURI(), ex.getMessage(), getClientIp(request));
+        if (isApiRequest(request)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", ex.getMessage(), "status", 403));
+        }
+        ModelAndView mav = new ModelAndView("error");
+        mav.addObject("status", "403 - Accès interdit");
+        mav.addObject("message", ex.getMessage());
+        mav.setStatus(HttpStatus.FORBIDDEN);
+        return mav;
+    }
+
+    @ExceptionHandler(BusinessValidationException.class)
+    public Object handleBusinessValidation(BusinessValidationException ex, HttpServletRequest request) {
+        log.warn("Erreur métier: {} - {}", request.getRequestURI(), ex.getMessage());
+        if (isApiRequest(request)) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", ex.getMessage(), "status", 400));
+        }
+        ModelAndView mav = new ModelAndView("error");
+        mav.addObject("status", "400 - Erreur de validation");
+        mav.addObject("message", ex.getMessage());
+        mav.setStatus(HttpStatus.BAD_REQUEST);
+        return mav;
+    }
+
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public Object handleMissingParam(MissingServletRequestParameterException ex, HttpServletRequest request) {
+        log.warn("Paramètre manquant sur {} : {}", request.getRequestURI(), ex.getMessage());
+        if (isApiRequest(request)) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", "Paramètre requis manquant: " + ex.getParameterName(), "status", 400));
+        }
+        ModelAndView mav = new ModelAndView("error");
+        mav.addObject("status", "400 - Paramètre manquant");
+        mav.addObject("message", "Un paramètre requis est manquant.");
         mav.setStatus(HttpStatus.BAD_REQUEST);
         return mav;
     }

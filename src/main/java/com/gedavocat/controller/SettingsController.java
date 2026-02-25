@@ -3,6 +3,7 @@ package com.gedavocat.controller;
 import com.gedavocat.model.User;
 import com.gedavocat.repository.UserRepository;
 import com.gedavocat.service.SettingsService;
+import com.gedavocat.util.PasswordValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -225,6 +226,11 @@ public class SettingsController {
                 redirectAttributes.addFlashAttribute("error", "Le nouveau mot de passe doit comporter au moins 8 caractères.");
                 return "redirect:/settings";
             }
+            // SEC-15 FIX : Mêmes exigences de complexité que l'inscription
+            if (!PasswordValidator.isValid(newPassword)) {
+                redirectAttributes.addFlashAttribute("error", PasswordValidator.PASSWORD_REQUIREMENTS_MESSAGE);
+                return "redirect:/settings";
+            }
             user.setPassword(passwordEncoder.encode(newPassword));
             userRepository.save(user);
             redirectAttributes.addFlashAttribute("message", "Mot de passe modifié avec succès.");
@@ -291,6 +297,13 @@ public class SettingsController {
                 return ResponseEntity.badRequest().body(Map.of(
                     "success", false,
                     "message", "Le nouveau mot de passe doit comporter au moins 8 caractères."
+                ));
+            }
+            // SEC-15 FIX : Mêmes exigences de complexité que l'inscription
+            if (!PasswordValidator.isValid(newPassword)) {
+                return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", PasswordValidator.PASSWORD_REQUIREMENTS_MESSAGE
                 ));
             }
             user.setPassword(passwordEncoder.encode(newPassword));

@@ -539,7 +539,6 @@ body {
 /* ── Page Content ── */
 .page-content {
     padding: 28px;
-    animation: fadeIn 0.4s var(--ease-out) both;
     position: relative;
 }
 

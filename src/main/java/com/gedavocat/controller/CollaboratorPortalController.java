@@ -3,9 +3,10 @@ package com.gedavocat.controller;
 import com.gedavocat.model.Appointment;
 import com.gedavocat.model.Case;
 import com.gedavocat.model.Document;
+import com.gedavocat.model.Permission;
 import com.gedavocat.model.User;
+import com.gedavocat.repository.PermissionRepository;
 import com.gedavocat.repository.UserRepository;
-import com.gedavocat.repository.ClientRepository;
 import com.gedavocat.service.AppointmentService;
 import com.gedavocat.service.CaseService;
 import com.gedavocat.service.DocumentService;
@@ -31,7 +32,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -48,15 +48,11 @@ public class CollaboratorPortalController {
     private final CaseService caseService;
     private final DocumentService documentService;
     private final UserRepository userRepository;
-    private final ClientRepository clientRepository;
     private final WatermarkService watermarkService;
     private final AppointmentService appointmentService;
+    private final PermissionRepository permissionRepository;
 
-    private String notLinked(Model model) {
-        model.addAttribute("errorMessage",
-                "Votre compte collaborateur n'a pas encore été activé. Contactez l'administrateur.");
-        return "collaborator-portal/pending";
-    }
+
 
     @GetMapping
     public String listMyCases(Model model, Authentication authentication) {
@@ -73,6 +69,18 @@ public class CollaboratorPortalController {
 
         model.addAttribute("cases", myCases);
         model.addAttribute("user", user);
+
+        // Build a map caseId -> expiresAt for display in the portal
+        java.util.Map<String, java.time.LocalDateTime> expirations = new java.util.HashMap<>();
+        try {
+            List<com.gedavocat.model.Permission> perms = permissionRepository.findActiveByLawyerId(user.getId());
+            for (com.gedavocat.model.Permission p : perms) {
+                if (p.getCaseEntity() != null && p.getExpiresAt() != null) {
+                    expirations.put(p.getCaseEntity().getId(), p.getExpiresAt());
+                }
+            }
+        } catch (Exception ignore) {}
+        model.addAttribute("expirations", expirations);
 
         return "collaborator-portal/cases";
     }
@@ -136,7 +144,6 @@ public class CollaboratorPortalController {
                                  RedirectAttributes redirectAttributes) {
         try {
             User user = getCurrentUser(authentication);
-            Case caseEntity = caseService.getCaseById(caseId);
             if (!caseService.hasCollaboratorAccess(caseId, user.getId())) {
                 redirectAttributes.addFlashAttribute("error", "Accès non autorisé à ce dossier.");
                 return "redirect:/my-cases-collab";
