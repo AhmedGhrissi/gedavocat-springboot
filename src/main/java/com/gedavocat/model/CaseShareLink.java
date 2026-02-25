@@ -58,14 +58,6 @@ public class CaseShareLink {
     @Column(name = "description", length = 500)
     private String description;
 
-    /** Email du destinataire (optionnel) */
-    @Column(name = "recipient_email", length = 255)
-    private String recipientEmail;
-
-    /** Date/heure où l'invitation a été envoyée (optionnel) */
-    @Column(name = "invited_at")
-    private LocalDateTime invitedAt;
-
     /** Expiration du lien (peut être null = permanent) */
     @Column(name = "expires_at")
     private LocalDateTime expiresAt;
