@@ -518,14 +518,14 @@
     </div>
 
     <script>
-        /* ===================== Nouvel utilisateur ===================== */
+        /* ===================== Fonctions globales (appelées via onclick) ===================== */
         function toggleSubscriptionFields() {
-            const isLawyer = document.getElementById('roleLawyer').checked;
+            var isLawyer = document.getElementById('roleLawyer').checked;
             document.getElementById('subscriptionInfo').style.display = isLawyer ? 'block' : 'none';
         }
         function togglePasswordVisibility() {
-            const pwdInput = document.getElementById('newPassword');
-            const icon = document.getElementById('togglePwdIcon');
+            var pwdInput = document.getElementById('newPassword');
+            var icon = document.getElementById('togglePwdIcon');
             if (pwdInput.type === 'password') {
                 pwdInput.type = 'text';
                 icon.classList.replace('fa-eye', 'fa-eye-slash');
@@ -535,131 +535,155 @@
             }
         }
 
-        /* ===================== Bouton Voir ===================== */
-        document.querySelectorAll('.btn-view-user').forEach(btn => {
-            btn.addEventListener('click', function () {
-                const userId = this.dataset.userId;
-                adminLoadUser(userId, 'view');
+        /* ===================== Initialisation robuste ===================== */
+        document.addEventListener('DOMContentLoaded', function () {
+            var currentUserId = null;
+
+            /* -- Déplacer les modales au niveau <body> pour éviter les problèmes de stacking context -- */
+            ['viewUserModal', 'editUserModal', 'newUserModal'].forEach(function (id) {
+                var modal = document.getElementById(id);
+                if (modal) document.body.appendChild(modal);
             });
-        });
 
-        /* ===================== Bouton Modifier ===================== */
-        document.querySelectorAll('.btn-edit-user').forEach(btn => {
-            btn.addEventListener('click', function () {
-                const userId = this.dataset.userId;
-                adminLoadUser(userId, 'edit');
-            });
-        });
-
-        /* Bouton "Modifier" depuis la modale de vue */
-        let currentUserId = null;
-        document.getElementById('viewToEditBtn').addEventListener('click', function () {
-            if (currentUserId) {
-                bootstrap.Modal.getInstance(document.getElementById('viewUserModal')).hide();
-                adminLoadUser(currentUserId, 'edit');
-                new bootstrap.Modal(document.getElementById('editUserModal')).show();
-            }
-        });
-
-        /* ===================== Fetch utilisateur ===================== */
-        function adminLoadUser(userId, mode) {
-            currentUserId = userId;
-            if (mode === 'view') {
-                document.getElementById('viewUserContent').style.display = 'none';
-                document.getElementById('viewUserSpinner').style.display = 'block';
-            } else {
-                document.getElementById('editUserContent').style.display = 'none';
-                document.getElementById('editUserSpinner').style.display = 'block';
+            /* -- Bouton "Nouvel utilisateur" -- */
+            var newBtn = document.querySelector('[data-bs-target="#newUserModal"]');
+            if (newBtn) {
+                newBtn.removeAttribute('data-bs-toggle');
+                newBtn.removeAttribute('data-bs-target');
+                newBtn.addEventListener('click', function () {
+                    bootstrap.Modal.getOrCreateInstance(document.getElementById('newUserModal')).show();
+                });
             }
 
-            fetch('/admin/users/' + userId, { credentials: 'same-origin', headers: { 'Accept': 'application/json' } })
-                .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-                .then(u => {
-                    if (mode === 'view') {
-                        document.getElementById('vu-firstName').textContent        = u.firstName || '-';
-                        document.getElementById('vu-lastName').textContent         = u.lastName  || '-';
-                        document.getElementById('vu-email').textContent            = u.email     || '-';
-                        document.getElementById('vu-roleLabel').textContent        = u.roleLabel || '-';
-                        document.getElementById('vu-phone').textContent            = u.phone     || '-';
-                        document.getElementById('vu-barNumber').textContent        = u.barNumber || '-';
-                        document.getElementById('vu-subscriptionPlan').textContent = u.subscriptionPlan || '-';
-                        document.getElementById('vu-subscriptionStatus').textContent = u.subscriptionStatus || '-';
-                        document.getElementById('vu-maxClients').textContent       = u.maxClients != null ? u.maxClients : '-';
-                        document.getElementById('vu-accountEnabled').innerHTML     = u.accountEnabled
-                            ? '<span class="badge bg-success">Actif</span>'
-                            : '<span class="badge bg-danger">Bloqué</span>';
-                        document.getElementById('vu-createdAt').textContent        = u.createdAt  || '-';
-                        document.getElementById('vu-updatedAt').textContent        = u.updatedAt  || '-';
-                        document.getElementById('viewUserSpinner').style.display  = 'none';
-                        document.getElementById('viewUserContent').style.display  = 'block';
-                    } else {
-                        document.getElementById('edit-firstName').value = u.firstName || '';
-                        document.getElementById('edit-lastName').value  = u.lastName  || '';
-                        document.getElementById('edit-email').value     = u.email     || '';
-                        document.getElementById('edit-role').value      = u.role      || 'LAWYER';
-                        const enabledCb = document.getElementById('edit-accountEnabled');
-                        enabledCb.checked = u.accountEnabled;
-                        document.getElementById('editBlockWarning').style.display = u.accountEnabled ? 'none' : 'block';
-                        /* Action du formulaire d'édition */
-                        document.getElementById('editUserForm').action = '/admin/users/' + userId + '/edit';
-                        /* Bouton supprimer dans la modale édition */
-                        document.getElementById('editDeleteBtn').dataset.userId   = userId;
-                        document.getElementById('editDeleteBtn').dataset.userName = u.firstName + ' ' + u.lastName;
-                        document.getElementById('editUserSpinner').style.display  = 'none';
-                        document.getElementById('editUserContent').style.display  = 'block';
-                    }
-                })
-                .catch(err => {
-                    alert('Erreur lors du chargement : ' + err.message);
-                    if (mode === 'view') {
-                        document.getElementById('viewUserSpinner').innerHTML =
-                            '<div class="alert alert-danger">Erreur de chargement</div>';
-                    } else {
-                        document.getElementById('editUserSpinner').innerHTML =
-                            '<div class="alert alert-danger">Erreur de chargement</div>';
+            /* -- Boutons Voir -- */
+            document.querySelectorAll('.btn-view-user').forEach(function (btn) {
+                btn.removeAttribute('data-bs-toggle');
+                btn.removeAttribute('data-bs-target');
+                btn.addEventListener('click', function () {
+                    currentUserId = this.dataset.userId;
+                    adminLoadUser(currentUserId, 'view');
+                    bootstrap.Modal.getOrCreateInstance(document.getElementById('viewUserModal')).show();
+                });
+            });
+
+            /* -- Boutons Modifier -- */
+            document.querySelectorAll('.btn-edit-user').forEach(function (btn) {
+                btn.removeAttribute('data-bs-toggle');
+                btn.removeAttribute('data-bs-target');
+                btn.addEventListener('click', function () {
+                    currentUserId = this.dataset.userId;
+                    adminLoadUser(currentUserId, 'edit');
+                    bootstrap.Modal.getOrCreateInstance(document.getElementById('editUserModal')).show();
+                });
+            });
+
+            /* -- Bouton "Modifier" depuis la modale de vue -- */
+            var viewToEditBtn = document.getElementById('viewToEditBtn');
+            if (viewToEditBtn) {
+                viewToEditBtn.addEventListener('click', function () {
+                    if (currentUserId) {
+                        var vm = bootstrap.Modal.getInstance(document.getElementById('viewUserModal'));
+                        if (vm) vm.hide();
+                        adminLoadUser(currentUserId, 'edit');
+                        bootstrap.Modal.getOrCreateInstance(document.getElementById('editUserModal')).show();
                     }
                 });
-        }
-
-        /* Mise à jour de l'avertissement de blocage en temps réel */
-        document.getElementById('edit-accountEnabled').addEventListener('change', function () {
-            document.getElementById('editBlockWarning').style.display = this.checked ? 'none' : 'block';
-        });
-
-        /* ===================== Bouton Supprimer (tableau) ===================== */
-        document.querySelectorAll('.btn-delete-user').forEach(btn => {
-            btn.addEventListener('click', function () {
-                const userId   = this.dataset.userId;
-                const userName = this.dataset.userName;
-                confirmDelete(userId, userName);
-            });
-        });
-
-        /* Bouton supprimer depuis la modale édition */
-        document.getElementById('editDeleteBtn').addEventListener('click', function () {
-            const userId   = this.dataset.userId;
-            const userName = this.dataset.userName;
-            bootstrap.Modal.getInstance(document.getElementById('editUserModal')).hide();
-            confirmDelete(userId, userName);
-        });
-
-        function confirmDelete(userId, userName) {
-            if (confirm('Supprimer définitivement l\'utilisateur ' + userName + ' ?\n⚠️ Cette action est irréversible.')) {
-                const csrfToken  = document.getElementById('_csrf_token').content;
-                const csrfHeader = document.getElementById('_csrf_header').content;
-                fetch('/admin/users/' + userId + '/delete', {
-                    method: 'POST',
-                    credentials: 'same-origin',
-                    redirect: 'manual',
-                    headers: { [csrfHeader]: csrfToken }
-                })
-                .then(r => {
-                    // redirect: manual preserves flash attributes for the next navigation
-                    window.location.href = '/admin/users';
-                })
-                .catch(err => alert('Erreur réseau : ' + err.message));
             }
-        }
+
+            /* -- Toggle blocage compte -- */
+            var editEnabled = document.getElementById('edit-accountEnabled');
+            if (editEnabled) {
+                editEnabled.addEventListener('change', function () {
+                    document.getElementById('editBlockWarning').style.display = this.checked ? 'none' : 'block';
+                });
+            }
+
+            /* -- Boutons Supprimer (tableau) -- */
+            document.querySelectorAll('.btn-delete-user').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    confirmDelete(this.dataset.userId, this.dataset.userName);
+                });
+            });
+
+            /* -- Bouton Supprimer depuis modale édition -- */
+            var editDeleteBtn = document.getElementById('editDeleteBtn');
+            if (editDeleteBtn) {
+                editDeleteBtn.addEventListener('click', function () {
+                    var em = bootstrap.Modal.getInstance(document.getElementById('editUserModal'));
+                    if (em) em.hide();
+                    confirmDelete(this.dataset.userId, this.dataset.userName);
+                });
+            }
+
+            /* ===================== Fetch utilisateur ===================== */
+            function adminLoadUser(userId, mode) {
+                currentUserId = userId;
+                if (mode === 'view') {
+                    document.getElementById('viewUserContent').style.display = 'none';
+                    document.getElementById('viewUserSpinner').style.display = 'block';
+                } else {
+                    document.getElementById('editUserContent').style.display = 'none';
+                    document.getElementById('editUserSpinner').style.display = 'block';
+                }
+
+                fetch('/admin/users/' + userId, { credentials: 'same-origin', headers: { 'Accept': 'application/json' } })
+                    .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+                    .then(function (u) {
+                        if (mode === 'view') {
+                            document.getElementById('vu-firstName').textContent        = u.firstName || '-';
+                            document.getElementById('vu-lastName').textContent         = u.lastName  || '-';
+                            document.getElementById('vu-email').textContent            = u.email     || '-';
+                            document.getElementById('vu-roleLabel').textContent        = u.roleLabel || '-';
+                            document.getElementById('vu-phone').textContent            = u.phone     || '-';
+                            document.getElementById('vu-barNumber').textContent        = u.barNumber || '-';
+                            document.getElementById('vu-subscriptionPlan').textContent = u.subscriptionPlan || '-';
+                            document.getElementById('vu-subscriptionStatus').textContent = u.subscriptionStatus || '-';
+                            document.getElementById('vu-maxClients').textContent       = u.maxClients != null ? u.maxClients : '-';
+                            document.getElementById('vu-accountEnabled').innerHTML     = u.accountEnabled
+                                ? '<span class="badge bg-success">Actif</span>'
+                                : '<span class="badge bg-danger">Bloqué</span>';
+                            document.getElementById('vu-createdAt').textContent        = u.createdAt  || '-';
+                            document.getElementById('vu-updatedAt').textContent        = u.updatedAt  || '-';
+                            document.getElementById('viewUserSpinner').style.display  = 'none';
+                            document.getElementById('viewUserContent').style.display  = 'block';
+                        } else {
+                            document.getElementById('edit-firstName').value = u.firstName || '';
+                            document.getElementById('edit-lastName').value  = u.lastName  || '';
+                            document.getElementById('edit-email').value     = u.email     || '';
+                            document.getElementById('edit-role').value      = u.role      || 'LAWYER';
+                            var enabledCb = document.getElementById('edit-accountEnabled');
+                            enabledCb.checked = u.accountEnabled;
+                            document.getElementById('editBlockWarning').style.display = u.accountEnabled ? 'none' : 'block';
+                            document.getElementById('editUserForm').action = '/admin/users/' + userId + '/edit';
+                            document.getElementById('editDeleteBtn').dataset.userId   = userId;
+                            document.getElementById('editDeleteBtn').dataset.userName = u.firstName + ' ' + u.lastName;
+                            document.getElementById('editUserSpinner').style.display  = 'none';
+                            document.getElementById('editUserContent').style.display  = 'block';
+                        }
+                    })
+                    .catch(function (err) {
+                        alert('Erreur lors du chargement : ' + err.message);
+                        var target = mode === 'view' ? 'viewUserSpinner' : 'editUserSpinner';
+                        document.getElementById(target).innerHTML = '<div class="alert alert-danger">Erreur de chargement</div>';
+                    });
+            }
+
+            /* ===================== Suppression ===================== */
+            function confirmDelete(userId, userName) {
+                if (confirm('Supprimer définitivement l\'utilisateur ' + userName + ' ?\n⚠️ Cette action est irréversible.')) {
+                    var csrfToken  = document.getElementById('_csrf_token').content;
+                    var csrfHeader = document.getElementById('_csrf_header').content;
+                    fetch('/admin/users/' + userId + '/delete', {
+                        method: 'POST',
+                        credentials: 'same-origin',
+                        redirect: 'manual',
+                        headers: { [csrfHeader]: csrfToken }
+                    })
+                    .then(function () { window.location.href = '/admin/users'; })
+                    .catch(function (err) { alert('Erreur réseau : ' + err.message); });
+                }
+            }
+        });
     </script>
 </div>
 </body>

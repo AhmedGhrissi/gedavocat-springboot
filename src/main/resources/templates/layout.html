@@ -379,6 +379,7 @@
                             <h6><i class="fas fa-lock"></i> Modifier le mot de passe</h6>
                             
                             <form id="changePasswordForm">
+                                <input type="text" name="username" autocomplete="username" th:value="${#authentication?.name}" style="display:none" aria-hidden="true" tabindex="-1">
                                 <div class="form-floating mb-3">
                                     <input type="password" id="currentPassword" name="currentPassword" class="form-control" placeholder="Mot de passe actuel" required autocomplete="current-password">
                                     <label for="currentPassword">Mot de passe actuel</label>
