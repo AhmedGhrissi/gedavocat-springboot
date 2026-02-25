@@ -120,8 +120,12 @@ public class YousignService {
                 "email", signerEmail,
                 "locale", "fr"
             ));
-            signerBody.put("signature_level", mapSignatureLevel(signatureLevel));
-            signerBody.put("signature_authentication_mode", "no_otp");
+            String mappedLevel = mapSignatureLevel(signatureLevel);
+            signerBody.put("signature_level", mappedLevel);
+            // Pour qualified_electronic_signature, pas d'authentication_mode
+            if (!"qualified_electronic_signature".equals(mappedLevel)) {
+                signerBody.put("signature_authentication_mode", "no_otp");
+            }
             signerBody.put("fields", List.of(Map.of(
                 "document_id", uploadedDocumentId,
                 "type", "signature",
