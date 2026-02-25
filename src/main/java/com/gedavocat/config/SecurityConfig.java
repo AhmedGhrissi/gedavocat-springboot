@@ -128,21 +128,25 @@ public class SecurityConfig {
 							.usernameParameter("email") // Le champ input s'appelle "email"
 							.passwordParameter("password")
 							.successHandler((request, response, authentication) -> {
-									// Redirection selon le rôle
-									String role = authentication.getAuthorities().stream()
-											.findFirst()
-											.map(a -> a.getAuthority())
-											.orElse("");
-									
-									if (role.equals("ROLE_ADMIN")) {
-										response.sendRedirect("/admin");
-									} else if (role.equals("ROLE_CLIENT")) {
-										response.sendRedirect("/my-cases");
-									} else {
-										response.sendRedirect("/dashboard");
-									}
-								})
-							.failureUrl("/login?error=true").permitAll())
+								// Déterminer les rôles présents de manière sûre
+								java.util.Set<String> roles = new java.util.HashSet<>();
+								authentication.getAuthorities().forEach(a -> roles.add(a.getAuthority()));
+								if (roles.contains("ROLE_ADMIN")) {
+									response.sendRedirect("/admin");
+									return;
+								}
+								if (roles.contains("ROLE_CLIENT")) {
+									response.sendRedirect("/my-cases");
+									return;
+								}
+								if (roles.contains("ROLE_LAWYER_SECONDARY")) {
+									response.sendRedirect("/my-cases-collab");
+									return;
+								}
+								// Par défaut, envoyer vers le dashboard (avocat / autre)
+								response.sendRedirect("/dashboard");
+							})
+						.failureUrl("/login?error=true").permitAll())
 				.logout(logout -> logout.logoutUrl("/logout").logoutSuccessUrl("/login")
 							.deleteCookies("JSESSIONID").invalidateHttpSession(true).permitAll());
 

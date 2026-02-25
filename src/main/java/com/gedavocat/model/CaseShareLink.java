@@ -50,6 +50,14 @@ public class CaseShareLink {
     @Column(name = "description", length = 500)
     private String description;
 
+    /** Email du destinataire (optionnel) */
+    @Column(name = "recipient_email", length = 255)
+    private String recipientEmail;
+
+    /** Date/heure où l'invitation a été envoyée (optionnel) */
+    @Column(name = "invited_at")
+    private LocalDateTime invitedAt;
+
     /** Expiration du lien (peut être null = permanent) */
     @Column(name = "expires_at")
     private LocalDateTime expiresAt;
@@ -78,6 +86,15 @@ public class CaseShareLink {
         if (token == null || token.isEmpty()) {
             token = UUID.randomUUID().toString().replace("-", "") + UUID.randomUUID().toString().replace("-", "").substring(0, 8);
         }
+    }
+
+    // Explicit getters to avoid depending on Lombok during maven compilation
+    public String getRecipientEmail() {
+        return this.recipientEmail;
+    }
+
+    public LocalDateTime getInvitedAt() {
+        return this.invitedAt;
     }
 
     /** Vérifie si le lien est encore valide */

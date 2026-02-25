@@ -26,4 +26,9 @@ public interface CaseShareLinkRepository extends JpaRepository<CaseShareLink, St
     @Transactional
     @Query("DELETE FROM CaseShareLink l WHERE l.sharedCase.id = :caseId")
     void deleteAllByCaseId(@Param("caseId") String caseId);
+
+    @Query("SELECT l FROM CaseShareLink l WHERE l.sharedCase.id = :caseId " +
+           "AND l.recipientEmail = :email AND l.revoked = FALSE " +
+           "AND (l.expiresAt IS NULL OR l.expiresAt > CURRENT_TIMESTAMP)")
+    List<CaseShareLink> findActiveByCaseIdAndRecipientEmail(@Param("caseId") String caseId, @Param("email") String email);
 }

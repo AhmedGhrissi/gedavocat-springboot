@@ -61,6 +61,9 @@ public class DashboardController {
         } else if (user.isClient()) {
             // B19 FIX : Les clients sont redirigés vers leur portail dédié
             return "redirect:/my-cases";
+        } else if (user.isCollaborator()) {
+            // Les collaborateurs ont leur propre portail
+            return "redirect:/my-cases-collab";
         } else {
             buildEmptyDashboard(model);
         }

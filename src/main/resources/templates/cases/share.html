@@ -28,12 +28,11 @@
         </div>
 
         <!-- Lien généré -->
-        <div th:if="${shareUrl}" class="alert alert-primary">
+		<div th:if="${shareFullUrl != null or shareUrl != null}" class="alert alert-primary">
             <strong><i class="fas fa-link"></i> Lien de partage :</strong>
             <div class="input-group mt-2">
                 <input type="text" class="form-control" id="generatedLink"
-                       th:value="${@environment.getProperty('app.base-url', 'https://docavocat.fr') + shareUrl}"
-                       readonly>
+                  th:value="${shareFullUrl != null ? shareFullUrl : (@environment.getProperty('app.base-url', 'https://docavocat.fr') + shareUrl)}"                       readonly>
                 <button class="btn btn-outline-primary" type="button" onclick="copyLink()">
                     <i class="fas fa-copy"></i> Copier
                 </button>

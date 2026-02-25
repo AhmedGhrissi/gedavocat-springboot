@@ -83,12 +83,44 @@ public class CollaboratorInvitationController {
                                            RedirectAttributes redirectAttributes,
                                            Model model) {
         if (!password.equals(confirmPassword)) {
+            // Resolve email to re-display (prefer in-memory entry, fallback DB); preserve provided names
+            String resolvedEmail = null;
+            try {
+                Optional<CollaboratorInvitationService.InvitationEntry> entry = collaboratorInvitationService.validateToken(token);
+                if (entry.isPresent()) resolvedEmail = entry.get().email();
+                else {
+                    try {
+                        CaseShareLink link = caseShareService.getLinkByToken(token);
+                        if (link != null) resolvedEmail = link.getRecipientEmail();
+                    } catch (Exception ignored) {}
+                }
+            } catch (Exception ignore) {}
+
             model.addAttribute("token", token);
+            model.addAttribute("email", resolvedEmail != null ? resolvedEmail : email);
+            model.addAttribute("firstName", firstName);
+            model.addAttribute("lastName", lastName);
             model.addAttribute("error", "Les mots de passe ne correspondent pas.");
             return "collaborators/accept-invitation";
         }
         if (password.length() < 8) {
+            // Preserve email and names as above
+            String resolvedEmail = null;
+            try {
+                Optional<CollaboratorInvitationService.InvitationEntry> entry = collaboratorInvitationService.validateToken(token);
+                if (entry.isPresent()) resolvedEmail = entry.get().email();
+                else {
+                    try {
+                        CaseShareLink link = caseShareService.getLinkByToken(token);
+                        if (link != null) resolvedEmail = link.getRecipientEmail();
+                    } catch (Exception ignored) {}
+                }
+            } catch (Exception ignore) {}
+
             model.addAttribute("token", token);
+            model.addAttribute("email", resolvedEmail != null ? resolvedEmail : email);
+            model.addAttribute("firstName", firstName);
+            model.addAttribute("lastName", lastName);
             model.addAttribute("error", "Le mot de passe doit contenir au moins 8 caractères.");
             return "collaborators/accept-invitation";
         }

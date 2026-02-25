@@ -4,7 +4,8 @@ import com.gedavocat.model.Case;
 import com.gedavocat.model.CaseShareLink;
 import com.gedavocat.model.User;
 import com.gedavocat.repository.CaseShareLinkRepository;
-import com.gedavocat.service.CaseService;
+import com.gedavocat.repository.PermissionRepository;
+import com.gedavocat.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,7 +16,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * Service de partage de dossier entre avocats via lien temporaire.
@@ -28,6 +28,9 @@ public class CaseShareService {
     private final CaseShareLinkRepository shareLinkRepository;
     private final CaseService caseService;
     private final JavaMailSender mailSender;
+    private final CollaboratorInvitationService collaboratorInvitationService;
+    private final UserRepository userRepository;
+    private final PermissionRepository permissionRepository;
 
     @Value("${spring.mail.username:noreply@docavocat.fr}")
     private String fromEmail;
@@ -61,6 +64,42 @@ public class CaseShareService {
             throw new RuntimeException("Accès non autorisé : vous n'êtes pas propriétaire de ce dossier");
         }
 
+        // New: prevent sharing to the same collaborator twice
+        if (emailTo != null && !emailTo.isBlank()) {
+            // Trim/normalize email
+            String normalized = emailTo.trim().toLowerCase();
+
+            // If a user account exists for this email and already has read access, reject
+            try {
+                java.util.Optional<User> maybeUser = userRepository.findByEmail(normalized);
+                if (maybeUser.isPresent()) {
+                    User existingUser = maybeUser.get();
+                    if (permissionRepository.hasReadAccess(caseId, existingUser.getId())) {
+                        throw new RuntimeException("Impossible : ce collaborateur a déjà accès à ce dossier.");
+                    }
+                }
+            } catch (RuntimeException re) {
+                throw re; // rethrow explicit business errors
+            } catch (Exception e) {
+                log.warn("[CaseShare] Erreur lors de la vérification des permissions pour {} : {}", emailTo, e.getMessage());
+            }
+
+            // Also ensure there isn't already an active invite for this email on this case
+            try {
+                List<CaseShareLink> existing = shareLinkRepository.findActiveByCaseIdAndRecipientEmail(caseId, normalized);
+                if (existing != null && !existing.isEmpty()) {
+                    throw new RuntimeException("Un lien d'invitation actif existe déjà pour cet email.");
+                }
+            } catch (RuntimeException re) {
+                throw re;
+            } catch (Exception e) {
+                log.warn("[CaseShare] Erreur lors de la vérification des invitations actives pour {} : {}", emailTo, e.getMessage());
+            }
+
+            // replace emailTo by normalized form to store/send
+            emailTo = normalized;
+        }
+
         CaseShareLink link = new CaseShareLink();
         link.setSharedCase(caseEntity);
         link.setOwner(owner);
@@ -68,8 +107,23 @@ public class CaseShareService {
         link.setExpiresAt(expiresAt);
         link.setMaxAccessCount(maxAccessCount);
 
+        // If an email recipient is provided, store it and mark invitedAt so collaborator flow works
+        if (emailTo != null && !emailTo.isBlank()) {
+            link.setRecipientEmail(emailTo);
+            link.setInvitedAt(LocalDateTime.now());
+        }
+
         CaseShareLink saved = shareLinkRepository.save(link);
         log.info("[CaseShare] Lien créé pour dossier {} par avocat {}", caseId, owner.getEmail());
+
+        // Register in the collaborator invitation service so in-memory validation works
+        try {
+            if (emailTo != null && !emailTo.isBlank()) {
+                collaboratorInvitationService.registerInvitation(saved);
+            }
+        } catch (Exception e) {
+            log.warn("[CaseShare] Impossible d'enregistrer l'invitation en mémoire: {}", e.getMessage());
+        }
 
         // Envoyer par email si destinataire fourni
         if (emailTo != null && !emailTo.isBlank()) {
@@ -77,6 +131,42 @@ public class CaseShareService {
         }
 
         return saved;
+    }
+
+    /**
+     * Récupère un lien de partage par son token (lecture seule, sans incrémenter le compteur).
+     */
+    @Transactional(readOnly = true)
+    public CaseShareLink getLinkByToken(String token) {
+        CaseShareLink link = shareLinkRepository.findByToken(token)
+            .orElseThrow(() -> new RuntimeException("Lien de partage introuvable"));
+        // Initialize lazy associations while still in transaction/session to avoid LazyInitializationException in controllers/views
+        try {
+            if (link.getSharedCase() != null) {
+                // access a few useful fields
+                link.getSharedCase().getName();
+                if (link.getSharedCase().getClient() != null) link.getSharedCase().getClient().getName();
+                if (link.getSharedCase().getLawyer() != null) link.getSharedCase().getLawyer().getName();
+            }
+            if (link.getOwner() != null) {
+                link.getOwner().getId();
+                link.getOwner().getName();
+                link.getOwner().getEmail();
+            }
+        } catch (Exception ignore) {}
+        return link;
+    }
+
+    /**
+     * Révoque un lien de partage par son token.
+     */
+    @Transactional
+    public void revokeByToken(String token) {
+        CaseShareLink link = shareLinkRepository.findByToken(token)
+            .orElseThrow(() -> new RuntimeException("Lien de partage introuvable"));
+        link.setRevoked(true);
+        shareLinkRepository.save(link);
+        log.info("[CaseShare] Lien révoqué par token pour dossier {}", link.getSharedCase().getId());
     }
 
     /**
@@ -118,13 +208,36 @@ public class CaseShareService {
         shareLinkRepository.save(link);
     }
 
+    /**
+     * Construit l'URL publique d'accès pour un lien de partage.
+     *
+     * @param token   Token du lien
+     * @param emailTo Email du destinataire (pour déterminer le type d'URL)
+     * @return URL publique complète
+     */
+    public String buildPublicUrl(String token, String emailTo) {
+        if (emailTo != null && !emailTo.isBlank()) {
+            return baseUrl + "/collaborators/accept-invitation?token=" + token;
+        }
+        return baseUrl + "/cases/shared?token=" + token;
+    }
+
     // =========================================================================
     // Email
     // =========================================================================
 
     private void sendShareEmail(String to, User owner, Case caseEntity, String token, String description) {
         try {
-            String link = baseUrl + "/cases/shared?token=" + token;
+            // If an email recipient was provided, this is an invitation to join as a collaborator
+            // -> point them to the collaborator accept-invitation page so they can create an account
+            String link;
+            if (to != null && !to.isBlank()) {
+                link = baseUrl + "/collaborators/accept-invitation?token=" + token;
+            } else {
+                // otherwise, send the public shared-case view
+                link = baseUrl + "/cases/shared?token=" + token;
+            }
+
             String lawyerName = owner.getFirstName() + " " + owner.getLastName();
 
             SimpleMailMessage msg = new SimpleMailMessage();

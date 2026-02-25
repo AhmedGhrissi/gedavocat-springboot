@@ -101,11 +101,16 @@
                Créez un mot de passe pour accéder au dossier partagé.</p>
         </div>
 
-        <div th:if="${error}" class="alert alert-danger">
+        <div th:if="${error}" class="alert alert-danger" id="serverError">
             <i class="fas fa-exclamation-circle"></i> <span th:text="${error}">Erreur</span>
         </div>
 
-        <form th:action="@{/collaborators/accept-invitation}" method="post">
+        <!-- Client-side error container (hidden by default) -->
+        <div id="clientError" class="alert alert-danger" style="display:none;">
+            <i class="fas fa-exclamation-circle"></i> <span id="clientErrorText"></span>
+        </div>
+
+        <form id="inviteForm" th:action="@{/collaborators/accept-invitation}" method="post">
             <input type="hidden" name="token" th:value="${token}"/>
 
             <div class="mb-3">
@@ -148,5 +153,55 @@
             </button>
         </form>
     </div>
+
+    <script>
+        // Client-side password match check: prevents submit and shows inline error
+        (function() {
+            const form = document.getElementById('inviteForm');
+            const password = document.getElementById('password');
+            const confirm = document.getElementById('confirmPassword');
+            const clientError = document.getElementById('clientError');
+            const clientErrorText = document.getElementById('clientErrorText');
+            const serverError = document.getElementById('serverError');
+
+            function showClientError(msg) {
+                if (serverError) serverError.style.display = 'none';
+                clientErrorText.textContent = msg;
+                clientError.style.display = 'flex';
+            }
+
+            function hideClientError() {
+                clientError.style.display = 'none';
+                clientErrorText.textContent = '';
+                if (serverError) serverError.style.display = '';
+            }
+
+            form.addEventListener('submit', function(e) {
+                hideClientError();
+                if (!password || !confirm) return; // nothing to do
+                if (password.value.length < 8) {
+                    e.preventDefault();
+                    showClientError('Le mot de passe doit contenir au moins 8 caractères.');
+                    password.focus();
+                    return false;
+                }
+                if (password.value !== confirm.value) {
+                    e.preventDefault();
+                    showClientError('Les mots de passe ne correspondent pas.');
+                    confirm.focus();
+                    return false;
+                }
+                // allow submit
+            });
+
+            // Optional: clear client error when user edits fields
+            [password, confirm].forEach(function(el) {
+                if (!el) return;
+                el.addEventListener('input', function() {
+                    hideClientError();
+                });
+            });
+        })();
+    </script>
 </body>
 </html>
