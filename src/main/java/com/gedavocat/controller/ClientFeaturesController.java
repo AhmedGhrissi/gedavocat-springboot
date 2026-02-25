@@ -9,7 +9,10 @@ import com.gedavocat.repository.SignatureRepository;
 import com.gedavocat.repository.UserRepository;
 import com.gedavocat.service.AppointmentService;
 import com.gedavocat.service.EmailService;
+import com.gedavocat.service.NotificationService;
+import com.gedavocat.service.YousignService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -33,6 +36,7 @@ import java.util.Map;
 @Controller
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('CLIENT')")
+@Slf4j
 public class ClientFeaturesController {
 
     private final AppointmentService appointmentService;
@@ -41,6 +45,8 @@ public class ClientFeaturesController {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
+    private final YousignService yousignService;
+    private final NotificationService notificationService;
 
     // =========================================================================
     // Rendez-vous
@@ -82,6 +88,7 @@ public class ClientFeaturesController {
     // =========================================================================
 
     @GetMapping("/my-signatures")
+    @Transactional
     public String mySignatures(Model model, Authentication authentication) {
         User user = getCurrentUser(authentication);
         var clientOpt = clientRepository.findByClientUserId(user.getId());
@@ -95,6 +102,12 @@ public class ClientFeaturesController {
         List<Signature> signatures;
         try {
             signatures = signatureRepository.findBySignerEmail(user.getEmail());
+            // Synchroniser le statut des signatures PENDING depuis Yousign
+            for (Signature sig : signatures) {
+                if (sig.getStatus() == Signature.SignatureStatus.PENDING) {
+                    syncSignatureStatus(sig);
+                }
+            }
         } catch (Exception e) {
             signatures = Collections.emptyList();
         }
@@ -269,5 +282,42 @@ public class ClientFeaturesController {
         String email = authentication.getName();
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+    }
+
+    /**
+     * Synchroniser le statut d'une signature depuis l'API Yousign
+     */
+    private void syncSignatureStatus(Signature signature) {
+        if (signature.getYousignSignatureRequestId() == null || !yousignService.isConfigured()) {
+            return;
+        }
+        try {
+            Map<String, Object> yousignData = yousignService.getSignatureStatus(
+                    signature.getYousignSignatureRequestId());
+            if (yousignData == null) return;
+
+            String yousignStatus = (String) yousignData.get("status");
+            if (yousignStatus == null) return;
+
+            Signature.SignatureStatus newStatus = switch (yousignStatus) {
+                case "draft" -> Signature.SignatureStatus.DRAFT;
+                case "ongoing", "approval" -> Signature.SignatureStatus.PENDING;
+                case "done" -> Signature.SignatureStatus.SIGNED;
+                case "declined", "canceled" -> Signature.SignatureStatus.REJECTED;
+                case "expired", "deleted" -> Signature.SignatureStatus.EXPIRED;
+                default -> null;
+            };
+
+            if (newStatus != null && newStatus != signature.getStatus()) {
+                signature.setStatus(newStatus);
+                if (newStatus == Signature.SignatureStatus.SIGNED) {
+                    signature.setSignedAt(LocalDateTime.now());
+                }
+                signatureRepository.save(signature);
+                log.info("Signature client {} : statut mis à jour → {}", signature.getId(), newStatus);
+            }
+        } catch (Exception e) {
+            log.warn("Impossible de synchroniser la signature {} : {}", signature.getId(), e.getMessage());
+        }
     }
 }

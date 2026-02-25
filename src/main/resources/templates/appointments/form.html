@@ -27,9 +27,7 @@
                         <h5 class="mb-0"><i class="fas fa-calendar-plus"></i> Informations du rendez-vous</h5>
                     </div>
                     <div class="card-body">
-                        <form th:action="${appointment.id != null ? '/appointments/' + appointment.id + '/update' : '/appointments/create'}" 
-                              method="post">
-                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                        <form th:action="@{__${appointment.id != null ? '/appointments/' + appointment.id + '/update' : '/appointments/create'}__}" method="post">
                             
                             <!-- Type de rendez-vous -->
                             <div class="row mb-3">
