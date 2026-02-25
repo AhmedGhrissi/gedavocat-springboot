@@ -9,7 +9,6 @@ import com.gedavocat.repository.SignatureRepository;
 import com.gedavocat.repository.UserRepository;
 import com.gedavocat.service.AppointmentService;
 import com.gedavocat.service.EmailService;
-import com.gedavocat.service.NotificationService;
 import com.gedavocat.service.YousignService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -46,7 +45,6 @@ public class ClientFeaturesController {
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
     private final YousignService yousignService;
-    private final NotificationService notificationService;
 
     // =========================================================================
     // Rendez-vous
