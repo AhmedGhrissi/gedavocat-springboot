@@ -90,7 +90,7 @@ public class SignatureController {
         model.addAttribute("documents", allDocuments);
 
         // Dossiers de l'avocat pour le filtre par dossier
-        List<com.gedavocat.model.Case> cases = caseRepository.findAllByLawyerIdWithClient(user.getId());
+        List<Case> cases = caseRepository.findAllByLawyerIdWithClient(user.getId());
         model.addAttribute("cases", cases);
 
         // Si un document est spécifié, le pré-remplir
