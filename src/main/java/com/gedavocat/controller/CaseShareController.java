@@ -150,6 +150,16 @@ public class CaseShareController {
     public String accessSharedCase(@RequestParam String token, Model model) {
         try {
             CaseShareLink link = shareService.accessByToken(token);
+
+            // Si le lien a un destinataire email et qu'il n'a pas encore de compte →
+            // rediriger vers la page de création de compte collaborateur
+            if (link.getRecipientEmail() != null && !link.getRecipientEmail().isBlank()) {
+                boolean accountExists = userRepository.findByEmail(link.getRecipientEmail()).isPresent();
+                if (!accountExists) {
+                    return "redirect:/collaborators/accept-invitation?token=" + token;
+                }
+            }
+
             Case caseEntity = link.getSharedCase();
 
             // Charger les données nécessaires (OSIV=false, donc init lazy dans la transaction)
