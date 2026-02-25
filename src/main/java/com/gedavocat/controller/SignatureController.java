@@ -8,6 +8,7 @@ import com.gedavocat.repository.CaseRepository;
 import com.gedavocat.repository.DocumentRepository;
 import com.gedavocat.repository.SignatureRepository;
 import com.gedavocat.repository.UserRepository;
+import com.gedavocat.service.DocumentService;
 import com.gedavocat.service.YousignService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
@@ -35,6 +37,7 @@ import java.util.Map;
 public class SignatureController {
 
     private final YousignService yousignService;
+    private final DocumentService documentService;
     private final DocumentRepository documentRepository;
     private final UserRepository userRepository;
     private final SignatureRepository signatureRepository;
@@ -72,6 +75,7 @@ public class SignatureController {
     @GetMapping("/new")
     public String newSignature(
             @RequestParam(required = false) String documentId,
+            @RequestParam(required = false) String caseId,
             @AuthenticationPrincipal UserDetails userDetails,
             Model model
     ) {
@@ -85,18 +89,33 @@ public class SignatureController {
 
         model.addAttribute("user", user);
 
-        // Documents de l'avocat connecté uniquement (sécurité) — avec le Case chargé
-        List<Document> allDocuments = documentRepository.findByLawyerIdWithCase(user.getId());
-        model.addAttribute("documents", allDocuments);
-
-        // Dossiers de l'avocat pour le filtre par dossier
+        // Dossiers de l'avocat (obligatoire pour la signature)
         List<Case> cases = caseRepository.findAllByLawyerIdWithClient(user.getId());
         model.addAttribute("cases", cases);
+
+        // Si un dossier est sélectionné, charger ses documents PDF
+        if (caseId != null && !caseId.isBlank()) {
+            List<Document> caseDocuments = documentRepository.findByCaseIdAndNotDeleted(caseId)
+                .stream()
+                .filter(d -> "application/pdf".equals(d.getMimetype()) || d.getFilename().endsWith(".pdf"))
+                .toList();
+            model.addAttribute("documents", caseDocuments);
+            model.addAttribute("selectedCaseId", caseId);
+        }
 
         // Si un document est spécifié, le pré-remplir
         if (documentId != null) {
             Document document = documentRepository.findById(documentId).orElse(null);
             model.addAttribute("document", document);
+            if (document != null && document.getCaseEntity() != null) {
+                model.addAttribute("selectedCaseId", document.getCaseEntity().getId());
+                // Charger les documents du dossier
+                List<Document> caseDocuments = documentRepository.findByCaseIdAndNotDeleted(document.getCaseEntity().getId())
+                    .stream()
+                    .filter(d -> "application/pdf".equals(d.getMimetype()) || d.getFilename().endsWith(".pdf"))
+                    .toList();
+                model.addAttribute("documents", caseDocuments);
+            }
         }
 
         // Niveaux de signature disponibles
@@ -106,12 +125,39 @@ public class SignatureController {
     }
 
     /**
+     * API JSON — documents PDF d'un dossier (pour le JS dynamique)
+     */
+    @GetMapping("/api/cases/{caseId}/documents")
+    @ResponseBody
+    public List<Map<String, String>> getDocumentsByCase(
+            @PathVariable String caseId,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        User user = userRepository.findByEmail(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+        
+        // Vérifier que le dossier appartient à l'avocat
+        Case caseEntity = caseRepository.findById(caseId).orElse(null);
+        if (caseEntity == null || !caseEntity.getLawyer().getId().equals(user.getId())) {
+            return List.of();
+        }
+        
+        return documentRepository.findByCaseIdAndNotDeleted(caseId)
+            .stream()
+            .filter(d -> "application/pdf".equals(d.getMimetype()) || d.getFilename().endsWith(".pdf"))
+            .map(d -> Map.of("id", d.getId(), "name", d.getOriginalName()))
+            .toList();
+    }
+
+    /**
      * Créer une demande de signature
      */
     @PostMapping("/create")
     @Transactional
     public String createSignature(
-            @RequestParam String documentId,
+            @RequestParam(required = false) String documentId,
+            @RequestParam String caseId,
+            @RequestParam(required = false) MultipartFile uploadFile,
             @RequestParam String signerName,
             @RequestParam String signerEmail,
             @RequestParam(defaultValue = "advanced") String signatureLevel,
@@ -125,14 +171,31 @@ public class SignatureController {
             User user = userRepository.findByEmail(userDetails.getUsername())
                     .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
 
-            Document document = documentRepository.findById(documentId)
-                    .orElseThrow(() -> new RuntimeException("Document non trouvé"));
-
-            // Ownership check: verify document belongs to authenticated lawyer
-            if (document.getCaseEntity() == null || document.getCaseEntity().getLawyer() == null
-                    || !document.getCaseEntity().getLawyer().getId().equals(user.getId())) {
-                redirectAttributes.addFlashAttribute("error", "Accès non autorisé à ce document");
+            // Vérifier que le dossier appartient à l'avocat
+            Case caseEntity = caseRepository.findById(caseId)
+                    .orElseThrow(() -> new RuntimeException("Dossier non trouvé"));
+            if (!caseEntity.getLawyer().getId().equals(user.getId())) {
+                redirectAttributes.addFlashAttribute("error", "Accès non autorisé à ce dossier");
                 return "redirect:/signatures";
+            }
+
+            Document document;
+
+            // Soit on utilise un document existant, soit on uploade un nouveau
+            if (uploadFile != null && !uploadFile.isEmpty()) {
+                // Upload du nouveau document dans le dossier
+                document = documentService.uploadDocument(caseId, uploadFile, user.getId(), user.getRole().name());
+            } else if (documentId != null && !documentId.isBlank()) {
+                document = documentRepository.findById(documentId)
+                        .orElseThrow(() -> new RuntimeException("Document non trouvé"));
+                // Vérifier que le document appartient au bon dossier
+                if (document.getCaseEntity() == null || !document.getCaseEntity().getId().equals(caseId)) {
+                    redirectAttributes.addFlashAttribute("error", "Le document ne correspond pas au dossier");
+                    return "redirect:/signatures/new?caseId=" + caseId;
+                }
+            } else {
+                redirectAttributes.addFlashAttribute("error", "Veuillez sélectionner ou importer un document PDF");
+                return "redirect:/signatures/new?caseId=" + caseId;
             }
 
             // Créer la demande de signature
@@ -150,16 +213,13 @@ public class SignatureController {
             signature.setId(signatureId != null ? signatureId : java.util.UUID.randomUUID().toString());
             signature.setYousignSignatureRequestId(signatureId);
             signature.setDocument(document);
-            signature.setDocumentName(document.getFilename());
+            signature.setDocumentName(document.getOriginalName());
             signature.setSignerName(signerName);
             signature.setSignerEmail(signerEmail);
             signature.setLevel(signatureLevel);
             signature.setStatus(Signature.SignatureStatus.PENDING);
             signature.setRequestedBy(user);
-            // Lier au dossier via le document
-            if (document.getCaseEntity() != null) {
-                signature.setCaseEntity(document.getCaseEntity());
-            }
+            signature.setCaseEntity(caseEntity);
             signatureRepository.save(signature);
 
             redirectAttributes.addFlashAttribute("message",

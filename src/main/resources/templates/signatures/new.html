@@ -26,80 +26,135 @@
 
                 <!-- Formulaire -->
                 <form th:action="@{/signatures/create}" method="post" enctype="multipart/form-data">
-                    <!-- Section 1: Document -->
+
+                    <!-- Section 1: Dossier (obligatoire) -->
                     <div class="form-card">
                         <div class="section-title">
-                            <i class="fas fa-file-pdf"></i>
-                            1. Sélectionner le document
+                            <i class="fas fa-folder-open"></i>
+                            1. Sélectionner le dossier
                         </div>
 
                         <div class="form-group">
                             <label class="form-label">
-                                Dossier <span class="text-muted">(optionnel — filtre les documents)</span>
+                                Dossier <span class="required">*</span>
                             </label>
-                            <select id="caseFilter" class="form-control" onchange="filterDocumentsByCase()">
-                                <option value="">-- Tous les dossiers --</option>
+                            <select id="caseSelect" name="caseId" class="form-control" required
+                                    style="padding: 14px 16px; border-radius: 12px; font-size: 15px;"
+                                    onchange="onCaseChanged()">
+                                <option value="">-- Choisir un dossier --</option>
                                 <option th:each="c : ${cases}"
                                         th:value="${c.id}"
-                                        th:text="${c.name + (c.client != null ? ' — ' + c.client.firstName + ' ' + c.client.lastName : '')}">
+                                        th:text="${c.name + (c.client != null ? ' — ' + c.client.name : '')}"
+                                        th:data-client-name="${c.client != null ? c.client.name : ''}"
+                                        th:data-client-email="${c.client != null ? c.client.email : ''}"
+                                        th:selected="${c.id == selectedCaseId}">
                                     Dossier
                                 </option>
                             </select>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="form-label">
-                                Document à signer <span class="required">*</span>
-                            </label>
-                            
-                            <div th:if="${document != null}" class="selected-document">
-                                <div class="doc-preview-icon">
-                                    <i class="fas fa-file-pdf"></i>
-                                </div>
-                                <div class="doc-info">
-                                    <div class="doc-name" th:text="${document.originalName}">Document.pdf</div>
-                                    <div class="doc-meta">
-                                        <span th:text="${document.fileSize != null ? #numbers.formatDecimal(document.fileSize / 1024.0, 1, 2) + ' KB' : ''}"></span>
-                                    </div>
-                                </div>
-                                <input type="hidden" name="documentId" th:value="${document.id}" required>
-                            </div>
-
-                            <div th:unless="${document != null}">
-                                <select id="documentSelect" name="documentId" class="form-control" required
-                                        style="padding: 14px 16px; border-radius: var(--radius-lg, 12px); font-size: 15px;">
-                                    <option value="">-- Choisir un document PDF --</option>
-                                    <option th:each="doc : ${documents}"
-                                            th:value="${doc.id}"
-                                            th:text="${doc.originalName + (doc.caseEntity != null ? ' (' + doc.caseEntity.name + ')' : '')}"
-                                            th:data-case-id="${doc.caseEntity != null ? doc.caseEntity.id : ''}"
-                                            th:if="${doc.mimetype == 'application/pdf' or doc.filename.endsWith('.pdf')}">
-                                        Document.pdf
-                                    </option>
-                                </select>
-                            </div>
                             <small class="form-text">
-                                <i class="fas fa-info-circle"></i> 
-                                Seuls les fichiers PDF sont acceptés pour la signature électronique
+                                <i class="fas fa-info-circle"></i>
+                                La signature sera associée à ce dossier
                             </small>
                         </div>
                     </div>
 
-                    <!-- Section 2: Signataire -->
-                    <div class="form-card">
+                    <!-- Section 2: Document -->
+                    <div class="form-card" id="documentSection" style="display:none;">
+                        <div class="section-title">
+                            <i class="fas fa-file-pdf"></i>
+                            2. Document à signer
+                        </div>
+
+                        <!-- Choix de la source du document -->
+                        <div class="form-group">
+                            <label class="form-label">Source du document</label>
+                            <div style="display:flex; gap:16px; margin-bottom:16px;">
+                                <label class="level-card" style="flex:1; cursor:pointer; margin:0;">
+                                    <input type="radio" name="documentSource" value="existing" checked
+                                           onchange="toggleDocSource()" style="display:none;">
+                                    <div class="level-content" style="padding:12px 16px;">
+                                        <div class="level-icon" style="width:36px; height:36px; font-size:16px;">
+                                            <i class="fas fa-file-alt"></i>
+                                        </div>
+                                        <div class="level-info">
+                                            <h4 style="margin:0; font-size:14px;">Document existant</h4>
+                                            <p style="margin:0; font-size:12px;">Choisir un fichier déjà importé</p>
+                                        </div>
+                                    </div>
+                                    <div class="level-badge"><i class="fas fa-check"></i></div>
+                                </label>
+                                <label class="level-card" style="flex:1; cursor:pointer; margin:0;">
+                                    <input type="radio" name="documentSource" value="upload"
+                                           onchange="toggleDocSource()" style="display:none;">
+                                    <div class="level-content" style="padding:12px 16px;">
+                                        <div class="level-icon" style="width:36px; height:36px; font-size:16px;">
+                                            <i class="fas fa-upload"></i>
+                                        </div>
+                                        <div class="level-info">
+                                            <h4 style="margin:0; font-size:14px;">Importer un fichier</h4>
+                                            <p style="margin:0; font-size:12px;">Uploader un nouveau PDF</p>
+                                        </div>
+                                    </div>
+                                    <div class="level-badge"><i class="fas fa-check"></i></div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Document existant -->
+                        <div id="existingDocBlock" class="form-group">
+                            <label class="form-label">
+                                Document PDF <span class="required">*</span>
+                            </label>
+                            <select id="documentSelect" name="documentId" class="form-control"
+                                    style="padding: 14px 16px; border-radius: 12px; font-size: 15px;">
+                                <option value="">-- Choisir un document --</option>
+                                <option th:each="doc : ${documents}"
+                                        th:value="${doc.id}"
+                                        th:text="${doc.originalName}"
+                                        th:selected="${document != null && doc.id == document.id}">
+                                </option>
+                            </select>
+                            <div id="noDocsMsg" style="display:none; padding:12px; background:#fff3cd; border-radius:8px; margin-top:8px;">
+                                <i class="fas fa-exclamation-triangle" style="color:#856404;"></i>
+                                <span style="color:#856404;">Aucun document PDF dans ce dossier. Importez un document ci-dessous.</span>
+                            </div>
+                        </div>
+
+                        <!-- Upload nouveau document -->
+                        <div id="uploadDocBlock" class="form-group" style="display:none;">
+                            <label class="form-label">
+                                Fichier PDF à importer <span class="required">*</span>
+                            </label>
+                            <div style="border:2px dashed rgba(var(--bs-primary-rgb, 59,130,246), 0.3); border-radius:12px; padding:24px; text-align:center; background:rgba(var(--bs-primary-rgb, 59,130,246), 0.03); transition:all 0.2s;">
+                                <i class="fas fa-cloud-upload-alt" style="font-size:32px; color:var(--primary-color, #3b82f6); margin-bottom:8px;"></i>
+                                <p style="margin:0 0 12px; font-size:14px; opacity:0.8;">Glissez votre fichier ici ou cliquez pour parcourir</p>
+                                <input type="file" id="uploadFile" name="uploadFile" accept=".pdf,application/pdf"
+                                       class="form-control" style="max-width:400px; margin:0 auto;">
+                                <div id="uploadFileName" style="margin-top:10px; font-weight:600; display:none;"></div>
+                            </div>
+                        </div>
+
+                        <small class="form-text">
+                            <i class="fas fa-info-circle"></i>
+                            Seuls les fichiers PDF sont acceptés pour la signature électronique
+                        </small>
+                    </div>
+
+                    <!-- Section 3: Signataire -->
+                    <div class="form-card" id="signerSection" style="display:none;">
                         <div class="section-title">
                             <i class="fas fa-user-edit"></i>
-                            2. Informations du signataire
+                            3. Informations du signataire
                         </div>
 
                         <div class="form-group">
                             <label for="signerName" class="form-label">
                                 Nom complet <span class="required">*</span>
                             </label>
-                            <input type="text" 
-                                   id="signerName" 
-                                   name="signerName" 
-                                   class="form-control" 
+                            <input type="text"
+                                   id="signerName"
+                                   name="signerName"
+                                   class="form-control"
                                    placeholder="Ex: Jean Dupont"
                                    required>
                             <small class="form-text">
@@ -111,14 +166,14 @@
                             <label for="signerEmail" class="form-label">
                                 Adresse e-mail <span class="required">*</span>
                             </label>
-                            <input type="email" 
-                                   id="signerEmail" 
-                                   name="signerEmail" 
-                                   class="form-control" 
+                            <input type="email"
+                                   id="signerEmail"
+                                   name="signerEmail"
+                                   class="form-control"
                                    placeholder="Ex: jean.dupont@example.com"
                                    required>
                             <small class="form-text">
-                                <i class="fas fa-envelope"></i> 
+                                <i class="fas fa-envelope"></i>
                                 Un e-mail avec le lien de signature sera envoyé à cette adresse
                             </small>
                         </div>
@@ -127,10 +182,10 @@
                             <label for="signerPhone" class="form-label">
                                 Téléphone (optionnel)
                             </label>
-                            <input type="tel" 
-                                   id="signerPhone" 
-                                   name="signerPhone" 
-                                   class="form-control" 
+                            <input type="tel"
+                                   id="signerPhone"
+                                   name="signerPhone"
+                                   class="form-control"
                                    placeholder="+33 6 12 34 56 78">
                             <small class="form-text">
                                 Pour les signatures avec authentification par SMS
@@ -138,88 +193,71 @@
                         </div>
                     </div>
 
-                    <!-- Section 3: Niveau de signature -->
-                    <div class="form-card">
+                    <!-- Section 4: Niveau de signature -->
+                    <div class="form-card" id="levelSection" style="display:none;">
                         <div class="section-title">
                             <i class="fas fa-shield-alt"></i>
-                            3. Niveau de signature
+                            4. Niveau de signature
                         </div>
 
                         <div class="signature-level-cards">
-                            <!-- Signature Simple -->
                             <label class="level-card">
                                 <input type="radio" name="signatureLevel" value="simple" checked>
                                 <div class="level-content">
-                                    <div class="level-icon">
-                                        <i class="fas fa-pencil-alt"></i>
-                                    </div>
+                                    <div class="level-icon"><i class="fas fa-pencil-alt"></i></div>
                                     <div class="level-info">
                                         <h4>Simple</h4>
                                         <p>Signature électronique de base, valeur juridique limitée</p>
                                     </div>
                                 </div>
-                                <div class="level-badge">
-                                    <i class="fas fa-check"></i>
-                                </div>
+                                <div class="level-badge"><i class="fas fa-check"></i></div>
                             </label>
-
-                            <!-- Signature Avancée -->
                             <label class="level-card">
                                 <input type="radio" name="signatureLevel" value="advanced">
                                 <div class="level-content">
-                                    <div class="level-icon">
-                                        <i class="fas fa-signature"></i>
-                                    </div>
+                                    <div class="level-icon"><i class="fas fa-signature"></i></div>
                                     <div class="level-info">
                                         <h4>Avancée</h4>
                                         <p>Conforme eIDAS, valeur juridique reconnue en Europe</p>
                                     </div>
                                 </div>
-                                <div class="level-badge">
-                                    <i class="fas fa-check"></i>
-                                </div>
+                                <div class="level-badge"><i class="fas fa-check"></i></div>
                             </label>
-
-                            <!-- Signature Qualifiée -->
                             <label class="level-card">
                                 <input type="radio" name="signatureLevel" value="qualified">
                                 <div class="level-content">
-                                    <div class="level-icon">
-                                        <i class="fas fa-certificate"></i>
-                                    </div>
+                                    <div class="level-icon"><i class="fas fa-certificate"></i></div>
                                     <div class="level-info">
                                         <h4>Qualifiée</h4>
                                         <p>Équivalent signature manuscrite, valeur légale maximale</p>
                                     </div>
                                 </div>
-                                <div class="level-badge">
-                                    <i class="fas fa-check"></i>
-                                </div>
+                                <div class="level-badge"><i class="fas fa-check"></i></div>
                             </label>
                         </div>
 
                         <div class="alert alert-info mt-3" style="border-radius: 12px;">
                             <i class="fas fa-info-circle"></i>
-                            <strong>Recommandation :</strong> 
+                            <strong>Recommandation :</strong>
                             Pour la plupart des contrats juridiques, une signature <strong>avancée</strong> est suffisante et reconnue légalement.
                         </div>
                     </div>
 
-                    <!-- Section 4: Options supplémentaires -->
-                    <div class="form-card">
+                    <!-- Section 5: Options supplémentaires -->
+                    <div class="form-card" id="optionsSection" style="display:none;">
                         <div class="section-title">
                             <i class="fas fa-cog"></i>
-                            4. Options supplémentaires
+                            5. Options supplémentaires
                         </div>
 
                         <div class="form-group">
                             <label for="expirationDays" class="form-label">
                                 Délai d'expiration (jours)
                             </label>
-                            <input type="number" 
-                                   id="expirationDays" 
-                                   name="expirationDays" 
-                                   class="form-control" 
+                            <input type="number"
+                                   id="expirationDays"
+                                   name="expirationDays"
+                                   class="form-control"
                                    value="7"
                                    min="1"
                                    max="90">
@@ -232,9 +270,9 @@
                             <label for="message" class="form-label">
                                 Message personnalisé (optionnel)
                             </label>
-                            <textarea id="message" 
-                                      name="message" 
-                                      class="form-control" 
+                            <textarea id="message"
+                                      name="message"
+                                      class="form-control"
                                       rows="4"
                                       placeholder="Ajoutez un message qui sera envoyé avec l'e-mail de demande de signature..."></textarea>
                             <small class="form-text">
@@ -243,9 +281,9 @@
                         </div>
 
                         <div class="form-check">
-                            <input type="checkbox" 
-                                   id="sendCopy" 
-                                   name="sendCopy" 
+                            <input type="checkbox"
+                                   id="sendCopy"
+                                   name="sendCopy"
                                    class="form-check-input"
                                    checked>
                             <label for="sendCopy" class="form-check-label">
@@ -255,7 +293,7 @@
                     </div>
 
                     <!-- Actions -->
-                    <div class="actions-grid">
+                    <div class="actions-grid" id="actionsSection" style="display:none;">
                         <a th:href="@{/signatures}" class="btn-cancel">
                             <i class="fas fa-times"></i> Annuler
                         </a>
@@ -268,21 +306,125 @@
             </div>
         </div>
 
-        <script>
-        function filterDocumentsByCase() {
-            var caseId = document.getElementById('caseFilter').value;
+        <script th:inline="javascript">
+        /*<![CDATA[*/
+        var csrfToken = document.querySelector('meta[name="_csrf"]');
+        var selectedCaseId = /*[[${selectedCaseId}]]*/ null;
+
+        // Au chargement, si un dossier est pré-sélectionné, afficher les sections
+        document.addEventListener('DOMContentLoaded', function() {
+            if (selectedCaseId) {
+                showFormSections();
+                loadDocuments(selectedCaseId);
+                autoFillSigner();
+            }
+        });
+
+        function onCaseChanged() {
+            var sel = document.getElementById('caseSelect');
+            var caseId = sel.value;
+            if (!caseId) {
+                hideFormSections();
+                return;
+            }
+            showFormSections();
+            autoFillSigner();
+            loadDocuments(caseId);
+        }
+
+        function showFormSections() {
+            ['documentSection','signerSection','levelSection','optionsSection','actionsSection']
+                .forEach(function(id) {
+                    document.getElementById(id).style.display = '';
+                });
+        }
+
+        function hideFormSections() {
+            ['documentSection','signerSection','levelSection','optionsSection','actionsSection']
+                .forEach(function(id) {
+                    document.getElementById(id).style.display = 'none';
+                });
+        }
+
+        function autoFillSigner() {
+            var sel = document.getElementById('caseSelect');
+            var opt = sel.options[sel.selectedIndex];
+            if (!opt) return;
+            var clientName = opt.getAttribute('data-client-name') || '';
+            var clientEmail = opt.getAttribute('data-client-email') || '';
+            var nameInput = document.getElementById('signerName');
+            var emailInput = document.getElementById('signerEmail');
+            if (nameInput && !nameInput.value) nameInput.value = clientName;
+            if (emailInput && !emailInput.value) emailInput.value = clientEmail;
+        }
+
+        function loadDocuments(caseId) {
             var select = document.getElementById('documentSelect');
-            if (!select) return;
-            var options = select.querySelectorAll('option[data-case-id]');
-            options.forEach(function(opt) {
-                if (!caseId || opt.getAttribute('data-case-id') === caseId) {
-                    opt.style.display = '';
+            var noDocsMsg = document.getElementById('noDocsMsg');
+            select.innerHTML = '<option value="">Chargement...</option>';
+            noDocsMsg.style.display = 'none';
+
+            fetch('/signatures/api/cases/' + caseId + '/documents', {
+                headers: { 'Accept': 'application/json' }
+            })
+            .then(function(resp) { return resp.json(); })
+            .then(function(docs) {
+                select.innerHTML = '<option value="">-- Choisir un document --</option>';
+                if (docs.length === 0) {
+                    noDocsMsg.style.display = '';
+                    // Basculer automatiquement vers l'upload
+                    var uploadRadio = document.querySelector('input[name="documentSource"][value="upload"]');
+                    if (uploadRadio) { uploadRadio.checked = true; toggleDocSource(); }
                 } else {
-                    opt.style.display = 'none';
-                    if (opt.selected) { opt.selected = false; select.value = ''; }
+                    docs.forEach(function(doc) {
+                        var option = document.createElement('option');
+                        option.value = doc.id;
+                        option.textContent = doc.name;
+                        select.appendChild(option);
+                    });
                 }
+            })
+            .catch(function(err) {
+                select.innerHTML = '<option value="">Erreur de chargement</option>';
+                console.error('Erreur chargement documents:', err);
             });
         }
+
+        function toggleDocSource() {
+            var source = document.querySelector('input[name="documentSource"]:checked').value;
+            var existingBlock = document.getElementById('existingDocBlock');
+            var uploadBlock = document.getElementById('uploadDocBlock');
+            var docSelect = document.getElementById('documentSelect');
+            var uploadInput = document.getElementById('uploadFile');
+
+            if (source === 'existing') {
+                existingBlock.style.display = '';
+                uploadBlock.style.display = 'none';
+                // Activer/désactiver les required
+                if (uploadInput) uploadInput.removeAttribute('required');
+            } else {
+                existingBlock.style.display = 'none';
+                uploadBlock.style.display = '';
+                if (docSelect) docSelect.value = '';
+            }
+        }
+
+        // Affichage du nom du fichier uploadé
+        document.addEventListener('DOMContentLoaded', function() {
+            var fileInput = document.getElementById('uploadFile');
+            if (fileInput) {
+                fileInput.addEventListener('change', function() {
+                    var nameDiv = document.getElementById('uploadFileName');
+                    if (this.files && this.files.length > 0) {
+                        nameDiv.textContent = this.files[0].name;
+                        nameDiv.style.display = '';
+                    } else {
+                        nameDiv.style.display = 'none';
+                    }
+                });
+            }
+        });
+        /*]]>*/
         </script>
     </div>
 </body>
