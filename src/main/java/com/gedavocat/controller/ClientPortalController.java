@@ -5,9 +5,11 @@ import com.gedavocat.model.Case;
 import com.gedavocat.model.Client;
 import com.gedavocat.model.Document;
 import com.gedavocat.model.Permission;
+import com.gedavocat.model.Signature;
 import com.gedavocat.model.User;
 import com.gedavocat.repository.ClientRepository;
 import com.gedavocat.repository.PermissionRepository;
+import com.gedavocat.repository.SignatureRepository;
 import com.gedavocat.repository.UserRepository;
 import com.gedavocat.service.AppointmentService;
 import com.gedavocat.service.CaseService;
@@ -56,6 +58,7 @@ public class ClientPortalController {
     private final WatermarkService watermarkService;
     private final AppointmentService appointmentService;
     private final PermissionRepository permissionRepository;
+    private final SignatureRepository signatureRepository;
 
     /**
      * Liste des dossiers du client connecté
@@ -93,6 +96,21 @@ public class ClientPortalController {
         model.addAttribute("cases", myCases);
         model.addAttribute("user", user);
         model.addAttribute("client", client);
+
+        // Signatures du client (par email)
+        List<Signature> signatures;
+        try {
+            signatures = signatureRepository.findBySignerEmail(user.getEmail());
+        } catch (Exception e) {
+            signatures = Collections.emptyList();
+        }
+        long pendingSignatures = signatures.stream()
+                .filter(s -> s.getStatus() == Signature.SignatureStatus.PENDING).count();
+        long signedSignatures = signatures.stream()
+                .filter(s -> s.getStatus() == Signature.SignatureStatus.SIGNED).count();
+        model.addAttribute("signatures", signatures);
+        model.addAttribute("pendingSignatures", pendingSignatures);
+        model.addAttribute("signedSignatures", signedSignatures);
         
         return "client-portal/cases";
     }

@@ -9,6 +9,7 @@ import com.gedavocat.repository.DocumentRepository;
 import com.gedavocat.repository.SignatureRepository;
 import com.gedavocat.repository.UserRepository;
 import com.gedavocat.service.DocumentService;
+import com.gedavocat.service.NotificationService;
 import com.gedavocat.service.YousignService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
@@ -38,6 +39,7 @@ public class SignatureController {
 
     private final YousignService yousignService;
     private final DocumentService documentService;
+    private final NotificationService notificationService;
     private final DocumentRepository documentRepository;
     private final UserRepository userRepository;
     private final SignatureRepository signatureRepository;
@@ -225,6 +227,14 @@ public class SignatureController {
             signature.setCaseEntity(caseEntity);
             signatureRepository.save(signature);
 
+            // Notification pour l'avocat
+            notificationService.notifySignaturePending(user, signerName, document.getOriginalName(), signature.getId());
+
+            // Notification pour le client (s'il a un compte)
+            userRepository.findByEmail(signerEmail).ifPresent(clientUser ->
+                notificationService.notifyClientSignatureRequest(clientUser, user.getName(), document.getOriginalName())
+            );
+
             redirectAttributes.addFlashAttribute("message",
                 "Demande de signature envoyée à " + signerEmail);
 
@@ -251,7 +261,7 @@ public class SignatureController {
             User user = userRepository.findByEmail(userDetails.getUsername())
                     .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
 
-            Signature signature = signatureRepository.findById(signatureId)
+            Signature signature = signatureRepository.findByIdWithCase(signatureId)
                     .orElseThrow(() -> new RuntimeException("Signature introuvable"));
 
             // Vérifier que la signature appartient à l'utilisateur

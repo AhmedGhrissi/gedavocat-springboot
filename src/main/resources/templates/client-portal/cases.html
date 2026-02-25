@@ -17,6 +17,52 @@
                 </p>
             </div>
 
+            <!-- Signatures en attente -->
+            <div th:if="${signatures != null and !signatures.empty}" class="card shadow-sm mb-4" style="border-radius:16px;overflow:hidden">
+                <div class="card-header d-flex justify-content-between align-items-center" style="background:linear-gradient(135deg,#0d9488,#14b8a6);color:#fff;border:none;padding:1rem 1.5rem">
+                    <h5 class="mb-0"><i class="fas fa-file-signature me-2"></i> Mes Signatures</h5>
+                    <div class="d-flex gap-2">
+                        <span th:if="${pendingSignatures > 0}" class="badge bg-warning text-dark" th:text="'En attente : ' + ${pendingSignatures}">0</span>
+                        <span th:if="${signedSignatures > 0}" class="badge bg-light text-success" th:text="'Signés : ' + ${signedSignatures}">0</span>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div th:each="sig,iter : ${signatures}" th:if="${sig.status?.name() == 'PENDING'}"
+                         class="d-flex align-items-center gap-3 px-4 py-3"
+                         th:style="${!iter.last ? 'border-bottom:1px solid #e2e8f0' : ''}">
+                        <div style="width:44px;height:44px;border-radius:10px;background:#fef3c7;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                            <i class="fas fa-file-signature" style="color:#92400e;font-size:1.1rem"></i>
+                        </div>
+                        <div class="flex-grow-1" style="min-width:0">
+                            <div style="font-weight:600;font-size:14px" th:text="${sig.documentName}">Document.pdf</div>
+                            <div style="font-size:12px;color:#64748b">
+                                Demandé le <span th:text="${#temporals.format(sig.createdAt, 'dd/MM/yyyy')}">01/01/2025</span>
+                            </div>
+                        </div>
+                        <span class="badge bg-warning text-dark" style="border-radius:6px">En attente</span>
+                    </div>
+                    <div th:each="sig,iter : ${signatures}" th:if="${sig.status?.name() == 'SIGNED'}"
+                         class="d-flex align-items-center gap-3 px-4 py-3"
+                         th:style="${!iter.last ? 'border-bottom:1px solid #e2e8f0' : ''}" style="opacity:.8">
+                        <div style="width:44px;height:44px;border-radius:10px;background:#d1fae5;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                            <i class="fas fa-check" style="color:#065f46;font-size:1.1rem"></i>
+                        </div>
+                        <div class="flex-grow-1" style="min-width:0">
+                            <div style="font-weight:600;font-size:14px" th:text="${sig.documentName}">Document.pdf</div>
+                            <div style="font-size:12px;color:#64748b">
+                                Signé le <span th:if="${sig.signedAt}" th:text="${#temporals.format(sig.signedAt, 'dd/MM/yyyy HH:mm')}">01/01/2025</span>
+                            </div>
+                        </div>
+                        <span class="badge bg-success" style="border-radius:6px">Signé</span>
+                    </div>
+                </div>
+                <div class="card-footer text-center" style="background:#f8fafc;border-top:1px solid #e2e8f0">
+                    <a th:href="@{/my-signatures}" class="text-decoration-none" style="font-size:14px;font-weight:600;color:#0d9488">
+                        Voir toutes mes signatures <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+
             <!-- Liste des dossiers -->
             <div th:if="${cases != null and !cases.empty}">
                 <div th:each="case : ${cases}" class="case-card">

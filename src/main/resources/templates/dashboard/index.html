@@ -162,6 +162,54 @@
 
                     <!-- Recent Cases -->
                     <h3 class="section-title">
+                        <i class="fas fa-file-signature" style="color:var(--brand-500);font-size:14px"></i> Signatures récentes
+                    </h3>
+                    <div class="card mb-4">
+                        <div class="card-body p-0">
+                            <div th:if="${recentSignatures != null and !#lists.isEmpty(recentSignatures)}">
+                                <div class="d-flex gap-3 px-4 py-2" style="border-bottom:1px solid var(--border-light);background:var(--bg-secondary);border-radius:var(--radius-lg) var(--radius-lg) 0 0">
+                                    <span class="badge bg-warning text-dark" th:text="'En attente : ' + ${pendingSignatures}">En attente : 0</span>
+                                    <span class="badge bg-success" th:text="'Signés : ' + ${signedSignatures}">Signés : 0</span>
+                                </div>
+                                <div th:each="sig,iter : ${recentSignatures}"
+                                     class="d-flex align-items-center gap-3 px-4 py-3"
+                                     th:style="${!iter.last ? 'border-bottom:1px solid var(--border-light)' : ''}">
+                                    <div style="width:40px;height:40px;border-radius:var(--radius-lg);display:flex;align-items:center;justify-content:center;flex-shrink:0"
+                                         th:classappend="${sig.status.name() == 'SIGNED'} ? 'bg-success bg-opacity-10' : (${sig.status.name() == 'PENDING'} ? 'bg-warning bg-opacity-10' : 'bg-secondary bg-opacity-10')">
+                                        <i th:class="${sig.status.name() == 'SIGNED'} ? 'fas fa-check text-success' : (${sig.status.name() == 'PENDING'} ? 'fas fa-hourglass-half text-warning' : 'fas fa-times text-secondary')"
+                                           style="font-size:14px"></i>
+                                    </div>
+                                    <div class="flex-grow-1" style="min-width:0">
+                                        <div style="font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+                                            <a th:href="@{/signatures/{id}(id=${sig.id})}" th:text="${sig.documentName}"
+                                               class="text-decoration-none" style="color:var(--text-primary)">Document</a>
+                                        </div>
+                                        <div style="font-size:12px;color:var(--text-tertiary)"
+                                             th:text="${sig.signerName + ' · ' + sig.signerEmail}">Signataire</div>
+                                    </div>
+                                    <span class="badge"
+                                          th:classappend="${sig.status.name() == 'SIGNED'} ? 'bg-success' :
+                                                         (${sig.status.name() == 'PENDING'} ? 'bg-warning text-dark' :
+                                                         (${sig.status.name() == 'REJECTED'} ? 'bg-danger' : 'bg-secondary'))"
+                                          th:text="${sig.status.displayName}">Statut</span>
+                                    <span style="font-size:12px;color:var(--text-tertiary);flex-shrink:0"
+                                          th:text="${#temporals.format(sig.createdAt, 'dd/MM/yyyy')}">Date</span>
+                                </div>
+                            </div>
+                            <div th:if="${recentSignatures == null or #lists.isEmpty(recentSignatures)}" class="text-center py-4">
+                                <div style="width:56px;height:56px;border-radius:var(--radius-xl);background:linear-gradient(135deg,var(--bg-secondary),var(--bg-tertiary));display:inline-flex;align-items:center;justify-content:center;margin-bottom:12px">
+                                    <i class="fas fa-file-signature fa-lg" style="color:var(--text-tertiary)"></i>
+                                </div>
+                                <p style="color:var(--text-secondary);font-size:14px;margin:0">Aucune signature</p>
+                                <a th:href="@{/signatures/new}" class="btn btn-primary btn-sm mt-2">
+                                    <i class="fas fa-plus me-1"></i> Nouvelle signature
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dossiers récents -->
+                    <h3 class="section-title">
                         <i class="fas fa-folder" style="color:var(--brand-400);font-size:14px"></i> Dossiers récents
                     </h3>
                     <div class="card">

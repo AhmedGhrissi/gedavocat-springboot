@@ -10,6 +10,7 @@ import com.gedavocat.repository.ClientRepository;
 import com.gedavocat.repository.DocumentRepository;
 import com.gedavocat.repository.SignatureRepository;
 import com.gedavocat.repository.UserRepository;
+import com.gedavocat.model.Signature;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -120,6 +121,19 @@ public class DashboardController {
         model.addAttribute("totalStorage",   totalStorage);
         model.addAttribute("recentCases",    recentCases);
         model.addAttribute("recentClients",  recentClients);
+        
+        // Signatures récentes (5 dernières, tous statuts)
+        List<Signature> allSignatures = signatureRepository.findByRequestedByIdWithCase(user.getId());
+        List<Signature> recentSignatures = allSignatures.stream()
+                .limit(5)
+                .toList();
+        long pendingSignatures = allSignatures.stream()
+                .filter(s -> s.getStatus() == Signature.SignatureStatus.PENDING).count();
+        long signedSignatures = allSignatures.stream()
+                .filter(s -> s.getStatus() == Signature.SignatureStatus.SIGNED).count();
+        model.addAttribute("recentSignatures", recentSignatures);
+        model.addAttribute("pendingSignatures", pendingSignatures);
+        model.addAttribute("signedSignatures", signedSignatures);
         
         // Activités récentes depuis l'audit log
         model.addAttribute("recentActivities", buildRecentActivities(user.getId()));

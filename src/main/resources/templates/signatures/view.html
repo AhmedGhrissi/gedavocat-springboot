@@ -50,7 +50,7 @@
                             <dd class="col-sm-8" th:text="${signature.signerName + ' &lt;' + signature.signerEmail + '&gt;'}">-</dd>
 
                             <dt class="col-sm-4">Niveau de signature</dt>
-                            <dd class="col-sm-8" th:text="${signature.level ?: 'Avancée (eIDAS)'}">-</dd>
+                            <dd class="col-sm-8" th:text="${signature.level == 'simple' ? 'Simple' : (signature.level == 'advanced' ? 'Avancée (eIDAS)' : (signature.level == 'qualified' ? 'Qualifiée (eIDAS)' : (signature.level ?: 'Avancée (eIDAS)')))}">-</dd>
 
                             <dt class="col-sm-4">Dossier</dt>
                             <dd class="col-sm-8">

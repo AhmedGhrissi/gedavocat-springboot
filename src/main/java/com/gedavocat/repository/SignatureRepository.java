@@ -60,6 +60,12 @@ public interface SignatureRepository extends JpaRepository<Signature, String> {
     long countPendingByUserId(@Param("userId") String userId);
     
     /**
+     * Trouve une signature par ID avec le dossier chargé
+     */
+    @Query("SELECT s FROM Signature s LEFT JOIN FETCH s.caseEntity LEFT JOIN FETCH s.document WHERE s.id = :id")
+    Optional<Signature> findByIdWithCase(@Param("id") String id);
+
+    /**
      * Trouve les signatures par email du signataire
      */
     List<Signature> findBySignerEmail(String signerEmail);
