@@ -66,14 +66,16 @@ public interface SignatureRepository extends JpaRepository<Signature, String> {
     Optional<Signature> findByIdWithCase(@Param("id") String id);
 
     /**
-     * Trouve les signatures par email du signataire
+     * Trouve les signatures par email du signataire (avec relations chargées)
      */
-    List<Signature> findBySignerEmail(String signerEmail);
+    @Query("SELECT s FROM Signature s LEFT JOIN FETCH s.caseEntity LEFT JOIN FETCH s.document LEFT JOIN FETCH s.requestedBy " +
+           "WHERE s.signerEmail = :signerEmail ORDER BY s.createdAt DESC")
+    List<Signature> findBySignerEmail(@Param("signerEmail") String signerEmail);
 
     /**
      * Trouve les signatures liées aux dossiers d'un client (via case → client → client_user_id)
      */
-    @Query("SELECT s FROM Signature s LEFT JOIN FETCH s.caseEntity LEFT JOIN FETCH s.document " +
+    @Query("SELECT s FROM Signature s LEFT JOIN FETCH s.caseEntity LEFT JOIN FETCH s.document LEFT JOIN FETCH s.requestedBy " +
            "WHERE s.caseEntity.client.clientUser.id = :clientUserId ORDER BY s.createdAt DESC")
     List<Signature> findByClientUserId(@Param("clientUserId") String clientUserId);
 
