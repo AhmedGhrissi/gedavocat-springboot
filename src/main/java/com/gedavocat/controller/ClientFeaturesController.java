@@ -96,10 +96,22 @@ public class ClientFeaturesController {
             return "client-portal/pending";
         }
 
-        // Les signatures adressées au client par email
+        // Chercher les signatures par :
+        // 1. Email du signataire (correspondance directe)
+        // 2. Dossiers du client (case → client → client_user_id)
         List<Signature> signatures;
         try {
-            signatures = signatureRepository.findBySignerEmail(user.getEmail());
+            // Par email du signataire
+            List<Signature> byEmail = signatureRepository.findBySignerEmail(user.getEmail());
+            // Par dossiers du client
+            List<Signature> byCase = signatureRepository.findByClientUserId(user.getId());
+
+            // Fusionner et dédupliquer
+            java.util.LinkedHashMap<String, Signature> merged = new java.util.LinkedHashMap<>();
+            for (Signature s : byCase) merged.put(s.getId(), s);
+            for (Signature s : byEmail) merged.put(s.getId(), s);
+            signatures = new java.util.ArrayList<>(merged.values());
+
             // Synchroniser le statut des signatures PENDING depuis Yousign
             for (Signature sig : signatures) {
                 if (sig.getStatus() == Signature.SignatureStatus.PENDING) {

@@ -243,10 +243,21 @@ public class SignatureController {
             // Notification pour l'avocat
             notificationService.notifySignaturePending(user, signerName, document.getOriginalName(), signature.getId());
 
-            // Notification pour le client (s'il a un compte)
-            userRepository.findByEmail(signerEmail).ifPresent(clientUser ->
-                notificationService.notifyClientSignatureRequest(clientUser, user.getName(), document.getOriginalName())
-            );
+            // Notification pour le client :
+            // 1. Par email du signataire (s'il a un compte)
+            // 2. Par le client lié au dossier (si différent)
+            java.util.Set<String> notifiedUserIds = new java.util.HashSet<>();
+            userRepository.findByEmail(signerEmail).ifPresent(clientUser -> {
+                notificationService.notifyClientSignatureRequest(clientUser, user.getName(), document.getOriginalName());
+                notifiedUserIds.add(clientUser.getId());
+            });
+            // Notifier aussi le client du dossier s'il a un compte utilisateur
+            if (caseEntity.getClient() != null && caseEntity.getClient().getClientUser() != null) {
+                User clientUser = caseEntity.getClient().getClientUser();
+                if (!notifiedUserIds.contains(clientUser.getId())) {
+                    notificationService.notifyClientSignatureRequest(clientUser, user.getName(), document.getOriginalName());
+                }
+            }
 
             redirectAttributes.addFlashAttribute("message",
                 "Demande de signature envoyée à " + signerEmail);

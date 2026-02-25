@@ -70,6 +70,13 @@ public interface SignatureRepository extends JpaRepository<Signature, String> {
      */
     List<Signature> findBySignerEmail(String signerEmail);
 
+    /**
+     * Trouve les signatures liées aux dossiers d'un client (via case → client → client_user_id)
+     */
+    @Query("SELECT s FROM Signature s LEFT JOIN FETCH s.caseEntity LEFT JOIN FETCH s.document " +
+           "WHERE s.caseEntity.client.clientUser.id = :clientUserId ORDER BY s.createdAt DESC")
+    List<Signature> findByClientUserId(@Param("clientUserId") String clientUserId);
+
     @org.springframework.data.jpa.repository.Modifying(clearAutomatically = true)
     @org.springframework.transaction.annotation.Transactional
     @Query("DELETE FROM Signature s WHERE s.requestedBy.id = :userId")
