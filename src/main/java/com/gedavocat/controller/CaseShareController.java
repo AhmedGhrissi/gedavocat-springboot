@@ -107,20 +107,9 @@ public class CaseShareController {
             User user = getCurrentUser(authentication);
             CaseShareLink link = shareService.createShareLink(id, user, description, expiresAt, maxAccessCount, emailTo);
 
-            // Determine which public path to display based on whether the recipient is an existing user
-            String shareUrlPath = "/cases/shared?token=" + link.getToken();
-            if (emailTo != null && !emailTo.isBlank()) {
-                boolean userExists = false;
-                try {
-                    userExists = userRepository.findByEmail(emailTo).isPresent();
-                } catch (Exception ignore) { }
-                if (!userExists) {
-                    shareUrlPath = "/collaborators/accept-invitation?token=" + link.getToken();
-                }
-            }
-
-            // Only send the relative path in flash (template will prepend baseUrl)
-            redirectAttributes.addFlashAttribute("shareUrl", shareUrlPath);
+            // Build the full public URL (same logic used in email)
+            String fullPublicUrl = shareService.buildPublicUrl(emailTo, link.getToken());
+            redirectAttributes.addFlashAttribute("shareFullUrl", fullPublicUrl);
             redirectAttributes.addFlashAttribute("message", "Lien de partage créé avec succès !");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Erreur : " + e.getMessage());
