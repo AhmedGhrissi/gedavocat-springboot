@@ -158,7 +158,8 @@ public class SignatureController {
             @RequestParam(required = false) String documentId,
             @RequestParam String caseId,
             @RequestParam(required = false) MultipartFile uploadFile,
-            @RequestParam String signerName,
+            @RequestParam String signerFirstName,
+            @RequestParam String signerLastName,
             @RequestParam String signerEmail,
             @RequestParam(defaultValue = "advanced") String signatureLevel,
             @RequestParam(required = false) String signerPhone,
@@ -199,9 +200,11 @@ public class SignatureController {
             }
 
             // Créer la demande de signature
+            String signerName = signerFirstName.trim() + " " + signerLastName.trim();
             Map<String, Object> result = yousignService.createSignatureRequest(
                     document.getPath(),
-                    signerName,
+                    signerFirstName.trim(),
+                    signerLastName.trim(),
                     signerEmail,
                     signatureLevel
             );

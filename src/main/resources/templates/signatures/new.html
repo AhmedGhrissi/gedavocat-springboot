@@ -147,19 +147,29 @@
                             3. Informations du signataire
                         </div>
 
-                        <div class="form-group">
-                            <label for="signerName" class="form-label">
-                                Nom complet <span class="required">*</span>
-                            </label>
-                            <input type="text"
-                                   id="signerName"
-                                   name="signerName"
-                                   class="form-control"
-                                   placeholder="Ex: Jean Dupont"
-                                   required>
-                            <small class="form-text">
-                                Nom et prénom de la personne qui doit signer le document
-                            </small>
+                        <div style="display:flex; gap:16px;">
+                            <div class="form-group" style="flex:1;">
+                                <label for="signerFirstName" class="form-label">
+                                    Prénom <span class="required">*</span>
+                                </label>
+                                <input type="text"
+                                       id="signerFirstName"
+                                       name="signerFirstName"
+                                       class="form-control"
+                                       placeholder="Ex: Jean"
+                                       required>
+                            </div>
+                            <div class="form-group" style="flex:1;">
+                                <label for="signerLastName" class="form-label">
+                                    Nom <span class="required">*</span>
+                                </label>
+                                <input type="text"
+                                       id="signerLastName"
+                                       name="signerLastName"
+                                       class="form-control"
+                                       placeholder="Ex: Dupont"
+                                       required>
+                            </div>
                         </div>
 
                         <div class="form-group">
@@ -352,9 +362,13 @@
             if (!opt) return;
             var clientName = opt.getAttribute('data-client-name') || '';
             var clientEmail = opt.getAttribute('data-client-email') || '';
-            var nameInput = document.getElementById('signerName');
+            var firstNameInput = document.getElementById('signerFirstName');
+            var lastNameInput = document.getElementById('signerLastName');
             var emailInput = document.getElementById('signerEmail');
-            if (nameInput && !nameInput.value) nameInput.value = clientName;
+            // Tenter de séparer prénom/nom depuis le nom complet du client
+            var parts = clientName.trim().split(/\s+/);
+            if (firstNameInput && !firstNameInput.value) firstNameInput.value = parts.length > 1 ? parts[0] : '';
+            if (lastNameInput && !lastNameInput.value) lastNameInput.value = parts.length > 1 ? parts.slice(1).join(' ') : clientName;
             if (emailInput && !emailInput.value) emailInput.value = clientEmail;
         }
 

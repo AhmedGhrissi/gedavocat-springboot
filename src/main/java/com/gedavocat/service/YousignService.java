@@ -49,7 +49,8 @@ public class YousignService {
      */
     public Map<String, Object> createSignatureRequest(
             String documentPath,
-            String signerName,
+            String signerFirstName,
+            String signerLastName,
             String signerEmail,
             String signatureLevel
     ) {
@@ -65,6 +66,8 @@ public class YousignService {
             requestBody.put("name", "Signature document juridique");
             requestBody.put("delivery_mode", "email");
             requestBody.put("timezone", "Europe/Paris");
+            // ordered_signers obligatoire pour qualified_electronic_signature
+            requestBody.put("ordered_signers", true);
             
             HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, createJsonHeaders());
             
@@ -110,14 +113,10 @@ public class YousignService {
             log.info("Document uploadé: {}", uploadedDocumentId);
             
             // ── Étape 3 : Ajouter le signataire ──
-            String[] nameParts = signerName.trim().split("\\s+", 2);
-            String firstName = nameParts[0];
-            String lastName = nameParts.length > 1 ? nameParts[1] : firstName;
-            
             Map<String, Object> signerBody = new HashMap<>();
             signerBody.put("info", Map.of(
-                "first_name", firstName,
-                "last_name", lastName,
+                "first_name", signerFirstName,
+                "last_name", signerLastName,
                 "email", signerEmail,
                 "locale", "fr"
             ));
