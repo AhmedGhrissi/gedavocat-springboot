@@ -1,6 +1,5 @@
 package com.gedavocat.controller;
 
-import com.gedavocat.model.Case;
 import com.gedavocat.model.CaseShareLink;
 import com.gedavocat.model.User;
 import com.gedavocat.repository.UserRepository;
@@ -14,7 +13,6 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -146,7 +144,6 @@ public class CaseShareController {
      * Accès en lecture au dossier partagé via token
      */
     @GetMapping("/cases/shared")
-    @Transactional
     public String accessSharedCase(@RequestParam String token, Model model) {
         try {
             CaseShareLink link = shareService.accessByToken(token);
@@ -160,20 +157,8 @@ public class CaseShareController {
                 }
             }
 
-            Case caseEntity = link.getSharedCase();
-
-            // Charger les données nécessaires (OSIV=false, donc init lazy dans la transaction)
-            caseEntity.getName(); // init lazy
-            if (caseEntity.getClient() != null) caseEntity.getClient().getName();
-            if (caseEntity.getLawyer() != null) caseEntity.getLawyer().getName();
-            // Init owner du lien (utilisé dans le template shared-view)
-            if (link.getOwner() != null) {
-                link.getOwner().getFirstName();
-                link.getOwner().getLastName();
-            }
-
-            model.addAttribute("case", caseEntity);
-            model.addAttribute("documents", documentService.getLatestVersions(caseEntity.getId()));
+            model.addAttribute("case", link.getSharedCase());
+            model.addAttribute("documents", documentService.getLatestVersions(link.getSharedCase().getId()));
             model.addAttribute("link", link);
             model.addAttribute("token", token);
             return "cases/shared-view";

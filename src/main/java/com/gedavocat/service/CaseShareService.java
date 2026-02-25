@@ -171,6 +171,7 @@ public class CaseShareService {
     /**
      * Accède à un dossier partagé via token.
      * Incrémente le compteur d'accès.
+     * Initialise les proxies lazy pour usage hors transaction.
      */
     @Transactional
     public CaseShareLink accessByToken(String token) {
@@ -182,7 +183,23 @@ public class CaseShareService {
         }
 
         link.setAccessCount(link.getAccessCount() + 1);
-        return shareLinkRepository.save(link);
+        link = shareLinkRepository.save(link);
+
+        // Initialiser les proxies lazy (OSIV=false)
+        if (link.getSharedCase() != null) {
+            link.getSharedCase().getName();
+            if (link.getSharedCase().getClient() != null) link.getSharedCase().getClient().getName();
+            if (link.getSharedCase().getLawyer() != null) link.getSharedCase().getLawyer().getName();
+        }
+        if (link.getOwner() != null) {
+            link.getOwner().getFirstName();
+            link.getOwner().getLastName();
+        }
+        if (link.getRecipientEmail() != null) {
+            // already a plain field, no lazy init needed
+        }
+
+        return link;
     }
 
     /**
