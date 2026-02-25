@@ -112,7 +112,7 @@ public class YousignService {
             // ── Étape 3 : Ajouter le signataire ──
             String[] nameParts = signerName.trim().split("\\s+", 2);
             String firstName = nameParts[0];
-            String lastName = nameParts.length > 1 ? nameParts[1] : "";
+            String lastName = nameParts.length > 1 ? nameParts[1] : firstName;
             
             Map<String, Object> signerBody = new HashMap<>();
             signerBody.put("info", Map.of(
@@ -278,7 +278,7 @@ public class YousignService {
     private String mapSignatureLevel(String level) {
         return switch (level != null ? level.toLowerCase() : "simple") {
             case "advanced" -> "advanced_electronic_signature";
-            case "qualified" -> "electronic_signature_with_qualified_certificate";
+            case "qualified" -> "qualified_electronic_signature";
             default -> "electronic_signature";
         };
     }
