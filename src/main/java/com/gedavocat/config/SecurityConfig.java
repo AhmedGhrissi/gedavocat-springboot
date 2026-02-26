@@ -102,7 +102,8 @@ public class SecurityConfig {
 							// Always allow the CDN for script/style/font resources so external UI libs (FullCalendar, cdnjs, Google Fonts) can load
 							final String extraScriptOrigins = " https://cdn.jsdelivr.net";
 							final String extraStyleOrigins = " https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com";
-							final String extraFontOrigins = " https://cdnjs.cloudflare.com https://fonts.gstatic.com";
+							// Allow data: URIs for embedded/base64 fonts (some libs inline fonts as data: URIs)
+							final String extraFontOrigins = " data: https://cdnjs.cloudflare.com https://fonts.gstatic.com";
 
 							final String scriptSrc = "'self' 'unsafe-inline' https://js.stripe.com" + extraScriptOrigins;
 							final String styleSrc = "'self' 'unsafe-inline'" + extraStyleOrigins;
