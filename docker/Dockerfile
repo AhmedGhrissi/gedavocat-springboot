@@ -11,10 +11,7 @@
 # ============================================================
 
 # ── Stage 1 : Build ─────────────────────────────────────────
-# ARG BUILDPLATFORM permet au stage builder de tourner en x86_64 natif
-# même quand on build --platform linux/arm64 (cross-compilation efficace)
-ARG BUILDPLATFORM=linux/amd64
-FROM --platform=$BUILDPLATFORM maven:3.9-eclipse-temurin-17-alpine AS builder
+FROM maven:3.9-eclipse-temurin-17 AS builder
 
 WORKDIR /build
 
