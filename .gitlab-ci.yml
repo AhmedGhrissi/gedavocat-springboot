@@ -66,7 +66,7 @@ stages:
   - |
     WEBHOOK="${DISCORD_WEBHOOK:-${DISCORD_COMMIT_WEBHOOK:-}}"
     [ -z "$WEBHOOK" ] && exit 0
-    apk add --no-cache curl --quiet 2>/dev/null || true
+    apt-get update -qq && apt-get install -yqq curl > /dev/null 2>&1 || apk add --no-cache curl --quiet 2>/dev/null || true
     BRANCH="${CI_COMMIT_BRANCH:-MR}"
     AUTHOR="${GITLAB_USER_NAME:-CI}"
     SHA="${CI_COMMIT_SHORT_SHA:-????}"
@@ -111,9 +111,9 @@ stages:
 # 
 build:
   stage: build
-  image: maven:3.9-eclipse-temurin-17-alpine
+  image: maven:3.9-eclipse-temurin-17
   before_script:
-    - apk add --no-cache curl --quiet 2>/dev/null || true
+    - apt-get update -qq && apt-get install -yqq curl > /dev/null 2>&1 || true
     # Notification Discord : pipeline demarre
     - |
       WEBHOOK="${DISCORD_WEBHOOK:-${DISCORD_COMMIT_WEBHOOK:-}}"
@@ -157,10 +157,10 @@ build:
 # 
 test:
   stage: test
-  image: maven:3.9-eclipse-temurin-17-alpine
+  image: maven:3.9-eclipse-temurin-17
   needs: [build]
   before_script:
-    - apk add --no-cache curl --quiet 2>/dev/null || true
+    - apt-get update -qq && apt-get install -yqq curl > /dev/null 2>&1 || true
   script:
     - mvn $MAVEN_CLI_OPTS test
   after_script:
