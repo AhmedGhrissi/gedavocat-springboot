@@ -1,0 +1,5 @@
+/* Lightweight app.css that aggregates existing css files to satisfy templates requesting /css/app.css */
+@import url("/css/design-system.css");
+@import url("/css/main.css");
+
+/* Project specific small overrides (empty for now) */

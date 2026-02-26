@@ -51,6 +51,9 @@ public class User {
     @Column(name = "bar_number", length = 50)
     private String barNumber;
 
+    @Column(name = "email_signature", columnDefinition = "TEXT")
+    private String emailSignature;
+
     @NotBlank(message = "L'email est obligatoire")
     @Email(message = "Email invalide")
     @Column(nullable = false, unique = true, length = 255)

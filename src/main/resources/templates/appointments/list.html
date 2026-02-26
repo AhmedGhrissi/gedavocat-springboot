@@ -32,10 +32,10 @@
                     <p style="font-size:0.875rem;margin:0;color:rgba(255,255,255,0.8)">Vue détaillée de tous vos rendez-vous</p>
                 </div>
                 <div class="d-flex gap-2 flex-wrap">
-                    <a href="/appointments" class="btn" style="background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:var(--radius-lg);backdrop-filter:blur(8px);padding:8px 14px">
+                    <a href="/appointments" class="btn" style="background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:var(--radius-md);backdrop-filter:blur(8px)">
                         <i class="fas fa-calendar me-1"></i> Vue calendrier
                     </a>
-                    <a href="/appointments/new" class="btn" style="background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.25);border-radius:var(--radius-lg);font-weight:600;backdrop-filter:blur(8px);padding:8px 18px">
+                    <a href="/appointments/new" class="btn" style="background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.25);border-radius:var(--radius-md);font-weight:600;backdrop-filter:blur(8px)">
                         <i class="fas fa-plus me-1"></i> Nouveau rendez-vous
                     </a>
                 </div>
@@ -165,7 +165,7 @@
                                                   th:text="${appointment.status.displayName}">Statut</span>
                                         </td>
                                         <td onclick="event.stopPropagation()">
-                                            <div class="btn-group btn-group-sm">
+                                            <div class="d-flex gap-2">
                                                 <a th:href="@{/appointments/{id}/edit(id=${appointment.id})}" 
                                                    class="btn btn-outline-primary"
                                                    title="Modifier">
@@ -300,7 +300,7 @@
                                             <div class="modal-content">
                                                 <div class="modal-header bg-info text-white">
                                                     <h5 class="modal-title"><i class="fas fa-calendar-alt"></i> Proposer une nouvelle date</h5>
-                                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                                 </div>
                                                 <form th:action="@{/appointments/{id}/propose-date(id=${apt.id})}" method="post">
                                                     <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />

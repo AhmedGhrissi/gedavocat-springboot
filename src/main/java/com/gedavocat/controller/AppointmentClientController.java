@@ -2,6 +2,8 @@ package com.gedavocat.controller;
 
 import com.gedavocat.model.Appointment;
 import com.gedavocat.model.User;
+import com.gedavocat.model.Client;
+import com.gedavocat.repository.ClientRepository;
 import com.gedavocat.repository.UserRepository;
 import com.gedavocat.service.AppointmentService;
 import com.gedavocat.service.EmailService;
@@ -28,6 +30,7 @@ public class AppointmentClientController {
 
     private final AppointmentService appointmentService;
     private final UserRepository userRepository;
+    private final ClientRepository clientRepository;
     private final EmailService emailService;
     private final NotificationService notificationService;
 
@@ -37,10 +40,23 @@ public class AppointmentClientController {
         User user = userRepository.findByEmail(authentication.getName())
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
 
-        var appointments = appointmentService.getAppointmentsByClient(user.getId());
+        var clientOpt = clientRepository.findByClientUserId(user.getId());
+        if (clientOpt.isEmpty()) {
+            model.addAttribute("errorMessage", "Votre profil client n'a pas encore été activé.");
+            return "client-portal/pending";
+        }
+        Client client = clientOpt.get();
+
+        var appointments = appointmentService.getAppointmentsByClient(client.getId());
+        for (var a : appointments) {
+            if (a.getLawyer() != null) a.getLawyer().getFirstName();
+            if (a.getRelatedCase() != null) a.getRelatedCase().getName();
+        }
+
         model.addAttribute("user", user);
+        model.addAttribute("client", client);
         model.addAttribute("appointments", appointments);
-        return "client/appointments";
+        return "client-portal/appointments";
     }
 
     @PostMapping("/{id}/confirm")
@@ -72,9 +88,10 @@ public class AppointmentClientController {
                         "Le client a confirmé le rendez-vous le " + dateStr,
                         "/appointments", "fa-check", "success");
                 if (appointment.getLawyer().getEmail() != null) {
+                    String dateStr2 = appointment.getAppointmentDate().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy 'à' HH:mm"));
                     emailService.sendEmail(appointment.getLawyer().getEmail(),
                             "Rendez-vous confirmé par le client",
-                            "Le client a confirmé le rendez-vous : " + appointment.getTitle() + " le " + dateStr);
+                            "Votre client a confirmé le rendez-vous :\n" + appointment.getTitle() + "\nDate : " + dateStr2);
                 }
             }
 

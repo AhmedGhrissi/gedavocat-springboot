@@ -86,7 +86,7 @@
                         <!-- Télécharger le document signé (si complété) -->
                         <a th:if="${signature.status.name() == 'SIGNED'}"
                            th:href="@{/signatures/{id}/download(id=${signature.id})}"
-                           class="btn btn-success" style="border-radius:var(--radius-lg);font-weight:600">
+                           class="btn btn-success" style="border-radius:var(--radius-md);font-weight:600">
                             <i class="fas fa-download"></i> Télécharger le document signé
                         </a>
 
@@ -94,7 +94,7 @@
                         <form th:if="${signature.status.name() == 'PENDING'}"
                               th:action="@{/signatures/{id}/remind(id=${signature.id})}" method="post">
                             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-                            <button type="submit" class="btn btn-warning w-100" style="border-radius:var(--radius-lg);font-weight:600">
+                            <button type="submit" class="btn btn-warning w-100" style="border-radius:var(--radius-md);font-weight:600">
                                 <i class="fas fa-bell"></i> Relancer le signataire
                             </button>
                         </form>
@@ -103,7 +103,7 @@
                         <form th:if="${signature.status.name() == 'PENDING'}"
                               th:action="@{/signatures/{id}/cancel(id=${signature.id})}" method="post">
                             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-                            <button type="submit" class="btn btn-outline-danger w-100" style="border-radius:var(--radius-lg);font-weight:600"
+                            <button type="submit" class="btn btn-outline-danger w-100" style="border-radius:var(--radius-md);font-weight:600"
                                     data-confirm="Voulez-vous vraiment annuler cette demande de signature ?">
                                 <i class="fas fa-times"></i> Annuler la demande
                             </button>

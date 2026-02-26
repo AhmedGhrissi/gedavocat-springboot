@@ -362,9 +362,18 @@ public class AppointmentController {
                 String dateStr = appointment.getAppointmentDate().format(fmt);
 
                 if (appointment.getClient().getEmail() != null) {
-                    emailService.sendEmail(appointment.getClient().getEmail(),
+                    String contentHtml = "<p style='color:#374151;font-size:15px;line-height:1.7'>Bonjour,</p>"
+                        + "<p style='color:#374151;font-size:15px;line-height:1.7'>Votre rendez-vous a été <strong>confirmé</strong> par votre avocat.</p>"
+                        + "<table style='border-collapse:collapse;margin:20px 0' cellpadding='0' cellspacing='0'>"
+                        + "<tr><td style='padding:10px 16px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:6px;color:#0F172A;font-size:14px'>"
+                        + "<strong>Date :</strong> " + dateStr + "</td></tr>"
+                        + "<tr><td style='padding:10px 16px;background:#F8FAFC;border:1px solid #E2E8F0;border-top:none;border-radius:0 0 6px 6px;color:#0F172A;font-size:14px'>"
+                        + "<strong>Objet :</strong> " + escapeHtml(appointment.getTitle()) + "</td></tr>"
+                        + "</table>"
+                        + "<p style='color:#64748B;font-size:13px;margin-top:24px'>Pour toute question, n&apos;hésitez pas à contacter votre cabinet.</p>";
+                    emailService.sendEmailFromLawyer(appointment.getClient().getEmail(),
                             "Rendez-vous confirmé : " + appointment.getTitle(),
-                            "Bonjour,\n\nVotre rendez-vous a été confirmé par votre avocat.\n\nDate: " + dateStr + "\n\n---\nDocAvocat");
+                            contentHtml, appointment.getLawyer());
                 }
 
                 try {
@@ -423,10 +432,13 @@ public class AppointmentController {
             if (appointment.getClient() != null && appointment.getClient().getEmail() != null) {
                 java.time.format.DateTimeFormatter fmt = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy 'à' HH:mm");
                 String dateStr = appointment.getAppointmentDate().format(fmt);
-                emailService.sendEmail(appointment.getClient().getEmail(),
-                    "Report accepté : " + appointment.getTitle(),
-                    "Bonjour,\n\nVotre demande de report a été acceptée.\n\n" +
-                    "Nouveau rendez-vous : " + appointment.getAppointmentDate().format(fmt) + "\n\n---\nDocAvocat");
+                String contentHtml = "<p style='color:#374151;font-size:15px;line-height:1.7'>Bonjour,</p>"
+                    + "<p style='color:#374151;font-size:15px;line-height:1.7'>Votre demande de report a été <strong>acceptée</strong>.</p>"
+                    + "<table style='border-collapse:collapse;margin:20px 0' cellpadding='0' cellspacing='0'>"
+                    + "<tr><td style='padding:10px 16px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:6px;color:#0F172A;font-size:14px'>"
+                    + "<strong>Nouveau rendez-vous :</strong> " + dateStr + "</td></tr></table>";
+                emailService.sendEmailFromLawyer(appointment.getClient().getEmail(),
+                    "Report accepté : " + appointment.getTitle(), contentHtml, appointment.getLawyer());
 
                 try {
                     if (appointment.getClient().getClientUser() != null) {
@@ -477,10 +489,14 @@ public class AppointmentController {
             // Notifier le client
             if (appointment.getClient() != null && appointment.getClient().getEmail() != null) {
                 java.time.format.DateTimeFormatter fmt = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy 'à' HH:mm");
-                emailService.sendEmail(appointment.getClient().getEmail(),
-                    "Demande de report refusée : " + appointment.getTitle(),
-                    "Bonjour,\n\nVotre demande de report a été refusée.\n\n" +
-                    "Le rendez-vous est maintenu le : " + appointment.getAppointmentDate().format(fmt) + "\n\n---\nDocAvocat");
+                String dateStr = appointment.getAppointmentDate().format(fmt);
+                String contentHtml = "<p style='color:#374151;font-size:15px;line-height:1.7'>Bonjour,</p>"
+                    + "<p style='color:#374151;font-size:15px;line-height:1.7'>Votre demande de report a été <strong>refusée</strong>.</p>"
+                    + "<table style='border-collapse:collapse;margin:20px 0' cellpadding='0' cellspacing='0'>"
+                    + "<tr><td style='padding:10px 16px;background:#FEF2F2;border:1px solid #FECACA;border-radius:6px;color:#0F172A;font-size:14px'>"
+                    + "Le rendez-vous est maintenu le : <strong>" + dateStr + "</strong></td></tr></table>";
+                emailService.sendEmailFromLawyer(appointment.getClient().getEmail(),
+                    "Demande de report refusée : " + appointment.getTitle(), contentHtml, appointment.getLawyer());
 
                 try {
                     if (appointment.getClient().getClientUser() != null) {
@@ -535,15 +551,19 @@ public class AppointmentController {
             if (appointment.getClient() != null && appointment.getClient().getEmail() != null) {
                 java.time.format.DateTimeFormatter fmt = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy 'à' HH:mm");
                 String dateStr = proposedDate.format(fmt);
-                String body = "Bonjour,\n\nVotre avocat propose une nouvelle date pour le rendez-vous :\n\n" +
-                    appointment.getTitle() + "\n" +
-                    "Date proposée : " + dateStr + "\n";
-                if (rescheduleMessage != null && !rescheduleMessage.isEmpty()) {
-                    body += "\nMessage : " + rescheduleMessage + "\n";
-                }
-                body += "\nConnectez-vous à votre espace client pour accepter ou proposer une autre date.\n\n---\nDocAvocat";
-                emailService.sendEmail(appointment.getClient().getEmail(),
-                    "Nouvelle date proposée : " + appointment.getTitle(), body);
+                String contentHtml = "<p style='color:#374151;font-size:15px;line-height:1.7'>Bonjour,</p>"
+                    + "<p style='color:#374151;font-size:15px;line-height:1.7'>Votre avocat vous propose une <strong>nouvelle date</strong> pour votre rendez-vous.</p>"
+                    + "<table style='border-collapse:collapse;margin:20px 0' cellpadding='0' cellspacing='0'>"
+                    + "<tr><td style='padding:10px 16px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:6px 6px 0 0;color:#0F172A;font-size:14px'>"
+                    + "<strong>Objet :</strong> " + escapeHtml(appointment.getTitle()) + "</td></tr>"
+                    + "<tr><td style='padding:10px 16px;background:#EFF6FF;border:1px solid #BFDBFE;border-top:none;border-radius:0 0 6px 6px;color:#0F172A;font-size:14px'>"
+                    + "<strong>Date proposée :</strong> " + dateStr + "</td></tr></table>"
+                    + (rescheduleMessage != null && !rescheduleMessage.isEmpty()
+                        ? "<p style='color:#374151;font-size:14px;background:#F8FAFC;border-left:3px solid #C6A75E;padding:12px 16px;border-radius:0 4px 4px 0;margin:16px 0'>"
+                          + "<em>Message :</em> " + escapeHtml(rescheduleMessage) + "</p>" : "")
+                    + "<p style='color:#64748B;font-size:13px;margin-top:20px'>Connectez-vous &agrave; votre espace client pour accepter ou proposer une autre date.</p>";
+                emailService.sendEmailFromLawyer(appointment.getClient().getEmail(),
+                    "Nouvelle date proposée : " + appointment.getTitle(), contentHtml, appointment.getLawyer());
 
                 try {
                     if (appointment.getClient().getClientUser() != null) {
@@ -611,6 +631,11 @@ public class AppointmentController {
     private User getCurrentUser(Authentication authentication) {
         return userRepository.findByEmail(authentication.getName())
             .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+    }
+
+    private String escapeHtml(String text) {
+        if (text == null) return "";
+        return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
     }
 
     private AppointmentEvent toEvent(Appointment appointment) {

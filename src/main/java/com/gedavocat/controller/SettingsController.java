@@ -320,6 +320,19 @@ public class SettingsController {
         }
     }
 
+    @PostMapping("/email-signature")
+    @Transactional
+    public String saveEmailSignature(
+            @RequestParam(value = "emailSignature", defaultValue = "") String emailSignature,
+            Authentication authentication,
+            RedirectAttributes redirectAttributes) {
+        User user = getCurrentUser(authentication);
+        user.setEmailSignature(emailSignature.isBlank() ? null : emailSignature.trim());
+        userRepository.save(user);
+        redirectAttributes.addFlashAttribute("message", "Signature email sauvegardée avec succès");
+        return "redirect:/settings?tab=email";
+    }
+
     private User getCurrentUser(Authentication authentication) {
         String email = authentication.getName();
         return userRepository.findByEmail(email)

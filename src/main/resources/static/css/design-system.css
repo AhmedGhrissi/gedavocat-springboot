@@ -708,20 +708,36 @@ body {
     color: #fff !important;
 }
 
-.btn-outline-secondary { color: var(--text-secondary) !important; border-color: var(--border-default) !important; border-radius: var(--radius-md) !important; background: transparent !important; }
-.btn-outline-secondary:hover { background: var(--surface-hover) !important; color: var(--text-primary) !important; }
+/* Outline buttons — neutres au repos, colorés au hover uniquement */
+.btn-outline-secondary {
+    color: var(--text-secondary) !important; border-color: var(--border-default) !important;
+    border-radius: var(--radius-md) !important; background: transparent !important;
+}
+.btn-outline-secondary:hover { background: var(--surface-hover) !important; color: var(--text-primary) !important; border-color: var(--border-strong) !important; }
 
-.btn-outline-danger { color: var(--danger-600) !important; border-color: var(--danger-200) !important; border-radius: var(--radius-md) !important; background: transparent !important; }
-.btn-outline-danger:hover { background: rgba(239,68,68,0.06) !important; border-color: var(--danger-400) !important; }
+.btn-outline-danger {
+    color: var(--text-tertiary) !important; border-color: var(--border-default) !important;
+    border-radius: var(--radius-md) !important; background: transparent !important;
+}
+.btn-outline-danger:hover { background: var(--danger-50) !important; color: var(--danger-600) !important; border-color: var(--danger-200) !important; }
 
-.btn-outline-warning { color: var(--warning-600) !important; border-color: var(--warning-200) !important; border-radius: var(--radius-md) !important; background: transparent !important; }
-.btn-outline-warning:hover { background: rgba(245,158,11,0.06) !important; border-color: var(--warning-400) !important; }
+.btn-outline-warning {
+    color: var(--text-secondary) !important; border-color: var(--border-default) !important;
+    border-radius: var(--radius-md) !important; background: transparent !important;
+}
+.btn-outline-warning:hover { background: var(--warning-50) !important; color: var(--warning-600) !important; border-color: var(--warning-200) !important; }
 
-.btn-outline-info { color: var(--info-600) !important; border-color: var(--info-200) !important; border-radius: var(--radius-md) !important; background: transparent !important; }
-.btn-outline-info:hover { background: rgba(14,165,233,0.06) !important; border-color: var(--info-400) !important; }
+.btn-outline-info {
+    color: var(--text-secondary) !important; border-color: var(--border-default) !important;
+    border-radius: var(--radius-md) !important; background: transparent !important;
+}
+.btn-outline-info:hover { background: var(--info-50) !important; color: var(--info-600) !important; border-color: var(--info-200) !important; }
 
-.btn-outline-success { color: var(--success-600) !important; border-color: var(--success-200) !important; border-radius: var(--radius-md) !important; background: transparent !important; }
-.btn-outline-success:hover { background: rgba(34,197,94,0.06) !important; border-color: var(--success-400) !important; }
+.btn-outline-success {
+    color: var(--text-secondary) !important; border-color: var(--border-default) !important;
+    border-radius: var(--radius-md) !important; background: transparent !important;
+}
+.btn-outline-success:hover { background: var(--success-50) !important; color: var(--success-600) !important; border-color: var(--success-200) !important; }
 
 /* ===================================================================
    TABLEAUX
@@ -990,6 +1006,101 @@ small, .text-sm { color: var(--text-secondary); }
     -webkit-text-fill-color: transparent;
     background-clip: text;
 }
+
+/* ===================================================================
+   POLISH — Affinements institutionnels
+   =================================================================== */
+
+/* ── Boutons : respiration généreuse ── */
+.btn { padding: 9px 18px; }
+.btn.btn-sm,
+.btn-sm { padding: 6px 13px !important; font-size: 13px !important; line-height: 1.45; }
+.btn.btn-lg { padding: 12px 26px; font-size: 15px; }
+
+/* ── Action buttons dans les tableaux ── */
+.table td > .d-flex { gap: 6px !important; }
+.table td .btn-group.btn-group-sm { gap: 5px; border: none !important; }
+.table td .btn-group.btn-group-sm .btn { border-radius: var(--radius-md) !important; }
+
+/* ── Ligne hover avec indicateur latéral or ── */
+.table tbody tr {
+    border-left: 3px solid transparent;
+    transition: background var(--duration-fast) ease, border-left-color var(--duration-fast) ease;
+}
+.table tbody tr:hover { border-left-color: var(--accent-500); }
+
+/* ── Filter card ── */
+.filter-card .card-body { padding: 14px 20px !important; }
+
+/* ── Badges de statut plus lisibles ── */
+.badge { padding: 5px 11px; border-radius: 6px; }
+
+/* ── Hero banner — filet or en bas, plus de hauteur ── */
+.hero-banner { padding: 24px 28px; }
+
+/* ── Form control plus aéré — ciblé (exclut checkbox, radio, file, range) ── */
+input[type="text"].form-control,
+input[type="email"].form-control,
+input[type="password"].form-control,
+input[type="number"].form-control,
+input[type="tel"].form-control,
+input[type="url"].form-control,
+input[type="search"].form-control,
+input[type="date"].form-control,
+input[type="time"].form-control,
+input[type="datetime-local"].form-control,
+textarea.form-control,
+.form-select { padding: 10px 14px; min-height: 42px; }
+
+input[type="text"].form-control-sm,
+input[type="email"].form-control-sm,
+input[type="password"].form-control-sm,
+input[type="number"].form-control-sm,
+input[type="date"].form-control-sm,
+textarea.form-control-sm,
+.form-select.form-select-sm { padding: 7px 12px !important; min-height: 36px; font-size: 13px; }
+
+/* ── Cards — corps plus aéré ── */
+.card-body { padding: 22px; }
+
+/* ── Modal header institutionnel ── */
+.modal-content .modal-header {
+    padding: 18px 24px;
+    background: var(--surface-hover) !important;
+    color: var(--text-primary) !important;
+}
+.modal-content .modal-header .modal-title { color: var(--text-primary) !important; font-size: 15px; }
+.modal-content .modal-header .btn-close { filter: none; }
+
+/* Supprimer les headers Bootstrap violets/bleus hérités */
+.modal-header.bg-primary { background: var(--brand-500) !important; }
+.modal-header.bg-primary .modal-title { color: white !important; }
+.modal-header.bg-primary .btn-close { filter: invert(1); }
+
+/* ── Page header — séparateur gold automatique ── */
+.page-header h1 { font-size: 1.375rem; }
+.page-header .btn-primary-gradient,
+.page-header .btn-primary { min-width: 140px; }
+
+/* ── Statuts dossiers — text plus lisible ── */
+.case-status { font-size: 11.5px; padding: 4px 10px; }
+
+/* ── Formulaire — labels uppercase fins ── */
+.form-label { letter-spacing: 0.02em; }
+
+/* ── Table — en-têtes plus épurés ── */
+.table thead th { padding: 11px 18px; }
+.table td { padding: 13px 18px; }
+
+/* ── Empty state — icône plus grande ── */
+.empty-state-icon, .text-center.py-5 > div:first-child { margin-bottom: 20px; }
+
+/* ── Inputs groupés ── */
+.input-group > .form-control:focus { z-index: 3; }
+
+/* ── Transition sur les cartes stat ── */
+.stat-card { cursor: default; }
+.stat-card .stat-value { letter-spacing: -0.025em; }
 
 /* ===================================================================
    RESPONSIVE

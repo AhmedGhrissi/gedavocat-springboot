@@ -127,7 +127,7 @@
                         </select>
                     </div>
                     <div class="col-md-2 d-flex align-items-end gap-2">
-                        <button type="submit" class="btn btn-primary w-100" style="border-radius:var(--radius-lg);font-weight:600">
+                        <button type="submit" class="btn btn-primary w-100" style="border-radius:var(--radius-md);font-weight:600">
                             <i class="fas fa-search"></i> Filtrer
                         </button>
                         <a href="/admin/users" class="btn btn-outline-secondary" title="Réinitialiser">
@@ -154,7 +154,7 @@
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="mb-0"><i class="fas fa-list"></i> Liste des utilisateurs</h5>
-                <button class="btn btn-sm btn-success" style="border-radius:var(--radius-lg);font-weight:600" data-bs-toggle="modal" data-bs-target="#newUserModal">
+                <button class="btn btn-sm btn-success" style="border-radius:var(--radius-md);font-weight:600" data-bs-toggle="modal" data-bs-target="#newUserModal">
                     <i class="fas fa-plus"></i> Nouvel utilisateur
                 </button>
             </div>
@@ -238,7 +238,7 @@
                                     </span>
                                 </td>
                                 <td>
-                                    <div class="btn-group btn-group-sm">
+                                    <div class="d-flex gap-2">
                                         <button class="btn btn-outline-primary btn-view-user"
                                                 th:data-user-id="${user.id}"
                                                 data-bs-toggle="modal" data-bs-target="#viewUserModal"
@@ -309,7 +309,7 @@
                                         <td>
                                             <form th:action="@{/admin/users/send-invitation}" method="post" class="d-inline">
                                                 <input type="hidden" name="clientId" th:value="${client.id}" />
-                                                <button type="submit" class="btn btn-sm btn-primary" style="border-radius:var(--radius-lg);font-weight:600">
+                                                <button type="submit" class="btn btn-sm btn-primary" style="border-radius:var(--radius-md);font-weight:600">
                                                     <i class="fas fa-envelope"></i> Envoyer invitation
                                                 </button>
                                             </form>
@@ -511,7 +511,7 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                        <button type="submit" class="btn btn-success" style="border-radius:var(--radius-lg);font-weight:600">
+                        <button type="submit" class="btn btn-success" style="border-radius:var(--radius-md);font-weight:600">
                             <i class="fas fa-check"></i> Créer l'utilisateur
                         </button>
                     </div>

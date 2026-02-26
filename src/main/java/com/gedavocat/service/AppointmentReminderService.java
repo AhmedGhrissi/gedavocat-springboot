@@ -89,9 +89,9 @@ public class AppointmentReminderService {
         if (appointment.getClient() != null) {
             if (appointment.getClient().getEmail() != null) {
                 String clientEmail = appointment.getClient().getEmail();
-                String clientSubject = "Rappel: Votre rendez-vous du " + formattedDate;
-                String clientMessage = buildClientReminderMessage(appointment, formattedDate);
-                emailService.sendEmail(clientEmail, clientSubject, clientMessage);
+                String clientSubject = "Rappel : votre rendez-vous du " + formattedDate;
+                String clientContentHtml = buildClientReminderHtml(appointment, formattedDate);
+                emailService.sendEmailFromLawyer(clientEmail, clientSubject, clientContentHtml, appointment.getLawyer());
                 
                 log.info("Rappel client envoyé à {}", clientEmail);
             }
@@ -108,6 +108,38 @@ public class AppointmentReminderService {
                 log.warn("Impossible de créer notification in-app pour le client: {}", e.getMessage());
             }
         }
+    }
+
+    private String buildClientReminderHtml(Appointment appointment, String formattedDate) {
+        String lawyerDisplay = appointment.getLawyer().getFirstName() != null && appointment.getLawyer().getLastName() != null
+            ? "Me\u00a0" + appointment.getLawyer().getFirstName() + " " + appointment.getLawyer().getLastName()
+            : appointment.getLawyer().getName();
+        StringBuilder sb = new StringBuilder();
+        sb.append("<p style='color:#374151;font-size:15px;line-height:1.7'>Bonjour,</p>")
+          .append("<p style='color:#374151;font-size:15px;line-height:1.7'>")
+          .append("Nous vous rappelons votre rendez-vous avec <strong>").append(escapeHtml(lawyerDisplay)).append("</strong>.</p>")
+          .append("<table style='border-collapse:collapse;margin:20px 0;width:100%' cellpadding='0' cellspacing='0'>")
+          .append("<tr><td style='padding:10px 16px;background:#EFF6FF;border:1px solid #BFDBFE;border-radius:6px 6px 0 0;color:#0F172A;font-size:14px'>")
+          .append("<strong>Objet :</strong> ").append(escapeHtml(appointment.getTitle())).append("</td></tr>")
+          .append("<tr><td style='padding:10px 16px;background:#F8FAFC;border:1px solid #E2E8F0;border-top:none;color:#0F172A;font-size:14px'>")
+          .append("<strong>Date :</strong> ").append(formattedDate).append("</td></tr>");
+        if (appointment.getLocation() != null && !appointment.getLocation().isBlank()) {
+            sb.append("<tr><td style='padding:10px 16px;background:#F8FAFC;border:1px solid #E2E8F0;border-top:none;color:#0F172A;font-size:14px'>")
+              .append("<strong>Lieu :</strong> ").append(escapeHtml(appointment.getLocation())).append("</td></tr>");
+        }
+        if (appointment.getVideoConferenceLink() != null && !appointment.getVideoConferenceLink().isBlank()) {
+            sb.append("<tr><td style='padding:10px 16px;background:#F8FAFC;border:1px solid #E2E8F0;border-top:none;border-radius:0 0 6px 6px;color:#0F172A;font-size:14px'>")
+              .append("<strong>Lien vid\u00e9o :</strong> <a href='").append(escapeHtml(appointment.getVideoConferenceLink()))
+              .append("' style='color:#1E3A5F'>").append(escapeHtml(appointment.getVideoConferenceLink())).append("</a></td></tr>");
+        }
+        sb.append("</table>")
+          .append("<p style='color:#64748B;font-size:13px;margin-top:16px'>En cas d&apos;emp\u00eachement, merci de contacter votre avocat d\u00e8s que possible.</p>");
+        return sb.toString();
+    }
+
+    private String escapeHtml(String text) {
+        if (text == null) return "";
+        return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
     }
 
     /**

@@ -21,7 +21,7 @@
                     <i class="fas fa-list"></i> Vue liste
                 </a>
                 <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newAppointmentModal"
-                        style="border-radius:var(--radius-lg);font-weight:600">
+                        style="border-radius:var(--radius-md);font-weight:600">
                     <i class="fas fa-plus"></i> Nouveau rendez-vous
                 </button>
             </div>
@@ -171,7 +171,7 @@
                                 <div class="modal-content">
                                     <div class="modal-header bg-info text-white">
                                         <h5 class="modal-title"><i class="fas fa-calendar-alt"></i> Proposer une nouvelle date</h5>
-                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                     </div>
                                     <form th:action="@{/appointments/{id}/propose-date(id=${apt.id})}" method="post">
                                         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
@@ -301,9 +301,9 @@
     <div class="modal fade" id="newAppointmentModal" tabindex="-1" aria-labelledby="newAppointmentModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
-                <div class="modal-header bg-primary text-white">
+                <div class="modal-header">
                     <h5 class="modal-title" id="newAppointmentModalLabel"><i class="fas fa-calendar-plus"></i> Nouveau rendez-vous</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
                 </div>
                 <form action="/appointments/create" method="post">
                     <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
