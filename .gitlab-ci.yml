@@ -1,4 +1,4 @@
-# ============================================================
+﻿# ============================================================
 # DocAvocat  Pipeline CI/CD GitLab
 #
 # COMPORTEMENT PAR BRANCHE :
@@ -46,7 +46,7 @@ workflow:
 
 default:
   tags:
-    - saas-linux-small-amd64
+    - vps
 
 variables:
   MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
