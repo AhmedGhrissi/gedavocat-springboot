@@ -1,6 +1,7 @@
 package com.gedavocat.service;
 
 import com.gedavocat.model.Appointment;
+import com.gedavocat.model.User;
 import com.gedavocat.repository.AppointmentRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +23,7 @@ public class AppointmentReminderService {
 
     private final AppointmentRepository appointmentRepository;
     private final EmailService emailService;
+    private final NotificationService notificationService;
 
     /**
      * Tâche planifiée pour envoyer les rappels toutes les 15 minutes
@@ -74,14 +76,37 @@ public class AppointmentReminderService {
         log.info("Rappel envoyé à {} ({}) pour le rendez-vous du {}", 
             lawyerName, lawyerEmail, formattedDate);
         
+        // Créer notification in-app pour l'avocat
+        try {
+            notificationService.create(appointment.getLawyer(), "APPOINTMENT_REMINDER", "Rappel de rendez-vous",
+                    "Rappel: " + appointment.getTitle() + " le " + formattedDate,
+                    "/appointments", "fa-calendar-check", "primary");
+        } catch (Exception e) {
+            log.warn("Impossible de créer notification in-app pour l'avocat: {}", e.getMessage());
+        }
+        
         // Si un client est associé, lui envoyer aussi un rappel
-        if (appointment.getClient() != null && appointment.getClient().getEmail() != null) {
-            String clientEmail = appointment.getClient().getEmail();
-            String clientSubject = "Rappel: Votre rendez-vous du " + formattedDate;
-            String clientMessage = buildClientReminderMessage(appointment, formattedDate);
-            emailService.sendEmail(clientEmail, clientSubject, clientMessage);
-            
-            log.info("Rappel client envoyé à {}", clientEmail);
+        if (appointment.getClient() != null) {
+            if (appointment.getClient().getEmail() != null) {
+                String clientEmail = appointment.getClient().getEmail();
+                String clientSubject = "Rappel: Votre rendez-vous du " + formattedDate;
+                String clientMessage = buildClientReminderMessage(appointment, formattedDate);
+                emailService.sendEmail(clientEmail, clientSubject, clientMessage);
+                
+                log.info("Rappel client envoyé à {}", clientEmail);
+            }
+
+            // Créer notification in-app pour le client utilisateur si lié
+            try {
+                if (appointment.getClient().getClientUser() != null) {
+                    User clientUser = appointment.getClient().getClientUser();
+                    notificationService.create(clientUser, "APPOINTMENT_REMINDER", "Rappel de rendez-vous",
+                            "Rappel: " + appointment.getTitle() + " le " + formattedDate,
+                            "/client/appointments", "fa-calendar-check", "primary");
+                }
+            } catch (Exception e) {
+                log.warn("Impossible de créer notification in-app pour le client: {}", e.getMessage());
+            }
         }
     }
 
@@ -178,12 +203,35 @@ public class AppointmentReminderService {
             String subject = "Nouveau rendez-vous: " + appointment.getTitle();
             String message = buildAppointmentCreatedMessage(appointment, formattedDate);
             emailService.sendEmail(appointment.getLawyer().getEmail(), subject, message);
+            
+            // Notification in-app pour l'avocat
+            try {
+                notificationService.create(appointment.getLawyer(), "APPOINTMENT_CREATED", "Nouveau rendez-vous",
+                        "Rendez-vous créé: " + appointment.getTitle() + " le " + formattedDate,
+                        "/appointments", "fa-calendar-check", "primary");
+            } catch (Exception e) {
+                log.warn("Impossible de créer notification in-app avocat: {}", e.getMessage());
+            }
                         
             // Notifier le client s'il est associé
-            if (appointment.getClient() != null && appointment.getClient().getEmail() != null) {
-                String clientSubject = "Nouveau rendez-vous planifié le " + formattedDate;
-                String clientMessage = buildClientAppointmentCreatedMessage(appointment, formattedDate);
-                emailService.sendEmail(appointment.getClient().getEmail(), clientSubject, clientMessage);
+            if (appointment.getClient() != null) {
+                if (appointment.getClient().getEmail() != null) {
+                    String clientSubject = "Nouveau rendez-vous planifié le " + formattedDate;
+                    String clientMessage = buildClientAppointmentCreatedMessage(appointment, formattedDate);
+                    emailService.sendEmail(appointment.getClient().getEmail(), clientSubject, clientMessage);
+                }
+
+                // Notification in-app pour le client si lié à un User
+                try {
+                    if (appointment.getClient().getClientUser() != null) {
+                        User clientUser = appointment.getClient().getClientUser();
+                        notificationService.create(clientUser, "APPOINTMENT_CREATED", "Nouveau rendez-vous",
+                                "Me " + appointment.getLawyer().getName() + " vous a planifié un rendez-vous le " + formattedDate,
+                                "/client/appointments", "fa-calendar-check", "primary");
+                    }
+                } catch (Exception e) {
+                    log.warn("Impossible de créer notification in-app client: {}", e.getMessage());
+                }
             }
             
         } catch (Exception e) {

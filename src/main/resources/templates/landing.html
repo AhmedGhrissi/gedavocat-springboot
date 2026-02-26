@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+!DOCTYPE html>
 <html lang="fr" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
@@ -40,7 +40,7 @@
     <meta name="twitter:image:alt" content="DocAvocat — Interface de gestion">
 
     <!-- ═══ TECHNIQUE ═════════════════════════════════════════════════════════ -->
-    <meta name="theme-color" content="#667eea">
+    <meta name="theme-color" content="#1E3A5F">
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <link rel="shortcut icon" href="/favicon.svg">
     <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
@@ -166,7 +166,7 @@
                     <div class="plan-name">Essentiel</div>
                     <div class="plan-price">
                         <span class="lp-monthly">49€<small>/mois</small></span>
-                        <span class="lp-yearly" style="display:none;">39€<small>/mois</small> <small style="text-decoration:line-through;color:#a0aec0;font-size:1rem;">49€</small></span>
+                        <span class="lp-yearly" style="display:none;">39€<small>/mois</small> <small style="text-decoration:line-through;color:#94A3B8;font-size:1rem;">49€</small></span>
                     </div>
                     <ul class="plan-features">
                         <li>Jusqu'à 10 clients</li>
@@ -184,7 +184,7 @@
                     <div class="plan-name">Professionnel</div>
                     <div class="plan-price">
                         <span class="lp-monthly">99€<small>/mois</small></span>
-                        <span class="lp-yearly" style="display:none;">79€<small>/mois</small> <small style="text-decoration:line-through;color:#a0aec0;font-size:1rem;">99€</small></span>
+                        <span class="lp-yearly" style="display:none;">79€<small>/mois</small> <small style="text-decoration:line-through;color:#94A3B8;font-size:1rem;">99€</small></span>
                     </div>
                     <ul class="plan-features">
                         <li>Jusqu'à 75 clients</li>
@@ -202,7 +202,7 @@
                     <div class="plan-name">Cabinet+</div>
                     <div class="plan-price">
                         <span class="lp-monthly">199€<small>/mois</small></span>
-                        <span class="lp-yearly" style="display:none;">159€<small>/mois</small> <small style="text-decoration:line-through;color:#a0aec0;font-size:1rem;">199€</small></span>
+                        <span class="lp-yearly" style="display:none;">159€<small>/mois</small> <small style="text-decoration:line-through;color:#94A3B8;font-size:1rem;">199€</small></span>
                     </div>
                     <ul class="plan-features">
                         <li>Clients illimités</li>
@@ -224,10 +224,10 @@
         document.querySelectorAll('.lp-monthly').forEach(el => el.style.display = period === 'monthly' ? '' : 'none');
         document.querySelectorAll('.lp-yearly').forEach(el => el.style.display = period === 'yearly' ? '' : 'none');
         document.getElementById('btn-monthly').style.background = period === 'monthly' ? 'white' : 'transparent';
-        document.getElementById('btn-monthly').style.color = period === 'monthly' ? '#667eea' : '#718096';
+        document.getElementById('btn-monthly').style.color = period === 'monthly' ? '#1E3A5F' : '#718096';
         document.getElementById('btn-monthly').style.boxShadow = period === 'monthly' ? '0 2px 6px rgba(0,0,0,.1)' : 'none';
         document.getElementById('btn-yearly').style.background = period === 'yearly' ? 'white' : 'transparent';
-        document.getElementById('btn-yearly').style.color = period === 'yearly' ? '#667eea' : '#718096';
+        document.getElementById('btn-yearly').style.color = period === 'yearly' ? '#1E3A5F' : '#718096';
         document.getElementById('btn-yearly').style.boxShadow = period === 'yearly' ? '0 2px 6px rgba(0,0,0,.1)' : 'none';
         // Mettre à jour les liens des boutons avec la période sélectionnée
         document.querySelectorAll('.btn-select[href*="/register"]').forEach(btn => {

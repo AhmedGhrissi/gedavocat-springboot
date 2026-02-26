@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout}">
@@ -19,7 +19,7 @@
 
             <!-- Signatures en attente -->
             <div th:if="${signatures != null and !signatures.empty}" class="card shadow-sm mb-4" style="border-radius:16px;overflow:hidden">
-                <div class="card-header d-flex justify-content-between align-items-center" style="background:linear-gradient(135deg,#0d9488,#14b8a6);color:#fff;border:none;padding:1rem 1.5rem">
+                <div class="card-header d-flex justify-content-between align-items-center" style="background:linear-gradient(135deg,#1E3A5F,#172D4A);color:#fff;border:none;padding:1rem 1.5rem">
                     <h5 class="mb-0"><i class="fas fa-file-signature me-2"></i> Mes Signatures</h5>
                     <div class="d-flex gap-2">
                         <span th:if="${pendingSignatures > 0}" class="badge bg-warning text-dark" th:text="'En attente : ' + ${pendingSignatures}">0</span>
@@ -57,7 +57,7 @@
                     </div>
                 </div>
                 <div class="card-footer text-center" style="background:#f8fafc;border-top:1px solid #e2e8f0">
-                    <a th:href="@{/my-signatures}" class="text-decoration-none" style="font-size:14px;font-weight:600;color:#0d9488">
+                    <a th:href="@{/my-signatures}" class="text-decoration-none" style="font-size:14px;font-weight:600;color:#1E3A5F">
                         Voir toutes mes signatures <i class="fas fa-arrow-right ms-1"></i>
                     </a>
                 </div>

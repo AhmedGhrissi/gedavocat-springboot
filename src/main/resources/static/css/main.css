@@ -1,4 +1,4 @@
-/* ===================================================================
+* ===================================================================
    GED Avocat - Feuille de style principale
    Design Light Modern — version 3.0
    =================================================================== */
@@ -12,17 +12,17 @@
     --border: #e2e8f0;
     --text-primary: #1e293b;
     --text-secondary: #64748b;
-    --primary: #6366f1;
-    --primary-end: #8b5cf6;
-    --accent: #6366f1;
+    --primary: #1E3A5F;
+    --primary-end: #172D4A;
+    --accent: #C6A75E;
     --success: #10b981;
     --warning: #f59e0b;
     --danger: #ef4444;
     --info: #0ea5e9;
 
     /* Legacy aliases */
-    --primary-color: #6366f1;
-    --secondary-color: #6366f1;
+    --primary-color: #1E3A5F;
+    --secondary-color: #1E3A5F;
     --success-color: #10b981;
     --danger-color: #ef4444;
     --warning-color: #f59e0b;

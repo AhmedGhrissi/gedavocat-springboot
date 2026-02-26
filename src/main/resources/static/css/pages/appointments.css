@@ -83,7 +83,7 @@
     color: var(--text-secondary);
 }
 .fc-day-today {
-    background: rgba(99,102,241,0.04) !important;
+    background: rgba(30,58,95,0.04) !important;
 }
 .fc-daygrid-day:hover {
     background: var(--bg-secondary);
@@ -148,7 +148,7 @@
 /* ── Dark mode ── */
 .dark #calendar { background: var(--surface); border-color: var(--border-default); }
 .dark .fc-col-header-cell { background: var(--bg-tertiary); }
-.dark .fc-day-today { background: rgba(99,102,241,0.08) !important; }
+.dark .fc-day-today { background: rgba(30,58,95,0.08) !important; }
 .dark .fc th,
 .dark .fc td,
 .dark .fc .fc-scrollgrid { border-color: var(--border-default); }

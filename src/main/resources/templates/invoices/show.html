@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout}">
@@ -51,7 +51,7 @@
     .badge-paid    { background:rgba(39,174,96,.15);  color:#2ecc71; border:1px solid rgba(39,174,96,.3); }
     .badge-sent    { background:rgba(52,152,219,.15); color:#5dade2; border:1px solid rgba(52,152,219,.3); }
     .badge-draft   { background:rgba(149,165,166,.15);color:#95a5a6; border:1px solid rgba(149,165,166,.3); }
-    .badge-overdue { background:rgba(231,76,60,.15);  color:#e74c3c; border:1px solid rgba(231,76,60,.3); }
+    .badge-overdue { background:rgba(231,76,60,.15);  color:#dc2626; border:1px solid rgba(231,76,60,.3); }
     .badge-cancelled{background:rgba(44,62,80,.5);   color:#7f8c8d; border:1px solid rgba(127,140,141,.3);}
 
     /* Layout */
@@ -179,7 +179,7 @@
         <span class="status-label">Échéance</span>
         <span class="status-val"
               th:text="${#temporals.format(invoice.dueDate,'dd/MM/yyyy')}"
-              th:style="${invoice.overdue ? 'color:#e74c3c;font-weight:600' : ''}">—</span>
+              th:style="${invoice.overdue ? 'color:#dc2626;font-weight:600' : ''}">—</span>
       </div>
       <div class="status-item" th:if="${invoice.paidDate != null}">
         <span class="status-label">Payée le</span>

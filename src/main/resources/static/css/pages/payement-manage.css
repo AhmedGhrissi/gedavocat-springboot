@@ -1,4 +1,4 @@
-/* ══════════════════════════════════════════════════════════
+* ══════════════════════════════════════════════════════════
    PAYMENT — Subscription management page
    Uses design-system.css tokens
 ══════════════════════════════════════════════════════════ */
@@ -126,7 +126,7 @@
 .btn-upgrade:hover {
     transform: translateY(-2px);
     color: #fff;
-    box-shadow: var(--shadow-lg), 0 0 20px rgba(99,102,241,0.3);
+    box-shadow: var(--shadow-lg), 0 0 20px rgba(30,58,95,0.25);
 }
 .btn-cancel-sub {
     background: rgba(239,68,68,0.08);

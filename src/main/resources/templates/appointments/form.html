@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout}">
@@ -11,7 +11,7 @@
         <!-- En-tête -->
         <div class="d-flex justify-content-between align-items-center mb-4 page-header">
             <div>
-                <h2 class="mb-1 animate-fade-in-up" th:text="${appointment.id != null ? '✏️ Modifier le rendez-vous' : '➕ Nouveau rendez-vous'}">Rendez-vous</h2>
+                <h2 class="mb-1 animate-fade-in-up" th:text="${appointment.id != null ? 'Modifier le rendez-vous' : 'Nouveau rendez-vous'}">Rendez-vous</h2>
                 <p class="text-muted">Planifiez un rendez-vous client ou une audience tribunal</p>
             </div>
             <a href="/appointments" class="btn btn-outline-secondary">

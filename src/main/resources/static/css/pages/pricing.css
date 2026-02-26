@@ -113,11 +113,11 @@
 }
 .pricing-card:hover {
     transform: translateY(-8px);
-    box-shadow: 0 20px 40px rgba(99,102,241,0.1);
+    box-shadow: 0 20px 40px rgba(30,58,95,0.1);
 }
 .pricing-card.featured {
     border-color: var(--brand-500);
-    background: linear-gradient(135deg, rgba(99,102,241,0.04), rgba(139,92,246,0.03));
+    background: linear-gradient(135deg, rgba(30,58,95,0.04), rgba(198,167,94,0.03));
 }
 
 .featured-badge {
@@ -131,7 +131,7 @@
     border-radius: 9999px;
     font-size: 0.8125rem;
     font-weight: 700;
-    box-shadow: 0 4px 12px rgba(99,102,241,0.4);
+    box-shadow: 0 4px 12px rgba(30,58,95,0.4);
     white-space: nowrap;
 }
 .plan-name {
@@ -220,7 +220,7 @@
 .cta-primary {
     background: linear-gradient(135deg, var(--brand-500), var(--brand-700));
     color: #fff;
-    box-shadow: 0 4px 12px rgba(99,102,241,0.3);
+    box-shadow: 0 4px 12px rgba(30,58,95,0.3);
 }
 .cta-primary::before {
     content: '';
@@ -235,7 +235,7 @@
 .cta-primary:hover::before { left: 100%; }
 .cta-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(99,102,241,0.4);
+    box-shadow: 0 8px 24px rgba(30,58,95,0.4);
     color: #fff;
 }
 .cta-secondary {
@@ -352,7 +352,7 @@
 }
 .dark .pricing-card.featured {
     border-color: var(--brand-500);
-    background: linear-gradient(135deg, rgba(99,102,241,0.08), rgba(139,92,246,0.05));
+    background: linear-gradient(135deg, rgba(30,58,95,0.08), rgba(198,167,94,0.05));
 }
 .dark .period-btn.active {
     background: var(--surface);

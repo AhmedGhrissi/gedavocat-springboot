@@ -27,11 +27,11 @@
 }
 .upload-zone:hover {
     border-color: var(--brand-400);
-    background: rgba(99,102,241,0.03);
+    background: rgba(30,58,95,0.03);
 }
 .upload-zone.dragover {
     border-color: var(--brand-500);
-    background: rgba(99,102,241,0.06);
+    background: rgba(30,58,95,0.06);
     transform: scale(1.01);
 }
 .upload-zone i {
@@ -109,7 +109,7 @@
 .btn-download:hover { background: #0284c7; color: #fff; transform: scale(1.08); }
 .btn-delete { background: rgba(220,38,38,0.08); color: #dc2626; }
 .btn-delete:hover { background: #dc2626; color: #fff; transform: scale(1.08); }
-.btn-view { background: rgba(99,102,241,0.08); color: var(--brand-500); }
+.btn-view { background: rgba(30,58,95,0.08); color: var(--brand-500); }
 .btn-view:hover { background: var(--brand-500); color: #fff; transform: scale(1.08); }
 .btn-restore { background: rgba(16,185,129,0.08); color: #059669; }
 .btn-restore:hover { background: #10b981; color: #fff; transform: scale(1.08); }
@@ -218,7 +218,7 @@
 }
 .case-item:hover {
     border-color: var(--brand-300);
-    background: rgba(99,102,241,0.03);
+    background: rgba(30,58,95,0.03);
     transform: translateX(4px);
 }
 

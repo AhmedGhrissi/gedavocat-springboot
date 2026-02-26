@@ -88,7 +88,7 @@
 .form-control:focus {
     outline: none;
     border-color: var(--brand-500);
-    box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+    box-shadow: 0 0 0 3px rgba(30,58,95,0.1);
 }
 .form-text {
     font-size: 0.8125rem;
@@ -159,8 +159,8 @@
 }
 .level-card:has(input[type="radio"]:checked) {
     border-color: var(--brand-500);
-    background: rgba(99,102,241,0.03);
-    box-shadow: 0 4px 15px rgba(99,102,241,0.12);
+    background: rgba(30,58,95,0.03);
+    box-shadow: 0 4px 15px rgba(30,58,95,0.12);
     transform: translateY(-2px);
 }
 .level-card:has(input[type="radio"]:checked) .level-badge { display: flex; }
@@ -177,7 +177,7 @@
 }
 .document-selector:hover {
     border-color: var(--brand-400);
-    background: rgba(99,102,241,0.03);
+    background: rgba(30,58,95,0.03);
 }
 .document-selector i {
     font-size: 2.5rem;
@@ -243,7 +243,7 @@
 .btn-submit:hover::before { left: 100%; }
 .btn-submit:hover {
     transform: translateY(-2px);
-    box-shadow: var(--shadow-lg), 0 0 20px rgba(99,102,241,0.3);
+    box-shadow: var(--shadow-lg), 0 0 20px rgba(30,58,95,0.3);
 }
 .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 

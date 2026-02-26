@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout}">
@@ -671,7 +671,7 @@
 
             /* ===================== Suppression ===================== */
             function confirmDelete(userId, userName) {
-                appConfirm('Supprimer définitivement l\'utilisateur ' + userName + ' ?\n⚠️ Cette action est irréversible.', { type: 'danger', confirmText: 'Supprimer' }).then(function(ok) {
+                appConfirm('Supprimer définitivement l\'utilisateur ' + userName + ' ?\nCette action est irréversible.', { type: 'danger', confirmText: 'Supprimer' }).then(function(ok) {
                 if (ok) {
                     var csrfToken  = getCsrfToken();
                     var csrfHeader = getCsrfHeader();

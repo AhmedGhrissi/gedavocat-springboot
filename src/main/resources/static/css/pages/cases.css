@@ -47,7 +47,7 @@
     background: linear-gradient(135deg, var(--brand-500), var(--accent-500)) !important;
     border-color: transparent !important;
     color: #fff !important;
-    box-shadow: 0 4px 12px rgba(99,102,241,0.3);
+    box-shadow: 0 4px 12px rgba(30,58,95,0.3);
 }
 
 /* ── Search Input Enhancement ── */
@@ -61,7 +61,7 @@
 }
 .filter-card .form-control:focus {
     border-color: var(--brand-400);
-    box-shadow: 0 0 0 3px rgba(99,102,241,0.1), var(--shadow-sm);
+    box-shadow: 0 0 0 3px rgba(30,58,95,0.1), var(--shadow-sm);
 }
 
 /* ── Table Enhancement ── */

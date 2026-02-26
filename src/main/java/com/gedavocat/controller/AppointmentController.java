@@ -7,6 +7,7 @@ import com.gedavocat.repository.ClientRepository;
 import com.gedavocat.repository.UserRepository;
 import com.gedavocat.service.AppointmentService;
 import com.gedavocat.service.EmailService;
+import com.gedavocat.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -38,6 +39,7 @@ public class AppointmentController {
     private final ClientRepository clientRepository;
     private final CaseRepository caseRepository;
     private final EmailService emailService;
+    private final NotificationService notificationService;
 
     /**
      * Page principale du calendrier
@@ -343,51 +345,50 @@ public class AppointmentController {
                          RedirectAttributes redirectAttributes) {
         try {
             User user = getCurrentUser(authentication);
-            
+
             Appointment appointment = appointmentService.getAppointmentById(id)
                 .orElseThrow(() -> new RuntimeException("Rendez-vous non trouvé"));
-            
+
             if (!appointment.getLawyer().getId().equals(user.getId())) {
                 redirectAttributes.addFlashAttribute("error", "Accès non autorisé");
                 return "redirect:/appointments";
             }
-            
+
             appointmentService.confirmAppointment(id);
+
+            // Notifier le client (email + notif in-app si user lié)
+            if (appointment.getClient() != null) {
+                java.time.format.DateTimeFormatter fmt = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy 'à' HH:mm");
+                String dateStr = appointment.getAppointmentDate().format(fmt);
+
+                if (appointment.getClient().getEmail() != null) {
+                    emailService.sendEmail(appointment.getClient().getEmail(),
+                            "Rendez-vous confirmé : " + appointment.getTitle(),
+                            "Bonjour,\n\nVotre rendez-vous a été confirmé par votre avocat.\n\nDate: " + dateStr + "\n\n---\nDocAvocat");
+                }
+
+                try {
+                    if (appointment.getClient().getClientUser() != null) {
+                        notificationService.create(appointment.getClient().getClientUser(),
+                                "APPOINTMENT_CONFIRMED_BY_LAWYER",
+                                "Rendez-vous confirmé",
+                                "Maître " + appointment.getLawyer().getName() + " a confirmé le rendez-vous le " + dateStr,
+                                "/client/appointments",
+                                "fa-check-circle",
+                                "success");
+                    }
+                } catch (Exception e) {
+                    log.warn("Impossible de créer notification in-app pour le client: {}", e.getMessage());
+                }
+            }
+
             redirectAttributes.addFlashAttribute("success", "Rendez-vous confirmé");
-            
+
         } catch (Exception e) {
             log.error("Erreur lors de la confirmation du rendez-vous", e);
             redirectAttributes.addFlashAttribute("error", "Erreur: " + e.getMessage());
         }
-        
-        return "redirect:/appointments";
-    }
 
-    /**
-     * Marquer comme terminé
-     */
-    @PostMapping("/{id}/complete")
-    public String complete(@PathVariable String id, Authentication authentication,
-                          RedirectAttributes redirectAttributes) {
-        try {
-            User user = getCurrentUser(authentication);
-            
-            Appointment appointment = appointmentService.getAppointmentById(id)
-                .orElseThrow(() -> new RuntimeException("Rendez-vous non trouvé"));
-            
-            if (!appointment.getLawyer().getId().equals(user.getId())) {
-                redirectAttributes.addFlashAttribute("error", "Accès non autorisé");
-                return "redirect:/appointments";
-            }
-            
-            appointmentService.completeAppointment(id);
-            redirectAttributes.addFlashAttribute("success", "Rendez-vous marqué comme terminé");
-            
-        } catch (Exception e) {
-            log.error("Erreur lors de la finalisation du rendez-vous", e);
-            redirectAttributes.addFlashAttribute("error", "Erreur: " + e.getMessage());
-        }
-        
         return "redirect:/appointments";
     }
 
@@ -421,10 +422,25 @@ public class AppointmentController {
             // Notifier le client
             if (appointment.getClient() != null && appointment.getClient().getEmail() != null) {
                 java.time.format.DateTimeFormatter fmt = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy 'à' HH:mm");
+                String dateStr = appointment.getAppointmentDate().format(fmt);
                 emailService.sendEmail(appointment.getClient().getEmail(),
                     "Report accepté : " + appointment.getTitle(),
                     "Bonjour,\n\nVotre demande de report a été acceptée.\n\n" +
                     "Nouveau rendez-vous : " + appointment.getAppointmentDate().format(fmt) + "\n\n---\nDocAvocat");
+
+                try {
+                    if (appointment.getClient().getClientUser() != null) {
+                        notificationService.create(appointment.getClient().getClientUser(),
+                                "APPOINTMENT_RESCHEDULE_ACCEPTED",
+                                "Report accepté",
+                                "Votre proposition de report a été acceptée. Nouveau rendez-vous: " + dateStr,
+                                "/client/appointments",
+                                "fa-check",
+                                "success");
+                    }
+                } catch (Exception e) {
+                    log.warn("Impossible de créer notification in-app pour le client: {}", e.getMessage());
+                }
             }
 
             redirectAttributes.addFlashAttribute("success", "Report accepté et rendez-vous confirmé.");
@@ -465,6 +481,20 @@ public class AppointmentController {
                     "Demande de report refusée : " + appointment.getTitle(),
                     "Bonjour,\n\nVotre demande de report a été refusée.\n\n" +
                     "Le rendez-vous est maintenu le : " + appointment.getAppointmentDate().format(fmt) + "\n\n---\nDocAvocat");
+
+                try {
+                    if (appointment.getClient().getClientUser() != null) {
+                        notificationService.create(appointment.getClient().getClientUser(),
+                                "APPOINTMENT_RESCHEDULE_REFUSED",
+                                "Demande de report refusée",
+                                "Votre demande de report a été refusée. Le rendez-vous est maintenu le " + appointment.getAppointmentDate().format(fmt),
+                                "/client/appointments",
+                                "fa-times",
+                                "danger");
+                    }
+                } catch (Exception e) {
+                    log.warn("Impossible de créer notification in-app pour le client: {}", e.getMessage());
+                }
             }
 
             redirectAttributes.addFlashAttribute("success", "Demande de report refusée. Rendez-vous maintenu.");
@@ -504,15 +534,30 @@ public class AppointmentController {
             // Notifier le client
             if (appointment.getClient() != null && appointment.getClient().getEmail() != null) {
                 java.time.format.DateTimeFormatter fmt = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy 'à' HH:mm");
+                String dateStr = proposedDate.format(fmt);
                 String body = "Bonjour,\n\nVotre avocat propose une nouvelle date pour le rendez-vous :\n\n" +
                     appointment.getTitle() + "\n" +
-                    "Date proposée : " + proposedDate.format(fmt) + "\n";
+                    "Date proposée : " + dateStr + "\n";
                 if (rescheduleMessage != null && !rescheduleMessage.isEmpty()) {
                     body += "\nMessage : " + rescheduleMessage + "\n";
                 }
                 body += "\nConnectez-vous à votre espace client pour accepter ou proposer une autre date.\n\n---\nDocAvocat";
                 emailService.sendEmail(appointment.getClient().getEmail(),
                     "Nouvelle date proposée : " + appointment.getTitle(), body);
+
+                try {
+                    if (appointment.getClient().getClientUser() != null) {
+                        notificationService.create(appointment.getClient().getClientUser(),
+                                "APPOINTMENT_RESCHEDULE_PROPOSED_BY_LAWYER",
+                                "Nouvelle date proposée",
+                                "Votre avocat propose une nouvelle date: " + dateStr,
+                                "/client/appointments",
+                                "fa-calendar-alt",
+                                "warning");
+                    }
+                } catch (Exception e) {
+                    log.warn("Impossible de créer notification in-app pour le client: {}", e.getMessage());
+                }
             }
 
             redirectAttributes.addFlashAttribute("success", "Nouvelle date proposée au client.");
