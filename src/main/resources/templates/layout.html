@@ -161,10 +161,6 @@
 
             <!-- Client : portail client -->
             <div sec:authorize="hasRole('CLIENT')">
-                <a th:href="@{/my-cases}" class="nav-link">
-                    <i class="fas fa-home"></i>
-                    <span>Tableau de bord</span>
-                </a>
                 <a th:href="@{/my-cases}" class="nav-link" data-nav="dossiers">
                     <i class="fas fa-folder"></i>
                     <span>Mes dossiers</span>
@@ -254,7 +250,7 @@
                 <button class="icon-btn" id="darkModeToggle" title="Mode sombre" type="button">
                     <i class="fas fa-moon" id="darkModeIcon"></i>
                 </button>
-                <button class="icon-btn position-relative" sec:authorize="!hasRole('ADMIN')" type="button" id="notifBell" onclick="toggleNotifPanel()">
+                <button class="icon-btn position-relative" sec:authorize="!hasRole('ADMIN')" type="button" id="notifBell" onclick="if(window.toggleNotifPanel)toggleNotifPanel()">
                     <i class="fas fa-bell"></i>
                     <span id="notifBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size:10px;display:none">0</span>
                 </button>
