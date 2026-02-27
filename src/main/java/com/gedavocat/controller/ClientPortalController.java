@@ -82,8 +82,20 @@ public class ClientPortalController {
 
             // Récupérer le client associé à cet utilisateur
             java.util.Optional<Client> clientOpt = clientRepository.findByClientUserId(user.getId());
-            if (clientOpt.isEmpty()) return notLinked(model);
-            Client client = clientOpt.get();
+            Client client;
+            if (clientOpt.isEmpty()) {
+                // Fallback: parfois le client est lié uniquement par email (migration / oubli).
+                java.util.Optional<Client> byEmail = clientRepository.findByEmail(user.getEmail());
+                if (byEmail.isPresent()) {
+                    log.warn("Utilisateur {} non lié via clientUserId mais trouvé par email -> displaying cases (consider linking)", user.getEmail());
+                    client = byEmail.get();
+                    model.addAttribute("linkWarning", "Votre compte n'est pas encore lié techniquement. Affichage basé sur votre adresse email.");
+                } else {
+                    return notLinked(model);
+                }
+            } else {
+                client = clientOpt.get();
+            }
 
             // Récupérer UNIQUEMENT les dossiers de ce client
             List<Case> myCases = caseService.getCasesByClient(client.getId());

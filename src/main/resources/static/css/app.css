@@ -147,3 +147,36 @@ form[style*="display:inline-block"] > * + * { margin-left: 8px !important; }
 @media (max-width: 576px) {
   .d-flex.gap-2 > * + *, .btn + .btn { margin-left: 6px !important; }
 }
+
+/* FullCalendar: ensure toolbar buttons have proper spacing and don't stick together */
+.fc .fc-toolbar-chunk {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.fc .fc-button {
+  margin-bottom: 6px;
+}
+.fc .fc-toolbar .fc-button + .fc-button {
+  margin-left: 8px;
+}
+
+/* Ensure card-level buttons also keep spacing when FullCalendar injects its own markup */
+.card .btn + .btn,
+.fc .fc-button + .fc-button {
+  margin-left: 8px !important;
+}
+
+/* Client portal: fix visibility when some pages accidentally render light text
+   Scoped to the case list items only to avoid interfering with global header colors */
+.case-card,
+.client-header {
+  color: var(--text-primary) !important;
+}
+.case-card a,
+.case-card .stat-value,
+.case-card .stat-label,
+.case-card .small,
+.case-card .text-muted {
+  color: var(--text-primary) !important;
+}
