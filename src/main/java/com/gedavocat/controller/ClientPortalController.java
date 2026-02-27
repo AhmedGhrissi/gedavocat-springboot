@@ -100,6 +100,9 @@ public class ClientPortalController {
             // Récupérer UNIQUEMENT les dossiers de ce client
             List<Case> myCases = caseService.getCasesByClient(client.getId());
 
+            // Log diagnostic: how many cases were returned for this client
+            log.info("Client portal: user={} clientId={} returned {} cases", user.getEmail(), client.getId(), myCases == null ? 0 : myCases.size());
+            
             // Force-initialiser les proxies lazy (open-in-view=false)
             for (Case c : myCases) {
                 if (c.getLawyer() != null) {
@@ -536,5 +539,34 @@ public class ClientPortalController {
         clientRepository.save(client);
         redirectAttributes.addFlashAttribute("message", "Vos informations ont été mises à jour.");
         return "redirect:/my-cases/profile";
+    }
+
+    /**
+     * Debug endpoint for client to see link status and cases count (protected by CLIENT role).
+     * Use for troubleshooting: GET /my-cases/api/debug-status
+     */
+    @GetMapping("/api/debug-status")
+    @ResponseBody
+    @Transactional(readOnly = true)
+    public ResponseEntity<Map<String, Object>> debugStatus(Authentication authentication) {
+        try {
+            User user = getCurrentUser(authentication);
+            java.util.Optional<Client> clientById = clientRepository.findByClientUserId(user.getId());
+            java.util.Optional<Client> clientByEmail = clientRepository.findByEmail(user.getEmail());
+            String clientId = clientById.map(Client::getId).orElse(null);
+            List<Case> myCases = clientId != null ? caseService.getCasesByClient(clientId) : List.of();
+            Map<String, Object> payload = Map.of(
+                    "userEmail", user.getEmail(),
+                    "userId", user.getId(),
+                    "clientLinkedById", clientById.isPresent(),
+                    "clientFoundByEmail", clientByEmail.isPresent(),
+                    "clientId", clientId,
+                    "casesCount", myCases.size()
+            );
+            return ResponseEntity.ok(payload);
+        } catch (Exception e) {
+            log.error("Error in debugStatus: {}", e.getMessage(), e);
+            return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
+        }
     }
 }
