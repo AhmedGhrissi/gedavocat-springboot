@@ -102,3 +102,48 @@
 .modal-footer .btn + .btn {
   margin-left: 8px;
 }
+
+/* Fallback for flex gap (older browsers): ensure children get margin when parent uses .d-flex.gap-2 etc. */
+.d-flex.gap-1 > * + *,
+.d-flex.gap-2 > * + *,
+.d-flex.gap-3 > * + * {
+  margin-left: .5rem; /* gap-2 equivalent */
+}
+
+/* Ensure buttons inside inline forms get spacing (forms that used inline-block) */
+form.d-inline > * + *,
+form[style*="display:inline-block"] > * + * {
+  margin-left: 6px;
+}
+
+/* Strong fallback: ensure adjacent buttons always have spacing */
+.btn + .btn { margin-left: 8px !important; }
+.btn-group .btn + .btn { margin-left: 8px !important; }
+
+/* Flex gap fallbacks for multiple gap utility values */
+.d-flex.gap-1 > * + *,
+.d-flex.gap-2 > * + *,
+.d-flex.gap-3 > * + *,
+.d-flex.gap-4 > * + * {
+  margin-left: 8px !important;
+}
+
+/* If gap is applied inline as style="gap: ..." provide fallback */
+.d-flex[style*="gap"] > * + * { margin-left: 8px !important; }
+
+/* Inline forms fallback */
+form.d-inline > * + *,
+form[style*="display:inline-block"] > * + * { margin-left: 8px !important; }
+
+/* Register page forced color scheme as a last-resort override */
+.register-form-box, .register-form-box h1, .register-form-box .subtitle, .register-form-box .form-floating label, .register-form-box .form-control {
+  color: var(--text-primary) !important;
+}
+.register-sidebar, .register-sidebar .plan-card, .register-sidebar .plan-card li {
+  color: #EEF2F7 !important;
+}
+
+/* Ensure small screen buttons stack with spacing */
+@media (max-width: 576px) {
+  .d-flex.gap-2 > * + *, .btn + .btn { margin-left: 6px !important; }
+}

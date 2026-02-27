@@ -16,6 +16,7 @@ import com.gedavocat.service.CaseService;
 import com.gedavocat.service.DocumentService;
 import com.gedavocat.service.WatermarkService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -28,8 +29,10 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.http.HttpStatus;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -48,6 +51,7 @@ import java.util.zip.ZipOutputStream;
 @Controller
 @RequestMapping("/my-cases")
 @RequiredArgsConstructor
+@Slf4j
 @PreAuthorize("hasRole('CLIENT')")
 public class ClientPortalController {
 
@@ -72,47 +76,57 @@ public class ClientPortalController {
 
     @GetMapping
     @Transactional(readOnly = true)
-    public String listMyCases(Model model, Authentication authentication) {
-        User user = getCurrentUser(authentication);
-        
-        // Récupérer le client associé à cet utilisateur
-        java.util.Optional<Client> clientOpt = clientRepository.findByClientUserId(user.getId());
-        if (clientOpt.isEmpty()) return notLinked(model);
-        Client client = clientOpt.get();
-
-        // Récupérer UNIQUEMENT les dossiers de ce client
-        List<Case> myCases = caseService.getCasesByClient(client.getId());
-        
-        // Force-initialiser les proxies lazy (open-in-view=false)
-        for (Case c : myCases) {
-            if (c.getLawyer() != null) {
-                c.getLawyer().getName(); // force init
-            }
-            if (c.getClient() != null) {
-                c.getClient().getName(); // force init
-            }
-        }
-        
-        model.addAttribute("cases", myCases);
-        model.addAttribute("user", user);
-        model.addAttribute("client", client);
-
-        // Signatures du client (par email)
-        List<Signature> signatures;
+    public Object listMyCases(Model model, Authentication authentication) {
         try {
-            signatures = signatureRepository.findBySignerEmail(user.getEmail());
-        } catch (Exception e) {
-            signatures = Collections.emptyList();
+            User user = getCurrentUser(authentication);
+
+            // Récupérer le client associé à cet utilisateur
+            java.util.Optional<Client> clientOpt = clientRepository.findByClientUserId(user.getId());
+            if (clientOpt.isEmpty()) return notLinked(model);
+            Client client = clientOpt.get();
+
+            // Récupérer UNIQUEMENT les dossiers de ce client
+            List<Case> myCases = caseService.getCasesByClient(client.getId());
+
+            // Force-initialiser les proxies lazy (open-in-view=false)
+            for (Case c : myCases) {
+                if (c.getLawyer() != null) {
+                    c.getLawyer().getName(); // force init
+                }
+                if (c.getClient() != null) {
+                    c.getClient().getName(); // force init
+                }
+            }
+
+            model.addAttribute("cases", myCases);
+            model.addAttribute("user", user);
+            model.addAttribute("client", client);
+
+            // Signatures du client (par email)
+            List<Signature> signatures;
+            try {
+                signatures = signatureRepository.findBySignerEmail(user.getEmail());
+            } catch (Exception e) {
+                signatures = Collections.emptyList();
+            }
+            long pendingSignatures = signatures.stream()
+                    .filter(s -> s.getStatus() == Signature.SignatureStatus.PENDING).count();
+            long signedSignatures = signatures.stream()
+                    .filter(s -> s.getStatus() == Signature.SignatureStatus.SIGNED).count();
+            model.addAttribute("signatures", signatures);
+            model.addAttribute("pendingSignatures", pendingSignatures);
+            model.addAttribute("signedSignatures", signedSignatures);
+
+            return "client-portal/cases";
+        } catch (Exception ex) {
+            // Log and return a friendly error page with status 500 so the client sees an informative message
+            log.error("Erreur lors du chargement des dossiers du client: {}", ex.getMessage(), ex);
+            ModelAndView mav = new ModelAndView("error");
+            mav.addObject("status", "500 - Erreur interne");
+            mav.addObject("message", "Une erreur est survenue lors du chargement de vos dossiers. Veuillez réessayer ultérieurement.");
+            mav.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+            return mav;
         }
-        long pendingSignatures = signatures.stream()
-                .filter(s -> s.getStatus() == Signature.SignatureStatus.PENDING).count();
-        long signedSignatures = signatures.stream()
-                .filter(s -> s.getStatus() == Signature.SignatureStatus.SIGNED).count();
-        model.addAttribute("signatures", signatures);
-        model.addAttribute("pendingSignatures", pendingSignatures);
-        model.addAttribute("signedSignatures", signedSignatures);
-        
-        return "client-portal/cases";
     }
 
     /**
