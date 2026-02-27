@@ -14,6 +14,15 @@
     <link rel="shortcut icon" href="/favicon.svg">
     <title layout:title-pattern="$CONTENT_TITLE - $LAYOUT_TITLE">DocAvocat</title>
 
+    <!-- Safety: early no-op stub to avoid ReferenceError when pages call toggleNotifPanel before main scripts load -->
+    <script>
+        window.toggleNotifPanel = window.toggleNotifPanel || function() {
+            // noop stub — real implementation will be attached by the main scripts.
+            // This prevents an uncaught ReferenceError when a button with onclick calls toggleNotifPanel()
+            console.debug('toggleNotifPanel called before scripts loaded.');
+        };
+    </script>
+
     <!-- Bootstrap & Font Awesome from WebJars -->
     <link th:href="@{/webjars/bootstrap/5.3.0/css/bootstrap.min.css}" rel="stylesheet">
     <link th:href="@{/webjars/font-awesome/6.4.0/css/all.min.css}" rel="stylesheet">
@@ -352,6 +361,16 @@
                                             <label for="modalBarNumber">Numéro au barreau</label>
                                         </div>
                                     </div>
+
+                                    <!-- Email signature field -->
+                                    <div class="col-12">
+                                        <div class="form-floating">
+                                            <textarea id="modalEmailSignature" name="emailSignature" class="form-control" placeholder="Signature email" rows="3" style="height:84px;"></textarea>
+                                            <label for="modalEmailSignature">Signature email (utilisée pour les emails envoyés)</label>
+                                            <div class="form-text">HTML basique autorisé (ligne, prénom, titre). Ne pas inclure informations sensibles.</div>
+                                        </div>
+                                    </div>
+
                                 </div>
                                 <div class="mt-3">
                                     <button type="submit" class="btn btn-primary">
@@ -584,12 +603,16 @@
                     var barEl = document.getElementById('modalBarNumber');
                     if (barEl) barEl.value = data.barNumber || '';
                     
+                    // Remplir la signature email (si présente)
+                    var sigEl = document.getElementById('modalEmailSignature');
+                    if (sigEl) sigEl.value = data.emailSignature || '';
+                    
                     // Remplir les champs Yousign (si l'onglet existe)
                     var apiKeyEl = document.getElementById('modalApiKey');
                     if (apiKeyEl) {
                         apiKeyEl.value = data.yousignApiKey || '';
                     }
-                    
+
                     // Mettre à jour le badge Yousign (si l'onglet existe)
                     const badge = document.querySelector('#yousign-pane .badge');
                     if (badge) {

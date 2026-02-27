@@ -3,3 +3,102 @@
 @import url("/css/main.css");
 
 /* Project specific small overrides (empty for now) */
+
+/* ========== Utility: spacing between adjacent buttons ========== */
+.btn + .btn,
+.btn-group .btn + .btn {
+  margin-left: 8px;
+}
+
+/* Ensure consistent spacing between adjacent action buttons across the app (cases, calendar, modals) */
+.case-actions .btn + .btn,
+.appointment-card .btn + .btn,
+.apt-kanban-card .btn + .btn,
+.card .actions .btn + .btn,
+.modal-footer .btn + .btn,
+.btn + .btn,
+.btn-group .btn + .btn {
+  margin-left: 8px;
+}
+
+/* Add some vertical spacing for stacked action buttons */
+.actions .btn,
+.card .actions .btn {
+  margin-bottom: 6px;
+}
+
+/* Fallback for older pages that used margin-right: keep bottom/right spacing for stacked buttons */
+.case-actions .btn,
+.appointment-card .btn,
+.apt-kanban-card .btn {
+  margin-bottom: 6px;
+}
+
+/* Specific: ensure button groups don't collapse on small screens */
+.btn-group {
+  display: inline-flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* ========== Notification panel default styles ========== */
+.notification-panel {
+  display: none;
+}
+.notification-panel.open {
+  display: block;
+}
+
+/* ========== Auth / inscription: rendre le formulaire lisible ========== */
+/* Targets common auth pages that use classes like .auth-page, .auth-form, .register-form */
+.auth-page .auth-card,
+.auth-form,
+.register-form,
+.signup-card {
+  max-width: 560px;
+  margin: 28px auto;
+  padding: 20px;
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+}
+
+.auth-form .form-control,
+.register-form .form-control,
+.signup-card .form-control {
+  width: 100%;
+}
+
+.auth-page .page-title,
+.register-form .page-title {
+  text-align: center;
+  margin-bottom: 14px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+/* Small screens: ensure inputs are full width and buttons stack nicely */
+@media (max-width: 576px) {
+  .btn-group {
+    width: 100%;
+  }
+  .btn-group .btn {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .btn + .btn { margin-left: 6px; }
+  .case-actions .btn + .btn, .appointment-card .btn + .btn { margin-left: 6px; }
+}
+
+/* ========== Cases / appointments: card action spacing ========== */
+.case-actions .btn,
+.appointment-card .btn,
+.apt-kanban-card .btn {
+  margin-right: 8px;
+  margin-bottom: 6px;
+}
+
+/* Ensure modal footer buttons have spacing */
+.modal-footer .btn + .btn {
+  margin-left: 8px;
+}

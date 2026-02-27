@@ -173,3 +173,78 @@ function debounce(func, wait) {
         timeout = setTimeout(later, wait);
     };
 }
+
+// Fonction pour basculer le panneau de notifications (appelée depuis des boutons onclick="toggleNotifPanel()")
+window.toggleNotifPanel = function() {
+    try {
+        // Rechercher un panneau de notifications courant
+        let panel = document.getElementById('notifPanel') || document.querySelector('.notification-panel');
+        if (!panel) {
+            // Si aucun panneau trouvé, créer un panneau simple et l'insérer dans le header
+            panel = document.createElement('div');
+            panel.id = 'notifPanel';
+            panel.className = 'notification-panel';
+            panel.style.position = 'absolute';
+            panel.style.right = '16px';
+            panel.style.top = '56px';
+            panel.style.width = '320px';
+            panel.style.maxHeight = '60vh';
+            panel.style.overflowY = 'auto';
+            panel.style.background = '#fff';
+            panel.style.boxShadow = '0 8px 24px rgba(15,23,42,0.12)';
+            panel.style.borderRadius = '8px';
+            panel.style.padding = '8px';
+            panel.style.zIndex = '1200';
+            document.body.appendChild(panel);
+        }
+
+        const isOpen = panel.classList.contains('open');
+        if (isOpen) {
+            panel.classList.remove('open');
+            panel.style.display = 'none';
+            return;
+        }
+
+        // Ouvrir et charger les notifications via l'API (si l'utilisateur est connecté)
+        panel.style.display = 'block';
+        panel.classList.add('open');
+        panel.innerHTML = '<div style="padding:12px;color:#64748B">Chargement des notifications...</div>';
+
+        fetch('/api/notifications', { credentials: 'same-origin' })
+            .then(resp => {
+                if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                return resp.json();
+            })
+            .then(data => {
+                const items = data.notifications || [];
+                if (items.length === 0) {
+                    panel.innerHTML = '<div style="padding:12px;color:#64748B">Aucune notification</div>';
+                    return;
+                }
+                const list = document.createElement('div');
+                list.style.display = 'flex';
+                list.style.flexDirection = 'column';
+                list.style.gap = '6px';
+                items.forEach(n => {
+                    const row = document.createElement('a');
+                    row.href = n.link || '#';
+                    row.style.display = 'block';
+                    row.style.padding = '10px';
+                    row.style.borderRadius = '6px';
+                    row.style.textDecoration = 'none';
+                    row.style.color = '#0f172a';
+                    row.style.background = n.read ? 'transparent' : '#f8fafc';
+                    row.innerHTML = `<div style="font-weight:600;font-size:14px">${n.title}</div><div style="font-size:13px;color:#64748B">${n.message}</div>`;
+                    list.appendChild(row);
+                });
+                panel.innerHTML = '';
+                panel.appendChild(list);
+            })
+            .catch(err => {
+                panel.innerHTML = '<div style="padding:12px;color:#ef4444">Impossible de charger les notifications</div>';
+                console.warn('Erreur chargement notifications', err);
+            });
+    } catch (e) {
+        console.error('toggleNotifPanel error', e);
+    }
+};
