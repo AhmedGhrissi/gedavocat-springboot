@@ -33,6 +33,7 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.http.HttpStatus;
+import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -76,7 +77,7 @@ public class ClientPortalController {
 
     @GetMapping
     @Transactional(readOnly = true)
-    public Object listMyCases(Model model, Authentication authentication) {
+    public Object listMyCases(Model model, Authentication authentication, HttpServletResponse response) {
         try {
             User user = getCurrentUser(authentication);
 
@@ -117,6 +118,28 @@ public class ClientPortalController {
             model.addAttribute("user", user);
             model.addAttribute("client", client);
 
+            // Compute case statistics for KPIs
+            long openCases = myCases.stream()
+                    .filter(c -> c.getStatus() != null && c.getStatus() == Case.CaseStatus.OPEN)
+                    .count();
+            long inProgressCases = myCases.stream()
+                    .filter(c -> c.getStatus() != null && c.getStatus() == Case.CaseStatus.IN_PROGRESS)
+                    .count();
+            long closedCases = myCases.stream()
+                    .filter(c -> c.getStatus() != null && c.getStatus() == Case.CaseStatus.CLOSED)
+                    .count();
+            
+            model.addAttribute("openCases", openCases);
+            model.addAttribute("inProgressCases", inProgressCases);
+            model.addAttribute("closedCases", closedCases);
+
+            // Count total documents across all cases
+            long totalDocuments = myCases.stream()
+                    .filter(c -> c.getDocuments() != null)
+                    .mapToLong(c -> c.getDocuments().size())
+                    .sum();
+            model.addAttribute("totalDocuments", totalDocuments);
+
             // Signatures du client (par email)
             List<Signature> signatures;
             try {
@@ -140,9 +163,13 @@ public class ClientPortalController {
             mav.addObject("status", "500 - Erreur interne");
             mav.addObject("message", "Une erreur est survenue lors du chargement de vos dossiers. Veuillez réessayer ultérieurement.");
             mav.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
-            return mav;
-        }
-    }
+            // Ensure the HTTP response status is set to 500 so the client receives the proper status
+            try {
+                response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+            } catch (Exception ignored) { }
+             return mav;
+         }
+     }
 
     /**
      * Détail d'un dossier (avec vérification de propriété)

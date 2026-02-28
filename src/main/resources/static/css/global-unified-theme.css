@@ -1,0 +1,527 @@
+/* ══════════════════════════════════════════════════════════
+   DocAvocat - Thème Global Unifié
+   Mode CLAIR par défaut avec excellente lisibilité
+   Force tous les styles à être cohérents dans toute l'app
+══════════════════════════════════════════════════════════ */
+
+/* ── FORCER LE MODE CLAIR PAR DÉFAUT ── */
+html:not(.dark) {
+    background-color: #FAFBFC !important;
+    color: #1A202C !important;
+}
+
+body {
+    background-color: #FAFBFC !important;
+    color: #1A202C !important;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+}
+
+/* ── TYPOGRAPHIE GLOBALE - TOUS LES TEXTES LISIBLES ── */
+h1, h2, h3, h4, h5, h6,
+.h1, .h2, .h3, .h4, .h5, .h6 {
+    color: #1A202C !important;
+    font-weight: 700 !important;
+}
+
+p, span, div, td, th, li, a, label, input, textarea, select {
+    color: #1A202C !important;
+}
+
+.text-muted, .text-secondary, small, .small {
+    color: #3A4556 !important;
+}
+
+/* ── CARTES ET CONTENEURS ── */
+.card {
+    background-color: #FFFFFF !important;
+    border: 1px solid #DEE2E6 !important;
+    color: #1A202C !important;
+}
+
+.card-header {
+    background-color: #F4F6F8 !important;
+    border-bottom: 1px solid #DEE2E6 !important;
+    color: #1A202C !important;
+}
+
+.card-body {
+    background-color: #FFFFFF !important;
+    color: #1A202C !important;
+}
+
+.card-title {
+    color: #1A202C !important;
+}
+
+.card-text {
+    color: #1A202C !important;
+}
+
+/* ── BOUTONS ── */
+.btn {
+    font-weight: 600 !important;
+    border-radius: 8px !important;
+}
+
+.btn-primary {
+    background-color: #1E3A5F !important;
+    border-color: #1E3A5F !important;
+    color: #FFFFFF !important;
+}
+
+.btn-primary:hover, .btn-primary:focus, .btn-primary:active {
+    background-color: #14253F !important;
+    border-color: #14253F !important;
+    color: #FFFFFF !important;
+}
+
+.btn-secondary {
+    background-color: #F4F6F8 !important;
+    border-color: #DEE2E6 !important;
+    color: #1A202C !important;
+}
+
+.btn-secondary:hover {
+    background-color: #E5E7EB !important;
+    color: #1A202C !important;
+}
+
+.btn-success {
+    background-color: #16A34A !important;
+    border-color: #16A34A !important;
+    color: #FFFFFF !important;
+}
+
+.btn-warning {
+    background-color: #D97706 !important;
+    border-color: #D97706 !important;
+    color: #FFFFFF !important;
+}
+
+.btn-danger {
+    background-color: #DC2626 !important;
+    border-color: #DC2626 !important;
+    color: #FFFFFF !important;
+}
+
+.btn-info {
+    background-color: #0284C7 !important;
+    border-color: #0284C7 !important;
+    color: #FFFFFF !important;
+}
+
+.btn-outline-primary {
+    border-color: #1E3A5F !important;
+    color: #1E3A5F !important;
+    background-color: transparent !important;
+}
+
+.btn-outline-primary:hover {
+    background-color: #1E3A5F !important;
+    color: #FFFFFF !important;
+}
+
+.btn-outline-secondary {
+    border-color: #DEE2E6 !important;
+    color: #1A202C !important;
+    background-color: transparent !important;
+}
+
+.btn-outline-secondary:hover {
+    background-color: #F4F6F8 !important;
+    color: #1A202C !important;
+}
+
+/* ── BADGES ── */
+.badge {
+    font-weight: 600 !important;
+    padding: 0.4em 0.75em !important;
+    border-radius: 6px !important;
+}
+
+.badge.bg-success, .badge-success {
+    background-color: #16A34A !important;
+    color: #FFFFFF !important;
+}
+
+.badge.bg-warning, .badge-warning {
+    background-color: #D97706 !important;
+    color: #FFFFFF !important;
+}
+
+.badge.bg-danger, .badge-danger {
+    background-color: #DC2626 !important;
+    color: #FFFFFF !important;
+}
+
+.badge.bg-info, .badge-info {
+    background-color: #0284C7 !important;
+    color: #FFFFFF !important;
+}
+
+.badge.bg-primary, .badge-primary {
+    background-color: #1E3A5F !important;
+    color: #FFFFFF !important;
+}
+
+.badge.bg-secondary, .badge-secondary {
+    background-color: #6B7280 !important;
+    color: #FFFFFF !important;
+}
+
+/* ── TABLEAUX ── */
+.table {
+    color: #1A202C !important;
+    background-color: #FFFFFF !important;
+}
+
+.table thead th {
+    background-color: #F4F6F8 !important;
+    color: #1A202C !important;
+    border-bottom: 2px solid #DEE2E6 !important;
+    font-weight: 700 !important;
+}
+
+.table tbody td {
+    color: #1A202C !important;
+    border-bottom: 1px solid #F1F3F5 !important;
+}
+
+.table tbody tr:hover {
+    background-color: #F9FAFB !important;
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: #FAFBFC !important;
+}
+
+/* ── FORMULAIRES ── */
+.form-label {
+    color: #1A202C !important;
+    font-weight: 600 !important;
+}
+
+.form-control {
+    background-color: #FFFFFF !important;
+    border: 1px solid #DEE2E6 !important;
+    color: #1A202C !important;
+}
+
+.form-control:focus {
+    border-color: #1E3A5F !important;
+    box-shadow: 0 0 0 0.2rem rgba(30, 58, 95, 0.15) !important;
+    background-color: #FFFFFF !important;
+    color: #1A202C !important;
+}
+
+.form-control::placeholder {
+    color: #9CA3AF !important;
+}
+
+.form-select {
+    background-color: #FFFFFF !important;
+    border: 1px solid #DEE2E6 !important;
+    color: #1A202C !important;
+}
+
+.form-select:focus {
+    border-color: #1E3A5F !important;
+    box-shadow: 0 0 0 0.2rem rgba(30, 58, 95, 0.15) !important;
+}
+
+.form-text {
+    color: #3A4556 !important;
+}
+
+/* ── ALERTES ── */
+.alert {
+    border-radius: 10px !important;
+    border-width: 1px !important;
+}
+
+.alert-success {
+    background-color: #F0FDF4 !important;
+    border-color: #16A34A !important;
+    color: #14532D !important;
+}
+
+.alert-success strong, .alert-success a {
+    color: #14532D !important;
+}
+
+.alert-warning {
+    background-color: #FFFBEB !important;
+    border-color: #D97706 !important;
+    color: #92400E !important;
+}
+
+.alert-warning strong, .alert-warning a {
+    color: #92400E !important;
+}
+
+.alert-danger {
+    background-color: #FEF2F2 !important;
+    border-color: #DC2626 !important;
+    color: #991B1B !important;
+}
+
+.alert-danger strong, .alert-danger a {
+    color: #991B1B !important;
+}
+
+.alert-info {
+    background-color: #F0F9FF !important;
+    border-color: #0284C7 !important;
+    color: #075985 !important;
+}
+
+.alert-info strong, .alert-info a {
+    color: #075985 !important;
+}
+
+/* ── MODALES ── */
+.modal-content {
+    background-color: #FFFFFF !important;
+    border: none !important;
+    border-radius: 12px !important;
+}
+
+.modal-header {
+    background-color: #F4F6F8 !important;
+    border-bottom: 1px solid #DEE2E6 !important;
+}
+
+.modal-title {
+    color: #1A202C !important;
+}
+
+.modal-body {
+    background-color: #FFFFFF !important;
+    color: #1A202C !important;
+}
+
+.modal-footer {
+    background-color: #F4F6F8 !important;
+    border-top: 1px solid #DEE2E6 !important;
+}
+
+/* ── NAVIGATION / SIDEBAR ── */
+.sidebar {
+    background-color: #1A202C !important;
+}
+
+.sidebar-logo-text {
+    color: #FFFFFF !important;
+}
+
+.sidebar-nav a {
+    color: #A0AEC0 !important;
+}
+
+.sidebar-nav a:hover {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+    color: #FFFFFF !important;
+}
+
+.sidebar-nav a.active {
+    background-color: rgba(212, 175, 111, 0.15) !important;
+    color: #FFFFFF !important;
+}
+
+/* ── NAVBAR ── */
+.navbar {
+    background-color: #1E3A5F !important;
+    color: #FFFFFF !important;
+}
+
+.navbar a {
+    color: #FFFFFF !important;
+}
+
+.navbar a:hover {
+    color: #D4AF6F !important;
+}
+
+/* ── HERO BANNER / DASHBOARD ── */
+.hero-banner {
+    background: linear-gradient(135deg, #1E3A5F 0%, #14253F 100%) !important;
+    color: #FFFFFF !important;
+}
+
+.hero-banner h1, .hero-banner h2, .hero-banner h3 {
+    color: #FFFFFF !important;
+}
+
+.hero-banner p {
+    color: rgba(255, 255, 255, 0.95) !important;
+}
+
+/* ── DROPDOWN ── */
+.dropdown-menu {
+    background-color: #FFFFFF !important;
+    border: 1px solid #DEE2E6 !important;
+}
+
+.dropdown-item {
+    color: #1A202C !important;
+}
+
+.dropdown-item:hover {
+    background-color: #F4F6F8 !important;
+    color: #1E3A5F !important;
+}
+
+/* ── PAGINATION ── */
+.pagination .page-link {
+    color: #1E3A5F !important;
+    background-color: #FFFFFF !important;
+    border: 1px solid #DEE2E6 !important;
+}
+
+.pagination .page-link:hover {
+    background-color: #F4F6F8 !important;
+    color: #1E3A5F !important;
+}
+
+.pagination .page-item.active .page-link {
+    background-color: #1E3A5F !important;
+    border-color: #1E3A5F !important;
+    color: #FFFFFF !important;
+}
+
+/* ── BREADCRUMB ── */
+.breadcrumb {
+    background-color: transparent !important;
+}
+
+.breadcrumb-item a {
+    color: #1E3A5F !important;
+}
+
+.breadcrumb-item.active {
+    color: #3A4556 !important;
+}
+
+/* ── LIENS ── */
+a {
+    color: #1E3A5F !important;
+    text-decoration: none !important;
+}
+
+a:hover {
+    color: #14253F !important;
+    text-decoration: underline !important;
+}
+
+/* Exceptions pour les liens dans les boutons */
+.btn a,
+a.btn {
+    text-decoration: none !important;
+}
+
+/* ── SIDEBAR TEXTE ── */
+.nav-section-title {
+    color: #6B7280 !important;
+}
+
+/* ── STAT CARDS ── */
+.stat-card {
+    background-color: #FFFFFF !important;
+    border: 1px solid #DEE2E6 !important;
+}
+
+.stat-card h3, .stat-card h4, .stat-card p {
+    color: #1A202C !important;
+}
+
+/* ── LISTES ── */
+.list-group-item {
+    background-color: #FFFFFF !important;
+    border: 1px solid #DEE2E6 !important;
+    color: #1A202C !important;
+}
+
+.list-group-item:hover {
+    background-color: #F9FAFB !important;
+}
+
+/* ── MODE SOMBRE (Optionnel si l'utilisateur l'active) ── */
+.dark body {
+    background-color: #111827 !important;
+    color: #F9FAFB !important;
+}
+
+.dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6 {
+    color: #F9FAFB !important;
+}
+
+.dark p, .dark span, .dark div, .dark td, .dark th, .dark li {
+    color: #E5E7EB !important;
+}
+
+.dark .card {
+    background-color: #1F2937 !important;
+    border-color: #4B5563 !important;
+}
+
+.dark .card-header {
+    background-color: #374151 !important;
+    border-bottom-color: #4B5563 !important;
+    color: #F9FAFB !important;
+}
+
+.dark .form-control {
+    background-color: #374151 !important;
+    border-color: #4B5563 !important;
+    color: #F9FAFB !important;
+}
+
+.dark .table {
+    background-color: #1F2937 !important;
+    color: #E5E7EB !important;
+}
+
+.dark .table thead th {
+    background-color: #374151 !important;
+    color: #F9FAFB !important;
+}
+
+/* ── CONTAINERS ── */
+.container, .container-fluid {
+    color: #1A202C !important;
+}
+
+/* ── ASSURER LA LISIBILITÉ PARTOUT ── */
+* {
+    -webkit-font-smoothing: antialiased !important;
+    -moz-osx-font-smoothing: grayscale !important;
+}
+
+/* ── CORRECTION SPÉCIFIQUE POUR LES TEXTES DANS LES ÉLÉMENTS SPÉCIAUX ── */
+.page-header h1, .page-header h2 {
+    color: #1A202C !important;
+}
+
+.page-title {
+    color: #1A202C !important;
+}
+
+.section-title {
+    color: #1A202C !important;
+}
+
+/* Les textes dans les gradients restent blancs */
+.hero-banner *, 
+.footer-cta *,
+[style*="background: linear-gradient"] *,
+[style*="background:linear-gradient"] * {
+    color: #FFFFFF !important;
+}
+
+/* Correction pour les prix avec gradient */
+.price {
+    background: linear-gradient(135deg, #1E3A5F, #14253F) !important;
+    -webkit-background-clip: text !important;
+    background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+}

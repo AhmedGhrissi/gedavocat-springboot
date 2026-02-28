@@ -36,24 +36,21 @@
         <div class="col-6 col-xl-3">
             <div class="stat-card">
                 <div class="stat-icon blue"><i class="fas fa-folder-open"></i></div>
-                <div class="stat-value"
-                     th:text="${cases != null ? cases.stream().filter(c -> c.status != null && c.status.name() == 'OPEN').count() : 0}">0</div>
+                <div class="stat-value" th:text="${openCases != null ? openCases : 0}">0</div>
                 <div class="stat-label">Dossiers actifs</div>
             </div>
         </div>
         <div class="col-6 col-xl-3">
             <div class="stat-card">
                 <div class="stat-icon yellow"><i class="fas fa-spinner"></i></div>
-                <div class="stat-value"
-                     th:text="${cases != null ? cases.stream().filter(c -> c.status != null && c.status.name() == 'IN_PROGRESS').count() : 0}">0</div>
+                <div class="stat-value" th:text="${inProgressCases != null ? inProgressCases : 0}">0</div>
                 <div class="stat-label">En cours</div>
             </div>
         </div>
         <div class="col-6 col-xl-3">
             <div class="stat-card">
                 <div class="stat-icon green"><i class="fas fa-check-circle"></i></div>
-                <div class="stat-value"
-                     th:text="${cases != null ? cases.stream().filter(c -> c.status != null && c.status.name() == 'CLOSED').count() : 0}">0</div>
+                <div class="stat-value" th:text="${closedCases != null ? closedCases : 0}">0</div>
                 <div class="stat-label">Clôturés</div>
             </div>
         </div>
@@ -69,7 +66,7 @@
     <!-- Filtre -->
     <div class="card mb-4">
         <div class="card-body" style="padding:14px 20px">
-            <form method="get" th:action="@{/client/cases}" class="d-flex gap-3 align-items-end flex-wrap">
+            <form method="get" th:action="@{/my-cases}" class="d-flex gap-3 align-items-end flex-wrap">
                 <div style="flex:1;min-width:180px">
                     <label class="form-label">Recherche</label>
                     <input type="text" name="q" class="form-control form-control-sm"
@@ -89,7 +86,7 @@
                     <button type="submit" class="btn btn-primary btn-sm">
                         <i class="fas fa-search me-1"></i> Filtrer
                     </button>
-                    <a th:href="@{/client/cases}" class="btn btn-outline-secondary btn-sm" title="Réinitialiser">
+                    <a th:href="@{/my-cases}" class="btn btn-outline-secondary btn-sm" title="Réinitialiser">
                         <i class="fas fa-times"></i>
                     </a>
                 </div>
@@ -117,7 +114,7 @@
             <!-- Infos principales -->
             <div style="flex:1;min-width:0">
                 <div class="d-flex align-items-center gap-3 mb-2 flex-wrap">
-                    <a th:href="@{/client/cases/{id}(id=${case.id})}"
+                    <a th:href="@{/my-cases/{id}(id=${case.id})}"
                        class="text-decoration-none"
                        style="font-size:15px;font-weight:700;color:var(--text-primary);letter-spacing:-0.01em"
                        th:text="${case.name}">Nom du dossier</a>
@@ -165,7 +162,7 @@
                         <div>doc.</div>
                     </div>
                 </div>
-                <a th:href="@{/client/cases/{id}(id=${case.id})}"
+                <a th:href="@{/my-cases/{id}(id=${case.id})}"
                    class="btn btn-sm btn-outline-secondary"
                    style="white-space:nowrap">
                     <i class="fas fa-eye me-1"></i> Voir

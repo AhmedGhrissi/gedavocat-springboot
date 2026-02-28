@@ -7,42 +7,111 @@
     <meta name="robots" content="index, follow">
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <link rel="shortcut icon" href="/favicon.svg">
-    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    
+    <!-- Bootstrap & Font Awesome -->
+    <link th:href="@{/webjars/bootstrap/5.3.0/css/bootstrap.min.css}" rel="stylesheet">
+    <link th:href="@{/webjars/font-awesome/6.4.0/css/all.min.css}" rel="stylesheet">
+    
+    <!-- NOUVEAU Design System 2026 -->
+    <link th:href="@{/css/design-system.css}" rel="stylesheet">
+    <link th:href="@{/css/components.css}" rel="stylesheet">
+    
+    <!-- Anciens styles (compatibilité) -->
+    <link th:href="@{/css/professional-theme.css}" rel="stylesheet" onerror="this.remove()">
+    <link th:href="@{/css/cabinet-avocat-theme.css}" rel="stylesheet" onerror="this.remove()">
+    <link th:href="@{/css/pages/pricing-new.css}" rel="stylesheet" onerror="this.remove()">
+    
     <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" th:href="@{/css/pages/pricing.css}">
+    
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        /* Force tous les textes à être visibles */
+        * {
+            color: inherit !important;
+        }
+        
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background: #f1f5f9;
-            color: var(--text-primary);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+            background: #FAFBFC !important;
+            color: #1A202C !important;
             min-height: 100vh;
         }
-        .pricing-page { max-width: 1280px; margin: 0 auto; padding: 48px 24px 80px; }
+        
+        h1, h2, h3, h4, h5, h6, p, span, div, a, li, label {
+            color: #1A202C !important;
+        }
+        
+        .text-muted {
+            color: #6B7280 !important;
+        }
+        
+        .pricing-page { 
+            max-width: 1280px; 
+            margin: 0 auto; 
+            padding: 48px 24px 80px; 
+        }
         .pricing-topbar {
-            display: flex; align-items: center; justify-content: space-between;
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between;
             margin-bottom: 48px;
+            padding: 1rem 0;
         }
         .pricing-logo {
-            display: flex; align-items: center; gap: 10px;
-            text-decoration: none; color: var(--text-primary);
-            font-size: 20px; font-weight: 700;
+            display: flex; 
+            align-items: center; 
+            gap: 10px;
+            text-decoration: none; 
+            color: #1A202C !important;
+            font-size: 20px; 
+            font-weight: 700;
         }
-        .pricing-logo i { color: var(--brand-500); }
-        .pricing-topbar-links { display: flex; gap: 16px; align-items: center; }
+        .pricing-logo i { 
+            color: #1E3A5F !important; 
+        }
+        .pricing-topbar-links { 
+            display: flex; 
+            gap: 16px; 
+            align-items: center; 
+        }
         .pricing-topbar-links a {
-            color: var(--text-secondary); text-decoration: none; font-size: 14px; font-weight: 500;
+            color: #3A4556 !important; 
+            text-decoration: none; 
+            font-size: 14px; 
+            font-weight: 500;
             transition: color 0.2s;
         }
-        .pricing-topbar-links a:hover { color: var(--brand-500); }
-        .pricing-topbar-links .btn-login {
-            background: linear-gradient(135deg, var(--brand-500), var(--brand-700));
-            color: white; padding: 8px 20px; border-radius: 10px;
-            font-weight: 600; font-size: 14px;
+        .pricing-topbar-links a:hover { 
+            color: #1E3A5F !important; 
         }
-        .pricing-topbar-links .btn-login:hover { color: white; opacity: 0.9; }
+        .pricing-topbar-links .btn-login {
+            background: linear-gradient(135deg, #1E3A5F, #14253F) !important;
+            color: white !important; 
+            padding: 8px 20px; 
+            border-radius: 10px;
+            font-weight: 600; 
+            font-size: 14px;
+        }
+        .pricing-topbar-links .btn-login:hover { 
+            color: white !important; 
+            opacity: 0.9; 
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(30, 58, 95, 0.3);
+        }
+        
+        /* Cartes de pricing */
+        .card {
+            background: white !important;
+            border: 1px solid #E5E7EB !important;
+        }
+        
+        .card-title, .card-text {
+            color: #1A202C !important;
+        }
+        
+        .btn {
+            color: white !important;
+        }
     </style>
 </head>
 <body>

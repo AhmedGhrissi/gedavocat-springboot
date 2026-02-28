@@ -1,39 +1,40 @@
 * ===================================================================
    GED Avocat - Feuille de style principale
-   Design Light Modern — version 3.0
+   Design Professionnel Premium — version 7.0
+   Palette inspirée des grands cabinets d'avocats internationaux
    =================================================================== */
 
 /* === Variables CSS === */
 :root {
-    /* Light theme tokens */
-    --bg: #f1f5f9;
-    --surface-1: #ffffff;
-    --surface-2: #f8fafc;
-    --border: #e2e8f0;
-    --text-primary: #1e293b;
-    --text-secondary: #64748b;
+    /* Palette professionnelle avec excellents contrastes */
+    --bg: #FAFBFC;
+    --surface-1: #FFFFFF;
+    --surface-2: #F9FAFB;
+    --border: #DEE2E6;
+    --text-primary: #1A202C;
+    --text-secondary: #3A4556;
     --primary: #1E3A5F;
-    --primary-end: #172D4A;
-    --accent: #C6A75E;
-    --success: #10b981;
-    --warning: #f59e0b;
-    --danger: #ef4444;
-    --info: #0ea5e9;
+    --primary-end: #14253F;
+    --accent: #D4AF6F;
+    --success: #16A34A;
+    --warning: #D97706;
+    --danger: #DC2626;
+    --info: #0284C7;
 
-    /* Legacy aliases */
+    /* Legacy aliases - Compatibilité */
     --primary-color: #1E3A5F;
     --secondary-color: #1E3A5F;
-    --success-color: #10b981;
-    --danger-color: #ef4444;
-    --warning-color: #f59e0b;
-    --info-color: #0ea5e9;
-    --dark-color: #1e293b;
-    --white: #ffffff;
+    --success-color: #16A34A;
+    --danger-color: #DC2626;
+    --warning-color: #D97706;
+    --info-color: #0284C7;
+    --dark-color: #1A202C;
+    --white: #FFFFFF;
     
-    --font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    --font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
     --border-radius: 8px;
-    --box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
-    --transition: all 0.3s ease;
+    --box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    --transition: all 0.25s ease;
 }
 
 /* === Reset et base === */
@@ -48,6 +49,32 @@ body {
     line-height: 1.6;
     color: var(--text-primary);
     background-color: var(--bg);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Amélioration de la typographie */
+h1, h2, h3, h4, h5, h6 {
+    color: var(--text-primary);
+    font-weight: 700;
+    line-height: 1.3;
+    margin-bottom: 0.5em;
+}
+
+p {
+    color: var(--text-primary);
+    margin-bottom: 1em;
+}
+
+a {
+    color: var(--primary);
+    text-decoration: none;
+    transition: var(--transition);
+}
+
+a:hover {
+    color: var(--primary-end);
+    text-decoration: none;
 }
 
 /* === Container === */

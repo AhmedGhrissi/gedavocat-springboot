@@ -3,62 +3,187 @@
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout}">
 <head>
-    <link rel="stylesheet" th:href="@{/css/pages/cases.css}">
     <title>Dossiers</title>
 </head>
 <body>
     <div layout:fragment="content">
-        <div class="container-fluid">
-            <!-- Messages -->
-            <div th:if="${message}" class="alert alert-success alert-dismissible fade show mt-3" role="alert">
-                <i class="fas fa-check-circle"></i> <span th:text="${message}"></span>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-            <div th:if="${error}" class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
-                <i class="fas fa-exclamation-circle"></i> <span th:text="${error}"></span>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
+        <!-- Messages -->
+        <div th:if="${message}" class="alert alert-success" style="margin-bottom: 1.5rem;">
+            <i class="fas fa-check-circle"></i> <span th:text="${message}"></span>
+        </div>
 
-            <!-- En-tête -->
-            <div class="hero-banner mb-4">
-                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
-                    <div style="position:relative;z-index:1">
-                        <h1 style="font-size:1.5rem;font-weight:800;letter-spacing:-0.025em;margin-bottom:4px;color:#fff">
-                            <i class="fas fa-folder-open me-2"></i>Dossiers
-                        </h1>
-                        <p style="font-size:0.875rem;margin:0;color:rgba(255,255,255,0.8)"
-                           th:text="${cases != null ? cases.size() + ' dossier(s)' : '0 dossier(s)'}">0 dossier(s)</p>
+        <!-- Page Header -->
+        <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+            <div>
+                <h1 class="page-title">
+                    <i class="fas fa-folder-open" style="color: var(--success); margin-right: 0.75rem;"></i>
+                    Mes dossiers
+                </h1>
+                <p class="page-subtitle" th:text="${cases != null ? cases.size() + ' dossier(s)' : '0 dossier'}">0 dossiers</p>
+            </div>
+            <div style="display: flex; gap: 0.75rem;">
+                <a th:href="@{/cases/new}" class="btn btn-primary">
+                    <i class="fas fa-folder-plus"></i>
+                    Nouveau dossier
+                </a>
+                <button class="btn btn-secondary" onclick="window.print()">
+                    <i class="fas fa-file-export"></i>
+                    Exporter
+                </button>
+            </div>
+        </div>
+
+        <!-- Stats Row -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+            <div class="card" style="cursor: pointer;" onclick="filterByStatus('')">
+                <div class="card-body" style="padding: 1.25rem; text-align: center;">
+                    <div style="font-size: 0.875rem; color: var(--gray-600); margin-bottom: 0.25rem;">Total</div>
+                    <div style="font-size: 1.75rem; font-weight: 700; color: var(--gray-900);" th:text="${cases != null ? cases.size() : 0}">0</div>
+                </div>
+            </div>
+            <div class="card" style="cursor: pointer;" onclick="filterByStatus('OPEN')">
+                <div class="card-body" style="padding: 1.25rem; text-align: center;">
+                    <div style="font-size: 0.875rem; color: var(--success); margin-bottom: 0.25rem;">
+                        <i class="fas fa-folder-open"></i> En cours
                     </div>
-                    <a th:href="@{/cases/new}" class="btn" style="background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.25);border-radius:var(--radius-md);font-weight:600;backdrop-filter:blur(8px)">
-                        <i class="fas fa-folder-plus me-1"></i> Nouveau dossier
+                    <div style="font-size: 1.75rem; font-weight: 700; color: var(--success);" 
+                         th:text="${openCount != null ? openCount : 0}">0</div>
+                </div>
+            </div>
+            <div class="card" style="cursor: pointer;" onclick="filterByStatus('CLOSED')">
+                <div class="card-body" style="padding: 1.25rem; text-align: center;">
+                    <div style="font-size: 0.875rem; color: var(--warning); margin-bottom: 0.25rem;">
+                        <i class="fas fa-folder"></i> Clôturés
+                    </div>
+                    <div style="font-size: 1.75rem; font-weight: 700; color: var(--warning);"
+                         th:text="${closedCount != null ? closedCount : 0}">0</div>
+                </div>
+            </div>
+            <div class="card" style="cursor: pointer;" onclick="filterByStatus('ARCHIVED')">
+                <div class="card-body" style="padding: 1.25rem; text-align: center;">
+                    <div style="font-size: 0.875rem; color: var(--gray-500); margin-bottom: 0.25rem;">
+                        <i class="fas fa-archive"></i> Archivés
+                    </div>
+                    <div style="font-size: 1.75rem; font-weight: 700; color: var(--gray-700);"
+                         th:text="${archivedCount != null ? archivedCount : 0}">0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search & Filters -->
+        <div class="card animate-fade-in" style="margin-bottom: 1.5rem;">
+            <div class="card-body" style="padding: 1.25rem;">
+                <div class="search-bar">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" class="search-input" placeholder="Rechercher un dossier..." 
+                           id="searchCases" onkeyup="filterCases()">
+                </div>
+            </div>
+        </div>
+
+        <!-- Cases List -->
+        <div class="card card-elevated animate-fade-in">
+            <div class="card-header">
+                <h3 style="font-size: 1.125rem; margin: 0;">
+                    <i class="fas fa-list" style="color: var(--success);"></i>
+                    Liste des dossiers
+                </h3>
+            </div>
+            <div class="card-body" style="padding: 0;">
+                <div th:if="${cases != null and !cases.empty}">
+                    <table class="table-modern" id="casesTable" data-search-results>
+                        <thead>
+                            <tr>
+                                <th style="width: 30%;"><i class="fas fa-folder"></i> Dossier</th>
+                                <th style="width: 20%;"><i class="fas fa-user"></i> Client</th>
+                                <th style="width: 15%;"><i class="fas fa-tag"></i> Statut</th>
+                                <th style="width: 15%;"><i class="fas fa-file-alt"></i> Documents</th>
+                                <th style="width: 10%;"><i class="fas fa-calendar"></i> Créé le</th>
+                                <th style="width: 10%;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="case : ${cases}" data-search-item th:attr="data-status=${case.status.name()}">
+                                <td>
+                                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                        <div style="width: 2.5rem; height: 2.5rem; border-radius: var(--radius-md); background: var(--success-light); display: flex; align-items: center; justify-content: center; color: var(--success);">
+                                            <i class="fas fa-briefcase"></i>
+                                        </div>
+                                        <div>
+                                            <a th:href="@{/cases/{id}(id=${case.id})}" 
+                                               style="font-weight: 600; color: var(--gray-900); text-decoration: none;"
+                                               th:text="${case.name}">Dossier</a>
+                                            <div style="font-size: 0.8125rem; color: var(--gray-600);" th:if="${case.reference}">
+                                                Réf: <span th:text="${case.reference}"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <a th:if="${case.client != null}" th:href="@{/clients/{id}(id=${case.client.id})}" 
+                                       style="color: var(--primary); text-decoration: none;" th:text="${case.client.name}">Client</a>
+                                    <span th:if="${case.client == null}" style="color: var(--gray-400);">-</span>
+                                </td>
+                                <td>
+                                    <span class="badge" 
+                                          th:classappend="${case.status.name() == 'OPEN' ? 'badge-success' : (case.status.name() == 'CLOSED' ? 'badge-warning' : 'badge-info')}"
+                                          th:text="${case.status.displayName}">Statut</span>
+                                </td>
+                                <td>
+                                    <span class="badge badge-info" th:if="${case.documents != null}" 
+                                          th:text="${case.documents.size()}">0</span>
+                                    <span class="badge badge-info" th:if="${case.documents == null}">0</span>
+                                </td>
+                                <td style="font-size: 0.875rem; color: var(--gray-600);" th:text="${#temporals.format(case.createdAt, 'dd/MM/yyyy')}">Date</td>
+                                <td>
+                                    <div style="display: flex; gap: 0.5rem;">
+                                        <a th:href="@{/cases/{id}(id=${case.id})}" class="btn btn-ghost btn-sm" data-tooltip="Voir">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a th:href="@{/cases/{id}/edit(id=${case.id})}" class="btn btn-ghost btn-sm" data-tooltip="Modifier">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div th:if="${cases == null or cases.empty}" class="empty-state">
+                    <i class="fas fa-folder-open empty-state-icon"></i>
+                    <h3 class="empty-state-title">Aucun dossier</h3>
+                    <p class="empty-state-message">Créez votre premier dossier</p>
+                    <a th:href="@{/cases/new}" class="btn btn-primary" style="margin-top: 1rem;">
+                        <i class="fas fa-folder-plus"></i> Créer un dossier
                     </a>
                 </div>
             </div>
+        </div>
 
-            <!-- Filtres par statut (boutons) + recherche -->
-            <div class="filter-card card mb-3 animate-fade-in-up">
-                <div class="card-body py-3">
-                    <div class="d-flex flex-wrap align-items-center gap-3">
-                        <!-- Boutons filtres statut -->
-                        <div class="btn-group" role="group">
-                            <a th:href="@{/cases}" 
-                               class="btn btn-sm btn-outline-primary"
-                               th:classappend="${selectedStatus == null ? 'active' : ''}">
-                                Tous
-                            </a>
-                            <a th:each="stat : ${statuses}" 
-                               th:href="@{/cases(status=${stat})}"
-                               class="btn btn-sm btn-outline-primary"
-                               th:classappend="${selectedStatus != null and selectedStatus == stat ? 'active' : ''}"
-                               th:text="${stat.displayName}">Statut</a>
-                        </div>
-                        <!-- Barre de recherche -->
-                        <form th:action="@{/cases}" method="get" class="d-flex gap-2 ms-auto" style="max-width:400px;flex:1">
-                            <input type="text" name="search" th:value="${search}" 
-                                   class="form-control form-control-sm" placeholder="Rechercher un dossier...">
-                            <button type="submit" class="btn btn-sm btn-primary">
-                                <i class="fas fa-search"></i>
-                            </button>
+        <script>
+        function filterCases() {
+            const input = document.getElementById('searchCases');
+            const filter = input.value.toLowerCase();
+            const table = document.getElementById('casesTable');
+            const rows = table.getElementsByTagName('tr');
+            
+            for (let i = 1; i < rows.length; i++) {
+                const row = rows[i];
+                const text = row.textContent || row.innerText;
+                row.style.display = text.toLowerCase().indexOf(filter) > -1 ? '' : 'none';
+            }
+        }
+
+        function filterByStatus(status) {
+            const url = new URL(window.location);
+            if (status) {
+                url.searchParams.set('status', status);
+            } else {
+                url.searchParams.delete('status');
+            }
+            window.location.href = url.toString();
+        }
+        </script>
                         </form>
                     </div>
                 </div>

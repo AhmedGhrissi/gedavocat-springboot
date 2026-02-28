@@ -48,12 +48,28 @@ public class Case {
     @Column(nullable = false, length = 255)
     private String name;
     
+    @Column(length = 100)
+    private String reference;
+    
+    @Enumerated(EnumType.STRING)
+    @Column(name = "case_type", length = 50)
+    private CaseType caseType;
+    
     @Column(columnDefinition = "TEXT")
     private String description;
     
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private CaseStatus status = CaseStatus.OPEN;
+    
+    @Column(name = "opened_date")
+    private LocalDateTime openedDate;
+    
+    @Column(name = "closed_date")
+    private LocalDateTime closedDate;
+    
+    @Column(name = "deadline")
+    private LocalDateTime deadline;
     
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -88,6 +104,30 @@ public class Case {
         }
     }
     
+    // Énumération des types de dossiers juridiques
+    public enum CaseType {
+        CIVIL("Droit civil"),
+        PENAL("Droit pénal"),
+        COMMERCIAL("Droit commercial"),
+        TRAVAIL("Droit du travail"),
+        FAMILLE("Droit de la famille"),
+        IMMOBILIER("Droit immobilier"),
+        ADMINISTRATIF("Droit administratif"),
+        FISCAL("Droit fiscal"),
+        SOCIAL("Droit social"),
+        AUTRE("Autre");
+        
+        private final String displayName;
+        
+        CaseType(String displayName) {
+            this.displayName = displayName;
+        }
+        
+        public String getDisplayName() {
+            return displayName;
+        }
+    }
+    
     // Méthodes utilitaires
     public boolean isOpen() {
         return status == CaseStatus.OPEN;
@@ -103,6 +143,14 @@ public class Case {
     
     public boolean isArchived() {
         return status == CaseStatus.ARCHIVED;
+    }
+    
+    /**
+     * Retourne le nombre de documents associés à ce dossier
+     * @return Le nombre de documents
+     */
+    public Integer getDocumentCount() {
+        return documents != null ? documents.size() : 0;
     }
     
     @PrePersist

@@ -22,13 +22,27 @@
         };
     </script>
 
-    <!-- Bootstrap & Font Awesome from WebJars -->
-    <link th:href="@{/webjars/bootstrap/5.3.0/css/bootstrap.min.css}" rel="stylesheet">
+    <!-- Font Awesome -->
     <link th:href="@{/webjars/font-awesome/6.4.0/css/all.min.css}" rel="stylesheet">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
-    <!-- Design System -->
+    <!-- NOUVEAU Design System Moderne 2026 -->
     <link th:href="@{/css/design-system.css}" rel="stylesheet">
-    <link th:href="@{/css/app.css}" rel="stylesheet">
+    <link th:href="@{/css/components.css}" rel="stylesheet">
+    
+    <!-- Anciens CSS (si nécessaire pour compatibilité) -->
+    <link th:href="@{/css/professional-theme.css}" rel="stylesheet" onerror="this.remove()">
+    <link th:href="@{/css/cabinet-avocat-theme.css}" rel="stylesheet" onerror="this.remove()">
+    <link th:href="@{/css/app.css}" rel="stylesheet" onerror="this.remove()">
+    <link th:href="@{/css/global-unified-theme.css}" rel="stylesheet" onerror="this.remove()">
+    
+    <!-- CORRECTION FINALE - À charger EN DERNIER pour forcer les styles -->
+    <link th:href="@{/css/fix-override.css}" rel="stylesheet">
+    
+    <!-- Theme Management Script - Load early to prevent flash -->
+    <script th:src="@{/js/theme.js}"></script>
 
     <!-- Fragment pour CSS additionnel des pages enfants -->
     <th:block layout:fragment="extra-css"></th:block>
@@ -1227,6 +1241,9 @@
         }
     })();
     </script>
+
+    <!-- NOUVEAU JavaScript Moderne 2026 -->
+    <script th:src="@{/js/app.js}"></script>
 
 </body>
 </html>

@@ -1,0 +1,26 @@
+=========================================  
+   MODERNISATION COMPLETE - 28 FEV 2026  
+=========================================  
+  
+FICHIERS CSS/JS COPIES :  
+[OK] design-system.css - 12 KB  
+[OK] components.css - 10 KB  
+[OK] app.js - 11 KB  
+[OK] fix-override.css - Corrections finales  
+  
+PAGES MODERNISEES :  
+[OK] layout.html - Imports CSS/JS corriges  
+[OK] subscription/pricing.html - Textes visibles  
+[OK] clients/list.html - Recherche temps reel  
+[OK] clients/view.html - Deja moderne  
+[OK] cases/list.html - Filtres et stats  
+[OK] cases/view.html - Onglets et timeline  
+  
+TOTAL : 4 fichiers CSS/JS + 6 pages HTML  
+  
+POUR TESTER :  
+1. Redemarrer le serveur Spring Boot  
+2. Vider le cache : Ctrl+Shift+R  
+3. Tester : http://localhost:8092/dashboard  
+  
+=========================================  

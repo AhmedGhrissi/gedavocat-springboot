@@ -1,6 +1,7 @@
 /* ══════════════════════════════════════════════════════════
    PRICING / SUBSCRIPTION — Style Professionnel Cabinet d'Avocat
    Design moderne avec couleurs définies explicitement
+   Tous les textes sont lisibles avec excellent contraste
 ══════════════════════════════════════════════════════════ */
 
 /* ── Hero ── */
@@ -76,19 +77,19 @@
     border-radius: 8px;
     cursor: pointer;
     font-weight: 600;
-    color: #3A4556;
+    color: #3A4556 !important;
     transition: all 0.25s ease;
     font-family: inherit;
     font-size: 0.875rem;
 }
 .period-btn.active {
     background: #FFFFFF;
-    color: #1E3A5F;
+    color: #1E3A5F !important;
     box-shadow: 0 2px 6px rgba(0,0,0,0.08);
 }
 .save-badge {
     background: #16A34A;
-    color: #fff;
+    color: #fff !important;
     padding: 2px 8px;
     border-radius: 9999px;
     font-size: 0.6875rem;
@@ -128,7 +129,7 @@
     left: 50%;
     transform: translateX(-50%);
     background: linear-gradient(135deg, #1E3A5F, #14253F);
-    color: #fff;
+    color: #fff !important;
     padding: 0.5rem 1.5rem;
     border-radius: 9999px;
     font-size: 0.8125rem;
@@ -190,12 +191,15 @@
 .feature-item span {
     color: #1A202C !important;
 }
+.feature-item span strong {
+    color: #1A202C !important;
+}
 .feature-icon {
     width: 24px;
     height: 24px;
     border-radius: 50%;
     background: rgba(16,185,129,0.1);
-    color: #059669;
+    color: #059669 !important;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -204,7 +208,7 @@
 }
 .feature-icon.disabled {
     background: #EDF0F3;
-    color: #6B7280;
+    color: #6B7280 !important;
 }
 
 /* ── CTA Buttons ── */
@@ -254,6 +258,9 @@
     background: #1E3A5F;
     color: #fff !important;
 }
+.cta-plan {
+    margin-top: auto;
+}
 
 /* ── Payment Methods ── */
 .payment-methods {
@@ -292,7 +299,7 @@
 .method-icon { 
     font-size: 2rem; 
     margin-bottom: 0.5rem;
-    color: #1E3A5F;
+    color: #1E3A5F !important;
 }
 .method-name {
     font-size: 0.8125rem;
@@ -311,232 +318,140 @@
 }
 .trust-section h3 {
     color: #1A202C !important;
+    margin-bottom: 1.5rem;
 }
 .trust-badges {
-    font-weight: 800;
-    background: linear-gradient(135deg, var(--brand-500), var(--brand-700));
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    display: inline-block;
-    letter-spacing: -0.03em;
-}
-.price-period {
-    color: var(--text-secondary);
-    font-size: 1rem;
-    font-weight: 500;
-}
-.old-price {
-    text-decoration: line-through;
-    color: var(--text-tertiary);
-    font-size: 1.25rem;
-    margin-left: 0.5rem;
-}
-
-/* ── Features list ── */
-.features-list {
-    list-style: none;
-    padding: 0;
-    margin: 0 0 2rem 0;
-}
-.feature-item {
     display: flex;
-    align-items: flex-start;
-    gap: 0.75rem;
-    margin-bottom: 1rem;
-    font-size: 0.9375rem;
-    color: var(--text-secondary);
-}
-.feature-icon {
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    background: rgba(16,185,129,0.1);
-    color: #059669;
-    display: flex;
+    gap: 1.5rem;
     align-items: center;
     justify-content: center;
-    flex-shrink: 0;
-    font-size: 0.75rem;
-}
-.feature-icon.disabled {
-    background: var(--bg-tertiary);
-    color: var(--text-tertiary);
-}
-
-/* ── CTA Buttons ── */
-.cta-button {
-    width: 100%;
-    padding: 1rem;
-    border-radius: var(--radius-lg);
-    border: none;
-    font-size: 1rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: var(--transition-base);
-    text-decoration: none;
-    display: block;
-    text-align: center;
-    font-family: inherit;
-    position: relative;
-    overflow: hidden;
-}
-.cta-primary {
-    background: linear-gradient(135deg, var(--brand-500), var(--brand-700));
-    color: #fff;
-    box-shadow: 0 4px 12px rgba(30,58,95,0.3);
-}
-.cta-primary::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
-    transition: left 0.5s;
-}
-.cta-primary:hover::before { left: 100%; }
-.cta-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(30,58,95,0.4);
-    color: #fff;
-}
-.cta-secondary {
-    background: var(--bg-secondary);
-    color: var(--brand-600);
-    border: 2px solid var(--brand-500);
-}
-.cta-secondary:hover {
-    background: var(--brand-500);
-    color: #fff;
-}
-
-/* ── Payment Methods ── */
-.payment-methods {
-    background: var(--surface);
-    border-radius: var(--radius-2xl);
-    padding: 2.5rem;
-    border: 1px solid var(--border-default);
-    max-width: 800px;
-    margin: 0 auto 3rem;
-    box-shadow: var(--shadow-xs);
-}
-.payment-methods h3 {
-    text-align: center;
-    margin-bottom: 2rem;
-    color: var(--text-primary);
-    font-weight: 700;
-}
-.methods-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: 1rem;
-}
-.method-card {
-    background: var(--bg-secondary);
-    border-radius: var(--radius-lg);
-    padding: 1.25rem;
-    text-align: center;
-    border: 1px solid var(--border-default);
-    transition: var(--transition-base);
-}
-.method-card:hover {
-    border-color: var(--brand-400);
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-sm);
-}
-.method-icon { font-size: 2rem; margin-bottom: 0.5rem; }
-.method-name {
-    font-size: 0.8125rem;
-    font-weight: 600;
-    color: var(--text-secondary);
-}
-
-/* ── Trust Badges ── */
-.trust-section {
-    text-align: center;
-    padding: 2.5rem 1.25rem;
-    background: var(--bg-secondary);
-    border-radius: var(--radius-xl);
-    margin-bottom: 3rem;
-    border: 1px solid var(--border-default);
-}
-.trust-badges {
-    display: flex;
-    justify-content: center;
-    gap: 2.5rem;
     flex-wrap: wrap;
-    margin-top: 1.5rem;
 }
 .trust-badge {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    color: var(--text-secondary);
+    gap: 0.5rem;
+    color: #3A4556 !important;
     font-size: 0.875rem;
 }
 .trust-badge i {
-    font-size: 1.5rem;
-    color: var(--success);
+    color: #16A34A !important;
 }
 
-/* ── FAQ ── */
-.faq-section { max-width: 800px; margin: 0 auto; }
+/* ── FAQ Section ── */
+.faq-section {
+    max-width: 800px;
+    margin: 0 auto 3rem;
+}
+.faq-section h2 {
+    text-align: center;
+    margin-bottom: 2.5rem;
+    color: #1A202C !important;
+    font-weight: 700;
+}
 .faq-item {
-    background: var(--surface);
-    border-radius: var(--radius-lg);
+    background: #FFFFFF;
+    border-radius: 12px;
     padding: 1.5rem;
     margin-bottom: 1rem;
-    border: 1px solid var(--border-default);
-    box-shadow: var(--shadow-xs);
-    transition: var(--transition-base);
-}
-.faq-item:hover {
-    border-color: var(--border-light);
-    box-shadow: var(--shadow-sm);
+    border: 1px solid #DEE2E6;
 }
 .faq-question {
     font-weight: 700;
-    color: var(--text-primary);
+    color: #1A202C !important;
     margin-bottom: 0.5rem;
+    font-size: 1rem;
 }
 .faq-answer {
-    color: var(--text-secondary);
+    color: #3A4556 !important;
     line-height: 1.7;
     font-size: 0.9375rem;
 }
 
-/* ══════════════════════════════════════════════════════════
-   DARK MODE
-══════════════════════════════════════════════════════════ */
-.dark .pricing-card { border-color: var(--border-default); }
-.dark .pricing-card:hover {
-    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+/* ── Footer CTA ── */
+.footer-cta {
+    background: linear-gradient(135deg, #1E3A5F, #14253F);
+    border-radius: 20px;
+    padding: 3rem 2rem;
+    text-align: center;
+    color: #fff !important;
+    margin-top: 3rem;
 }
-.dark .pricing-card.featured {
-    border-color: var(--brand-500);
-    background: linear-gradient(135deg, rgba(30,58,95,0.08), rgba(198,167,94,0.05));
+.footer-cta h2 {
+    font-size: 1.875rem;
+    font-weight: 800;
+    margin-bottom: 1rem;
+    color: #FFFFFF !important;
 }
-.dark .period-btn.active {
-    background: var(--surface);
-    color: var(--brand-400);
+.footer-cta p {
+    font-size: 1.125rem;
+    opacity: 0.9;
+    margin-bottom: 2rem;
+    color: rgba(255,255,255,0.95) !important;
 }
-.dark .feature-icon {
-    background: rgba(16,185,129,0.15);
-    color: #34d399;
+.footer-cta .cta-button {
+    max-width: 300px;
+    margin: 0 auto;
 }
-.dark .method-card:hover { border-color: var(--brand-400); }
-.dark .cta-secondary:hover { background: var(--brand-600); }
 
-/* ══════════════════════════════════════════════════════════
-   RESPONSIVE
-══════════════════════════════════════════════════════════ */
+/* ── Responsive ── */
 @media (max-width: 768px) {
-    .pricing-hero { padding: 2.5rem 1.5rem; border-radius: var(--radius-xl); }
-    .pricing-grid { grid-template-columns: 1fr; gap: 1.5rem; }
-    .pricing-card { padding: 2rem 1.5rem; }
-    .payment-methods { padding: 1.5rem; }
-    .trust-badges { gap: 1.5rem; }
-    .price { font-size: 2.5rem; }
+    .pricing-hero {
+        padding: 2.5rem 1.5rem;
+    }
+    .pricing-hero h1 {
+        font-size: 1.75rem;
+    }
+    .pricing-topbar {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+    .pricing-topbar-links {
+        width: 100%;
+        justify-content: center;
+    }
+    .pricing-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    .period-toggle {
+        max-width: 100%;
+    }
+}
+
+/* ── Animation ── */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-in-up {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+/* ── Additional Utilities ── */
+.text-center { text-align: center; }
+.mt-3 { margin-top: 1rem; }
+.mt-4 { margin-top: 1.5rem; }
+.mb-2 { margin-bottom: 0.5rem; }
+.mb-3 { margin-bottom: 1rem; }
+.mb-4 { margin-bottom: 1.5rem; }
+.page-header h1 {
+    color: #FFFFFF !important;
+}
+.page-header p {
+    color: rgba(255,255,255,0.95) !important;
+}
+
+/* S'assurer que tout le texte est lisible */
+* {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }

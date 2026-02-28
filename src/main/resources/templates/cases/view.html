@@ -4,81 +4,278 @@
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
       layout:decorate="~{layout}">
 <head>
-    <link rel="stylesheet" th:href="@{/css/pages/cases.css}">
     <title th:text="'Dossier — ' + ${case.name}">Détails dossier</title>
 </head>
 <body>
     <div layout:fragment="content">
-        <div class="container-fluid">
-            <!-- Messages -->
-            <div th:if="${message}" class="alert alert-success alert-dismissible fade show mt-3" role="alert">
-                <i class="fas fa-check-circle"></i> <span th:text="${message}"></span>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-            <div th:if="${error}" class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
-                <i class="fas fa-exclamation-circle"></i> <span th:text="${error}"></span>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
+        <!-- Breadcrumb -->
+        <nav class="breadcrumb" style="margin-bottom: 1.5rem;">
+            <a th:href="@{/dashboard}" class="breadcrumb-item">
+                <i class="fas fa-home"></i> Accueil
+            </a>
+            <span class="breadcrumb-separator">/</span>
+            <a th:href="@{/cases}" class="breadcrumb-item">Dossiers</a>
+            <span class="breadcrumb-separator">/</span>
+            <span class="breadcrumb-item active" th:text="${case.name}">Dossier</span>
+        </nav>
 
-            <!-- En-tête du dossier -->
-            <div class="page-header d-flex flex-wrap justify-content-between align-items-center mt-3 mb-4 gap-2">
-                <div class="animate-fade-in-up">
-                    <div class="d-flex align-items-center gap-2 mb-1">
-                        <a th:href="@{/cases}" class="text-decoration-none" style="font-size:0.8125rem;color:var(--text-tertiary);transition:var(--transition-fast)">
-                            <i class="fas fa-arrow-left"></i> Dossiers
-                        </a>
-                        <span style="font-size:0.8125rem;color:var(--text-tertiary)">/</span>
-                    </div>
-                    <h1 style="font-size:1.5rem;font-weight:700;margin:0;color:var(--text-primary)">
-                        <i class="fas fa-folder-open me-1" style="color:var(--brand-500)"></i>
-                        <span th:text="${case.name}">Dossier</span>
-                    </h1>
-                </div>
-                <div class="d-flex flex-wrap gap-2" sec:authorize="hasRole('LAWYER')">
-                    <a th:href="@{/cases/{id}/edit(id=${case.id})}" class="btn btn-sm btn-warning">
-                        <i class="fas fa-edit"></i> Modifier
-                    </a>
-                    <form th:if="${case.status.name() == 'OPEN' or case.status.name() == 'IN_PROGRESS'}"
-                          th:action="@{/cases/{id}/close(id=${case.id})}" method="post" style="display:inline">
-                        <button type="submit" class="btn btn-sm btn-success">
-                            <i class="fas fa-check"></i> Fermer
-                        </button>
-                    </form>
-                    <form th:if="${case.status.name() == 'CLOSED'}"
-                          th:action="@{/cases/{id}/archive(id=${case.id})}" method="post" style="display:inline">
-                        <button type="submit" class="btn btn-sm btn-secondary">
-                            <i class="fas fa-archive"></i> Archiver
-                        </button>
-                    </form>
-                    <form th:action="@{/cases/{id}/delete(id=${case.id})}" method="post" style="display:inline">
-                        <button type="submit" class="btn btn-sm btn-outline-danger"
-                                data-confirm="Êtes-vous sûr de vouloir supprimer ce dossier ?" data-confirm-type="danger">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </form>
-                </div>
-            </div>
+        <!-- Messages -->
+        <div th:if="${message}" class="alert alert-success" style="margin-bottom: 1.5rem;">
+            <i class="fas fa-check-circle"></i> <span th:text="${message}"></span>
+        </div>
+        <div th:if="${error}" class="alert alert-danger" style="margin-bottom: 1.5rem;">
+            <i class="fas fa-exclamation-circle"></i> <span th:text="${error}"></span>
+        </div>
 
-            <div class="row">
-                <!-- Colonne principale -->
-                <div class="col-lg-8">
-                    <!-- Informations du dossier -->
-                    <div class="card mb-3">
-                        <div class="card-header d-flex justify-content-between align-items-center">
-                            <h6 class="mb-0"><i class="fas fa-info-circle me-1"></i> Informations</h6>
-                            <span class="case-status"
-                                  th:classappend="${case.status.name() == 'OPEN' ? 'open' : (case.status.name() == 'IN_PROGRESS' ? 'in-progress' : (case.status.name() == 'CLOSED' ? 'closed' : 'archived'))}"
-                                  th:text="${case.status.displayName}">Statut</span>
+        <!-- Header Card -->
+        <div class="card card-elevated animate-fade-in" style="margin-bottom: 2rem;">
+            <div class="card-body" style="padding: 2rem;">
+                <div style="display: flex; justify-content: space-between; align-items: start; gap: 2rem;">
+                    <div style="flex: 1;">
+                        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                            <div style="width: 3.5rem; height: 3.5rem; border-radius: var(--radius-lg); background: linear-gradient(135deg, var(--success) 0%, #059669 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 1.5rem;">
+                                <i class="fas fa-briefcase"></i>
+                            </div>
+                            <div>
+                                <h1 style="font-size: 2rem; margin: 0; color: var(--gray-900);" th:text="${case.name}">Nom du dossier</h1>
+                                <p style="margin: 0; color: var(--gray-600); font-size: 0.9375rem;">
+                                    <span th:if="${case.reference}" th:text="'Réf: ' + ${case.reference}"></span>
+                                </p>
+                            </div>
                         </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <p class="mb-2"><strong>Client :</strong>
-                                        <a th:if="${case.client != null}" th:href="@{/clients/{id}(id=${case.client.id})}"
-                                           th:text="${case.client.name}" class="text-decoration-none">Client</a>
-                                        <span th:if="${case.client == null}" class="text-muted">Aucun</span>
-                                    </p>
-                                    <p class="mb-2"><strong>Créé le :</strong>
+                        <div style="display: flex; gap: 1.5rem; flex-wrap: wrap; align-items: center;">
+                            <a th:if="${case.client != null}" th:href="@{/clients/{id}(id=${case.client.id})}" 
+                               style="display: flex; align-items: center; gap: 0.5rem; text-decoration: none; color: var(--primary);">
+                                <i class="fas fa-user"></i>
+                                <span th:text="${case.client.name}">Client</span>
+                            </a>
+                            <span th:if="${case.status}" class="badge" 
+                                  th:classappend="${case.status.name() == 'OPEN' ? 'badge-success' : (case.status.name() == 'CLOSED' ? 'badge-warning' : 'badge-info')}"
+                                  th:text="${case.status.displayName}">Statut</span>
+                            <span style="color: var(--gray-600); font-size: 0.875rem;">
+                                <i class="fas fa-calendar"></i>
+                                <span th:text="'Créé le ' + ${#temporals.format(case.createdAt, 'dd/MM/yyyy')}"></span>
+                            </span>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 0.75rem;" sec:authorize="hasRole('LAWYER')">
+                        <a th:href="@{/cases/{id}/edit(id=${case.id})}" class="btn btn-primary">
+                            <i class="fas fa-edit"></i> Modifier
+                        </a>
+                        <div class="dropdown">
+                            <button class="btn btn-outline" data-dropdown-trigger>
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                            <div class="dropdown-menu">
+                                <form th:if="${case.status.name() == 'OPEN'}" th:action="@{/cases/{id}/close(id=${case.id})}" method="post">
+                                    <button type="submit" class="dropdown-item">
+                                        <i class="fas fa-check"></i> Fermer le dossier
+                                    </button>
+                                </form>
+                                <form th:if="${case.status.name() == 'CLOSED'}" th:action="@{/cases/{id}/archive(id=${case.id})}" method="post">
+                                    <button type="submit" class="dropdown-item">
+                                        <i class="fas fa-archive"></i> Archiver
+                                    </button>
+                                </form>
+                                <div class="dropdown-divider"></div>
+                                <form th:action="@{/cases/{id}/delete(id=${case.id})}" method="post">
+                                    <button type="submit" class="dropdown-item" style="color: var(--danger);" 
+                                            onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce dossier ?')">
+                                        <i class="fas fa-trash"></i> Supprimer
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Row -->
+        <div class="kpi-grid" style="margin-bottom: 2rem;">
+            <div class="card stat-card">
+                <div class="card-body">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <span class="stat-label">Documents</span>
+                            <h2 class="stat-value" th:text="${case.documents != null ? case.documents.size() : 0}">0</h2>
+                        </div>
+                        <div class="stat-icon bg-info-soft">
+                            <i class="fas fa-file-alt fa-2x" style="color: var(--info);"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card stat-card">
+                <div class="card-body">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <span class="stat-label">Rendez-vous</span>
+                            <h2 class="stat-value" th:text="${case.appointments != null ? case.appointments.size() : 0}">0</h2>
+                        </div>
+                        <div class="stat-icon bg-warning-soft">
+                            <i class="fas fa-calendar fa-2x" style="color: var(--warning);"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card stat-card">
+                <div class="card-body">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <span class="stat-label">Signatures</span>
+                            <h2 class="stat-value">0</h2>
+                        </div>
+                        <div class="stat-icon bg-success-soft">
+                            <i class="fas fa-signature fa-2x" style="color: var(--success);"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card stat-card">
+                <div class="card-body">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <span class="stat-label">Collaborateurs</span>
+                            <h2 class="stat-value" th:text="${case.collaborators != null ? case.collaborators.size() : 0}">0</h2>
+                        </div>
+                        <div class="stat-icon bg-primary-soft">
+                            <i class="fas fa-users fa-2x" style="color: var(--primary);"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs" style="margin-bottom: 0;">
+            <a href="#infos" class="tab-item active" onclick="switchTab(event, 'infos')">
+                <i class="fas fa-info-circle"></i> Informations
+            </a>
+            <a href="#documents" class="tab-item" onclick="switchTab(event, 'documents')">
+                <i class="fas fa-file-alt"></i> Documents (<span th:text="${case.documents != null ? case.documents.size() : 0}">0</span>)
+            </a>
+            <a href="#appointments" class="tab-item" onclick="switchTab(event, 'appointments')">
+                <i class="fas fa-calendar"></i> Rendez-vous
+            </a>
+            <a href="#timeline" class="tab-item" onclick="switchTab(event, 'timeline')">
+                <i class="fas fa-history"></i> Historique
+            </a>
+        </div>
+
+        <!-- Tab Content: Informations -->
+        <div id="infos" class="tab-content active">
+            <div class="card">
+                <div class="card-header">
+                    <h3 style="font-size: 1.125rem; margin: 0;">
+                        <i class="fas fa-info-circle" style="color: var(--primary);"></i>
+                        Détails du dossier
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <table style="width: 100%;">
+                        <tr style="border-bottom: 1px solid var(--gray-200);">
+                            <td style="padding: 1rem 0; font-weight: 600; color: var(--gray-700); width: 200px;">
+                                <i class="fas fa-user" style="margin-right: 0.5rem; color: var(--gray-500);"></i>
+                                Client
+                            </td>
+                            <td style="padding: 1rem 0;">
+                                <a th:if="${case.client != null}" th:href="@{/clients/{id}(id=${case.client.id})}" 
+                                   th:text="${case.client.name}" style="color: var(--primary); text-decoration: none;"></a>
+                                <span th:if="${case.client == null}" style="color: var(--gray-400);">Non assigné</span>
+                            </td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid var(--gray-200);" th:if="${case.description}">
+                            <td style="padding: 1rem 0; font-weight: 600; color: var(--gray-700);">
+                                <i class="fas fa-align-left" style="margin-right: 0.5rem; color: var(--gray-500);"></i>
+                                Description
+                            </td>
+                            <td style="padding: 1rem 0;">
+                                <div style="background: var(--gray-50); padding: 1rem; border-radius: var(--radius-md); border-left: 3px solid var(--primary);" th:text="${case.description}"></div>
+                            </td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid var(--gray-200);">
+                            <td style="padding: 1rem 0; font-weight: 600; color: var(--gray-700);">
+                                <i class="fas fa-calendar-plus" style="margin-right: 0.5rem; color: var(--gray-500);"></i>
+                                Date de création
+                            </td>
+                            <td style="padding: 1rem 0;" th:text="${#temporals.format(case.createdAt, 'dd/MM/yyyy HH:mm')}"></td>
+                        </tr>
+                        <tr th:if="${case.updatedAt}">
+                            <td style="padding: 1rem 0; font-weight: 600; color: var(--gray-700);">
+                                <i class="fas fa-sync" style="margin-right: 0.5rem; color: var(--gray-500);"></i>
+                                Dernière modification
+                            </td>
+                            <td style="padding: 1rem 0;" th:text="${#temporals.format(case.updatedAt, 'dd/MM/yyyy HH:mm')}"></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Content: Documents -->
+        <div id="documents" class="tab-content" style="display: none;">
+            <div class="card">
+                <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                    <h3 style="font-size: 1.125rem; margin: 0;">
+                        <i class="fas fa-file-alt" style="color: var(--info);"></i>
+                        Documents
+                    </h3>
+                    <a th:href="@{/documents/upload?caseId={id}(id=${case.id})}" class="btn btn-primary btn-sm" sec:authorize="hasRole('LAWYER')">
+                        <i class="fas fa-cloud-upload-alt"></i> Upload
+                    </a>
+                </div>
+                <div class="card-body" style="padding: 0;">
+                    <div th:if="${case.documents != null and !case.documents.empty}">
+                        <table class="table-modern">
+                            <thead>
+                                <tr>
+                                    <th><i class="fas fa-file"></i> Nom</th>
+                                    <th><i class="fas fa-calendar"></i> Date</th>
+                                    <th><i class="fas fa-user"></i> Ajouté par</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="doc : ${case.documents}">
+                                    <td>
+                                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                            <i class="fas fa-file-pdf" style="color: var(--danger); font-size: 1.5rem;"></i>
+                                            <span th:text="${doc.fileName}" style="font-weight: 500;"></span>
+                                        </div>
+                                    </td>
+                                    <td th:text="${#temporals.format(doc.uploadedAt, 'dd/MM/yyyy')}"></td>
+                                    <td th:text="${doc.uploadedBy != null ? doc.uploadedBy.firstName + ' ' + doc.uploadedBy.lastName : 'Inconnu'}"></td>
+                                    <td>
+                                        <a th:href="@{/documents/{id}/download(id=${doc.id})}" class="btn btn-ghost btn-sm" data-tooltip="Télécharger">
+                                            <i class="fas fa-download"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div th:if="${case.documents == null or case.documents.empty}" class="empty-state">
+                        <i class="fas fa-file-alt empty-state-icon"></i>
+                        <h3 class="empty-state-title">Aucun document</h3>
+                        <p class="empty-state-message">Aucun document n'a été ajouté à ce dossier</p>
+                        <a th:href="@{/documents/upload?caseId={id}(id=${case.id})}" class="btn btn-primary" sec:authorize="hasRole('LAWYER')">
+                            <i class="fas fa-cloud-upload-alt"></i> Ajouter un document
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+        function switchTab(event, tabId) {
+            event.preventDefault();
+            document.querySelectorAll('.tab-item').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.style.display = 'none');
+            event.target.closest('.tab-item').classList.add('active');
+            document.getElementById(tabId).style.display = 'block';
+        }
+        </script>
                                         <span th:text="${#temporals.format(case.createdAt, 'dd/MM/yyyy à HH:mm')}">Date</span>
                                     </p>
                                 </div>
