@@ -10,32 +10,46 @@
     <div layout:fragment="content">
         <div class="container-fluid">
             <!-- En-tête -->
-            <div class="documents-header page-header">
-                <h1 class="animate-fade-in-up"><i class="fas fa-file-alt"></i> Tous mes documents</h1>
-                <p style="font-size: 16px; opacity: 0.95;">Vue d'ensemble de vos documents par dossier</p>
-                <div class="mt-3">
-                    <button class="btn btn-light btn-lg" data-bs-toggle="modal" data-bs-target="#selectCaseModal">
-                        <i class="fas fa-plus"></i> Ajouter un document
-                    </button>
+            <div class="page-header mb-4">
+                <div>
+                    <h1 class="page-title">
+                        <i class="fas fa-file-alt"></i> Tous mes documents
+                    </h1>
+                    <p class="page-subtitle">Vue d'ensemble de vos documents par dossier</p>
                 </div>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#selectCaseModal">
+                    <i class="fas fa-plus"></i> Ajouter un document
+                </button>
             </div>
 
             <!-- Statistiques -->
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <i class="fas fa-file" style="color: var(--brand-500);"></i>
-                    <h3 th:text="${documents != null ? documents.size() : 0}">0</h3>
-                    <p>Documents totaux</p>
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <div class="stat-card">
+                        <div class="stat-icon blue">
+                            <i class="fas fa-file"></i>
+                        </div>
+                        <div class="stat-value" th:text="${documents != null ? documents.size() : 0}">0</div>
+                        <div class="stat-label">Documents totaux</div>
+                    </div>
                 </div>
-                <div class="stat-card">
-                    <i class="fas fa-folder" style="color: var(--success);"></i>
-                    <h3 th:text="${documents != null ? #lists.size(#sets.toSet(documents.![caseEntity.id])) : 0}">0</h3>
-                    <p>Dossiers avec documents</p>
+                <div class="col-md-4">
+                    <div class="stat-card">
+                        <div class="stat-icon green">
+                            <i class="fas fa-folder"></i>
+                        </div>
+                        <div class="stat-value" th:text="${documents != null ? #lists.size(#sets.toSet(documents.![caseEntity.id])) : 0}">0</div>
+                        <div class="stat-label">Dossiers avec documents</div>
+                    </div>
                 </div>
-                <div class="stat-card">
-                    <i class="fas fa-clock" style="color: var(--warning);"></i>
-                    <h3 th:text="${documents != null and !documents.empty ? #temporals.format(documents[0].createdAt, 'dd/MM') : '-'}">-</h3>
-                    <p>Dernier ajout</p>
+                <div class="col-md-4">
+                    <div class="stat-card">
+                        <div class="stat-icon orange">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stat-value" th:text="${documents != null and !documents.empty ? #temporals.format(documents[0].createdAt, 'dd/MM') : '-'}">-</div>
+                        <div class="stat-label">Dernier ajout</div>
+                    </div>
                 </div>
             </div>
 

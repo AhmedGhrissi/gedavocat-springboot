@@ -10,18 +10,18 @@
         <!-- En-tête -->
         <div class="hero-banner mb-4">
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
-                <div style="position:relative;z-index:1">
-                    <h1 style="font-size:1.5rem;font-weight:800;letter-spacing:-0.025em;margin-bottom:4px;color:#fff">
-                        <i class="fas fa-file-invoice-dollar me-2"></i>Facturation
+                <div>
+                    <h1>
+                        <i class="fas fa-file-invoice-dollar"></i> Facturation
                     </h1>
-                    <p style="font-size:0.875rem;margin:0;color:rgba(255,255,255,0.8)">Gérez vos factures clients</p>
+                    <p>Gérez vos factures clients</p>
                 </div>
                 <div class="d-flex gap-2 flex-wrap">
-                    <button type="button" class="btn" data-bs-toggle="modal" data-bs-target="#importModal" style="background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:var(--radius-md);backdrop-filter:blur(8px)">
-                        <i class="fas fa-file-import me-1"></i> Importer une facture
+                    <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#importModal">
+                        <i class="fas fa-file-import"></i> Importer une facture
                     </button>
-                    <a href="/invoices/new" class="btn" style="background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.3);border-radius:var(--radius-md);font-weight:600;backdrop-filter:blur(8px)">
-                        <i class="fas fa-plus me-1"></i> Nouvelle facture
+                    <a href="/invoices/new" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Nouvelle facture
                     </a>
                 </div>
             </div>
@@ -38,68 +38,44 @@
         </div>
 
         <!-- Statistiques -->
-        <div class="row mb-4">
+        <div class="row g-3 mb-4">
             <div class="col-md-3">
-                <div class="card">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <p class="text-muted mb-1">Total facturé</p>
-                                <h3 class="mb-0" th:text="${totalAmount != null ? #numbers.formatDecimal(totalAmount, 0, 2) + ' €' : '0,00 €'}">0,00 €</h3>
-                            </div>
-                            <div class="text-primary">
-                                <i class="fas fa-euro-sign fa-2x"></i>
-                            </div>
-                        </div>
+                <div class="stat-card">
+                    <div class="stat-icon blue">
+                        <i class="fas fa-euro-sign"></i>
                     </div>
+                    <div class="stat-value" th:text="${totalAmount != null ? #numbers.formatDecimal(totalAmount, 0, 2) + ' €' : '0,00 €'}">0,00 €</div>
+                    <div class="stat-label">Total facturé</div>
                 </div>
             </div>
             
             <div class="col-md-3">
-                <div class="card">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <p class="text-muted mb-1">Factures payées</p>
-                                <h3 class="mb-0" th:text="${paidCount != null ? paidCount : 0}">0</h3>
-                            </div>
-                            <div class="text-success">
-                                <i class="fas fa-check-circle fa-2x"></i>
-                            </div>
-                        </div>
+                <div class="stat-card">
+                    <div class="stat-icon green">
+                        <i class="fas fa-check-circle"></i>
                     </div>
+                    <div class="stat-value" th:text="${paidCount != null ? paidCount : 0}">0</div>
+                    <div class="stat-label">Factures payées</div>
                 </div>
             </div>
             
             <div class="col-md-3">
-                <div class="card">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <p class="text-muted mb-1">En attente</p>
-                                <h3 class="mb-0" th:text="${pendingCount != null ? pendingCount : 0}">0</h3>
-                            </div>
-                            <div class="text-warning">
-                                <i class="fas fa-clock fa-2x"></i>
-                            </div>
-                        </div>
+                <div class="stat-card">
+                    <div class="stat-icon orange">
+                        <i class="fas fa-clock"></i>
                     </div>
+                    <div class="stat-value" th:text="${pendingCount != null ? pendingCount : 0}">0</div>
+                    <div class="stat-label">En attente</div>
                 </div>
             </div>
             
             <div class="col-md-3">
-                <div class="card">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <p class="text-muted mb-1">En retard</p>
-                                <h3 class="mb-0 text-danger" th:text="${overdueCount != null ? overdueCount : 0}">0</h3>
-                            </div>
-                            <div class="text-danger">
-                                <i class="fas fa-exclamation-triangle fa-2x"></i>
-                            </div>
-                        </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: rgba(220,38,38,0.1); color: #DC2626;">
+                        <i class="fas fa-exclamation-triangle"></i>
                     </div>
+                    <div class="stat-value" style="color: #DC2626;" th:text="${overdueCount != null ? overdueCount : 0}">0</div>
+                    <div class="stat-label">En retard</div>
                 </div>
             </div>
         </div>

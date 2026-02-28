@@ -1,0 +1,33 @@
+===== CHECKLIST VERIFICATION DESIGN ===== 
+ 
+[ ] Lancer l application : mvn spring-boot:run 
+[ ] Ouvrir http://localhost:8080 
+[ ] Verifier la page de login 
+    - Fond sobre 40/60 
+    - Pas de mesh grid 
+    - Bouton bleu nuit plein 
+ 
+[ ] Se connecter et verifier le dashboard 
+    - Hero banner bleu nuit avec bordure or 
+    - KPIs lisibles 
+    - Actions rapides sans gradients 
+ 
+[ ] Verifier les pages de gestion 
+    - Dossiers : tableaux clairs 
+    - Clients : avatars visibles 
+    - Facturation : stats sobres 
+ 
+[ ] Verifier les couleurs 
+    - Tous les textes lisibles 
+    - Contrastes suffisants 
+    - Pas de violet startup 
+ 
+[ ] Verifier le responsive 
+    - Sidebar mobile fonctionnelle 
+    - Cartes empilees correctement 
+ 
+[ ] Verifier l accessibilite 
+    - Focus or visible (Tab) 
+    - Navigation clavier OK 
+ 
+=========================================

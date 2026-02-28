@@ -8,20 +8,20 @@
 <body>
     <div layout:fragment="content">
         <!-- Messages -->
-        <div th:if="${message}" class="alert alert-success" style="margin-bottom: 1.5rem;">
+        <div th:if="${message}" class="alert alert-success">
             <i class="fas fa-check-circle"></i> <span th:text="${message}"></span>
         </div>
 
         <!-- Page Header -->
-        <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <div class="page-header">
             <div>
                 <h1 class="page-title">
-                    <i class="fas fa-folder-open" style="color: var(--success); margin-right: 0.75rem;"></i>
+                    <i class="fas fa-folder-open"></i>
                     Mes dossiers
                 </h1>
                 <p class="page-subtitle" th:text="${cases != null ? cases.size() + ' dossier(s)' : '0 dossier'}">0 dossiers</p>
             </div>
-            <div style="display: flex; gap: 0.75rem;">
+            <div class="d-flex gap-3">
                 <a th:href="@{/cases/new}" class="btn btn-primary">
                     <i class="fas fa-folder-plus"></i>
                     Nouveau dossier
@@ -34,45 +34,45 @@
         </div>
 
         <!-- Stats Row -->
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
-            <div class="card" style="cursor: pointer;" onclick="filterByStatus('')">
-                <div class="card-body" style="padding: 1.25rem; text-align: center;">
-                    <div style="font-size: 0.875rem; color: var(--gray-600); margin-bottom: 0.25rem;">Total</div>
-                    <div style="font-size: 1.75rem; font-weight: 700; color: var(--gray-900);" th:text="${cases != null ? cases.size() : 0}">0</div>
+        <div class="stats-grid">
+            <div class="card stat-filter-card" onclick="filterByStatus('')">
+                <div class="card-body">
+                    <div class="stat-filter-label">Total</div>
+                    <div class="stat-filter-value" th:text="${cases != null ? cases.size() : 0}">0</div>
                 </div>
             </div>
-            <div class="card" style="cursor: pointer;" onclick="filterByStatus('OPEN')">
-                <div class="card-body" style="padding: 1.25rem; text-align: center;">
-                    <div style="font-size: 0.875rem; color: var(--success); margin-bottom: 0.25rem;">
+            <div class="card stat-filter-card" onclick="filterByStatus('OPEN')">
+                <div class="card-body">
+                    <div class="stat-filter-label">
                         <i class="fas fa-folder-open"></i> En cours
                     </div>
-                    <div style="font-size: 1.75rem; font-weight: 700; color: var(--success);" 
+                    <div class="stat-filter-value" style="color: #16A34A;"
                          th:text="${openCount != null ? openCount : 0}">0</div>
                 </div>
             </div>
-            <div class="card" style="cursor: pointer;" onclick="filterByStatus('CLOSED')">
-                <div class="card-body" style="padding: 1.25rem; text-align: center;">
-                    <div style="font-size: 0.875rem; color: var(--warning); margin-bottom: 0.25rem;">
+            <div class="card stat-filter-card" onclick="filterByStatus('CLOSED')">
+                <div class="card-body">
+                    <div class="stat-filter-label">
                         <i class="fas fa-folder"></i> Clôturés
                     </div>
-                    <div style="font-size: 1.75rem; font-weight: 700; color: var(--warning);"
+                    <div class="stat-filter-value" style="color: #D97706;"
                          th:text="${closedCount != null ? closedCount : 0}">0</div>
                 </div>
             </div>
-            <div class="card" style="cursor: pointer;" onclick="filterByStatus('ARCHIVED')">
-                <div class="card-body" style="padding: 1.25rem; text-align: center;">
-                    <div style="font-size: 0.875rem; color: var(--gray-500); margin-bottom: 0.25rem;">
+            <div class="card stat-filter-card" onclick="filterByStatus('ARCHIVED')">
+                <div class="card-body">
+                    <div class="stat-filter-label">
                         <i class="fas fa-archive"></i> Archivés
                     </div>
-                    <div style="font-size: 1.75rem; font-weight: 700; color: var(--gray-700);"
+                    <div class="stat-filter-value" style="color: #64748B;"
                          th:text="${archivedCount != null ? archivedCount : 0}">0</div>
                 </div>
             </div>
         </div>
 
         <!-- Search & Filters -->
-        <div class="card animate-fade-in" style="margin-bottom: 1.5rem;">
-            <div class="card-body" style="padding: 1.25rem;">
+        <div class="card">
+            <div class="card-body">
                 <div class="search-bar">
                     <i class="fas fa-search search-icon"></i>
                     <input type="text" class="search-input" placeholder="Rechercher un dossier..." 

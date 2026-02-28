@@ -1,0 +1,35 @@
+========================================== 
+CORRECTIONS DESIGN - RECAPITULATIF 
+========================================== 
+ 
+[PALETTE COULEURS] 
+- Bleu nuit: #0F172A, #1E293B, #1E3A5F 
+- Or discret: #C6A75E 
+- Fond: #F8FAFC 
+ 
+[TYPOGRAPHIE] 
+- Police: Inter 
+- Titres: 700-800 bold 
+- Corps: 0.9375rem 
+ 
+[COMPOSANTS CORRIGES] 
+- Boutons: Bleu nuit plein, SANS gradients 
+- Cartes: Fond blanc, ombres douces 
+- Tableaux: Headers clairs, hover subtil 
+- Hero banner: Bleu nuit sobre, bordure or 
+- Badges: Couleurs pleines, lisibles 
+ 
+[PAGES CORRIGEES] 
+- Dashboard: KPIs visuels, actions rapides 
+- Login: Sobre 40/60, suppression mesh 
+- Dossiers: Tableaux ameliores 
+- Clients: Navigation claire 
+- Facturation: Stats sobres 
+- Documents: Upload sobre 
+- Signatures: Sans gradients 
+ 
+[FICHIER MASTER] 
+- fix-override.css charge EN DERNIER 
+- Force tous les styles sobres 
+ 
+==========================================

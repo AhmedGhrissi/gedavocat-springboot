@@ -1,0 +1,17 @@
+# Corrections Design - Resume des changements 
+ 
+## Fichiers CSS modifies: 
+- fix-override.css (corrections finales) 
+- professional-theme.css (theme sobre) 
+- pages/dashboard.css (suppression gradients) 
+- pages/auth.css (login institutionnel) 
+- pages/cases.css (tableaux sobres) 
+- pages/documents.css (upload sobre) 
+- pages/signatures.css (sans gradients) 
+ 
+## Fichiers HTML corriges: 
+- dashboard/index.html (styles inline retires) 
+- cases/list.html (tableaux ameliores) 
+- clients/list.html (navigation claire) 
+- invoices/index.html (stats sobres) 
+- documents/index.html (hero sobre)
