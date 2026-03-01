@@ -61,13 +61,33 @@
         }
         
         /* Mobile-First Responsive Grid */
-        @media (max-width: 768px) {
+        @media (max-width: 992px) {
             .page-header-modern {
                 padding: 1.5rem;
             }
             
             .page-header-modern h2 {
                 font-size: 1.5rem !important;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            /* Force responsive sur mobile */
+            body {
+                overflow-x: hidden !important;
+            }
+            
+            .page-header-modern {
+                padding: 1rem;
+                margin-bottom: 1rem;
+            }
+            
+            .page-header-modern h2 {
+                font-size: 1.25rem !important;
+            }
+            
+            .page-header-modern p {
+                font-size: 0.875rem !important;
             }
             
             .btn-mobile-full {
@@ -76,11 +96,55 @@
             }
             
             .stat-card-modern {
-                margin-bottom: 1rem;
+                margin-bottom: 0.75rem;
+            }
+            
+            .stat-card-modern h3 {
+                font-size: 1.5rem !important;
             }
             
             .calendar-sidebar-mobile {
-                margin-top: 2rem;
+                margin-top: 1.5rem;
+            }
+            
+            /* Forcer le calendrier à s'adapter */
+            #calendar {
+                max-width: 100% !important;
+                overflow-x: auto !important;
+            }
+            
+            .fc {
+                font-size: 0.875rem !important;
+            }
+            
+            .fc .fc-toolbar {
+                flex-direction: column !important;
+                gap: 0.5rem !important;
+                padding: 0.75rem !important;
+            }
+            
+            .fc .fc-toolbar-chunk {
+                width: 100% !important;
+                justify-content: center !important;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .page-header-modern {
+                padding: 0.75rem;
+            }
+            
+            .page-header-modern h2 {
+                font-size: 1.125rem !important;
+            }
+            
+            .stat-card-modern .rounded-circle {
+                width: 40px !important;
+                height: 40px !important;
+            }
+            
+            .stat-card-modern .rounded-circle i {
+                font-size: 0.875rem !important;
             }
         }
         
@@ -112,6 +176,19 @@
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
         
+        /* Amélioration du contraste WCAG 2.1 AA */
+        .text-muted {
+            color: #475569 !important; /* Meilleur contraste */
+        }
+        
+        .badge.bg-secondary {
+            background-color: #475569 !important; /* Meilleur contraste */
+        }
+        
+        small.text-muted {
+            color: #64748b !important;
+        }
+        
         /* Mobile responsive for action buttons */
         @media (max-width: 576px) {
             .reschedule-actions {
@@ -134,7 +211,7 @@
 </head>
 <body>
 <div layout:fragment="content">
-    <div class="container-fluid">
+    <div class="container-fluid" style="max-width: 100%; overflow-x: hidden;">
         
         <!-- En-tête -->
         <div class="page-header-modern mb-4">
@@ -354,8 +431,8 @@
                     <div class="card-header text-white" style="background: linear-gradient(135deg, #1E3A5F 0%, #0F172A 100%); border: none; padding: 1.25rem;">
                         <h5 class="mb-0"><i class="fas fa-calendar me-2"></i> Calendrier</h5>
                     </div>
-                    <div class="card-body p-3">
-                        <div id="calendar"></div>
+                    <div class="card-body p-3" style="overflow-x: auto;">
+                        <div id="calendar" style="max-width: 100%;"></div>
                     </div>
                 </div>
             </div>
@@ -390,8 +467,11 @@
                                     </div>
                                     <div>
                                         <a th:href="@{/appointments/{id}/edit(id=${appointment.id})}" 
-                                           class="btn btn-sm btn-outline-primary" style="border-radius: 8px;">
-                                            <i class="fas fa-edit"></i>
+                                           class="btn btn-sm btn-outline-primary" 
+                                           style="border-radius: 8px;"
+                                           aria-label="Modifier le rendez-vous"
+                                           th:attr="aria-label='Modifier le rendez-vous du ' + ${#temporals.format(appointment.appointmentDate, 'dd/MM HH:mm')}">
+                                            <i class="fas fa-edit" aria-hidden="true"></i>
                                         </a>
                                     </div>
                                 </div>
@@ -432,8 +512,11 @@
                                     </div>
                                     <div>
                                         <a th:href="@{/appointments/{id}/edit(id=${appointment.id})}" 
-                                           class="btn btn-sm btn-outline-primary" style="border-radius: 8px;">
-                                            <i class="fas fa-edit"></i>
+                                           class="btn btn-sm btn-outline-primary" 
+                                           style="border-radius: 8px;"
+                                           aria-label="Modifier le rendez-vous"
+                                           th:attr="aria-label='Modifier le rendez-vous du ' + ${#temporals.format(appointment.appointmentDate, 'dd/MM HH:mm')}">
+                                            <i class="fas fa-edit" aria-hidden="true"></i>
                                         </a>
                                     </div>
                                 </div>
@@ -459,15 +542,15 @@
                     <div class="modal-body">
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label class="form-label">Type <span class="text-danger">*</span></label>
-                                <select name="type" class="form-select" required id="modalType">
+                                <label for="modalType" class="form-label">Type <span class="text-danger" aria-label="requis">*</span></label>
+                                <select name="type" id="modalType" class="form-select" required aria-required="true">
                                     <option th:each="type : ${T(com.gedavocat.model.Appointment.AppointmentType).values()}"
                                             th:value="${type}" th:text="${type.displayName}">Type</option>
                                 </select>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Statut</label>
-                                <select name="status" class="form-select">
+                                <label for="modalStatus" class="form-label">Statut</label>
+                                <select name="status" id="modalStatus" class="form-select">
                                     <option th:each="st : ${T(com.gedavocat.model.Appointment.AppointmentStatus).values()}"
                                             th:value="${st}" th:text="${st.displayName}"
                                             th:selected="${st.name() == 'SCHEDULED'}">Statut</option>
@@ -475,39 +558,42 @@
                             </div>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Titre <span class="text-danger">*</span></label>
-                            <input type="text" name="title" class="form-control" required
+                            <label for="modalTitle" class="form-label">Titre <span class="text-danger" aria-label="requis">*</span></label>
+                            <input type="text" name="title" id="modalTitle" class="form-control" 
+                                   required aria-required="true" minlength="3" maxlength="200"
                                    placeholder="Ex: Consultation client, Audience tribunal...">
                         </div>
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label class="form-label">Début <span class="text-danger">*</span></label>
-                                <input type="datetime-local" name="appointmentDate" class="form-control" required id="modalStartDate">
+                                <label for="modalStartDate" class="form-label">Début <span class="text-danger" aria-label="requis">*</span></label>
+                                <input type="datetime-local" name="appointmentDate" id="modalStartDate" 
+                                       class="form-control" required aria-required="true">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Fin</label>
-                                <input type="datetime-local" name="endDate" class="form-control" id="modalEndDate">
+                                <label for="modalEndDate" class="form-label">Fin</label>
+                                <input type="datetime-local" name="endDate" id="modalEndDate" class="form-control">
                             </div>
                         </div>
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label class="form-label">Client</label>
-                                <select name="clientId" class="form-select">
+                                <label for="modalClient" class="form-label">Client</label>
+                                <select name="clientId" id="modalClient" class="form-select">
                                     <option value="">Aucun client</option>
                                     <option th:each="client : ${clients}" th:value="${client.id}" th:text="${client.name}">Client</option>
                                 </select>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Dossier</label>
-                                <select name="caseId" class="form-select">
+                                <label for="modalCase" class="form-label">Dossier</label>
+                                <select name="caseId" id="modalCase" class="form-select">
                                     <option value="">Aucun dossier</option>
                                     <option th:each="c : ${cases}" th:value="${c.id}" th:text="${c.name}">Dossier</option>
                                 </select>
                             </div>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Lieu</label>
-                            <input type="text" name="location" class="form-control" placeholder="Ex: Cabinet, Palais de justice...">
+                            <label for="modalLocation" class="form-label">Lieu</label>
+                            <input type="text" name="location" id="modalLocation" class="form-control" 
+                                   maxlength="200" placeholder="Ex: Cabinet, Palais de justice...">
                         </div>
                         <div id="modalCourtInfo" style="display:none">
                             <div class="row mb-3">
@@ -610,8 +696,20 @@
             events: function(info, successCallback, failureCallback) {
                 var startDate = info.start.toISOString().split('T')[0];
                 var endDate = info.end.toISOString().split('T')[0];
+                var cacheKey = startDate + '-' + endDate;
                 
-                console.log('Chargement des événements du', startDate, 'au', endDate);
+                // Cache simple avec expiration (5 minutes)
+                var CACHE_DURATION = 5 * 60 * 1000;
+                if (!window.eventCache) window.eventCache = new Map();
+                
+                var cached = window.eventCache.get(cacheKey);
+                if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+                    console.log('📦 Utilisation du cache pour les événements');
+                    successCallback(cached.data);
+                    return;
+                }
+                
+                console.log('🌐 Chargement des événements du', startDate, 'au', endDate);
                 
                 fetch('/appointments/api/events?start=' + startDate + '&end=' + endDate)
                     .then(response => {
@@ -621,11 +719,16 @@
                         return response.json();
                     })
                     .then(data => {
-                        console.log('Événements chargés:', data.length, 'événement(s)');
+                        console.log('✅ Événements chargés:', data.length, 'événement(s)');
+                        // Mettre en cache
+                        window.eventCache.set(cacheKey, {
+                            data: data,
+                            timestamp: Date.now()
+                        });
                         successCallback(data);
                     })
                     .catch(error => {
-                        console.error('Erreur lors du chargement des événements:', error);
+                        console.error('❌ Erreur lors du chargement des événements:', error);
                         appAlert('Erreur lors du chargement du calendrier. Veuillez actualiser la page.', 'danger');
                         failureCallback(error);
                     });
@@ -690,6 +793,48 @@
         if (modalType) {
             modalType.addEventListener('change', function() {
                 document.getElementById('modalCourtInfo').style.display = this.value === 'COURT_HEARING' ? 'block' : 'none';
+            });
+        }
+        
+        // Validation: La date de fin doit être après la date de début
+        var modalStartDate = document.getElementById('modalStartDate');
+        var modalEndDate = document.getElementById('modalEndDate');
+        
+        if (modalStartDate) {
+            modalStartDate.addEventListener('change', function() {
+                if (this.value) {
+                    var start = new Date(this.value);
+                    start.setMinutes(start.getMinutes() + 30); // Min 30 minutes après
+                    modalEndDate.min = start.toISOString().slice(0, 16);
+                    
+                    // Auto-ajuster la date de fin si elle est invalide
+                    if (modalEndDate.value && new Date(modalEndDate.value) <= new Date(this.value)) {
+                        modalEndDate.value = start.toISOString().slice(0, 16);
+                    }
+                }
+            });
+        }
+        
+        // Validation avant soumission du formulaire
+        var appointmentForm = document.querySelector('#newAppointmentModal form');
+        if (appointmentForm) {
+            appointmentForm.addEventListener('submit', function(e) {
+                var start = new Date(modalStartDate.value);
+                var end = new Date(modalEndDate.value);
+                
+                // Vérifier que la fin est après le début
+                if (end && end <= start) {
+                    e.preventDefault();
+                    alert('⚠️ La date de fin doit être après la date de début');
+                    return false;
+                }
+                
+                // Feedback visuel pendant la sauvegarde
+                var submitBtn = this.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Création en cours...';
+                }
             });
         }
         
