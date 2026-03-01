@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout}">
@@ -6,21 +6,128 @@
     <link rel="stylesheet" th:href="@{/css/pages/appointments.css}">
     <link rel="stylesheet" th:href="@{/css/calendar-modern.css}">
     <style>
+        /* SaaS 2026 Modern Design System */
+        :root {
+            --gradient-primary: linear-gradient(135deg, #1E3A5F 0%, #0F172A 100%);
+            --gradient-success: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);
+            --gradient-info: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            --gradient-glass: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.85) 100%);
+        }
+        
+        /* Glass Morphism Container */
+        .glass-container {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 8px 32px 0 rgba(15, 23, 42, 0.08);
+        }
+        
+        /* Modern Stat Cards with Gradient Accents */
+        .stat-card-modern {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .stat-card-modern::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--gradient-primary);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .stat-card-modern:hover::before {
+            opacity: 1;
+        }
+        
+        .stat-card-modern:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(15, 23, 42, 0.12);
+        }
+        
+        /* Responsive Page Header */
+        .page-header-modern {
+            background: var(--gradient-glass);
+            padding: 2rem;
+            border-radius: 16px;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(226, 232, 240, 0.6);
+        }
+        
+        /* Mobile-First Responsive Grid */
+        @media (max-width: 768px) {
+            .page-header-modern {
+                padding: 1.5rem;
+            }
+            
+            .page-header-modern h2 {
+                font-size: 1.5rem !important;
+            }
+            
+            .btn-mobile-full {
+                width: 100%;
+                margin-top: 0.5rem;
+            }
+            
+            .stat-card-modern {
+                margin-bottom: 1rem;
+            }
+            
+            .calendar-sidebar-mobile {
+                margin-top: 2rem;
+            }
+        }
+        
         /* Jours avec rendez-vous : fond + numéro en gras */
         .fc-daygrid-day:has(.fc-daygrid-event-harness) .fc-daygrid-day-frame {
-            background-color: rgba(30, 58, 95, 0.06);
+            background-color: rgba(30, 58, 95, 0.04);
         }
         .fc-daygrid-day:has(.fc-daygrid-event-harness) .fc-daygrid-day-number {
             color: #1E3A5F;
             font-weight: 700;
-            background: rgba(198, 167, 94, 0.15);
+            background: rgba(30, 58, 95, 0.1);
             border-radius: 50%;
-            width: 26px;
-            height: 26px;
+            width: 28px;
+            height: 28px;
             display: flex;
             align-items: center;
             justify-content: center;
             margin: 4px;
+        }
+        
+        /* Reschedule request cards */
+        .reschedule-request-card {
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+        
+        .reschedule-request-card:hover {
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Mobile responsive for action buttons */
+        @media (max-width: 576px) {
+            .reschedule-actions {
+                width: 100%;
+                margin-top: 1rem;
+            }
+            
+            .reschedule-actions form,
+            .reschedule-actions button {
+                width: 100%;
+                margin-bottom: 0.5rem;
+            }
+            
+            .reschedule-actions .btn {
+                width: 100%;
+            }
         }
     </style>
 <title>Calendrier et Rendez-vous</title>
@@ -30,18 +137,27 @@
     <div class="container-fluid">
         
         <!-- En-tête -->
-        <div class="d-flex justify-content-between align-items-center mb-4 page-header">
-            <div>
-                <h2 class="mb-1 animate-fade-in-up"><i class="fas fa-calendar-alt me-2"></i>Calendrier et Rendez-vous</h2>
-                <p class="text-muted">Gérez vos rendez-vous clients et audiences tribunal</p>
-            </div>
-            <div class="d-flex gap-3">
-                <a href="/appointments/list" class="btn btn-outline-secondary" style="border-radius:var(--radius-md);font-weight:500">
-                    <i class="fas fa-list me-1"></i> Vue liste
-                </a>
-                <button type="button" class="btn btn-primary rounded-md fw-600" data-bs-toggle="modal" data-bs-target="#newAppointmentModal">
-                    <i class="fas fa-plus me-1"></i> Nouveau rendez-vous
-                </button>
+        <div class="page-header-modern mb-4">
+            <div class="row align-items-center">
+                <div class="col-lg-6 col-md-12 mb-3 mb-lg-0">
+                    <h2 class="mb-2 animate-fade-in-up" style="font-weight: 700; color: var(--color-primary);">
+                        <i class="fas fa-calendar-alt me-2" style="color: #1E3A5F;"></i>Calendrier et Rendez-vous
+                    </h2>
+                    <p class="text-muted mb-0" style="font-size: 0.95rem;">Gérez vos rendez-vous clients et audiences tribunal</p>
+                </div>
+                <div class="col-lg-6 col-md-12">
+                    <div class="d-flex gap-2 flex-wrap justify-content-lg-end">
+                        <a href="/appointments/list" class="btn btn-outline-secondary btn-mobile-full" 
+                           style="border-radius: 12px; font-weight: 500; border-width: 2px;">
+                            <i class="fas fa-list me-1"></i> Vue liste
+                        </a>
+                        <button type="button" class="btn btn-primary btn-mobile-full" 
+                                data-bs-toggle="modal" data-bs-target="#newAppointmentModal"
+                                style="border-radius: 12px; font-weight: 600; background: linear-gradient(135deg, #1E3A5F 0%, #0F172A 100%); border: none; box-shadow: 0 4px 12px rgba(30, 58, 95, 0.3);">
+                            <i class="fas fa-plus me-1"></i> Nouveau rendez-vous
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -56,68 +172,83 @@
         </div>
 
         <!-- Statistiques -->
-        <div class="row mb-4">
-            <div class="col">
-                <div class="card stat-card scheduled">
-                    <div class="card-body">
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-md-4 col-lg">
+                <div class="card stat-card-modern border-0 h-100" style="background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%); border-left: 4px solid #3b82f6 !important;">
+                    <div class="card-body p-3">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
-                                <p class="text-muted mb-1">Planifiés</p>
-                                <h3 class="mb-0" th:text="${stats.scheduled}">0</h3>
+                                <p class="text-muted mb-1 small">Planifiés</p>
+                                <h3 class="mb-0 fw-bold" th:text="${stats.scheduled}">0</h3>
                             </div>
-                            <i class="fas fa-calendar-plus fa-2x text-info"></i>
+                            <div class="rounded-circle d-flex align-items-center justify-content-center" 
+                                 style="width: 48px; height: 48px; background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);">
+                                <i class="fas fa-calendar-plus text-primary"></i>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="col">
-                <div class="card stat-card confirmed">
-                    <div class="card-body">
+            <div class="col-6 col-md-4 col-lg">
+                <div class="card stat-card-modern border-0 h-100" style="background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%); border-left: 4px solid #10b981 !important;">
+                    <div class="card-body p-3">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
-                                <p class="text-muted mb-1">Confirmés</p>
-                                <h3 class="mb-0" th:text="${stats.confirmed}">0</h3>
+                                <p class="text-muted mb-1 small">Confirmés</p>
+                                <h3 class="mb-0 fw-bold" th:text="${stats.confirmed}">0</h3>
                             </div>
-                            <i class="fas fa-calendar-check fa-2x text-success"></i>
+                            <div class="rounded-circle d-flex align-items-center justify-content-center" 
+                                 style="width: 48px; height: 48px; background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);">
+                                <i class="fas fa-calendar-check text-success"></i>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="col">
-                <div class="card stat-card" style="border-left: 4px solid #f59e0b;">
-                    <div class="card-body">
+            <div class="col-6 col-md-4 col-lg">
+                <div class="card stat-card-modern border-0 h-100" style="background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%); border-left: 4px solid #f59e0b !important;">
+                    <div class="card-body p-3">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
-                                <p class="text-muted mb-1">Reportés</p>
-                                <h3 class="mb-0" th:text="${stats.rescheduled}">0</h3>
+                                <p class="text-muted mb-1 small">Reportés</p>
+                                <h3 class="mb-0 fw-bold" th:text="${stats.rescheduled}">0</h3>
                             </div>
-                            <i class="fas fa-exchange-alt fa-2x" style="color:var(--warning-500,#f59e0b)"></i>
+                            <div class="rounded-circle d-flex align-items-center justify-content-center" 
+                                 style="width: 48px; height: 48px; background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);">
+                                <i class="fas fa-exchange-alt text-warning"></i>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="col">
-                <div class="card stat-card completed">
-                    <div class="card-body">
+            <div class="col-6 col-md-4 col-lg">
+                <div class="card stat-card-modern border-0 h-100" style="background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%); border-left: 4px solid #6b7280 !important;">
+                    <div class="card-body p-3">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
-                                <p class="text-muted mb-1">Terminés</p>
-                                <h3 class="mb-0" th:text="${stats.completed}">0</h3>
+                                <p class="text-muted mb-1 small">Terminés</p>
+                                <h3 class="mb-0 fw-bold" th:text="${stats.completed}">0</h3>
                             </div>
-                            <i class="fas fa-calendar-check fa-2x text-secondary"></i>
+                            <div class="rounded-circle d-flex align-items-center justify-content-center" 
+                                 style="width: 48px; height: 48px; background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%);">
+                                <i class="fas fa-check-circle text-secondary"></i>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="col">
-                <div class="card stat-card cancelled">
-                    <div class="card-body">
+            <div class="col-6 col-md-4 col-lg">
+                <div class="card stat-card-modern border-0 h-100" style="background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%); border-left: 4px solid #ef4444 !important;">
+                    <div class="card-body p-3">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
-                                <p class="text-muted mb-1">Annulés</p>
-                                <h3 class="mb-0" th:text="${stats.cancelled}">0</h3>
+                                <p class="text-muted mb-1 small">Annulés</p>
+                                <h3 class="mb-0 fw-bold" th:text="${stats.cancelled}">0</h3>
                             </div>
-                            <i class="fas fa-calendar-times fa-2x text-danger"></i>
+                            <div class="rounded-circle d-flex align-items-center justify-content-center" 
+                                 style="width: 48px; height: 48px; background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);">
+                                <i class="fas fa-calendar-times text-danger"></i>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -218,48 +349,48 @@
 
         <div class="row">
             <!-- Calendrier principal -->
-            <div class="col-lg-8">
-                <div class="card">
-                    <div class="card-header bg-primary text-white">
-                        <h5 class="mb-0"><i class="fas fa-calendar"></i> Calendrier</h5>
+            <div class="col-lg-8 mb-4 mb-lg-0">
+                <div class="card border-0 shadow-sm" style="border-radius: 16px; overflow: hidden;">
+                    <div class="card-header text-white" style="background: linear-gradient(135deg, #1E3A5F 0%, #0F172A 100%); border: none; padding: 1.25rem;">
+                        <h5 class="mb-0"><i class="fas fa-calendar me-2"></i> Calendrier</h5>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body p-3">
                         <div id="calendar"></div>
                     </div>
                 </div>
             </div>
 
             <!-- Rendez-vous à venir -->
-            <div class="col-lg-4">
+            <div class="col-lg-4 calendar-sidebar-mobile">
                 <!-- Rendez-vous du jour -->
-                <div class="card mb-3">
-                    <div class="card-header bg-success text-white">
-                        <h6 class="mb-0"><i class="fas fa-calendar-day"></i> Aujourd'hui</h6>
+                <div class="card border-0 shadow-sm mb-3" style="border-radius: 16px; overflow: hidden;">
+                    <div class="card-header bg-success text-white" style="border: none; padding: 1rem;">
+                        <h6 class="mb-0"><i class="fas fa-calendar-day me-2"></i> Aujourd'hui</h6>
                     </div>
                     <div class="card-body p-2" style="max-height: 300px; overflow-y: auto;">
                         <div th:if="${todayAppointments.empty}" class="text-center text-muted py-3">
-                            <div style="width:64px;height:64px;border-radius:var(--radius-xl);background:var(--bg-tertiary);display:inline-flex;align-items:center;justify-content:center;margin-bottom:1rem">
-                                <i class="fas fa-calendar-check fa-2x"></i>
+                            <div style="width:64px;height:64px;border-radius:50%;background:#f1f5f9;display:inline-flex;align-items:center;justify-content:center;margin-bottom:1rem">
+                                <i class="fas fa-calendar-check fa-2x" style="color: #94a3b8;"></i>
                             </div>
                             <p class="mb-0">Aucun rendez-vous aujourd'hui</p>
                         </div>
-                        <div th:each="appointment : ${todayAppointments}" class="card appointment-card mb-2">
+                        <div th:each="appointment : ${todayAppointments}" class="card appointment-card mb-2 border-0" style="border-radius: 12px; background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%); border-left: 4px solid #1E3A5F !important;">
                             <div class="card-body p-2">
                                 <div class="d-flex justify-content-between align-items-start">
                                     <div class="flex-grow-1">
-                                        <h6 class="mb-1" th:text="${appointment.title}">Titre</h6>
+                                        <h6 class="mb-1 fw-bold" th:text="${appointment.title}">Titre</h6>
                                         <small class="text-muted">
                                             <i class="fas fa-clock"></i>
                                             <span th:text="${#temporals.format(appointment.appointmentDate, 'HH:mm')}">10:00</span>
                                         </small>
                                         <br>
-                                        <span class="badge appointment-type-badge" 
+                                        <span class="badge appointment-type-badge mt-1" 
                                               th:classappend="${appointment.type.name() == 'COURT_HEARING' ? 'bg-danger' : 'bg-info'}"
                                               th:text="${appointment.type.displayName}">Type</span>
                                     </div>
                                     <div>
                                         <a th:href="@{/appointments/{id}/edit(id=${appointment.id})}" 
-                                           class="btn btn-sm btn-outline-primary">
+                                           class="btn btn-sm btn-outline-primary" style="border-radius: 8px;">
                                             <i class="fas fa-edit"></i>
                                         </a>
                                     </div>
@@ -270,38 +401,38 @@
                 </div>
 
                 <!-- Prochains rendez-vous -->
-                <div class="card">
-                    <div class="card-header bg-info text-white">
-                        <h6 class="mb-0"><i class="fas fa-calendar-alt"></i> À venir</h6>
+                <div class="card border-0 shadow-sm" style="border-radius: 16px; overflow: hidden;">
+                    <div class="card-header bg-info text-white" style="border: none; padding: 1rem;">
+                        <h6 class="mb-0"><i class="fas fa-calendar-alt me-2"></i> À venir</h6>
                     </div>
                     <div class="card-body p-2" style="max-height: 400px; overflow-y: auto;">
                         <div th:if="${upcomingAppointments.empty}" class="text-center text-muted py-3">
-                            <div style="width:64px;height:64px;border-radius:var(--radius-xl);background:var(--bg-tertiary);display:inline-flex;align-items:center;justify-content:center;margin-bottom:1rem">
-                                <i class="fas fa-calendar fa-2x"></i>
+                            <div style="width:64px;height:64px;border-radius:50%;background:#f1f5f9;display:inline-flex;align-items:center;justify-content:center;margin-bottom:1rem">
+                                <i class="fas fa-calendar fa-2x" style="color: #94a3b8;"></i>
                             </div>
                             <p class="mb-0">Aucun rendez-vous à venir</p>
                         </div>
-                        <div th:each="appointment : ${upcomingAppointments}" class="card appointment-card mb-2">
+                        <div th:each="appointment : ${upcomingAppointments}" class="card appointment-card mb-2 border-0" style="border-radius: 12px; background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%); border-left: 4px solid #0ea5e9 !important;">
                             <div class="card-body p-2">
                                 <div class="d-flex justify-content-between align-items-start">
                                     <div class="flex-grow-1">
-                                        <h6 class="mb-1" th:text="${appointment.title}">Titre</h6>
+                                        <h6 class="mb-1 fw-bold" th:text="${appointment.title}">Titre</h6>
                                         <small class="text-muted">
                                             <i class="fas fa-calendar"></i>
                                             <span th:text="${#temporals.format(appointment.appointmentDate, 'dd/MM/yyyy HH:mm')}">19/02/2026 10:00</span>
                                         </small>
                                         <br>
-                                        <span th:if="${appointment.client != null}" class="badge bg-secondary appointment-type-badge">
+                                        <span th:if="${appointment.client != null}" class="badge bg-secondary appointment-type-badge mt-1">
                                             <i class="fas fa-user"></i>
                                             <span th:text="${appointment.client.name}">Client</span>
                                         </span>
-                                        <span class="badge appointment-type-badge" 
+                                        <span class="badge appointment-type-badge mt-1" 
                                               th:classappend="${appointment.type.name() == 'COURT_HEARING' ? 'bg-danger' : 'bg-info'}"
                                               th:text="${appointment.type.displayName}">Type</span>
                                     </div>
                                     <div>
                                         <a th:href="@{/appointments/{id}/edit(id=${appointment.id})}" 
-                                           class="btn btn-sm btn-outline-primary">
+                                           class="btn btn-sm btn-outline-primary" style="border-radius: 8px;">
                                             <i class="fas fa-edit"></i>
                                         </a>
                                     </div>
@@ -437,12 +568,15 @@
             return;
         }
         
+        // Detect mobile device
+        var isMobile = window.innerWidth < 768;
+        
         var calendar = new FullCalendar.Calendar(calendarEl, {
-            initialView: 'dayGridMonth',
+            initialView: isMobile ? 'listWeek' : 'dayGridMonth',
             locale: 'fr',
             firstDay: 1,
             height: 'auto',
-            aspectRatio: 1.8,
+            aspectRatio: isMobile ? 1 : 1.8,
             headerToolbar: {
                 left: 'prev',
                 center: 'title',
@@ -457,7 +591,7 @@
             },
             navLinks: true,
             editable: false,
-            dayMaxEvents: true,
+            dayMaxEvents: isMobile ? 2 : 4,
             selectable: true,
             selectMirror: true,
             nowIndicator: true,
@@ -529,6 +663,16 @@
                 } else {
                     calendarEl.style.opacity = '1';
                 }
+            },
+            // Mobile-specific settings
+            windowResize: function(view) {
+                var newIsMobile = window.innerWidth < 768;
+                if (newIsMobile !== isMobile) {
+                    isMobile = newIsMobile;
+                    calendar.changeView(isMobile ? 'listWeek' : 'dayGridMonth');
+                    calendar.setOption('aspectRatio', isMobile ? 1 : 1.8);
+                    calendar.setOption('dayMaxEvents', isMobile ? 2 : 4);
+                }
             }
         });
         
@@ -536,6 +680,7 @@
         calendar.render();
         console.log('Calendrier rendu avec succès!');
         
+        // Responsive header toolbar adjustment for mobile
         window.addEventListener('resize', function() {
             calendar.updateSize();
         });
@@ -545,6 +690,18 @@
         if (modalType) {
             modalType.addEventListener('change', function() {
                 document.getElementById('modalCourtInfo').style.display = this.value === 'COURT_HEARING' ? 'block' : 'none';
+            });
+        }
+        
+        // Touch feedback for mobile
+        if ('ontouchstart' in window) {
+            document.querySelectorAll('.stat-card-modern, .appointment-card').forEach(function(card) {
+                card.addEventListener('touchstart', function() {
+                    this.style.transform = 'scale(0.98)';
+                });
+                card.addEventListener('touchend', function() {
+                    this.style.transform = '';
+                });
             });
         }
     });

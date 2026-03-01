@@ -1,6 +1,6 @@
 /* ===================================================================
    CALENDRIER MODERNE - GEDAVOCAT 2026
-   Style moderne et professionnel pour FullCalendar
+   Style moderne et professionnel pour FullCalendar - Light SaaS Design
    =================================================================== */
 
 /* ===== FULLCALENDAR CUSTOMIZATION ===== */
@@ -8,39 +8,47 @@
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
-/* Header du calendrier */
+/* Header du calendrier - Modern Light Gradient */
 .fc .fc-toolbar {
     padding: 1.5rem;
-    background: var(--color-primary);
+    background: linear-gradient(135deg, #1E3A5F 0%, #0F172A 100%);
     color: white;
     border-radius: 12px 12px 0 0;
     margin-bottom: 0;
+    box-shadow: 0 4px 12px rgba(30, 58, 95, 0.15);
 }
 
 .fc .fc-toolbar-title {
     font-size: 1.5rem;
     font-weight: 700;
     color: white !important;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .fc .fc-button {
-    background: rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.2);
     border: 1px solid rgba(255, 255, 255, 0.3);
     color: white;
     padding: 0.5rem 1rem;
     border-radius: 8px;
     font-weight: 500;
     transition: all 0.2s ease;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
 }
 
 .fc .fc-button:hover {
-    background: rgba(255, 255, 255, 0.25);
+    background: rgba(255, 255, 255, 0.3);
     border-color: rgba(255, 255, 255, 0.4);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 .fc .fc-button-primary:not(:disabled).fc-button-active {
-    background: var(--color-accent-gold);
-    border-color: var(--color-accent-gold);
+    background: rgba(255, 255, 255, 0.95);
+    border-color: rgba(255, 255, 255, 0.95);
+    color: #1E3A5F;
+    font-weight: 600;
 }
 
 .fc .fc-button:disabled {
@@ -48,56 +56,56 @@
     cursor: not-allowed;
 }
 
-/* Vue du calendrier */
+/* Vue du calendrier - Light Background */
 .fc .fc-view-harness {
     background: white;
     border-radius: 0 0 12px 12px;
     padding: 1rem;
 }
 
-/* En-têtes des jours */
+/* En-têtes des jours - Soft Gradient */
 .fc .fc-col-header-cell {
-    background: var(--color-background);
-    border-color: var(--color-border);
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-color: #e2e8f0;
     padding: 1rem 0.5rem;
     font-weight: 600;
-    color: var(--color-primary);
+    color: #475569;
     text-transform: uppercase;
     font-size: 0.875rem;
     letter-spacing: 0.05em;
 }
 
 .fc .fc-col-header-cell-cushion {
-    color: var(--color-primary);
+    color: #475569;
     text-decoration: none;
     font-weight: 600;
 }
 
-/* Cellules des jours */
+/* Cellules des jours - Clean White */
 .fc .fc-daygrid-day {
     background: white;
-    border-color: var(--color-border);
+    border-color: #e2e8f0;
     transition: all 0.2s ease;
 }
 
 .fc .fc-daygrid-day:hover {
-    background: var(--color-background);
+    background: #f8fafc;
 }
 
 .fc .fc-daygrid-day-number {
-    color: var(--color-primary);
+    color: #0f172a;
     font-weight: 600;
     padding: 0.5rem;
     font-size: 0.9375rem;
 }
 
-/* Jour actuel */
+/* Jour actuel - Subtle Highlight */
 .fc .fc-day-today {
-    background: rgba(15, 23, 42, 0.05) !important;
+    background: rgba(30, 58, 95, 0.05) !important;
 }
 
 .fc .fc-day-today .fc-daygrid-day-number {
-    background: var(--color-primary);
+    background: linear-gradient(135deg, #1E3A5F 0%, #0F172A 100%);
     color: white;
     border-radius: 50%;
     width: 32px;
@@ -106,17 +114,18 @@
     align-items: center;
     justify-content: center;
     font-weight: 700;
+    box-shadow: 0 2px 8px rgba(30, 58, 95, 0.3);
 }
 
-/* Jours avec événements */
+/* Jours avec événements - Subtle Highlight */
 .fc .fc-daygrid-day:has(.fc-daygrid-event-harness) {
-    background: rgba(30, 58, 95, 0.03);
+    background: rgba(30, 58, 95, 0.04);
 }
 
 .fc .fc-daygrid-day:has(.fc-daygrid-event-harness) .fc-daygrid-day-number {
     color: #1E3A5F;
     font-weight: 700;
-    background: rgba(198, 167, 94, 0.15);
+    background: rgba(30, 58, 95, 0.1);
     border-radius: 50%;
     width: 28px;
     height: 28px;
@@ -125,21 +134,22 @@
     justify-content: center;
 }
 
-/* Événements du calendrier */
+/* Événements du calendrier - Modern Cards */
 .fc-event {
     border: none !important;
-    border-radius: 6px !important;
+    border-radius: 8px !important;
     padding: 0.25rem 0.5rem !important;
     margin: 2px 4px !important;
     font-size: 0.8125rem !important;
     font-weight: 500 !important;
     transition: all 0.2s ease !important;
     cursor: pointer !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
 }
 
 .fc-event:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
 }
 
 .fc-event-title {
@@ -151,51 +161,54 @@
     opacity: 0.9 !important;
 }
 
-/* Couleurs d'événements */
+/* Couleurs d'événements - Modern Palette */
 .fc-event.event-confirmed {
-    background: #10B981 !important;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
     color: white !important;
 }
 
 .fc-event.event-scheduled {
-    background: #3B82F6 !important;
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
     color: white !important;
 }
 
 .fc-event.event-rescheduled {
-    background: #F59E0B !important;
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
     color: white !important;
 }
 
 .fc-event.event-cancelled {
-    background: #EF4444 !important;
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
     color: white !important;
     opacity: 0.7;
     text-decoration: line-through;
 }
 
 .fc-event.event-completed {
-    background: #6B7280 !important;
+    background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%) !important;
     color: white !important;
 }
 
 .fc-event.event-court {
-    background: #DC2626 !important;
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important;
     color: white !important;
 }
 
 .fc-event.event-client {
-    background: #0EA5E9 !important;
+    background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
     color: white !important;
 }
 
 /* Vue liste d'événements */
 .fc-list-event {
     border-left: 4px solid !important;
+    background: white !important;
+    transition: all 0.2s ease;
 }
 
 .fc-list-event:hover {
-    background: #F8FAFC !important;
+    background: #f8fafc !important;
+    transform: translateX(4px);
 }
 
 /* Popover d'événement */
@@ -273,18 +286,19 @@
     background: #94A3B8;
 }
 
-/* ===== APPOINTMENT CARDS (sidebar) ===== */
+/* ===== APPOINTMENT CARDS (sidebar) - Modern SaaS 2026 ===== */
 .appointment-card {
-    border: 1px solid #E2E8F0;
-    border-radius: 10px;
-    transition: all 0.2s ease;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     background: white;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .appointment-card:hover {
-    border-color: #CBD5E1;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    transform: translateY(-1px);
+    border-color: #cbd5e1;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px) translateX(2px);
 }
 
 .appointment-type-badge {
@@ -292,9 +306,87 @@
     padding: 0.25rem 0.6rem;
     border-radius: 6px;
     font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
 }
 
-/* ===== STAT CARDS ===== */
+/* Smooth scrollbar for appointment lists */
+.card-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+.card-body::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 3px;
+}
+
+.card-body::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+}
+
+.card-body::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* ===== STAT CARDS - Modern SaaS 2026 ===== */
+.stat-card-modern {
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card-modern::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(135deg, #1E3A5F 0%, #0F172A 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.stat-card-modern:hover::before {
+    opacity: 1;
+}
+
+.stat-card-modern:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(15, 23, 42, 0.12);
+    border-color: #cbd5e1;
+}
+
+.stat-card-modern .card-body {
+    padding: 1.25rem;
+}
+
+.stat-card-modern h3 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.stat-card-modern .text-muted {
+    color: #64748b !important;
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+}
+
+.stat-card-modern .rounded-circle {
+    transition: transform 0.3s ease;
+}
+
+.stat-card-modern:hover .rounded-circle {
+    transform: scale(1.1) rotate(5deg);
+}
+
+/* Legacy stat card support */
 .stat-card {
     border-radius: 12px;
     border: 1px solid #E2E8F0;
@@ -322,7 +414,25 @@
     border-left: 4px solid #EF4444;
 }
 
-/* ===== PAGE HEADER ===== */
+/* ===== PAGE HEADER - Modern SaaS 2026 ===== */
+.page-header-modern {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.85) 100%);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(226, 232, 240, 0.6);
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+}
+
+.page-header-modern h2 {
+    color: #0f172a !important;
+    font-weight: 700;
+}
+
+.page-header-modern .text-muted {
+    color: #64748b !important;
+}
+
+/* Legacy page header */
 .page-header h2 {
     color: #0F172A !important;
     font-weight: 700;
@@ -332,7 +442,88 @@
     color: #64748B !important;
 }
 
-/* ===== RESPONSIVE ===== */
+/* ===== ANIMATIONS - Modern & Smooth ===== */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+.animate-fade-in-up {
+    animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.animate-slide-in-right {
+    animation: slideInRight 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Button hover animations */
+.btn {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+}
+
+.btn:active {
+    transform: translateY(0);
+}
+
+/* Card entrance animations */
+.card {
+    animation: fadeInUp 0.5s ease-out;
+}
+
+.stat-card-modern:nth-child(1) { animation-delay: 0.05s; }
+.stat-card-modern:nth-child(2) { animation-delay: 0.1s; }
+.stat-card-modern:nth-child(3) { animation-delay: 0.15s; }
+.stat-card-modern:nth-child(4) { animation-delay: 0.2s; }
+.stat-card-modern:nth-child(5) { animation-delay: 0.25s; }
+
+/* ===== RESPONSIVE - MOBILE-FIRST SaaS 2026 ===== */
+
+/* Tablet and below */
+@media (max-width: 992px) {
+    .fc .fc-toolbar {
+        padding: 1.25rem;
+    }
+    
+    .fc .fc-toolbar-title {
+        font-size: 1.35rem;
+    }
+    
+    .stat-card-modern {
+        margin-bottom: 0.75rem;
+    }
+}
+
+/* Mobile devices */
 @media (max-width: 768px) {
     .fc .fc-toolbar {
         flex-direction: column;
@@ -342,15 +533,99 @@
 
     .fc .fc-toolbar-title {
         font-size: 1.25rem;
+        text-align: center;
+    }
+    
+    .fc .fc-toolbar-chunk {
+        display: flex;
+        justify-content: center;
+        width: 100%;
     }
 
     .fc .fc-button {
-        padding: 0.375rem 0.75rem;
-        font-size: 0.875rem;
+        padding: 0.4rem 0.8rem;
+        font-size: 0.8125rem;
+    }
+    
+    .fc .fc-button-group {
+        display: flex;
+        gap: 0.25rem;
     }
 
     .fc-event {
         font-size: 0.75rem !important;
+        padding: 0.2rem 0.4rem !important;
+    }
+    
+    .fc .fc-daygrid-day-number {
+        font-size: 0.875rem;
+        padding: 0.25rem;
+    }
+    
+    .fc .fc-col-header-cell {
+        padding: 0.75rem 0.25rem;
+        font-size: 0.75rem;
+    }
+    
+    /* Stack calendar and sidebar on mobile */
+    .calendar-sidebar-mobile {
+        margin-top: 1.5rem;
+    }
+    
+    /* Adjust appointment cards for mobile */
+    .appointment-card {
+        margin-bottom: 0.75rem;
+    }
+    
+    /* Full width buttons on mobile */
+    .btn-mobile-full {
+        width: 100%;
+        margin-top: 0.5rem;
+    }
+}
+
+/* Small mobile devices */
+@media (max-width: 576px) {
+    .page-header-modern {
+        padding: 1rem;
+    }
+    
+    .page-header-modern h2 {
+        font-size: 1.25rem !important;
+    }
+    
+    .page-header-modern p {
+        font-size: 0.875rem !important;
+    }
+    
+    .fc .fc-toolbar {
+        padding: 0.75rem;
+    }
+    
+    .fc .fc-toolbar-title {
+        font-size: 1.125rem;
+    }
+    
+    .fc .fc-button {
+        padding: 0.35rem 0.6rem;
+        font-size: 0.75rem;
+    }
+    
+    .stat-card-modern .card-body {
+        padding: 0.75rem !important;
+    }
+    
+    .stat-card-modern h3 {
+        font-size: 1.5rem !important;
+    }
+    
+    .stat-card-modern .rounded-circle {
+        width: 40px !important;
+        height: 40px !important;
+    }
+    
+    .stat-card-modern .rounded-circle i {
+        font-size: 0.875rem;
     }
 }
 
@@ -370,35 +645,166 @@
     animation: fadeInUp 0.5s ease;
 }
 
-/* ===== DARK MODE SUPPORT ===== */
-.dark .fc .fc-view-harness {
-    background: #1E293B;
+/* ===== MODERN SCROLLBARS - Light Theme ===== */
+.fc-scroller::-webkit-scrollbar,
+.card-body::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
 }
 
-.dark .fc .fc-col-header-cell {
-    background: #334155;
-    color: #F1F5F9;
+.fc-scroller::-webkit-scrollbar-track,
+.card-body::-webkit-scrollbar-track {
+    background: #f8fafc;
+    border-radius: 4px;
 }
 
-.dark .fc .fc-daygrid-day {
-    background: #1E293B;
-    border-color: #334155;
+.fc-scroller::-webkit-scrollbar-thumb,
+.card-body::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #cbd5e1 0%, #94a3b8 100%);
+    border-radius: 4px;
+    transition: background 0.3s ease;
 }
 
-.dark .fc .fc-daygrid-day-number {
-    color: #CBD5E1;
+.fc-scroller::-webkit-scrollbar-thumb:hover,
+.card-body::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
 }
 
-.dark .fc .fc-day-today {
-    background: rgba(59, 130, 246, 0.15) !important;
+/* ===== LOADING STATES ===== */
+.calendar-loading {
+    position: relative;
 }
 
-.dark .appointment-card {
-    background: #1E293B;
-    border-color: #334155;
+.calendar-loading::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(2px);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.dark .stat-card {
-    background: #1E293B;
-    border-color: #334155;
+/* ===== BADGE IMPROVEMENTS ===== */
+.badge {
+    font-weight: 600;
+    padding: 0.35em 0.65em;
+    border-radius: 6px;
+    letter-spacing: 0.025em;
+}
+
+/* ===== BUTTON ENHANCEMENTS ===== */
+.btn {
+    font-weight: 500;
+    letter-spacing: 0.025em;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-primary {
+    box-shadow: 0 2px 8px rgba(30, 58, 95, 0.25);
+}
+
+.btn-primary:hover {
+    box-shadow: 0 4px 16px rgba(30, 58, 95, 0.35);
+}
+
+.btn-outline-secondary:hover {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+}
+
+/* ===== MODAL IMPROVEMENTS ===== */
+.modal-content {
+    border-radius: 16px;
+    border: none;
+    box-shadow: 0 20px 60px rgba(15, 23, 42, 0.2);
+}
+
+.modal-header {
+    border-bottom: 1px solid #e2e8f0;
+    border-radius: 16px 16px 0 0;
+    padding: 1.25rem 1.5rem;
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+.modal-footer {
+    border-top: 1px solid #e2e8f0;
+    padding: 1rem 1.5rem;
+}
+
+/* ===== FORM ENHANCEMENTS ===== */
+.form-control,
+.form-select {
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    padding: 0.625rem 0.875rem;
+    transition: all 0.2s ease;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: #1E3A5F;
+    box-shadow: 0 0 0 3px rgba(30, 58, 95, 0.1);
+}
+
+.form-label {
+    font-weight: 500;
+    color: #475569;
+    margin-bottom: 0.5rem;
+}
+
+/* ===== ALERT IMPROVEMENTS ===== */
+.alert {
+    border-radius: 12px;
+    border: none;
+    padding: 1rem 1.25rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.alert-success {
+    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+    color: #065f46;
+}
+
+.alert-danger {
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    color: #991b1b;
+}
+
+.alert-warning {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    color: #92400e;
+}
+
+/* ===== UTILITY CLASSES ===== */
+.shadow-sm {
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06) !important;
+}
+
+.text-gradient {
+    background: linear-gradient(135deg, #1E3A5F 0%, #0F172A 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* ===== PRINT STYLES ===== */
+@media print {
+    .page-header-modern,
+    .stat-card-modern,
+    .btn,
+    .modal {
+        box-shadow: none !important;
+    }
+    
+    .calendar-sidebar-mobile {
+        display: none;
+    }
 }
