@@ -1,6 +1,7 @@
 package com.gedavocat.repository;
 
 import com.gedavocat.model.Client;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -13,8 +14,9 @@ import java.util.Optional;
 public interface ClientRepository extends JpaRepository<Client, String> {
     
     /**
-     * Trouve tous les clients d'un avocat
+     * Trouve tous les clients d'un avocat avec les cases chargés
      */
+    @EntityGraph(attributePaths = {"cases", "lawyer"})
     List<Client> findByLawyerId(String lawyerId);
     
     /**

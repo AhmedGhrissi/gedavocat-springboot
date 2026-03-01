@@ -193,35 +193,6 @@ public class AppointmentReminderService {
     }
 
     /**
-     * Construit le message de rappel pour le client
-     */
-    private String buildClientReminderMessage(Appointment appointment, String formattedDate) {
-        StringBuilder message = new StringBuilder();
-        message.append("Bonjour,\n\n");
-        message.append("Rappel de votre rendez-vous avec Maître ").append(appointment.getLawyer().getName()).append(":\n\n");
-        message.append("📅 ").append(appointment.getTitle()).append("\n");
-        message.append("🕒 ").append(formattedDate).append("\n");
-        
-        if (appointment.getLocation() != null) {
-            message.append("📍 Lieu: ").append(appointment.getLocation()).append("\n");
-        }
-        
-        if (appointment.getVideoConferenceLink() != null) {
-            message.append("💻 Lien visio: ").append(appointment.getVideoConferenceLink()).append("\n");
-        }
-        
-        if (appointment.getDescription() != null) {
-            message.append("\nDétails:\n").append(appointment.getDescription()).append("\n");
-        }
-        
-        message.append("\nEn cas d'empêchement, merci de contacter votre avocat.\n");
-        message.append("\n---\n");
-        message.append("GED Avocat - Gestion de cabinet\n");
-        
-        return message.toString();
-    }
-
-    /**
      * Envoie une notification immédiate pour un nouveau rendez-vous
      */
     public void sendAppointmentCreatedNotification(Appointment appointment) {
@@ -229,7 +200,7 @@ public class AppointmentReminderService {
         
         try {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy 'à' HH:mm");
-            String formattedDate = appointment.getAppointmentDate().format(formatter);
+            String formattedDate = appointment.getAppointmentDate()   .format(formatter);
 
             // Notifier l'avocat
             String subject = "Nouveau rendez-vous: " + appointment.getTitle();

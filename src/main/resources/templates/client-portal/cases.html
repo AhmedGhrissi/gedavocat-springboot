@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout}">
@@ -108,7 +108,7 @@
 
     <!-- Cards dossiers -->
     <div th:each="case, iter : ${cases}" class="case-card animate-fade-in-up"
-         th:style="'animation-delay:' + ${iter.index * 60} + 'ms'">
+         style="border: 1px solid var(--color-border); border-radius: 12px; padding: 1.25rem; margin-bottom: 1rem; background: var(--color-surface); box-shadow: var(--shadow-sm); transition: all 0.2s;">
         <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
 
             <!-- Infos principales -->

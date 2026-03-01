@@ -22,57 +22,44 @@
         };
     </script>
 
+    <!-- Bootstrap CSS -->
+    <link th:href="@{/webjars/bootstrap/5.3.0/css/bootstrap.min.css}" rel="stylesheet">
+
     <!-- Font Awesome -->
     <link th:href="@{/webjars/font-awesome/6.4.0/css/all.min.css}" rel="stylesheet">
     
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
-    <!-- NOUVEAU Design System Moderne 2026 -->
+    <!-- Layout structure styles (CRITICAL) -->
+    <link th:href="@{/css/layout.css}" rel="stylesheet">
+
+    <!-- NOUVEAU: Charte Institutionnelle Moderne (remplace tous les anciens CSS) -->
+    <link th:href="@{/css/global-unified-theme.css}" rel="stylesheet">
+    
+    <!-- App CSS (IMPORTANT: contient les styles de boutons et utilitaires) -->
+    <link th:href="@{/css/app.css}" rel="stylesheet">
+    
+    <!-- FIX CRITIQUE - Boutons toujours visibles (DERNIER CSS chargé = priorité max) -->
+    <link th:href="@{/css/buttons-fix-critical.css}" rel="stylesheet">
+    
+    <!-- Anciens CSS désactivés pour éviter les conflits
     <link th:href="@{/css/design-system.css}" rel="stylesheet">
+    <link th:href="@{/css/main.css}" rel="stylesheet">
     <link th:href="@{/css/components.css}" rel="stylesheet">
+    <link th:href="@{/css/text-contrast-fix.css}" rel="stylesheet">
+    <link th:href="@{/css/urgent-fix.css}" rel="stylesheet">
+    <link th:href="@{/css/all-pages-uniform.css}" rel="stylesheet">
+    -->
     
-    <!-- Anciens CSS (si nécessaire pour compatibilité) -->
-    <link th:href="@{/css/professional-theme.css}" rel="stylesheet" onerror="this.remove()">
-    <link th:href="@{/css/cabinet-avocat-theme.css}" rel="stylesheet" onerror="this.remove()">
-    <link th:href="@{/css/app.css}" rel="stylesheet" onerror="this.remove()">
-    <link th:href="@{/css/global-unified-theme.css}" rel="stylesheet" onerror="this.remove()">
-    
-    <!-- CORRECTION FINALE - À charger EN DERNIER pour forcer les styles -->
-    <link th:href="@{/css/fix-override.css}" rel="stylesheet">
-    
-    <!-- Theme Management Script - Load early to prevent flash -->
+    <!-- Theme Management désactivé (causait des conflits dark/light mode)
     <script th:src="@{/js/theme.js}"></script>
+    -->
 
     <!-- Fragment pour CSS additionnel des pages enfants -->
     <th:block layout:fragment="extra-css"></th:block>
 
-    <style>
-        /* Legacy aliases for pages that use old variable names */
-        :root {
-            --primary: #1E3A5F;
-            --primary-end: #172D4A;
-            --accent: #C6A75E;
-            --bg: #f8fafc;
-            --surface-1: #ffffff;
-            --surface-2: #f8fafc;
-            --border: #e2e8f0;
-            --success: #22c55e;
-            --warning: #f59e0b;
-            --danger: #ef4444;
-            --info: #0ea5e9;
-            --sidebar-bg: #0C1524;
-            --sidebar-text: #8FA6BF;
-            --primary-color: #1E3A5F;
-            --secondary-color: #1E3A5F;
-            --success-color: #22c55e;
-            --danger-color: #ef4444;
-            --warning-color: #f59e0b;
-            --info-color: #0ea5e9;
-            --dark-color: #0f172a;
-            --white: #ffffff;
-        }
-    </style>
+    <!-- Variables centralisées : déplacées vers /css/global-unified-theme.css -->
 </head>
 <body>
     <!-- Overlay pour mobile -->
@@ -257,17 +244,17 @@
 
     <div class="main-content">
         <header class="topbar">
-            <div class="d-flex align-items-center gap-2">
-                <!-- Bouton menu mobile -->
-                <button class="mobile-menu-btn" id="mobileMenuBtn">
-                    <i class="fas fa-bars"></i>
-                </button>
-                
-                <form class="topbar-search d-none d-md-flex" action="/documents" method="get" sec:authorize="!hasRole('ADMIN')">
-                    <i class="fas fa-search"></i>
-                    <input type="text" placeholder="Rechercher des documents..." name="q">
-                </form>
-            </div>
+            <!-- Bouton menu mobile -->
+            <button class="mobile-menu-btn" id="mobileMenuBtn">
+                <i class="fas fa-bars"></i>
+            </button>
+            
+            <!-- Barre de recherche de documents -->
+            <form class="topbar-search" action="/documents" method="get" sec:authorize="!hasRole('ADMIN')" style="order:1;">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Rechercher des documents..." name="q">
+            </form>
+
             <div class="topbar-actions">
                 <!-- Dark mode toggle -->
                 <button class="icon-btn" id="darkModeToggle" title="Mode sombre" type="button">
@@ -1177,7 +1164,7 @@
                 b.style.border = '1px solid #f59e0b';
                 b.style.padding = '10px 14px';
                 b.style.borderRadius = '8px';
-                b.style.boxShadow = '0 6px 18px rgba(15,23,42,0.12)';
+                b.style.boxShadow = '0 6px 18px rgba(0,0,0,.12)';
                 b.style.fontSize = '13px';
                 b.style.color = '#42310a';
                 b.textContent = 'Un problème JavaScript a été détecté sur cette page — ouvrez la console pour plus de détails.';

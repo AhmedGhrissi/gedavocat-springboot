@@ -1,0 +1,537 @@
+/* ══════════════════════════════════════════════════════════
+    CHARTE INSTITUTIONNELLE MODERNE - DocAvocat
+    Portail professionnel sécurisé pour cabinets exigeants
+    Calme. Maîtrise. Confidentialité.
+══════════════════════════════════════════════════════════ */
+
+:root {
+    /* === PRIMARY === */
+    --color-primary: #0F172A;
+    --color-primary-hover: #1E293B;
+    --primary: #0F172A;  /* Alias pour layout.css */
+    --primary-dark: #1E293B;  /* Alias pour layout.css */
+
+    /* === BACKGROUNDS === */
+    --color-background: #F1F5F9;
+    --color-surface: #FFFFFF;
+    --bg-body: #F1F5F9;  /* Alias pour layout.css */
+    --bg-surface: #FFFFFF;  /* Alias pour layout.css */
+    --bg-surface-hover: #F8FAFC;  /* Alias pour layout.css */
+
+    /* === BORDERS === */
+    --color-border: #E2E8F0;
+    --border-default: #E2E8F0;  /* Alias pour layout.css */
+
+    /* === ACCENT === */
+    --color-accent-gold: #C6A75E;
+    --color-accent: #C6A75E;  /* Alias */
+    --accent: #C6A75E;  /* Alias pour layout.css */
+    --accent-dark: #B6973E;  /* Alias pour layout.css */
+    
+    /* Brand aliases (pour pages legacy comme pricing) */
+    --brand-500: #0F172A;  /* Alias vers primary */
+    --brand-700: #1E293B;  /* Alias vers primary-dark */
+    --bg-secondary: #F1F5F9;  /* Alias vers color-background */
+
+    /* === STATUS === */
+    --color-success: #16A34A;
+    --color-success-bg: rgba(22, 163, 74, 0.1);
+    --success: #16A34A;  /* Alias pour layout.css */
+    
+    --color-warning: #D97706;
+    --color-warning-bg: rgba(217, 119, 6, 0.1);
+    
+    --color-danger: #DC2626;
+    --color-danger-bg: rgba(220, 38, 38, 0.1);
+    
+    --color-info: #2563EB;
+    --color-info-bg: rgba(37, 99, 235, 0.1);
+
+    /* === TYPOGRAPHY === */
+    --font-family-base: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --text-primary: #0F172A;
+    --text-secondary: #475569;
+    --text-tertiary: #94A3B8;
+    --text-muted: #64748b;  /* Alias pour layout.css */
+
+    /* === SIDEBAR (pour layout.css) === */
+    --sidebar-bg: #0F172A;  /* Même bleu nuit que primary */
+    --sidebar-text: rgba(255, 255, 255, 0.7);
+
+    /* === RADIUS === */
+    --radius-small: 8px;
+    --radius-medium: 12px;
+    --radius-large: 16px;
+    --radius-lg: 16px;  /* Alias pour layout.css */
+
+    /* === SHADOWS === */
+    --shadow-soft: 0 2px 8px rgba(15, 23, 42, 0.04);
+    --shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.04);  /* Alias */
+    --shadow-medium: 0 4px 12px rgba(15, 23, 42, 0.06);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);  /* Alias pour layout.css */
+    --shadow-large: 0 8px 24px rgba(15, 23, 42, 0.08);
+    --shadow-lg: 0 8px 24px rgba(15, 23, 42, 0.08);  /* Alias */
+
+    /* === TRANSITIONS === */
+    --transition-fast: 0.15s ease;
+    --transition-base: 0.2s ease;
+    
+    /* === SPACING (grille 8px) === */
+    --spacing-1: 8px;
+    --spacing-2: 16px;
+    --spacing-3: 24px;
+    --spacing-4: 32px;
+    --spacing-5: 40px;
+    --spacing-6: 48px;
+}
+
+/* ══════════════════════════════════════════════════════════
+    BASE & RESET
+══════════════════════════════════════════════════════════ */
+
+* {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+html {
+    background: var(--color-background);
+}
+
+body {
+    background: var(--color-background);
+    color: var(--text-primary);
+    font-family: var(--font-family-base);
+    font-size: 15px;
+    font-weight: 400;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+}
+
+/* ══════════════════════════════════════════════════════════
+    TYPOGRAPHY
+══════════════════════════════════════════════════════════ */
+
+h1, h2, h3, h4, h5, h6,
+.h1, .h2, .h3, .h4, .h5, .h6 {
+    color: var(--text-primary);
+    font-weight: 600;
+    line-height: 1.3;
+    margin: 0 0 var(--spacing-2) 0;
+}
+
+h1, .h1 { font-size: 32px; }
+h2, .h2 { font-size: 24px; }
+h3, .h3 { font-size: 20px; }
+h4, .h4 { font-size: 18px; }
+h5, .h5 { font-size: 16px; }
+h6, .h6 { font-size: 15px; }
+
+p {
+    margin: 0 0 var(--spacing-2) 0;
+    color: var(--text-secondary);
+}
+
+.text-primary { color: var(--text-primary) !important; }
+.text-secondary { color: var(--text-secondary) !important; }
+.text-tertiary { color: var(--text-tertiary) !important; }
+
+small, .small {
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+/* ══════════════════════════════════════════════════════════
+    CARDS
+══════════════════════════════════════════════════════════ */
+
+.card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-large);
+    box-shadow: var(--shadow-soft);
+    padding: var(--spacing-3);
+    transition: var(--transition-base);
+}
+
+.card:hover {
+    box-shadow: var(--shadow-medium);
+    transform: scale(1.01);
+}
+
+.card-header {
+    background: transparent;
+    border-bottom: 1px solid var(--color-border);
+    padding: var(--spacing-2);
+    margin: calc(var(--spacing-3) * -1) calc(var(--spacing-3) * -1) var(--spacing-3);
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 18px;
+}
+
+.card-body {
+    padding: var(--spacing-3);
+    color: var(--text-primary);
+}
+
+.card-title {
+    color: var(--text-primary);
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: var(--spacing-1);
+}
+
+.card-text {
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+/* ══════════════════════════════════════════════════════════
+    BUTTONS - Institutionnel Moderne
+══════════════════════════════════════════════════════════ */
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 20px;
+    font-size: 15px;
+    font-weight: 500;
+    font-family: var(--font-family-base);
+    line-height: 1.5;
+    text-align: center;
+    text-decoration: none;
+    white-space: nowrap;
+    border: 1px solid transparent;
+    border-radius: var(--radius-medium);
+    cursor: pointer;
+    transition: var(--transition-base);
+    background: transparent;
+}
+
+.btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(198, 167, 94, 0.2);
+}
+
+/* Primary - Bleu nuit plein */
+.btn-primary,
+.button-primary {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: white;
+}
+
+.btn-primary:hover,
+.button-primary:hover {
+    background: var(--color-primary-hover);
+    border-color: var(--color-primary-hover);
+    color: white;
+}
+
+/* Secondary - Outline */
+.btn-secondary,
+.button-secondary {
+    background: transparent;
+    border-color: var(--color-border);
+    color: var(--text-primary);
+}
+
+.btn-secondary:hover,
+.button-secondary:hover {
+    background: var(--color-background);
+    border-color: var(--text-secondary);
+    color: var(--text-primary);
+}
+
+/* Outline Primary */
+.btn-outline-primary {
+    background: transparent;
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+
+.btn-outline-primary:hover {
+    background: var(--color-primary);
+    color: white;
+}
+
+/* Success */
+.btn-success {
+    background: var(--color-success);
+    border-color: var(--color-success);
+    color: white;
+}
+
+.btn-success:hover {
+    background: #15803D;
+    color: white;
+}
+
+/* Danger */
+.btn-danger {
+    background: var(--color-danger);
+    border-color: var(--color-danger);
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #B91C1C;
+    color: white;
+}
+
+/* Light */
+.btn-light {
+    background: var(--color-surface);
+    border-color: var(--color-border);
+    color: var(--text-primary);
+}
+
+.btn-light:hover {
+    background: var(--color-background);
+}
+
+/* Sizes */
+.btn-sm {
+    padding: 8px 16px;
+    font-size: 14px;
+}
+
+.btn-lg {
+    padding: 14px 24px;
+    font-size: 16px;
+}
+
+/* ══════════════════════════════════════════════════════════
+    BADGES - Fond pâle, texte fort
+══════════════════════════════════════════════════════════ */
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.4;
+    border-radius: var(--radius-small);
+    white-space: nowrap;
+}
+
+.badge-success {
+    background-color: var(--color-success-bg);
+    color: var(--color-success);
+}
+
+.badge-warning {
+    background-color: var(--color-warning-bg);
+    color: var(--color-warning);
+}
+
+.badge-danger {
+    background-color: var(--color-danger-bg);
+    color: var(--color-danger);
+}
+
+.badge-info {
+    background-color: var(--color-info-bg);
+    color: var(--color-info);
+}
+
+.badge-primary {
+    background-color: rgba(15, 23, 42, 0.1);
+    color: var(--color-primary);
+}
+
+.badge-secondary {
+    background-color: var(--color-background);
+    color: var(--text-secondary);
+}
+
+/* ══════════════════════════════════════════════════════════
+    FORMS
+══════════════════════════════════════════════════════════ */
+
+.form-label {
+    display: block;
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 6px;
+}
+
+.form-control,
+.form-select,
+textarea.form-control,
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="tel"],
+input[type="date"],
+input[type="time"],
+input[type="search"] {
+    width: 100%;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-medium);
+    color: var(--text-primary);
+    padding: 10px 14px;
+    font-size: 15px;
+    font-family: var(--font-family-base);
+    line-height: 1.5;
+    transition: var(--transition-base);
+}
+
+.form-control:focus,
+.form-select:focus,
+textarea.form-control:focus,
+input:focus {
+    outline: none;
+    border-color: var(--color-accent-gold);
+    box-shadow: 0 0 0 3px rgba(198, 167, 94, 0.15);
+}
+
+.form-control::placeholder {
+    color: var(--text-tertiary);
+}
+
+.form-text {
+    color: var(--text-secondary);
+    font-size: 13px;
+    margin-top: 4px;
+}
+
+/* ══════════════════════════════════════════════════════════
+    TABLES
+══════════════════════════════════════════════════════════ */
+
+.table {
+    width: 100%;
+    background: var(--color-surface);
+    border-collapse: collapse;
+    color: var(--text-primary);
+}
+
+.table thead th {
+    background: var(--color-background);
+    color: var(--text-primary);
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--color-border);
+    text-align: left;
+}
+
+.table tbody td {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--color-border);
+    color: var(--text-primary);
+    font-size: 14px;
+}
+
+.table tbody tr:hover {
+    background: var(--color-background);
+}
+
+/* ══════════════════════════════════════════════════════════
+    ALERTS
+══════════════════════════════════════════════════════════ */
+
+.alert {
+    padding: 14px 16px;
+    border-radius: var(--radius-medium);
+    border: 1px solid;
+    font-size: 14px;
+    line-height: 1.5;
+    margin-bottom: var(--spacing-2);
+}
+
+.alert-success {
+    background: var(--color-success-bg);
+    border-color: var(--color-success);
+    color: var(--color-success);
+}
+
+.alert-warning {
+    background: var(--color-warning-bg);
+    border-color: var(--color-warning);
+    color: var(--color-warning);
+}
+
+.alert-danger {
+    background: var(--color-danger-bg);
+    border-color: var(--color-danger);
+    color: var(--color-danger);
+}
+
+.alert-info {
+    background: var(--color-info-bg);
+    border-color: var(--color-info);
+    color: var(--color-info);
+}
+
+/* ══════════════════════════════════════════════════════════
+    UTILITIES
+══════════════════════════════════════════════════════════ */
+
+.rounded-md { border-radius: var(--radius-medium) !important; }
+.rounded-lg { border-radius: var(--radius-large) !important; }
+.fw-500 { font-weight: 500 !important; }
+.fw-600 { font-weight: 600 !important; }
+.text-xs { font-size: 12px !important; }
+.text-sm { font-size: 13px !important; }
+.text-base { font-size: 15px !important; }
+.text-lg { font-size: 17px !important; }
+
+/* Spacing */
+.mt-1 { margin-top: var(--spacing-1) !important; }
+.mt-2 { margin-top: var(--spacing-2) !important; }
+.mt-3 { margin-top: var(--spacing-3) !important; }
+.mb-1 { margin-bottom: var(--spacing-1) !important; }
+.mb-2 { margin-bottom: var(--spacing-2) !important; }
+.mb-3 { margin-bottom: var(--spacing-3) !important; }
+.p-2 { padding: var(--spacing-2) !important; }
+.p-3 { padding: var(--spacing-3) !important; }
+
+/* ══════════════════════════════════════════════════════════
+    ANIMATIONS SUBTILES
+══════════════════════════════════════════════════════════ */
+
+.fade-in {
+    animation: fadeIn 0.25s ease forwards;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ══════════════════════════════════════════════════════════
+    SUPPRESSION MODE SOMBRE & GRADIENTS
+    Règle absolue : JAMAIS de dégradés
+══════════════════════════════════════════════════════════ */
+
+/* Suppression de tous les dégradés existants */
+.hero-banner,
+.gradient-bg,
+[class*="gradient"] {
+    background: var(--color-primary) !important;
+    background-image: none !important;
+}
+
+/* Suppression mode sombre qui crée des conflits */
+.dark,
+.dark-mode,
+[data-theme="dark"] {
+    /* Désactivé pour éviter les mélanges */
+}

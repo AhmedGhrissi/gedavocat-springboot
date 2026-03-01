@@ -49,6 +49,13 @@ public class ClientController {
             clients = clientService.getClientsByLawyer(user.getId());
         }
 
+        // Force-initialiser les cases pour éviter LazyInitializationException
+        for (Client client : clients) {
+            if (client.getCases() != null) {
+                client.getCases().size();
+            }
+        }
+
         model.addAttribute("clients", clients);
         model.addAttribute("search", search);
         model.addAttribute("totalClients", clients.size());

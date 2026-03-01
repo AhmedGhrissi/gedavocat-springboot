@@ -1,9 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout}">
 <head>
     <link rel="stylesheet" th:href="@{/css/pages/appointments.css}">
+    <link rel="stylesheet" th:href="@{/css/calendar-modern.css}">
     <style>
         /* Jours avec rendez-vous : fond + numéro en gras */
         .fc-daygrid-day:has(.fc-daygrid-event-harness) .fc-daygrid-day-frame {
@@ -38,8 +39,7 @@
                 <a href="/appointments/list" class="btn btn-outline-secondary" style="border-radius:var(--radius-md);font-weight:500">
                     <i class="fas fa-list me-1"></i> Vue liste
                 </a>
-                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newAppointmentModal"
-                        style="border-radius:var(--radius-md);font-weight:600">
+                <button type="button" class="btn btn-primary rounded-md fw-600" data-bs-toggle="modal" data-bs-target="#newAppointmentModal">
                     <i class="fas fa-plus me-1"></i> Nouveau rendez-vous
                 </button>
             </div>

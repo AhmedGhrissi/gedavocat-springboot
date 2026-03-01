@@ -5,8 +5,6 @@ import com.gedavocat.security.UserDetailsServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.env.Environment;
-import org.springframework.core.env.Profiles;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -34,7 +32,6 @@ public class SecurityConfig {
 
 	private final UserDetailsServiceImpl userDetailsService;
 	private final JwtAuthenticationFilter jwtAuthFilter;
-	private final Environment env;
 
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -45,7 +42,7 @@ public class SecurityConfig {
 						// Pages publiques
 						.requestMatchers("/", "/login", "/register", "/maintenance", "/subscription/pricing",
 						"/api/auth/**", "/css/**", "/js/**", "/images/**", "/img/**", "/favicon.ico", "/favicon.svg",
-						"/robots.txt", "/sitemap.xml",
+						"/robots.txt", "/sitemap.xml", "/webjars/**", "/.well-known/**",
 							"/forgot-password", "/reset-password", "/verify-email", "/verify-email/resend",
 							"/clients/accept-invitation",
 							"/collaborators/accept-invitation", "/collaborators/invitation-info",
@@ -94,11 +91,8 @@ public class SecurityConfig {
 									"camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()"));
 
 							// Build connect-src and other origin lists once (effectively final) so they can be referenced by nested lambdas
-							boolean isDevOrLocal = env.acceptsProfiles(Profiles.of("dev", "local"));
-							final String connectSrc = isDevOrLocal
-									? "'self' https://api.stripe.com https://api.payplug.com https://cdn.jsdelivr.net"
-									: "'self' https://api.stripe.com https://api.payplug.com";
-
+						// Always include cdn.jsdelivr.net for Chart.js source maps
+						final String connectSrc = "'self' https://api.stripe.com https://api.payplug.com https://cdn.jsdelivr.net";
 							// Always allow the CDN for script/style/font resources so external UI libs (FullCalendar, cdnjs, Google Fonts) can load
 							final String extraScriptOrigins = " https://cdn.jsdelivr.net";
 							final String extraStyleOrigins = " https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com";

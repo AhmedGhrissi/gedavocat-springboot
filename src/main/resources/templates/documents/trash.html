@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout}">
@@ -46,13 +46,13 @@
             <div th:if="${documents != null and !documents.empty}">
                 <div th:each="doc : ${documents}" class="file-card">
                     <div class="file-icon"
-                         th:classappend="${#strings.endsWith(doc.originalName, '.pdf') ? 'pdf' :
-                                         (#strings.endsWith(doc.originalName, '.doc') or #strings.endsWith(doc.originalName, '.docx')) ? 'doc' :
-                                         (#strings.endsWith(doc.originalName, '.jpg') or #strings.endsWith(doc.originalName, '.png')) ? 'img' : 'default'}">
+                         th:classappend="${doc.originalName.toLowerCase().endsWith('.pdf') ? 'pdf' :
+                                         (doc.originalName.toLowerCase().endsWith('.doc') or doc.originalName.toLowerCase().endsWith('.docx')) ? 'doc' :
+                                         (doc.originalName.toLowerCase().endsWith('.jpg') or doc.originalName.toLowerCase().endsWith('.png')) ? 'img' : 'default'}">
                         <i class="fas"
-                           th:classappend="${#strings.endsWith(doc.originalName, '.pdf') ? 'fa-file-pdf' :
-                                           (#strings.endsWith(doc.originalName, '.doc') or #strings.endsWith(doc.originalName, '.docx')) ? 'fa-file-word' :
-                                           (#strings.endsWith(doc.originalName, '.jpg') or #strings.endsWith(doc.originalName, '.png')) ? 'fa-file-image' : 'fa-file'}"></i>
+                           th:classappend="${doc.originalName.toLowerCase().endsWith('.pdf') ? 'fa-file-pdf' :
+                                           (doc.originalName.toLowerCase().endsWith('.doc') or doc.originalName.toLowerCase().endsWith('.docx')) ? 'fa-file-word' :
+                                           (doc.originalName.toLowerCase().endsWith('.jpg') or doc.originalName.toLowerCase().endsWith('.png')) ? 'fa-file-image' : 'fa-file'}"></i>
                     </div>
                     <div class="file-info">
                         <div class="file-name" th:text="${doc.originalName}">document.pdf</div>

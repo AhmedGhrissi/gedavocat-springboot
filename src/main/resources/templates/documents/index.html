@@ -38,7 +38,7 @@
                         <div class="stat-icon green">
                             <i class="fas fa-folder"></i>
                         </div>
-                        <div class="stat-value" th:text="${documents != null ? #lists.size(#sets.toSet(documents.![caseEntity.id])) : 0}">0</div>
+                        <div class="stat-value" th:text="${documentsByCaseCount != null ? documentsByCaseCount : (documentsByCase != null ? documentsByCase.size() : 0)}">0</div>
                         <div class="stat-label">Dossiers avec documents</div>
                     </div>
                 </div>
@@ -66,13 +66,13 @@
 
                     <div th:each="doc : ${caseEntry.value}" class="file-card">
                         <div class="file-icon"
-                             th:classappend="${#strings.endsWith(doc.originalName, '.pdf') ? 'pdf' :
-                                             (#strings.endsWith(doc.originalName, '.doc') or #strings.endsWith(doc.originalName, '.docx')) ? 'doc' :
-                                             (#strings.endsWith(doc.originalName, '.jpg') or #strings.endsWith(doc.originalName, '.png')) ? 'img' : 'default'}">
+                             th:classappend="${doc.originalName.toLowerCase().endsWith('.pdf') ? 'pdf' :
+                                             (doc.originalName.toLowerCase().endsWith('.doc') or doc.originalName.toLowerCase().endsWith('.docx')) ? 'doc' :
+                                             (doc.originalName.toLowerCase().endsWith('.jpg') or doc.originalName.toLowerCase().endsWith('.png')) ? 'img' : 'default'}">
                             <i class="fas"
-                               th:classappend="${#strings.endsWith(doc.originalName, '.pdf') ? 'fa-file-pdf' :
-                                               (#strings.endsWith(doc.originalName, '.doc') or #strings.endsWith(doc.originalName, '.docx')) ? 'fa-file-word' :
-                                               (#strings.endsWith(doc.originalName, '.jpg') or #strings.endsWith(doc.originalName, '.png')) ? 'fa-file-image' : 'fa-file'}"></i>
+                               th:classappend="${doc.originalName.toLowerCase().endsWith('.pdf') ? 'fa-file-pdf' :
+                                               (doc.originalName.toLowerCase().endsWith('.doc') or doc.originalName.toLowerCase().endsWith('.docx')) ? 'fa-file-word' :
+                                               (doc.originalName.toLowerCase().endsWith('.jpg') or doc.originalName.toLowerCase().endsWith('.png')) ? 'fa-file-image' : 'fa-file'}"></i>
                         </div>
                         <div class="file-info">
                             <div class="file-name" th:text="${doc.originalName}">document.pdf</div>

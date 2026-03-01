@@ -5,7 +5,7 @@
 
 /* ── Hero section ── */
 .rpva-hero {
-    background: linear-gradient(135deg, #1e3a8a 0%, var(--brand-500) 100%);
+    background: var(--color-primary);
     border-radius: var(--radius-xl);
     padding: 48px;
     color: #fff;
@@ -36,17 +36,17 @@
     margin-bottom: 32px;
 }
 .feature-card {
-    background: var(--surface);
+    background: var(--color-surface, var(--surface));
     border-radius: var(--radius-lg);
     padding: 24px;
-    border: 1px solid var(--border-light);
+    border: 2px solid var(--color-border, var(--border-light));
     transition: var(--transition-base);
-    box-shadow: var(--shadow-xs);
+    box-shadow: var(--shadow-sm, var(--shadow-xs));
 }
 .feature-card:hover {
     transform: translateY(-4px);
     box-shadow: var(--shadow-lg);
-    border-color: var(--brand-200);
+    border-color: var(--color-primary, var(--brand-200));
 }
 .feature-icon {
     width: 52px;
@@ -83,13 +83,13 @@
     margin-bottom: 32px;
 }
 .stat-card {
-    background: var(--surface);
+    background: var(--color-surface, var(--surface));
     border-radius: var(--radius-lg);
     padding: 24px;
-    border: 1px solid var(--border-light);
+    border: 2px solid var(--color-border, var(--border-light));
     position: relative;
     overflow: hidden;
-    box-shadow: var(--shadow-xs);
+    box-shadow: var(--shadow-sm, var(--shadow-xs));
     transition: var(--transition-base);
 }
 .stat-card:hover {
@@ -126,19 +126,19 @@
 
 /* ── Communication timeline ── */
 .comm-item {
-    background: var(--surface);
+    background: var(--color-surface, var(--surface));
     border-radius: var(--radius-lg);
     padding: 20px;
     margin-bottom: 12px;
-    border-left: 4px solid var(--border-light);
+    border-left: 4px solid var(--color-border, var(--border-light));
     transition: var(--transition-base);
     display: flex;
     align-items: start;
     gap: 16px;
-    border-top: 1px solid var(--border-light);
-    border-right: 1px solid var(--border-light);
-    border-bottom: 1px solid var(--border-light);
-    box-shadow: var(--shadow-xs);
+    border-top: 2px solid var(--color-border, var(--border-light));
+    border-right: 2px solid var(--color-border, var(--border-light));
+    border-bottom: 2px solid var(--color-border, var(--border-light));
+    box-shadow: var(--shadow-sm, var(--shadow-xs));
 }
 .comm-item:hover {
     border-left-color: #3b82f6;
@@ -185,19 +185,20 @@
     margin-bottom: 32px;
 }
 .action-btn {
-    background: linear-gradient(135deg, var(--brand-500), var(--brand-700));
-    color: #fff;
-    border: none;
-    border-radius: var(--radius-lg);
+    background: var(--color-primary, #0F172A) !important;
+    color: #fff !important;
+    border: 2px solid #C6A75E !important;
+    border-radius: 12px;
     padding: 20px;
     display: flex;
     align-items: center;
     gap: 16px;
     cursor: pointer;
-    transition: var(--transition-base);
+    transition: all 0.2s ease;
     text-decoration: none;
     position: relative;
     overflow: hidden;
+    box-shadow: 0 4px 12px rgba(15,23,42,0.2);
 }
 .action-btn::before {
     content: '';
@@ -212,8 +213,17 @@
 .action-btn:hover::before { left: 100%; }
 .action-btn:hover {
     transform: translateY(-4px);
-    box-shadow: var(--shadow-lg), 0 0 20px rgba(30,58,95,0.3);
-    color: #fff;
+    box-shadow: 0 6px 16px rgba(15,23,42,0.3);
+    color: #fff !important;
+    border-color: #D4AF6F !important;
+}
+.action-btn-success {
+    background: #16a34a !important;
+    border-color: #22c55e !important;
+}
+.action-btn-success:hover {
+    background: #15803d !important;
+    border-color: #16a34a !important;
 }
 .action-icon {
     width: 44px;

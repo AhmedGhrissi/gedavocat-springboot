@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout}">
@@ -8,6 +8,25 @@
 <style>
     .apt-mini { background: #f8fafc; border-radius: 10px; padding: .75rem 1rem; margin-bottom: .5rem; }
     .apt-mini .apt-time { font-weight: 600; color: #1E3A5F; }
+    .info-card {
+        background: var(--color-surface, #FFFFFF);
+        border: 2px solid var(--color-border, #E2E8F0);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .info-card h4 {
+        font-weight: 600;
+        color: var(--color-primary, #0F172A);
+        margin-bottom: 1rem;
+    }
+    .info-card label {
+        font-size: 0.875rem;
+        font-weight: 500;
+        margin-bottom: 0.25rem;
+        display: block;
+    }
 </style>
 </head>
 <body>
@@ -66,22 +85,26 @@
                                 <i class="fas fa-file-pdf"></i> Documents 
                                 <span class="badge bg-secondary" th:text="${documents.size()}">0</span>
                             </h4>
-                            <div class="d-flex gap-2 flex-wrap">
+                            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
                                 <a th:if="${documents != null and !documents.empty}"
                                    th:href="@{/my-cases/{id}/export-zip(id=${case.id})}"
-                                   class="btn btn-outline-primary btn-sm">
+                                   style="background: #FFFFFF; border: 2px solid #0F172A; color: #0F172A; padding: 0.375rem 0.75rem; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 0.875rem; display: inline-flex; align-items: center; gap: 0.375rem; transition: all 0.2s;"
+                                   onmouseover="this.style.background='#0F172A'; this.style.color='#FFFFFF'" onmouseout="this.style.background='#FFFFFF'; this.style.color='#0F172A'">
                                     <i class="fas fa-file-archive"></i> Télécharger tout (ZIP)
                                 </a>
-                                <button class="btn btn-success btn-sm" 
+                                <button style="background: #16A34A; border: 2px solid #16A34A; color: #FFFFFF; padding: 0.375rem 0.75rem; border-radius: 6px; font-weight: 600; font-size: 0.875rem; display: inline-flex; align-items: center; gap: 0.375rem; cursor: pointer; transition: all 0.2s;"
                                         type="button" 
                                         data-bs-toggle="collapse" 
-                                        data-bs-target="#uploadForm">
+                                        data-bs-target="#uploadForm"
+                                        onmouseover="this.style.background='#15803D'" onmouseout="this.style.background='#16A34A'">
                                     <i class="fas fa-upload"></i> Envoyer un document
                                 </button>
-                                <button class="btn btn-secondary btn-sm" type="button"
+                                <button style="background: #64748B; border: 2px solid #64748B; color: #FFFFFF; padding: 0.375rem 0.75rem; border-radius: 6px; font-weight: 600; font-size: 0.875rem; display: inline-flex; align-items: center; gap: 0.375rem; cursor: pointer; transition: all 0.2s;"
+                                        type="button"
                                         th:data-upload="@{/my-cases/{id}/upload-ajax(id=${case.id})}"
                                         th:data-redirect="@{/my-cases/{id}(id=${case.id})}"
-                                        onclick="openScanner(this.dataset.upload, this.dataset.redirect)">
+                                        onclick="openScanner(this.dataset.upload, this.dataset.redirect)"
+                                        onmouseover="this.style.background='#475569'" onmouseout="this.style.background='#64748B'">
                                     <i class="fas fa-camera"></i> Scanner
                                 </button>
                             </div>
@@ -113,28 +136,35 @@
                             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                         </div>
                         
-                        <div th:if="${documents != null and !documents.empty}">
-                            <div th:each="doc : ${documents}" class="document-item">
-                                <div class="doc-icon">
-                                    <i class="fas fa-file-pdf"></i>
+                        <div th:if="${documents != null and !documents.empty}" style="display: flex; flex-direction: column; gap: 1rem;">
+                            <div th:each="doc : ${documents}" style="display: flex; align-items: center; justify-content: space-between; padding: 1rem; border: 2px solid #E2E8F0; border-radius: 12px; background: #F8FAFC;">
+                                <div style="display: flex; align-items: center; gap: 1rem; flex: 1;">
+                                    <div style="width: 40px; height: 40px; background: #FEE2E2; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                                        <i class="fas fa-file-pdf" style="color: #DC2626; font-size: 1.25rem;"></i>
+                                    </div>
+                                    <div style="flex: 1;">
+                                        <div style="font-weight: 600; color: #0F172A; margin-bottom: 0.25rem;" th:text="${doc.originalName}">Document.pdf</div>
+                                        <div style="font-size: 0.875rem; color: #64748B;">
+                                            <span th:text="${doc.fileSize != null ? #numbers.formatDecimal(doc.fileSize / 1024.0, 1, 2) + ' KB' : ''}"></span>
+                                            <span> • </span>
+                                            <span>Ajouté le </span>
+                                            <span th:text="${#temporals.format(doc.createdAt, 'dd/MM/yyyy')}"></span>
+                                            <span th:if="${doc.uploaderRole != null}" style="margin-left: 0.5rem; padding: 0.125rem 0.5rem; background: #E2E8F0; border-radius: 4px; font-size: 0.75rem; font-weight: 600;" 
+                                                  th:text="${doc.uploaderRole == 'CLIENT' ? 'Par vous' : 'Par avocat'}"></span>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="flex-grow-1">
-                                    <div class="fw-bold" th:text="${doc.originalName}">Document.pdf</div>
-                                    <small class="text-muted">
-                                        <span th:text="${doc.fileSize != null ? #numbers.formatDecimal(doc.fileSize / 1024.0, 1, 2) + ' KB' : ''}"></span>
-                                        • Ajouté le <span th:text="${#temporals.format(doc.createdAt, 'dd/MM/yyyy')}"></span>
-                                        <span th:if="${doc.uploaderRole != null}" class="badge bg-light text-dark ms-1" 
-                                              th:text="${doc.uploaderRole == 'CLIENT' ? 'Par vous' : 'Par l''avocat'}"></span>
-                                    </small>
-                                </div>
-                                <div class="d-flex gap-2">
+                                <div style="display: flex; gap: 0.5rem; flex-shrink: 0;">
                                     <a th:if="${doc.mimetype != null and (doc.mimetype.startsWith('application/pdf') or doc.mimetype.startsWith('image/'))}" 
                                        th:href="@{/my-cases/documents/{id}/preview(id=${doc.id})}" 
-                                       class="btn btn-sm btn-outline-primary" target="_blank" title="Prévisualiser">
+                                       style="background: #FFFFFF; border: 2px solid #E2E8F0; color: #0F172A; padding: 0.5rem 1rem; border-radius: 6px; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.2s;"
+                                       target="_blank" title="Prévisualiser"
+                                       onmouseover="this.style.background='#F1F5F9'" onmouseout="this.style.background='#FFFFFF'">
                                         <i class="fas fa-eye"></i>
                                     </a>
                                     <a th:href="@{/my-cases/documents/{id}/download(id=${doc.id})}" 
-                                       class="btn btn-sm btn-primary" style="border-radius:var(--radius-md);font-weight:600">
+                                       style="background: #0F172A; border: 2px solid #0F172A; color: #FFFFFF; padding: 0.5rem 1rem; border-radius: 6px; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.2s;"
+                                       onmouseover="this.style.background='#1E293B'; this.style.borderColor='#1E293B'" onmouseout="this.style.background='#0F172A'; this.style.borderColor='#0F172A'">
                                         <i class="fas fa-download"></i> Télécharger
                                     </a>
                                 </div>

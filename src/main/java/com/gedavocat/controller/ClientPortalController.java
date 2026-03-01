@@ -100,9 +100,12 @@ public class ClientPortalController {
 
             // Récupérer UNIQUEMENT les dossiers de ce client
             List<Case> myCases = caseService.getCasesByClient(client.getId());
+            if (myCases == null) {
+                myCases = Collections.emptyList();
+            }
 
             // Log diagnostic: how many cases were returned for this client
-            log.info("Client portal: user={} clientId={} returned {} cases", user.getEmail(), client.getId(), myCases == null ? 0 : myCases.size());
+            log.info("Client portal: user={} clientId={} returned {} cases", user.getEmail(), client.getId(), myCases.size());
             
             // Force-initialiser les proxies lazy (open-in-view=false)
             for (Case c : myCases) {

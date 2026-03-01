@@ -1,0 +1,171 @@
+/* ═══════════════════════════════════════════════════════════════════
+   FIX CRITIQUE - BOUTONS D'ACTION TOUJOURS VISIBLES
+   Priorité maximale pour contrer Bootstrap et autres conflits CSS
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Règle universelle avec spécificité maximale */
+table tbody tr td a.btn,
+table tbody tr td button.btn,
+table tbody tr td a.btn-ghost,
+table tbody tr td button.btn-ghost,
+table tbody tr td a.btn-sm,
+table tbody tr td button.btn-sm,
+table tbody tr td div.action-buttons a,
+table tbody tr td div.action-buttons button,
+.table-modern tbody tr td a.btn,
+.table-modern tbody tr td button.btn,
+.table-modern tbody tr td a.btn-ghost,
+.table-modern tbody tr td button.btn-ghost,
+.card-body table tbody tr td a.btn,
+.card-body table tbody tr td button.btn,
+td a.btn[class*="btn-"],
+td button.btn[class*="btn-"] {
+    display: inline-flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+}
+
+/* Conteneurs d'actions - FORCE l'affichage */
+table tbody tr td .action-buttons,
+table tbody tr td div.action-buttons,
+.table-modern tbody tr td .action-buttons,
+.table-modern tbody tr td div.action-buttons,
+.card-body table tbody tr td .action-buttons {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    gap: 0.5rem !important;
+    align-items: center !important;
+}
+
+/* Boutons ghost - Style complet avec priorité max */
+.btn-ghost,
+a.btn-ghost,
+button.btn-ghost,
+table a.btn-ghost,
+table button.btn-ghost {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.375rem !important;
+    padding: 0.5rem 0.75rem !important;
+    background: #F8FAFC !important;
+    border: 2px solid #0F172A !important;
+    color: #0F172A !important;
+    border-radius: 6px !important;
+    font-weight: 600 !important;
+    text-decoration: none !important;
+    white-space: nowrap !important;
+    transition: all 0.15s ease !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    min-width: 40px !important;
+    min-height: 36px !important;
+}
+
+.btn-ghost:hover,
+a.btn-ghost:hover,
+button.btn-ghost:hover {
+    background: #0F172A !important;
+    color: #FFFFFF !important;
+    border-color: #0F172A !important;
+    transform: translateY(-1px) !important;
+    text-decoration: none !important;
+}
+
+/* Icônes dans les boutons */
+.btn-ghost i,
+a.btn-ghost i,
+button.btn-ghost i,
+.btn i {
+    color: inherit !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    display: inline-block !important;
+}
+
+/* Boutons small */
+.btn-sm,
+a.btn-sm,
+button.btn-sm,
+.btn-ghost.btn-sm {
+    padding: 0.375rem 0.5rem !important;
+    font-size: 0.875rem !important;
+    min-width: 36px !important;
+    min-height: 34px !important;
+}
+
+/* Bootstrap override - FORCE l'affichage même si Bootstrap dit non */
+.btn:not(.d-none),
+.btn-ghost:not(.d-none),
+a.btn:not([style*="display: none"]),
+button.btn:not([style*="display: none"]) {
+    display: inline-flex !important;
+}
+
+/* Tooltip containers */
+.tooltip,
+a.tooltip,
+button.tooltip {
+    position: relative !important;
+    display: inline-flex !important;
+}
+
+.tooltip .tooltip-text {
+    position: absolute !important;
+    bottom: calc(100% + 8px) !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    background: rgba(15, 23, 42, 0.95) !important;
+    color: #fff !important;
+    padding: 6px 8px !important;
+    border-radius: 6px !important;
+    font-size: 0.8125rem !important;
+    white-space: nowrap !important;
+    z-index: 9999 !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transition: opacity 150ms ease, transform 150ms ease !important;
+}
+
+.tooltip:hover .tooltip-text,
+.tooltip:focus-within .tooltip-text {
+    visibility: visible !important;
+    opacity: 1 !important;
+    transform: translateX(-50%) translateY(-4px) !important;
+}
+
+/* Anti-masquage : empêche tout ce qui pourrait cacher les boutons */
+table tbody tr {
+    overflow: visible !important;
+}
+
+table tbody tr td {
+    overflow: visible !important;
+}
+
+/* Responsive - garde les boutons visibles sur mobile */
+@media (max-width: 768px) {
+    .btn,
+    .btn-ghost,
+    .btn-sm {
+        display: inline-flex !important;
+        visibility: visible !important;
+    }
+    
+    .action-buttons {
+        display: flex !important;
+        flex-wrap: wrap !important;
+    }
+}
+
+/* Debug - si rien d'autre ne fonctionne, utilisez ces règles */
+*[class*="btn-"]:not([class*="btn-group"]) {
+    display: inline-flex !important;
+}
+
+table td > * {
+    visibility: visible !important;
+}

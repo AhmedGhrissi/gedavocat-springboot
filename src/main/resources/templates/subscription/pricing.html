@@ -3,250 +3,395 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Choisir votre abonnement - DocAvocat</title>
+    <title>Tarifs et abonnements — DocAvocat</title>
     <meta name="robots" content="index, follow">
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-    <link rel="shortcut icon" href="/favicon.svg">
     
     <!-- Bootstrap & Font Awesome -->
     <link th:href="@{/webjars/bootstrap/5.3.0/css/bootstrap.min.css}" rel="stylesheet">
     <link th:href="@{/webjars/font-awesome/6.4.0/css/all.min.css}" rel="stylesheet">
     
-    <!-- NOUVEAU Design System 2026 -->
-    <link th:href="@{/css/design-system.css}" rel="stylesheet">
-    <link th:href="@{/css/components.css}" rel="stylesheet">
-    
-    <!-- Anciens styles (compatibilité) -->
-    <link th:href="@{/css/professional-theme.css}" rel="stylesheet" onerror="this.remove()">
-    <link th:href="@{/css/cabinet-avocat-theme.css}" rel="stylesheet" onerror="this.remove()">
-    <link th:href="@{/css/pages/pricing-new.css}" rel="stylesheet" onerror="this.remove()">
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    
+    <!-- Charte Institutionnelle (remplace design-system.css) -->
+    <link th:href="@{/css/global-unified-theme.css}" rel="stylesheet">
     <style>
-        /* Force tous les textes à être visibles */
-        * {
-            color: inherit !important;
-        }
+        /* === DocAvocat SaaS 2026 — Custom Page Styles === */
+        
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-            background: #FAFBFC !important;
-            color: #1A202C !important;
-            min-height: 100vh;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            color: var(--text-primary);
+            background: var(--bg-secondary);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
         }
         
-        h1, h2, h3, h4, h5, h6, p, span, div, a, li, label {
-            color: #1A202C !important;
-        }
+        h1, h2, h3, h4, h5, h6 { color: var(--text-primary); font-weight: 700; line-height: 1.2; }
+        p, span, div, a, li { color: var(--text-primary); }
+        .text-muted { color: var(--text-secondary); }
         
-        .text-muted {
-            color: #6B7280 !important;
-        }
+        /* Layout */
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
         
-        .pricing-page { 
-            max-width: 1280px; 
-            margin: 0 auto; 
-            padding: 48px 24px 80px; 
+        /* Navbar */
+        .navbar {
+            position: sticky;
+            top: 0;
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            padding: 0 24px;
+            height: 72px;
+            display: flex;
+            align-items: center;
+            z-index: 100;
         }
-        .pricing-topbar {
-            display: flex; 
-            align-items: center; 
-            justify-content: space-between;
-            margin-bottom: 48px;
-            padding: 1rem 0;
+        .navbar .container { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+        .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text-primary); font-weight: 700; font-size: 20px; }
+        .logo i { color: var(--brand-500); font-size: 22px; }
+        .nav-links { display: flex; gap: 8px; }
+        
+        /* Buttons */
+        .btn {
+            padding: 10px 20px;
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            font-size: 14px;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            transition: all .2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
         }
-        .pricing-logo {
-            display: flex; 
-            align-items: center; 
-            gap: 10px;
-            text-decoration: none; 
-            color: #1A202C !important;
-            font-size: 20px; 
-            font-weight: 700;
+        .btn-ghost { color: var(--text-secondary); background: transparent; }
+        .btn-ghost:hover { color: var(--text-primary); background: #F1F5F9; }
+        .btn-primary { background: var(--brand-500); color: #fff; }
+        .btn-primary:hover { box-shadow: 0 4px 15px rgba(30,58,95,.3); transform: translateY(-1px); }
+        .btn-outline { border: 2px solid var(--brand-500); color: var(--brand-500); background: white; }
+        .btn-outline:hover { background: rgba(30,58,95,.06); }
+        .btn-lg { padding: 14px 32px; font-size: 16px; border-radius: 12px; }
+        
+        /* Hero Section - SANS GRADIENT */
+        .hero {
+            padding: 80px 24px 60px;
+            text-align: center;
+            background: var(--color-primary);
+            color: white;
+            position: relative;
+            overflow: hidden;
         }
-        .pricing-logo i { 
-            color: #1E3A5F !important; 
+        .hero::before {
+            display: none;  /* Pas d'effet décoratif */
         }
-        .pricing-topbar-links { 
-            display: flex; 
-            gap: 16px; 
-            align-items: center; 
+        .hero h1 { font-size: clamp(2.5rem, 5vw, 3.5rem); font-weight: 800; margin-bottom: 16px; color: white; }
+        .hero p { font-size: 18px; color: rgba(255,255,255,.9); max-width: 600px; margin: 0 auto 40px; }
+        
+        /* Period Toggle */
+        .billing-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin: 48px 0;
         }
-        .pricing-topbar-links a {
-            color: #3A4556 !important; 
-            text-decoration: none; 
-            font-size: 14px; 
-            font-weight: 500;
+        .billing-toggle span {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
             transition: color 0.2s;
         }
-        .pricing-topbar-links a:hover { 
-            color: #1E3A5F !important; 
+        .billing-toggle span.active { color: var(--text-primary); }
+        .toggle-switch {
+            width: 52px;
+            height: 28px;
+            background: var(--brand-500);
+            border-radius: 99px;
+            position: relative;
+            cursor: pointer;
+            transition: background .3s;
         }
-        .pricing-topbar-links .btn-login {
-            background: linear-gradient(135deg, #1E3A5F, #14253F) !important;
-            color: white !important; 
-            padding: 8px 20px; 
-            border-radius: 10px;
-            font-weight: 600; 
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 22px;
+            height: 22px;
+            background: #fff;
+            border-radius: 50%;
+            transition: transform .3s;
+        }
+        .toggle-switch.annual::after { transform: translateX(24px); }
+        .discount-badge {
+            background: #ECFDF5;
+            color: var(--success);
+            font-size: 12px;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 99px;
+            border: 1px solid #A7F3D0;
+        }
+        
+        /* Pricing Grid */
+        .pricing {
+            padding: 80px 24px;
+            background: var(--bg-secondary);
+        }
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 24px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        /* Pricing Cards */
+        .pricing-card {
+            background: white;
+            border: 2px solid var(--border);
+            border-radius: 20px;
+            padding: 36px 32px;
+            position: relative;
+            transition: all .3s;
+            box-shadow: 0 1px 3px rgba(0,0,0,.04);
+        }
+        .pricing-card:hover {
+            border-color: var(--brand-500);
+            box-shadow: 0 12px 40px rgba(30,58,95,.1);
+            transform: translateY(-4px);
+        }
+        .pricing-card.popular {
+            border-color: var(--brand-500);
+            box-shadow: 0 8px 30px rgba(30,58,95,.12);
+        }
+        .popular-badge {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--color-accent-gold);
+            color: white;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 6px 18px;
+            border-radius: 99px;
+            box-shadow: 0 2px 8px rgba(30,58,95,.25);
+        }
+        .plan-name { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+        .plan-desc { color: var(--text-secondary); font-size: 14px; margin-bottom: 20px; line-height: 1.4; }
+        .price { font-size: 40px; font-weight: 800; margin-bottom: 4px; line-height: 1; }
+        .price span { font-size: 16px; font-weight: 500; color: var(--text-secondary); }
+        .price-original {
+            font-size: 16px;
+            color: var(--text-tertiary);
+            text-decoration: line-through;
+            margin-bottom: 4px;
+            display: none;
+        }
+        .price-original.show { display: block; }
+        .price-period { font-size: 13px; color: var(--text-tertiary); margin-bottom: 24px; }
+        
+        .pricing-card ul { list-style: none; padding: 0; margin: 0 0 28px; }
+        .pricing-card li {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 8px 0;
             font-size: 14px;
+            color: #475569;
+            line-height: 1.5;
         }
-        .pricing-topbar-links .btn-login:hover { 
-            color: white !important; 
-            opacity: 0.9; 
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(30, 58, 95, 0.3);
+        .pricing-card li i { margin-top: 3px; flex-shrink: 0; }
+        .pricing-card li i.fa-check { color: var(--success); }
+        .pricing-card li i.fa-times { color: #CBD5E1; }
+        .pricing-card li.disabled { color: #CBD5E1; }
+        .pricing-card .btn { width: 100%; justify-content: center; font-size: 15px; padding: 12px 24px; }
+        
+        /* Payment & Trust Sections */
+        .payment-section, .trust-section {
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: 40px 32px;
+            margin: 24px 0;
+            border: 1px solid var(--border);
+        }
+        .payment-section h3, .trust-section h3 {
+            text-align: center;
+            margin-bottom: 24px;
+            font-size: 1.5rem;
+        }
+        .methods-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 16px;
+        }
+        .method-card {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            transition: all .2s;
+        }
+        .method-card:hover {
+            background: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,.06);
+        }
+        .method-icon {
+            font-size: 2rem;
+            color: var(--brand-500);
+            margin-bottom: 8px;
+        }
+        .method-name {
+            font-size: 0.875rem;
+            font-weight: 600;
         }
         
-        /* Cartes de pricing */
-        .card {
-            background: white !important;
-            border: 1px solid #E5E7EB !important;
+        .trust-badges {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .trust-badge {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-weight: 500;
+        }
+        .trust-badge i { color: var(--success); font-size: 1.25rem; }
+        
+        /* FAQ */
+        .faq-section {
+            max-width: 800px;
+            margin: 60px auto;
+        }
+        .faq-section h2 {
+            text-align: center;
+            margin-bottom: 40px;
+            font-size: 2rem;
+        }
+        .faq-item {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 16px;
+            transition: all .2s;
+        }
+        .faq-item:hover { box-shadow: 0 4px 12px rgba(0,0,0,.06); }
+        .faq-question {
+            font-weight: 600;
+            font-size: 1.125rem;
+            margin-bottom: 12px;
+        }
+        .faq-answer {
+            color: var(--text-secondary);
+            line-height: 1.7;
         }
         
-        .card-title, .card-text {
-            color: #1A202C !important;
+        /* Footer */
+        .footer {
+            background: var(--text-primary);
+            color: var(--text-tertiary);
+            padding: 48px 24px;
+            text-align: center;
         }
+        .footer-links {
+            display: flex;
+            gap: 24px;
+            justify-content: center;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+        .footer-links a {
+            color: var(--text-tertiary);
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.2s;
+        }
+        .footer-links a:hover { color: #fff; }
+        .footer p { font-size: 13px; color: var(--text-tertiary); }
         
-        .btn {
-            color: white !important;
+        @media (max-width: 768px) {
+            .hero { padding: 60px 16px 40px; }
+            .hero h1 { font-size: 2rem; }
+            .pricing-grid { grid-template-columns: 1fr; max-width: 400px; }
         }
     </style>
 </head>
 <body>
-    <div class="pricing-page">
-
-        <!-- Top bar minimal -->
-        <div class="pricing-topbar">
-            <a th:href="@{/}" class="pricing-logo">
-                <i class="fas fa-scale-balanced"></i>
-                DocAvocat
-            </a>
-            <div class="pricing-topbar-links">
-                <a th:href="@{/login}">Se connecter</a>
-                <a th:href="@{/login}" class="btn-login">Accéder à l'app</a>
-            </div>
+<nav class="navbar">
+    <div class="container">
+        <a th:href="@{/}" class="logo"><i class="fas fa-scale-balanced"></i><span>DocAvocat</span></a>
+        <div class="nav-links">
+            <a th:href="@{/login}" class="btn btn-ghost">Se connecter</a>
+            <a th:href="@{/login}" class="btn btn-primary">Accéder à l'app</a>
         </div>
+    </div>
+</nav>
 
-        <!-- Hero -->
-        <div class="pricing-hero page-header">
-            <h1 class="animate-fade-in-up">Choisissez votre plan</h1>
-            <p>Gérez votre cabinet d'avocat avec efficacité. Annulez à tout moment.</p>
+<section class="hero">
+    <div class="container">
+        <h1>Choisissez votre plan</h1>
+        <p>Gérez votre cabinet d'avocat avec efficacité. Annulez à tout moment.</p>
+    </div>
+</section>
+
+<section class="pricing">
+    <div class="container">
+        <div class="billing-toggle">
+            <span id="labelMonthly" class="active" onclick="if(isAnnual)toggleBilling()">Mensuel</span>
+            <div class="toggle-switch" id="billingToggle" onclick="toggleBilling()"></div>
+            <span id="labelAnnual" onclick="if(!isAnnual)toggleBilling()">Annuel</span>
+            <span class="discount-badge">-20%</span>
         </div>
-
-        <!-- Period Toggle -->
-        <div class="period-toggle">
-            <button class="period-btn active" onclick="togglePeriod('monthly')">
-                Mensuel
-            </button>
-            <button class="period-btn" onclick="togglePeriod('yearly')">
-                Annuel
-                <span class="save-badge">-20%</span>
-            </button>
-        </div>
-
-        <!-- Pricing Cards -->
+        
         <div class="pricing-grid">
             <!-- ESSENTIEL -->
             <div class="pricing-card">
                 <div class="plan-name">Essentiel</div>
-                <div class="plan-description">
-                    Parfait pour les avocats indépendants démarrant leur activité
-                </div>
-                <div class="price-container">
-                    <span class="price monthly-price">49€</span>
-                    <span class="price yearly-price" style="display: none;">39€</span>
-                    <span class="price-period">/mois</span>
-                    <span class="old-price yearly-price" style="display: none;">49€</span>
-                </div>
-                <ul class="features-list">
-                    <li class="feature-item">
-                        <div class="feature-icon"><i class="fas fa-check"></i></div>
-                        <span><strong>10 clients</strong> maximum</span>
-                    </li>
-                    <li class="feature-item">
-                        <div class="feature-icon"><i class="fas fa-check"></i></div>
-                        <span><strong>15 dossiers</strong> actifs</span>
-                    </li>
-                    <li class="feature-item">
-                        <div class="feature-icon"><i class="fas fa-check"></i></div>
-                        <span><strong>5 Go</strong> de stockage</span>
-                    </li>
-                    <li class="feature-item">
-                        <div class="feature-icon"><i class="fas fa-check"></i></div>
-                        <span><strong>5 signatures/mois</strong> (Yousign)</span>
-                    </li>
-                    <li class="feature-item">
-                        <div class="feature-icon"><i class="fas fa-check"></i></div>
-                        <span>Gestion documentaire</span>
-                    </li>
-                    <li class="feature-item">
-                        <div class="feature-icon"><i class="fas fa-check"></i></div>
-                        <span>Calendrier & rendez-vous</span>
-                    </li>
-                    <li class="feature-item">
-                        <div class="feature-icon"><i class="fas fa-check"></i></div>
-                        <span>Support email</span>
-                    </li>
-                    <li class="feature-item">
-                        <div class="feature-icon disabled"><i class="fas fa-times"></i></div>
-                        <span style="color: #cbd5e1;">RPVA / e-Barreau</span>
-                    </li>
+                <div class="plan-desc">Parfait pour les avocats indépendants démarrant leur activité</div>
+                <div class="price-original" id="originalEssentiel"></div>
+                <div class="price" id="priceEssentiel">49 € <span>/mois</span></div>
+                <div class="price-period" id="periodEssentiel">Facturation mensuelle</div>
+                <ul>
+                    <li><i class="fas fa-check"></i> <strong>10 clients</strong> maximum</li>
+                    <li><i class="fas fa-check"></i> <strong>15 dossiers</strong> actifs</li>
+                    <li><i class="fas fa-check"></i> <strong>5 Go</strong> de stockage</li>
+                    <li><i class="fas fa-check"></i> <strong>5 signatures/mois</strong> (Yousign)</li>
+                    <li><i class="fas fa-check"></i> Gestion documentaire</li>
+                    <li><i class="fas fa-check"></i> Calendrier & rendez-vous</li>
+                    <li><i class="fas fa-check"></i> Support email</li>
+                    <li class="disabled"><i class="fas fa-times"></i> RPVA / e-Barreau</li>
                 </ul>
-                <a th:href="@{/register(plan=ESSENTIEL,billing=monthly)}" class="cta-button cta-secondary cta-plan">
+                <a th:href="@{/register(plan=ESSENTIEL,billing=monthly)}" class="btn btn-outline btn-lg btn-subscribe" data-plan="ESSENTIEL">
                     Essai gratuit 14 jours
                 </a>
             </div>
 
             <!-- PROFESSIONNEL (Featured) -->
-            <div class="pricing-card featured">
-                <div class="featured-badge">Le plus populaire</div>
+            <div class="pricing-card popular">
+                <div class="popular-badge">LE PLUS POPULAIRE</div>
                 <div class="plan-name">Professionnel</div>
-                <div class="plan-description">
-                    Pour les cabinets établis avec collaborateurs et huissiers
-                </div>
-                <div class="price-container">
-                    <span class="price monthly-price">99€</span>
-                    <span class="price yearly-price" style="display: none;">79€</span>
-                    <span class="price-period">/mois</span>
-                    <span class="old-price yearly-price" style="display: none;">99€</span>
-                </div>
-                <ul class="features-list">
-                    <li class="feature-item">
-                        <div class="feature-icon"><i class="fas fa-check"></i></div>
-                        <span><strong>75 clients</strong> maximum</span>
-                    </li>
-                    <li class="feature-item">
-                        <div class="feature-icon"><i class="fas fa-check"></i></div>
-                        <span><strong>Dossiers illimités</strong></span>
-                    </li>
-                    <li class="feature-item">
-                        <div class="feature-icon"><i class="fas fa-check"></i></div>
-                        <span><strong>50 Go</strong> de stockage</span>
-                    </li>
-                    <li class="feature-item">
-                        <div class="feature-icon"><i class="fas fa-check"></i></div>
-                        <span><strong>30 signatures/mois</strong> (Yousign)</span>
-                    </li>
-                    <li class="feature-item">
-                        <div class="feature-icon"><i class="fas fa-check"></i></div>
-                        <span>RPVA / e-Barreau intégré</span>
-                    </li>
-                    <li class="feature-item">
-                        <div class="feature-icon"><i class="fas fa-check"></i></div>
-                        <span><strong>3 collaborateurs</strong> + 2 huissiers</span>
-                    </li>
-                    <li class="feature-item">
-                        <div class="feature-icon"><i class="fas fa-check"></i></div>
-                        <span>Rappels email automatiques</span>
-                    </li>
-                    <li class="feature-item">
-                        <div class="feature-icon"><i class="fas fa-check"></i></div>
-                        <span>Support prioritaire</span>
-                    </li>
+                <div class="plan-desc">Pour les cabinets établis avec collaborateurs et huissiers</div>
+                <div class="price-original" id="originalProfessionnel"></div>
+                <div class="price" id="priceProfessionnel">99 € <span>/mois</span></div>
+                <div class="price-period" id="periodProfessionnel">Facturation mensuelle</div>
+                <ul>
+                    <li><i class="fas fa-check"></i> <strong>75 clients</strong> maximum</li>
+                    <li><i class="fas fa-check"></i> <strong>Dossiers illimités</strong></li>
+                    <li><i class="fas fa-check"></i> <strong>50 Go</strong> de stockage</li>
+                    <li><i class="fas fa-check"></i> <strong>30 signatures/mois</strong> (Yousign)</li>
+                    <li><i class="fas fa-check"></i> RPVA / e-Barreau intégré</li>
+                    <li><i class="fas fa-check"></i> <strong>3 collaborateurs</strong> + 2 huissiers</li>
+                    <li><i class="fas fa-check"></i> Rappels email automatiques</li>
+                    <li><i class="fas fa-check"></i> Support prioritaire</li>
                 </ul>
-                <a th:href="@{/register(plan=PROFESSIONNEL,billing=monthly)}" class="cta-button cta-primary cta-plan" style="border-radius:var(--radius-md);font-weight:600">
+                <a th:href="@{/register(plan=PROFESSIONNEL,billing=monthly)}" class="btn btn-primary btn-lg btn-subscribe" data-plan="PROFESSIONNEL">
                     Essai gratuit 14 jours
                 </a>
             </div>
@@ -254,57 +399,28 @@
             <!-- CABINET+ -->
             <div class="pricing-card">
                 <div class="plan-name">Cabinet+</div>
-                <div class="plan-description">
-                    Pour les grands cabinets avec besoins illimités
-                </div>
-                <div class="price-container">
-                    <span class="price monthly-price">199€</span>
-                    <span class="price yearly-price" style="display: none;">159€</span>
-                    <span class="price-period">/mois</span>
-                    <span class="old-price yearly-price" style="display: none;">199€</span>
-                </div>
-                <ul class="features-list">
-                    <li class="feature-item">
-                        <div class="feature-icon"><i class="fas fa-check"></i></div>
-                        <span><strong>Clients illimités</strong></span>
-                    </li>
-                    <li class="feature-item">
-                        <div class="feature-icon"><i class="fas fa-check"></i></div>
-                        <span><strong>Dossiers illimités</strong></span>
-                    </li>
-                    <li class="feature-item">
-                        <div class="feature-icon"><i class="fas fa-check"></i></div>
-                        <span><strong>500 Go</strong> de stockage</span>
-                    </li>
-                    <li class="feature-item">
-                        <div class="feature-icon"><i class="fas fa-check"></i></div>
-                        <span><strong>Signatures illimitées</strong></span>
-                    </li>
-                    <li class="feature-item">
-                        <div class="feature-icon"><i class="fas fa-check"></i></div>
-                        <span>Toutes fonctionnalités Professionnel</span>
-                    </li>
-                    <li class="feature-item">
-                        <div class="feature-icon"><i class="fas fa-check"></i></div>
-                        <span><strong>Collaborateurs illimités</strong></span>
-                    </li>
-                    <li class="feature-item">
-                        <div class="feature-icon"><i class="fas fa-check"></i></div>
-                        <span>Formation personnalisée incluse</span>
-                    </li>
-                    <li class="feature-item">
-                        <div class="feature-icon"><i class="fas fa-check"></i></div>
-                        <span>Support dédié prioritaire</span>
-                    </li>
+                <div class="plan-desc">Pour les grands cabinets avec besoins illimités</div>
+                <div class="price-original" id="originalCabinetPlus"></div>
+                <div class="price" id="priceCabinetPlus">199 € <span>/mois</span></div>
+                <div class="price-period" id="periodCabinetPlus">Facturation mensuelle</div>
+                <ul>
+                    <li><i class="fas fa-check"></i> <strong>Clients illimités</strong></li>
+                    <li><i class="fas fa-check"></i> <strong>Dossiers illimités</strong></li>
+                    <li><i class="fas fa-check"></i> <strong>500 Go</strong> de stockage</li>
+                    <li><i class="fas fa-check"></i> <strong>Signatures illimitées</strong></li>
+                    <li><i class="fas fa-check"></i> Toutes fonctionnalités Professionnel</li>
+                    <li><i class="fas fa-check"></i> <strong>Collaborateurs illimités</strong></li>
+                    <li><i class="fas fa-check"></i> Formation personnalisée incluse</li>
+                    <li><i class="fas fa-check"></i> Support dédié prioritaire</li>
                 </ul>
-                <a th:href="@{/register(plan=CABINET_PLUS,billing=monthly)}" class="cta-button cta-secondary cta-plan">
+                <a th:href="@{/register(plan=CABINET_PLUS,billing=monthly)}" class="btn btn-outline btn-lg btn-subscribe" data-plan="CABINET_PLUS">
                     Essai gratuit 14 jours
                 </a>
             </div>
         </div>
 
         <!-- Payment Methods -->
-        <div class="payment-methods">
+        <div class="payment-section">
             <h3><i class="fas fa-shield-alt" style="color: var(--success);"></i> Moyens de paiement sécurisés</h3>
             <div class="methods-grid">
                 <div class="method-card">
@@ -332,8 +448,8 @@
 
         <!-- Trust Section -->
         <div class="trust-section">
-            <h3 style="margin-bottom: 8px; color: var(--text-primary);">Paiement 100% sécurisé</h3>
-            <p style="color: var(--text-secondary); margin-bottom: 0;">Powered by PayPlug - Solution française certifiée PCI-DSS</p>
+            <h3>Paiement 100% sécurisé</h3>
+            <p class="text-muted">Powered by PayPlug - Solution française certifiée PCI-DSS</p>
             <div class="trust-badges">
                 <div class="trust-badge">
                     <i class="fas fa-lock"></i>
@@ -356,7 +472,7 @@
 
         <!-- FAQ -->
         <div class="faq-section">
-            <h2 style="text-align: center; margin-bottom: 32px;">Questions fréquentes</h2>
+            <h2>Questions fréquentes</h2>
 
             <div class="faq-item">
                 <div class="faq-question">Quels moyens de paiement acceptez-vous ?</div>
@@ -393,41 +509,55 @@
                 </div>
             </div>
         </div>
-
     </div>
+</section>
 
-    <script>
-        // Lire la période depuis l'URL si passée depuis la landing page
-        (function() {
-            const params = new URLSearchParams(window.location.search);
-            const billingParam = params.get('billing');
-            if (billingParam === 'yearly') {
-                document.addEventListener('DOMContentLoaded', function() { togglePeriod('yearly'); });
-            }
-        })();
+<footer class="footer">
+    <div class="container">
+        <div class="footer-links">
+            <a th:href="@{/legal/terms}">CGU</a>
+            <a th:href="@{/legal/privacy}">Confidentialité & RGPD</a>
+            <a th:href="@{/login}">Connexion</a>
+        </div>
+        <p>&copy; 2026 DocAvocat. Tous droits réservés.</p>
+    </div>
+</footer>
 
-        function togglePeriod(period) {
-            document.querySelectorAll('.period-btn').forEach(btn => btn.classList.remove('active'));
-            if (event && event.target) event.target.classList.add('active');
-            else {
-                const btn = period === 'yearly' ? document.querySelectorAll('.period-btn')[1] : document.querySelectorAll('.period-btn')[0];
-                if (btn) btn.classList.add('active');
-            }
+<script>
+let isAnnual = false;
+const prices = { ESSENTIEL:{monthly:49,annual:39}, PROFESSIONNEL:{monthly:99,annual:79}, CABINET_PLUS:{monthly:199,annual:159} };
+const planIds = {ESSENTIEL:'Essentiel',PROFESSIONNEL:'Professionnel',CABINET_PLUS:'CabinetPlus'};
 
-            if (period === 'yearly') {
-                document.querySelectorAll('.monthly-price').forEach(el => el.style.display = 'none');
-                document.querySelectorAll('.yearly-price').forEach(el => el.style.display = 'inline');
-            } else {
-                document.querySelectorAll('.monthly-price').forEach(el => el.style.display = 'inline');
-                document.querySelectorAll('.yearly-price').forEach(el => el.style.display = 'none');
-            }
-
-            document.querySelectorAll('.cta-plan').forEach(btn => {
-                const url = new URL(btn.href, window.location.origin);
-                url.searchParams.set('billing', period);
-                btn.href = url.pathname + url.search;
-            });
+function toggleBilling(){
+    isAnnual=!isAnnual;
+    document.getElementById('billingToggle').classList.toggle('annual',isAnnual);
+    document.getElementById('labelMonthly').classList.toggle('active',!isAnnual);
+    document.getElementById('labelAnnual').classList.toggle('active',isAnnual);
+    
+    Object.keys(prices).forEach(function(key){
+        var id=planIds[key];
+        var priceEl=document.getElementById('price'+id);
+        var originalEl=document.getElementById('original'+id);
+        var periodEl=document.getElementById('period'+id);
+        
+        if(isAnnual){
+            var m=prices[key].monthly, a=prices[key].annual;
+            originalEl.textContent=m+' €/mois';
+            originalEl.classList.add('show');
+            priceEl.innerHTML=a+' € <span>/mois</span>';
+            periodEl.textContent='Facturation annuelle — '+(a*12)+' €/an';
+        } else {
+            originalEl.classList.remove('show');
+            priceEl.innerHTML=prices[key].monthly+' € <span>/mois</span>';
+            periodEl.textContent='Facturation mensuelle';
         }
-    </script>
+    });
+    
+    document.querySelectorAll('.btn-subscribe').forEach(function(btn){
+        var plan=btn.dataset.plan;
+        btn.href='/register?plan='+plan+'&billing='+(isAnnual?'annual':'monthly');
+    });
+}
+</script>
 </body>
 </html>

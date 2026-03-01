@@ -4,6 +4,7 @@ import com.gedavocat.model.Case;
 import com.gedavocat.model.Case.CaseStatus;
 
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -16,8 +17,9 @@ import java.util.Optional;
 public interface CaseRepository extends JpaRepository<Case, String> {
 
     /**
-     * Trouve tous les dossiers d'un avocat
+     * Trouve tous les dossiers d'un avocat avec les documents chargés
      */
+    @EntityGraph(attributePaths = {"documents", "client", "lawyer"})
     List<Case> findByLawyerId(String lawyerId);
 
     /**
@@ -66,13 +68,13 @@ public interface CaseRepository extends JpaRepository<Case, String> {
     @Query("SELECT c FROM Case c LEFT JOIN FETCH c.client WHERE c.id = :id")
     Optional<Case> findByIdWithClient(@Param("id") String id);
 
-    @Query("SELECT c FROM Case c LEFT JOIN FETCH c.client WHERE c.lawyer.id = :lawyerId")
+    @Query("SELECT c FROM Case c LEFT JOIN FETCH c.client LEFT JOIN FETCH c.documents WHERE c.lawyer.id = :lawyerId")
     List<Case> findAllByLawyerIdWithClient(@Param("lawyerId") String lawyerId);
 
-    @Query("SELECT c FROM Case c LEFT JOIN FETCH c.client WHERE c.lawyer.id = :lawyerId AND c.status = :status")
+    @Query("SELECT c FROM Case c LEFT JOIN FETCH c.client LEFT JOIN FETCH c.documents WHERE c.lawyer.id = :lawyerId AND c.status = :status")
     List<Case> findByLawyerIdAndStatusWithClient(@Param("lawyerId") String lawyerId, @Param("status") CaseStatus status);
 
-    @Query("SELECT c FROM Case c LEFT JOIN FETCH c.client WHERE c.lawyer.id = :lawyerId AND " +
+    @Query("SELECT c FROM Case c LEFT JOIN FETCH c.client LEFT JOIN FETCH c.documents WHERE c.lawyer.id = :lawyerId AND " +
            "(LOWER(c.name) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
            "LOWER(c.description) LIKE LOWER(CONCAT('%', :search, '%')))")
     List<Case> searchByLawyerAndNameOrDescriptionWithClient(@Param("lawyerId") String lawyerId, @Param("search") String search);

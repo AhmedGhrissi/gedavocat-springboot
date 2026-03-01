@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout}">
@@ -27,13 +27,13 @@
 
         <div class="card shadow-sm">
             <div class="card-body">
-                <div th:if="${results == null or #lists.isEmpty(results)}" class="text-center text-muted py-5">
+                <div th:if="${results == null or results.isEmpty()}" class="text-center text-muted py-5">
                     <div style="width:64px;height:64px;border-radius:50%;background:var(--bg-secondary);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
                         <i class="fas fa-search" style="font-size:24px;color:var(--text-tertiary);"></i>
                     </div>
                     <p>Aucun résultat trouvé.</p>
                 </div>
-                <table th:if="${results != null and not #lists.isEmpty(results)}" class="table table-hover">
+                <table th:if="${results != null and !results.isEmpty()}" class="table table-hover">
                     <thead>
                         <tr>
                             <th>Référence</th>

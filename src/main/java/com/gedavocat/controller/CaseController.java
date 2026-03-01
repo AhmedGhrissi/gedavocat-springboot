@@ -70,6 +70,10 @@ public class CaseController {
             if (c.getClient() != null) {
                 c.getClient().getName();
             }
+            // IMPORTANT: Initialiser les documents pour éviter LazyInitializationException
+            if (c.getDocuments() != null) {
+                c.getDocuments().size();
+            }
         }
 
         model.addAttribute("cases", cases);
@@ -178,6 +182,18 @@ public class CaseController {
         // Forcer le chargement du client (lazy loading)
         if (caseEntity.getClient() != null) {
             caseEntity.getClient().getName();
+        }
+
+        // IMPORTANT: Forcer l'initialisation de la collection documents ici
+        // car la template accède à case.documents en dehors de la transaction
+        // (open-in-view désactivé). Nous appelons size() pour charger la collection.
+        try {
+            if (caseEntity.getDocuments() != null) {
+                caseEntity.getDocuments().size();
+            }
+        } catch (Exception e) {
+            // Ne pas interrompre l'affichage si l'initialisation échoue; le reste
+            // de la page utilise les listes fournies explicitement (documents, documentCount)
         }
 
         model.addAttribute("case", caseEntity);

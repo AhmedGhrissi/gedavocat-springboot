@@ -3,138 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Connexion — DocAvocat</title>
-    <meta name="description" content="Connectez-vous à votre espace GED Avocat pour gérer vos dossiers, documents et clients juridiques en toute sécurité.">
-    <meta name="robots" content="noindex, nofollow">
-    <link rel="canonical" href="https://docavocat.fr/login">
-    <meta name="theme-color" content="#0F172A">
+    <title>Accès au portail — DocAvocat</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-    <link rel="shortcut icon" href="/favicon.svg">
-    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/css/design-system.css">
-    <link rel="stylesheet" href="/css/global-unified-theme.css">
-    <link rel="stylesheet" href="/css/pages/auth.css">
+    <!-- Font Awesome -->
+    <link th:href="@{/webjars/font-awesome/6.4.0/css/all.min.css}" rel="stylesheet">
+    <link th:href="@{/css/global-unified-theme.css}" rel="stylesheet">
+    <link th:href="@{/css/pages/auth-institutional.css}" rel="stylesheet">
 </head>
-<body>
-    <!-- Left Panel — Brand Hero -->
-    <div class="auth-left">
-        <div class="auth-left-mesh"></div>
-        <div class="brand-logo">
-            <div class="brand-icon"><i class="fas fa-scale-balanced"></i></div>
-            <span class="brand-name">DocAvocat</span>
-        </div>
-        <div class="auth-left-content">
-            <h2>Espace professionnel<br>sécurisé</h2>
-            <p>Portail de gestion documentaire dédié aux cabinets d'avocats. Dossiers, documents, clients et signatures électroniques.</p>
-            <ul class="features-list">
-                <li>
-                    <div class="feature-icon"><i class="fas fa-folder-open"></i></div>
-                    Gestion centralisée des dossiers
-                </li>
-                <li>
-                    <div class="feature-icon"><i class="fas fa-file-signature"></i></div>
-                    Signatures électroniques Yousign
-                </li>
-                <li>
-                    <div class="feature-icon"><i class="fas fa-shield-halved"></i></div>
-                    Sécurité et conformité RGPD
-                </li>
-                <li>
-                    <div class="feature-icon"><i class="fas fa-gavel"></i></div>
-                    Intégration RPVA / e-Barreau
-                </li>
-            </ul>
-        </div>
-    </div>
-
-    <!-- Right Panel — Login Form -->
-    <div class="auth-right">
-        <h1>Accès au portail</h1>
-        <p class="subtitle">Connectez-vous à votre espace DocAvocat</p>
-
-        <div th:if="${param.error}" class="alert alert-danger">
-            <i class="fas fa-exclamation-circle"></i>
-            <span th:text="${error} ?: 'Email ou mot de passe incorrect'"></span>
-        </div>
-
-        <div th:if="${message}" class="alert alert-success">
-            <i class="fas fa-check-circle"></i>
-            <span th:text="${message}"></span>
-        </div>
-
-        <form th:action="@{/login}" method="post" th:object="${authRequest}">
-            <div class="form-group">
-                <label class="form-label" for="email">Adresse e-mail</label>
-                <div class="input-wrapper">
-                    <i class="fas fa-envelope input-icon"></i>
-                    <input type="email"
-                           id="email"
-                           name="email"
-                           th:field="*{email}"
-                           class="form-control"
-                           placeholder="votre@email.com"
-                           required
-                           autofocus
-                           autocomplete="email">
+<body class="auth-page">
+    <div class="auth-container">
+        <!-- ══════════════════════════════════════════════════════════
+            COLONNE GAUCHE (40%) - Bleu nuit uni
+        ══════════════════════════════════════════════════════════ -->
+        <div class="auth-left">
+            <div class="auth-left-content">
+                <div class="auth-brand">
+                    <div style="text-align: center; margin-bottom: 2rem;">
+                        <i class="fas fa-scale-balanced" style="font-size: 4rem; color: var(--color-accent-gold);"></i>
+                    </div>
+                    <h1 style="margin-top: 0;">DocAvocat</h1>
+                    <p class="auth-brand-subtitle">Portail professionnel sécurisé</p>
+                    <p class="auth-brand-description">Gestion documentaire et signature électronique</p>
                 </div>
             </div>
+        </div>
 
-            <div class="form-group">
-                <label class="form-label" for="password">Mot de passe</label>
-                <div class="input-wrapper">
-                    <i class="fas fa-lock input-icon"></i>
-                    <input type="password"
-                           id="password"
-                           name="password"
-                           th:field="*{password}"
-                           class="form-control"
-                           placeholder="Votre mot de passe"
-                           required
-                           autocomplete="current-password">
-                    <button type="button" class="toggle-password" onclick="togglePasswordVisibility()" tabindex="-1" aria-label="Afficher le mot de passe">
-                        <i class="fas fa-eye" id="togglePwdIcon"></i>
+        <!-- ══════════════════════════════════════════════════════════
+            COLONNE DROITE (60%) - Fond blanc
+        ══════════════════════════════════════════════════════════ -->
+        <div class="auth-right">
+            <div class="auth-form-container">
+                <div class="auth-header">
+                    <h2>Accès au portail cabinet</h2>
+                    <p>Veuillez vous identifier pour accéder à votre espace sécurisé.</p>
+                </div>
+
+                <!-- Alerts -->
+                <div th:if="${param.error}" class="auth-alert auth-alert-danger">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span th:text="${error} ?: 'Email ou mot de passe incorrect'"></span>
+                </div>
+
+                <div th:if="${message}" class="auth-alert auth-alert-success">
+                    <i class="fas fa-check-circle"></i>
+                    <span th:text="${message}"></span>
+                </div>
+
+                <!-- Formulaire -->
+                <form class="auth-form" th:action="@{/login}" method="post">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                    
+                    <div class="form-group">
+                        <label for="email">Adresse e-mail</label>
+                        <input 
+                            type="email"
+                            id="email"
+                            name="email"
+                            placeholder="votre@email.com"
+                            required
+                            autofocus
+                            autocomplete="email">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">Mot de passe</label>
+                        <input 
+                            type="password"
+                            id="password"
+                            name="password"
+                            placeholder="Votre mot de passe"
+                            required
+                            autocomplete="current-password">
+                    </div>
+
+                    <button type="submit" class="auth-submit-btn">
+                        Se connecter
                     </button>
+                </form>
+
+                <div style="margin-top: var(--spacing-3); text-align: center;">
+                    <a href="/forgot-password" style="color: var(--text-secondary); font-size: 14px; text-decoration: none;">Mot de passe oublié ?</a>
                 </div>
             </div>
-
-            <div class="form-group">
-                <button type="submit" class="btn-login">
-                    <i class="fas fa-arrow-right-to-bracket"></i>&nbsp; Se connecter
-                </button>
-            </div>
-        </form>
-
-        <div class="auth-links">
-            <p><a th:href="@{/forgot-password}">Mot de passe oublié ?</a></p>
-            <div class="divider">ou</div>
-            <p>Pas encore de compte ? <a th:href="@{/subscription/pricing}">Créer un compte</a></p>
-            <p style="margin-top: 14px;"><a th:href="@{/}" style="color: var(--text-tertiary);"><i class="fas fa-arrow-left" style="font-size: 12px;"></i> Retour à l'accueil</a></p>
         </div>
     </div>
-
-    <script>
-    function togglePasswordVisibility() {
-        var pwd = document.getElementById('password');
-        var icon = document.getElementById('togglePwdIcon');
-        if (pwd.type === 'password') {
-            pwd.type = 'text';
-            icon.classList.replace('fa-eye', 'fa-eye-slash');
-        } else {
-            pwd.type = 'password';
-            icon.classList.replace('fa-eye-slash', 'fa-eye');
-        }
-    }
-
-    // Dark mode: respect system preference or localStorage
-    (function() {
-        var saved = localStorage.getItem('theme');
-        if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            document.documentElement.classList.add('dark');
-        }
-    })();
-    </script>
 </body>
 </html>

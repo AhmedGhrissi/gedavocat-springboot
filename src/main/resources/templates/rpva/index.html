@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout}">
@@ -20,7 +20,7 @@
                             Communications sécurisées avec les juridictions françaises
                         </p>
                     </div>
-                    <a th:href="@{/settings}" class="btn" style="background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.25);border-radius:var(--radius-md);font-weight:600;backdrop-filter:blur(8px)">
+                    <a th:href="@{/settings}" class="btn rounded-md fw-600 backdrop-blur" style="background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.25);">
                         <i class="fas fa-cog me-1"></i> Configuration
                     </a>
                 </div>
@@ -45,7 +45,7 @@
                         <div style="opacity: 0.9; font-size: 13px;">Nouvelle communication</div>
                     </div>
                 </a>
-                <a th:href="@{/rpva/received}" class="action-btn" style="background: var(--success-600, #16a34a);">
+                <a th:href="@{/rpva/received}" class="action-btn action-btn-success">
                     <div class="action-icon">
                         <i class="fas fa-inbox"></i>
                     </div>
@@ -99,13 +99,13 @@
             <!-- Stats -->
             <div class="stats-dashboard">
                 <div class="stat-card blue">
-                    <div class="stat-value" th:text="${#lists.size(sentCommunications)}">0</div>
+                    <div class="stat-value" th:text="${sentCommunications != null ? sentCommunications.size() : 0}">0</div>
                     <div class="stat-label">
                         <i class="fas fa-paper-plane"></i> Communications envoyées
                     </div>
                 </div>
                 <div class="stat-card green">
-                    <div class="stat-value" th:text="${#lists.size(receivedCommunications)}">0</div>
+                    <div class="stat-value" th:text="${receivedCommunications != null ? receivedCommunications.size() : 0}">0</div>
                     <div class="stat-label">
                         <i class="fas fa-inbox"></i> Communications reçues
                     </div>
@@ -137,7 +137,7 @@
                         </div>
                         <h3>Aucune communication</h3>
                         <p>Envoyez votre première communication juridiction</p>
-                        <a th:href="@{/rpva/send}" class="btn btn-primary btn-lg" style="border-radius:var(--radius-md);font-weight:600">
+                        <a th:href="@{/rpva/send}" class="btn btn-primary btn-lg rounded-md fw-600">
                             <i class="fas fa-paper-plane"></i> Envoyer une communication
                         </a>
                     </div>

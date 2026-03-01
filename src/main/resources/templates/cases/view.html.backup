@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout}">
+<head>
+    <title th:text="'Dossier — ' + ${case.name}">Détails dossier</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <!-- Breadcrumb -->
+        <nav class="breadcrumb" style="margin-bottom: 1.5rem;">
+            <a th:href="@{/dashboard}" class="breadcrumb-item">
+                <i class="fas fa-home"></i> Accueil
+            </a>
+            <span class="breadcrumb-separator">/</span>
+            <a th:href="@{/cases}" class="breadcrumb-item">Dossiers</a>
+            <span class="breadcrumb-separator">/</span>
+            <span class="breadcrumb-item active" th:text="${case.name}">Dossier</span>
+        </nav>
+
+        <!-- Messages -->
+        <div th:if="${message}" class="alert alert-success" style="margin-bottom: 1.5rem;">
+            <i class="fas fa-check-circle"></i> <span th:text="${message}"></span>
+        </div>
+        <div th:if="${error}" class="alert alert-danger" style="margin-bottom: 1.5rem;">
+            <i class="fas fa-exclamation-circle"></i> <span th:text="${error}"></span>
+        </div>
+
+        <!-- Header Card -->
+        <div class="card card-elevated animate-fade-in" style="margin-bottom: 2rem;">
+            <div class="card-body" style="padding: 2rem;">
+                <div style="display: flex; justify-content: space-between; align-items: start; gap: 2rem;">
+                    <div style="flex: 1;">
+                        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                            <div style="width: 3.5rem; height: 3.5rem; border-radius: 12px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 1.5rem;">
+                                <i class="fas fa-briefcase"></i>
+                            </div>
+                            <div>
+                                <h1 style="font-size: 2rem; margin: 0; color: #0F172A;" th:text="${case.name}">Nom du dossier</h1>
+                                <p style="margin: 0; color: #64748B; font-size: 0.9375rem;">
+                                    <span th:if="${case.reference}" th:text="'Réf: ' + ${case.reference}"></span>
+                                </p>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 1.5rem; flex-wrap: wrap; align-items: center;">
+                            <a th:if="${case.client != null}" th:href="@{/clients/{id}(id=${case.client.id})}" 
+                               style="display: flex; align-items: center; gap: 0.5rem; text-decoration: none; color: #0F172A;">
+                                <i class="fas fa-user"></i>
+                                <span th:text="${case.client.name}">Client</span>
+                            </a>
+                            <span th:if="${case.status}" class="badge" 
+                                  th:classappend="${case.status.name() == 'OPEN' ? 'badge-success' : (case.status.name() == 'CLOSED' ? 'badge-warning' : 'badge-info')}"
+                                  th:text="${case.status.displayName}">Statut</span>
+                            <span style="color: #64748B; font-size: 0.875rem;">
+                                <i class="fas fa-calendar"></i>
+                                <span th:text="'Créé le ' + ${#temporals.format(case.createdAt, 'dd/MM/yyyy')}"></span>
+                            </span>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 0.75rem;" sec:authorize="hasRole('LAWYER')">
+                        <a th:href="@{/cases/{id}/edit(id=${case.id})}" class="btn btn-primary">
+                            <i class="fas fa-edit"></i> Modifier
+                        </a>
+                        <div class="dropdown">
+                            <button class="btn btn-outline" data-dropdown-trigger>
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                            <div class="dropdown-menu">
+                                <form th:if="${case.status.name() == 'OPEN'}" th:action="@{/cases/{id}/close(id=${case.id})}" method="post">
+                                    <button type="submit" class="dropdown-item">
+                                        <i class="fas fa-check"></i> Fermer le dossier
+                                    </button>
+                                </form>
+                                <form th:if="${case.status.name() == 'CLOSED'}" th:action="@{/cases/{id}/archive(id=${case.id})}" method="post">
+                                    <button type="submit" class="dropdown-item">
+                                        <i class="fas fa-archive"></i> Archiver
+                                    </button>
+                                </form>
+                                <div class="dropdown-divider"></div>
+                                <form th:action="@{/cases/{id}/delete(id=${case.id})}" method="post">
+                                    <button type="submit" class="dropdown-item" style="color: #DC2626;" 
+                                            onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce dossier ?')">
+                                        <i class="fas fa-trash"></i> Supprimer
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats KPI Grid -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+            <!-- Documents Count -->
+            <div class="card card-hover animate-slide-up" style="animation-delay: 0.1s;">
+                <div class="card-body">
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <div style="width: 3rem; height: 3rem; border-radius: 12px; background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%); display: flex; align-items: center; justify-content: center; color: #2563EB; font-size: 1.25rem;">
+                            <i class="fas fa-file-alt"></i>
+                        </div>
+                        <div style="flex: 1;">
+                            <p style="margin: 0; color: #64748B; font-size: 0.875rem; font-weight: 500;">Documents</p>
+                            <p style="margin: 0; font-size: 1.875rem; font-weight: 700; color: #0F172A;" th:text="${documentCount}">0</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Appointments Count -->
+            <div class="card card-hover animate-slide-up" style="animation-delay: 0.2s;">
+                <div class="card-body">
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <div style="width: 3rem; height: 3rem; border-radius: 12px; background: linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%); display: flex; align-items: center; justify-content: center; color: #16A34A; font-size: 1.25rem;">
+                            <i class="fas fa-calendar-check"></i>
+                        </div>
+                        <div style="flex: 1;">
+                            <p style="margin: 0; color: #64748B; font-size: 0.875rem; font-weight: 500;">Rendez-vous</p>
+                            <p style="margin: 0; font-size: 1.875rem; font-weight: 700; color: #0F172A;" th:text="${#lists.size(appointments)}">0</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Signatures Count -->
+            <div class="card card-hover animate-slide-up" style="animation-delay: 0.3s;">
+                <div class="card-body">
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <div style="width: 3rem; height: 3rem; border-radius: 12px; background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%); display: flex; align-items: center; justify-content: center; color: #D97706; font-size: 1.25rem;">
+                            <i class="fas fa-pen-fancy"></i>
+                        </div>
+                        <div style="flex: 1;">
+                            <p style="margin: 0; color: #64748B; font-size: 0.875rem; font-weight: 500;">Signatures</p>
+                            <p style="margin: 0; font-size: 1.875rem; font-weight: 700; color: #0F172A;">0</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Collaborateurs Count -->
+            <div class="card card-hover animate-slide-up" style="animation-delay: 0.4s;">
+                <div class="card-body">
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <div style="width: 3rem; height: 3rem; border-radius: 12px; background: linear-gradient(135deg, #F3E8FF 0%, #E9D5FF 100%); display: flex; align-items: center; justify-content: center; color: #9333EA; font-size: 1.25rem;">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div style="flex: 1;">
+                            <p style="margin: 0; color: #64748B; font-size: 0.875rem; font-weight: 500;">Collaborateurs</p>
+                            <p style="margin: 0; font-size: 1.875rem; font-weight: 700; color: #0F172A;" th:text="${permissions != null ? #lists.size(permissions) : 0}">0</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Buttons -->
+        <div style="display: flex; gap: 0.75rem; margin-bottom: 2rem; flex-wrap: wrap;">
+            <button class="section-btn active" onclick="switchSection(event, 'infos')" style="flex: 1; min-width: 200px; padding: 1rem 1.5rem; border: 2px solid #E2E8F0; border-radius: 12px; background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%); color: white; font-weight: 600; font-size: 0.9375rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem; transition: all 0.3s ease; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+                <i class="fas fa-info-circle"></i>
+                <span>Informations</span>
+            </button>
+            <button class="section-btn" onclick="switchSection(event, 'documents')" style="flex: 1; min-width: 200px; padding: 1rem 1.5rem; border: 2px solid #E2E8F0; border-radius: 12px; background: white; color: #64748B; font-weight: 600; font-size: 0.9375rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem; transition: all 0.3s ease;">
+                <i class="fas fa-file-alt"></i>
+                <span>Documents (<span th:text="${documentCount}">0</span>)</span>
+            </button>
+            <button class="section-btn" onclick="switchSection(event, 'appointments')" style="flex: 1; min-width: 200px; padding: 1rem 1.5rem; border: 2px solid #E2E8F0; border-radius: 12px; background: white; color: #64748B; font-weight: 600; font-size: 0.9375rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem; transition: all 0.3s ease;">
+                <i class="fas fa-calendar"></i>
+                <span>Rendez-vous</span>
+            </button>
+            <button class="section-btn" onclick="switchSection(event, 'timeline')" style="flex: 1; min-width: 200px; padding: 1rem 1.5rem; border: 2px solid #E2E8F0; border-radius: 12px; background: white; color: #64748B; font-weight: 600; font-size: 0.9375rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem; transition: all 0.3s ease;">
+                <i class="fas fa-history"></i>
+                <span>Historique</span>
+            </button>
+        </div>
+
+        <!-- Main Content Grid: 2 Columns Layout -->
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; align-items: start;">
+            <!-- Left Column: Main Content -->
+            <div>
+                <!-- Section Content: Informations -->
+                <!-- Section Content: Informations -->
+                <div id="infos" class="section-content active">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 style="font-size: 1.125rem; margin: 0;">
+                                <i class="fas fa-info-circle" style="color: #0F172A;"></i>
+                                Détails du dossier
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <table style="width: 100%;">
+                                <tr style="border-bottom: 1px solid #E2E8F0;">
+                                    <td style="padding: 1rem 0; font-weight: 600; color: #475569; width: 200px;">
+                                        <i class="fas fa-user" style="margin-right: 0.5rem; color: #94A3B8;"></i>
+                                        Client
+                                    </td>
+                                    <td style="padding: 1rem 0;">
+                                        <a th:if="${case.client != null}" th:href="@{/clients/{id}(id=${case.client.id})}" 
+                                           th:text="${case.client.name}" style="color: #0F172A; text-decoration: none;"></a>
+                                        <span th:if="${case.client == null}" style="color: #94A3B8;">Non assigné</span>
+                                    </td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid #E2E8F0;" th:if="${case.description}">
+                                    <td style="padding: 1rem 0; font-weight: 600; color: #475569;">
+                                        <i class="fas fa-align-left" style="margin-right: 0.5rem; color: #94A3B8;"></i>
+                                        Description
+                                    </td>
+                                    <td style="padding: 1rem 0;">
+                                        <div style="background: #F8FAFC; padding: 1rem; border-radius: 8px; border-left: 3px solid #0F172A;" th:text="${case.description}"></div>
+                                    </td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid #E2E8F0;">
+                                    <td style="padding: 1rem 0; font-weight: 600; color: #475569;">
+                                        <i class="fas fa-calendar-plus" style="margin-right: 0.5rem; color: #94A3B8;"></i>
+                                        Date de création
+                                    </td>
+                                    <td style="padding: 1rem 0;" th:text="${#temporals.format(case.createdAt, 'dd/MM/yyyy HH:mm')}"></td>
+                                </tr>
+                                <tr th:if="${case.updatedAt}">
+                                    <td style="padding: 1rem 0; font-weight: 600; color: #475569;">
+                                        <i class="fas fa-sync" style="margin-right: 0.5rem; color: #94A3B8;"></i>
+                                        Dernière modification
+                                    </td>
+                                    <td style="padding: 1rem 0;" th:text="${#temporals.format(case.updatedAt, 'dd/MM/yyyy HH:mm')}"></td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section Content: Documents -->
+        <div id="documents" class="tab-content" style="display: none;">
+            <div class="card">
+                <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                    <h3 style="font-size: 1.125rem; margin: 0; font-weight: 600; color: #0F172A;">
+                        <i class="fas fa-file-alt" style="color: var(--info); margin-right: 0.5rem;"></i>
+                        Documents
+                    </h3>
+                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                        <div style="display: flex; gap: 0.5rem;" sec:authorize="hasRole('LAWYER')">
+                            <button type="button" class="btn btn-sm btn-outline bulk-share-btn" data-role="LAWYER_SECONDARY" data-shared="true" title="Tout partager avec collaborateur" style="border-color: var(--info); color: var(--info);">
+                                <i class="fas fa-user-friends"></i> Tout Collab
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline bulk-share-btn" data-role="HUISSIER" data-shared="true" title="Tout partager avec huissier" style="border-color: var(--warning); color: var(--warning);">
+                                <i class="fas fa-gavel"></i> Tout Huissier
+                            </button>
+                        </div>
+                        <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#uploadModal" sec:authorize="hasRole('LAWYER')">
+                            <i class="fas fa-upload"></i> Uploader
+                        </button>
+                        <button type="button" class="btn btn-secondary btn-sm" sec:authorize="hasRole('LAWYER')"
+                                th:data-upload="@{/documents/case/{id}/upload-ajax(id=${case.id})}"
+                                th:data-redirect="@{/cases/{id}(id=${case.id})}"
+                                onclick="openScanner(this.dataset.upload, this.dataset.redirect)">
+                            <i class="fas fa-camera"></i> Scanner
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body" style="padding: 0;">
+                    <div th:if="${documents != null and !documents.empty}">
+                        <table class="table-modern">
+                            <thead>
+                                <tr>
+                                    <th><i class="fas fa-file"></i> Nom</th>
+                                    <th>Type</th>
+                                    <th>Taille</th>
+                                    <th>Version</th>
+                                    <th><i class="fas fa-calendar"></i> Date</th>
+                                    <th sec:authorize="hasRole('LAWYER')">Partage</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="doc : ${documents}">
+                                    <td>
+                                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                            <i class="fas fa-file-pdf" style="color: var(--danger); font-size: 1.5rem;"></i>
+                                            <span th:text="${doc.originalName}" style="font-weight: 500;"></span>
+                                        </div>
+                                    </td>
+                                    <td style="font-size: 0.875rem;" th:text="${doc.mimetype ?: '—'}">Type</td>
+                                    <td style="font-size: 0.875rem;" th:text="${doc.fileSize != null ? #numbers.formatDecimal(doc.fileSize / 1024.0, 1, 2) + ' KB' : '—'}">Taille</td>
+                                    <td><span class="badge badge-secondary" style="font-size: 0.75rem;">v<span th:text="${doc.version}">1</span></span></td>
+                                    <td style="font-size: 0.875rem;" th:text="${#temporals.format(doc.createdAt, 'dd/MM/yyyy')}">Date</td>
+                                    <td sec:authorize="hasRole('LAWYER')">
+                                        <div style="display: flex; gap: 1rem;">
+                                            <label style="display: flex; align-items: center; gap: 0.25rem; font-size: 0.75rem; cursor: pointer;">
+                                                <input class="doc-share-toggle" type="checkbox" style="cursor: pointer;"
+                                                       th:data-doc-id="${doc.id}"
+                                                       data-role="LAWYER_SECONDARY"
+                                                       th:checked="${shareMap != null and shareMap.containsKey(doc.id) and shareMap[doc.id].contains('LAWYER_SECONDARY')}">
+                                                <span>Collab</span>
+                                            </label>
+                                            <label style="display: flex; align-items: center; gap: 0.25rem; font-size: 0.75rem; cursor: pointer;">
+                                                <input class="doc-share-toggle" type="checkbox" style="cursor: pointer;"
+                                                       th:data-doc-id="${doc.id}"
+                                                       data-role="HUISSIER"
+                                                       th:checked="${shareMap != null and shareMap.containsKey(doc.id) and shareMap[doc.id].contains('HUISSIER')}">
+                                                <span>Huissier</span>
+                                            </label>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div style="display: flex; gap: 0.5rem;">
+                                            <a th:if="${doc.mimetype != null and (doc.mimetype.startsWith('application/pdf') or doc.mimetype.startsWith('image/'))}" 
+                                               th:href="@{/documents/{id}/preview(id=${doc.id})}" 
+                                               class="btn btn-ghost btn-sm" target="_blank" data-tooltip="Prévisualiser">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a th:href="@{/documents/{id}/download(id=${doc.id})}" class="btn btn-ghost btn-sm" data-tooltip="Télécharger">
+                                                <i class="fas fa-download"></i>
+                                            </a>
+                                            <form th:action="@{/documents/{id}/delete(id=${doc.id})}" method="post" style="display: inline;" sec:authorize="hasRole('LAWYER')">
+                                                <button type="submit" class="btn btn-ghost btn-sm" data-tooltip="Supprimer" style="color: var(--danger);"
+                                                        onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce document ?')">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div th:if="${documents == null or documents.empty}" class="empty-state">
+                        <i class="fas fa-file-alt empty-state-icon"></i>
+                        <h3 class="empty-state-title">Aucun document</h3>
+                        <p class="empty-state-message">Aucun document n'a été ajouté à ce dossier</p>
+                        <a th:href="@{/documents/upload?caseId={id}(id=${case.id})}" class="btn btn-primary" sec:authorize="hasRole('LAWYER')">
+                            <i class="fas fa-cloud-upload-alt"></i> Ajouter un document
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Content: Appointments -->
+        <div id="appointments" class="tab-content" style="display: none;">
+            <div class="card">
+                <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                    <h3 style="font-size: 1.125rem; margin: 0; font-weight: 600; color: #0F172A;">
+                        <i class="fas fa-calendar-check" style="color: #0F172A; margin-right: 0.5rem;"></i>
+                        Rendez-vous
+                    </h3>
+                    <a th:href="@{/appointments}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-plus"></i> Nouveau
+                    </a>
+                </div>
+                <div class="card-body" style="padding: 1.5rem;">
+                    <div th:if="${appointments != null and !#lists.isEmpty(appointments)}" style="display: flex; flex-direction: column; gap: 1rem;">
+                        <div th:each="apt : ${appointments}" style="padding: 1rem; background: #F8FAFC; border-radius: 8px; border: 1px solid #E2E8F0;">
+                            <div style="font-size: 0.9375rem; font-weight: 600; color: #0F172A; margin-bottom: 0.5rem;" th:text="${apt.title}">RDV</div>
+                            <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; color: #64748B;">
+                                <i class="fas fa-calendar"></i>
+                                <span th:text="${#temporals.format(apt.appointmentDate, 'dd/MM/yyyy HH:mm')}">Date</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div th:if="${appointments == null or #lists.isEmpty(appointments)}" style="text-align: center; padding: 3rem;">
+                        <div style="width: 4rem; height: 4rem; border-radius: 12px; background: #F1F5F9; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 1rem;">
+                            <i class="fas fa-calendar-alt" style="font-size: 1.5rem; color: #CBD5E1;"></i>
+                        </div>
+                        <p style="margin: 0; font-size: 0.9375rem; color: #64748B;">Aucun rendez-vous prévu</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Content: Timeline -->
+        <div id="timeline" class="tab-content" style="display: none;">
+            <div class="card">
+                <div class="card-header">
+                    <h3 style="font-size: 1.125rem; margin: 0; font-weight: 600; color: #0F172A;">
+                        <i class="fas fa-history" style="color: #0F172A; margin-right: 0.5rem;"></i>
+                        Historique
+                    </h3>
+                </div>
+                <div class="card-body" style="padding: 1.5rem;">
+                    <div style="display: flex; flex-direction: column; gap: 1rem;">
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <div style="width: 0.5rem; height: 0.5rem; border-radius: 50%; background: #10B981;"></div>
+                            <span style="font-size: 0.9375rem; color: #475569;">
+                                Créé le <strong th:text="${#temporals.format(case.createdAt, 'dd/MM/yyyy')}">date</strong>
+                            </span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <div style="width: 0.5rem; height: 0.5rem; border-radius: 50%; background: #0F172A;"></div>
+                            <span style="font-size: 0.9375rem; color: #475569;">
+                                Modifié le <strong th:text="${#temporals.format(case.updatedAt, 'dd/MM/yyyy')}">date</strong>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+        function switchTab(event, tabId) {
+            event.preventDefault();
+            document.querySelectorAll('.tab-item').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.style.display = 'none');
+            event.target.closest('.tab-item').classList.add('active');
+            const targetTab = document.getElementById(tabId);
+            if (targetTab) {
+                targetTab.style.display = 'block';
+            }
+        }
+        </script>
+                                    </p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p class="mb-2"><strong>Dernière modification :</strong>
+                                        <span th:text="${#temporals.format(case.updatedAt, 'dd/MM/yyyy à HH:mm')}">Date</span>
+                                    </p>
+                                    <p class="mb-2"><strong>Documents :</strong>
+                                        <span th:text="${documentCount}">0</span>
+                                    </p>
+                                </div>
+                            </div>
+                            <div th:if="${case.description}" class="mt-2">
+                                <strong>Description :</strong>
+                                <p class="mb-0 mt-1" th:text="${case.description}" style="color:var(--text-secondary)">Description</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Documents -->
+                    <div class="card mb-3">
+                        <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <h6 class="mb-0"><i class="fas fa-file-alt me-1"></i> Documents</h6>
+                            <div class="d-flex gap-2 flex-wrap">
+                                <div class="btn-group btn-group-sm" sec:authorize="hasRole('LAWYER')">
+                                    <button type="button" class="btn btn-outline-info bulk-share-btn" data-role="LAWYER_SECONDARY" data-shared="true" title="Tout partager avec collab">
+                                        <i class="fas fa-user-friends"></i> Tout Collab
+                                    </button>
+                                    <button type="button" class="btn btn-outline-warning bulk-share-btn" data-role="HUISSIER" data-shared="true" title="Tout partager avec huissier">
+                                        <i class="fas fa-gavel"></i> Tout Huissier
+                                    </button>
+                                </div>
+                                <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#uploadModal">
+                                    <i class="fas fa-upload"></i> Uploader
+                                </button>
+                                <button type="button" class="btn btn-sm btn-secondary"
+                                        th:data-upload="@{/documents/case/{id}/upload-ajax(id=${case.id})}"
+                                        th:data-redirect="@{/cases/{id}(id=${case.id})}"
+                                        onclick="openScanner(this.dataset.upload, this.dataset.redirect)">
+                                    <i class="fas fa-camera"></i> Scanner
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive" th:if="${documents != null and !documents.empty}">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th style="padding-left:20px">Nom</th>
+                                            <th>Type</th>
+                                            <th>Taille</th>
+                                            <th>Version</th>
+                                            <th>Date</th>
+                                            <th sec:authorize="hasRole('LAWYER')">Partage</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="doc : ${documents}">
+                                            <td style="padding-left:20px">
+                                                <i class="fas fa-file me-1" style="color:var(--brand-500)"></i>
+                                                <span th:text="${doc.originalName}">Document</span>
+                                            </td>
+                                            <td style="font-size:12px" th:text="${doc.mimetype ?: '—'}">Type</td>
+                                            <td style="font-size:12px" th:text="${doc.fileSize != null ? #numbers.formatDecimal(doc.fileSize / 1024.0, 1, 2) + ' KB' : '—'}">Taille</td>
+                                            <td><span class="badge bg-secondary">v<span th:text="${doc.version}">1</span></span></td>
+                                            <td style="font-size:12px" th:text="${#temporals.format(doc.createdAt, 'dd/MM/yyyy')}">Date</td>
+                                            <td sec:authorize="hasRole('LAWYER')">
+                                                <div class="d-flex gap-2">
+                                                    <div class="form-check form-switch" title="Partager avec collaborateur">
+                                                        <input class="form-check-input doc-share-toggle" type="checkbox"
+                                                               th:data-doc-id="${doc.id}"
+                                                               data-role="LAWYER_SECONDARY"
+                                                               th:checked="${shareMap != null and shareMap.containsKey(doc.id) and shareMap[doc.id].contains('LAWYER_SECONDARY')}">
+                                                        <label class="form-check-label" style="font-size:10px">Collab</label>
+                                                    </div>
+                                                    <div class="form-check form-switch" title="Partager avec huissier">
+                                                        <input class="form-check-input doc-share-toggle" type="checkbox"
+                                                               th:data-doc-id="${doc.id}"
+                                                               data-role="HUISSIER"
+                                                               th:checked="${shareMap != null and shareMap.containsKey(doc.id) and shareMap[doc.id].contains('HUISSIER')}">
+                                                        <label class="form-check-label" style="font-size:10px">Huissier</label>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <a th:if="${doc.mimetype != null and (doc.mimetype.startsWith('application/pdf') or doc.mimetype.startsWith('image/'))}" 
+                                                   th:href="@{/documents/{id}/preview(id=${doc.id})}" 
+                                                   class="btn btn-sm btn-outline-primary" target="_blank" title="Prévisualiser">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                <a th:href="@{/documents/{id}/download(id=${doc.id})}" class="btn btn-sm btn-outline-success" title="Télécharger">
+                                                    <i class="fas fa-download"></i>
+                                                </a>
+                                                <form th:action="@{/documents/{id}/delete(id=${doc.id})}" method="post" style="display:inline"
+                                                      sec:authorize="hasRole('LAWYER')"
+                                                      data-confirm="Supprimer ce document ?" data-confirm-type="danger">
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Supprimer">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div th:if="${documents == null or documents.empty}" class="text-center py-4">
+                                <div style="width:56px;height:56px;border-radius:var(--radius-xl);background:var(--bg-tertiary);display:inline-flex;align-items:center;justify-content:center;margin-bottom:0.75rem">
+                                    <i class="fas fa-file-upload fa-lg" style="color:var(--text-tertiary)"></i>
+                                </div>
+                                <p style="color:var(--text-secondary)" class="mb-2">Aucun document</p>
+                                <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal">
+                                    <i class="fas fa-upload"></i> Ajouter un document
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Colonne latérale -->
+                <div class="col-lg-4">
+                    <!-- Collaborateurs & Huissiers (partage) -->
+                    <div class="card mb-3" sec:authorize="hasRole('LAWYER')">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0"><i class="fas fa-users me-1"></i> Intervenants</h6>
+                            <a th:href="@{/cases/{id}/share(id=${case.id})}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-share-alt"></i> Partager
+                            </a>
+                        </div>
+                        <div class="card-body">
+                            <div th:if="${permissions != null and !#lists.isEmpty(permissions)}">
+                                <div th:each="perm : ${permissions}" class="d-flex align-items-center justify-content-between mb-2 p-2" style="background:var(--bg-secondary);border-radius:var(--radius-md);border:1px solid var(--border-light)">
+                                    <div>
+                                        <div class="d-flex align-items-center gap-1">
+                                            <span style="font-size:0.8125rem;font-weight:600;color:var(--text-primary)" th:text="${perm.lawyer.firstName + ' ' + perm.lawyer.lastName}">Collaborateur</span>
+                                            <span class="badge bg-info" style="font-size:9px" th:if="${perm.lawyer.role.name() == 'LAWYER_SECONDARY'}">Collab</span>
+                                            <span class="badge bg-warning text-dark" style="font-size:9px" th:if="${perm.lawyer.role.name() == 'HUISSIER'}">Huissier</span>
+                                        </div>
+                                        <div style="font-size:0.6875rem;color:var(--text-tertiary)" th:text="${perm.lawyer.email}">email</div>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="badge bg-info" style="font-size:10px" th:if="${perm.expiresAt != null}"
+                                              th:text="'Exp. ' + ${#temporals.format(perm.expiresAt, 'dd/MM')}">Exp.</span>
+                                        <form th:action="@{/cases/{caseId}/permissions/{permId}/revoke(caseId=${case.id}, permId=${perm.id})}" method="post" style="margin:0"
+                                              data-confirm="Révoquer l'accès de ce collaborateur ?" data-confirm-type="danger">
+                                            <button type="submit" class="btn btn-outline-danger btn-sm" style="padding:2px 6px;font-size:11px" title="Révoquer l'accès">
+                                                <i class="fas fa-user-times"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                            <div th:if="${permissions == null or #lists.isEmpty(permissions)}" class="text-center py-2">
+                                <p class="text-muted mb-0" style="font-size:13px">Aucun collaborateur</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Rendez-vous à venir -->
+                    <div class="card mb-3">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0"><i class="fas fa-calendar-alt me-1"></i> Rendez-vous</h6>
+                            <a th:href="@{/appointments}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-plus"></i>
+                            </a>
+                        </div>
+                        <div class="card-body">
+                            <div th:if="${appointments != null and !#lists.isEmpty(appointments)}">
+                                <div th:each="apt : ${appointments}" class="mb-2 p-2" style="background:var(--bg-secondary);border-radius:var(--radius-md);border:1px solid var(--border-light)">
+                                    <div style="font-size:0.8125rem;font-weight:600;color:var(--text-primary)" th:text="${apt.title}">RDV</div>
+                                    <div style="font-size:0.6875rem;color:var(--text-tertiary)" th:text="${#temporals.format(apt.appointmentDate, 'dd/MM/yyyy HH:mm')}">Date</div>
+                                </div>
+                            </div>
+                            <div th:if="${appointments == null or #lists.isEmpty(appointments)}" class="text-center py-2">
+                                <p class="text-muted mb-0" style="font-size:13px">Aucun rendez-vous prévu</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Historique -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h6 class="mb-0"><i class="fas fa-history me-1"></i> Historique</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex align-items-center gap-2 mb-2" style="font-size:12px">
+                                <i class="fas fa-circle" style="font-size:6px;color:var(--success)"></i>
+                                <span>Créé le <span th:text="${#temporals.format(case.createdAt, 'dd/MM/yyyy')}">date</span></span>
+                            </div>
+                            <div class="d-flex align-items-center gap-2 mb-2" style="font-size:12px">
+                                <i class="fas fa-circle" style="font-size:6px;color:var(--brand-500)"></i>
+                                <span>Modifié le <span th:text="${#temporals.format(case.updatedAt, 'dd/MM/yyyy')}">date</span></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Upload -->
+        <div class="modal fade" id="uploadModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title"><i class="fas fa-upload me-2"></i> Uploader un document</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <form th:action="@{/documents/case/{id}/upload(id=${case.id})}" method="post" enctype="multipart/form-data">
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label for="file" class="form-label">Sélectionner un fichier</label>
+                                <input type="file" id="file" name="file" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-upload"></i> Uploader
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- JavaScript pour le partage de documents -->
+        <script th:inline="javascript" sec:authorize="hasRole('LAWYER')">
+        (function() {
+            const caseId = /*[[${case.id}]]*/ '';
+
+            // Toggle individuel
+            document.querySelectorAll('.doc-share-toggle').forEach(function(cb) {
+                cb.addEventListener('change', function() {
+                    const docId = this.dataset.docId;
+                    const role = this.dataset.role;
+                    const shared = this.checked;
+                    const toggle = this;
+                    toggle.disabled = true;
+
+                    fetch('/api/document-shares/toggle?documentId=' + encodeURIComponent(docId)
+                        + '&caseId=' + encodeURIComponent(caseId)
+                        + '&role=' + encodeURIComponent(role)
+                        + '&shared=' + shared, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+                    })
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        toggle.disabled = false;
+                        if (!data.success) {
+                            toggle.checked = !shared;
+                            appAlert('Erreur : ' + (data.error || 'Erreur inconnue'), 'danger');
+                        }
+                    })
+                    .catch(function(err) {
+                        toggle.disabled = false;
+                        toggle.checked = !shared;
+                        appAlert('Erreur réseau', 'danger');
+                    });
+                });
+            });
+
+            // Bulk toggle buttons
+            document.querySelectorAll('.bulk-share-btn').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    const role = this.dataset.role;
+                    const shared = this.dataset.shared === 'true';
+                    const label = role === 'LAWYER_SECONDARY' ? 'collaborateur' : 'huissier';
+                    const action = shared ? 'partager' : 'départager';
+
+                    appConfirm('Voulez-vous ' + action + ' tous les documents avec le ' + label + ' ?').then(function(ok) {
+                    if (!ok) return;
+
+                    fetch('/api/document-shares/bulk-toggle?caseId=' + encodeURIComponent(caseId)
+                        + '&role=' + encodeURIComponent(role)
+                        + '&shared=' + shared, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+                    })
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        if (data.success) {
+                            // Update all toggles for this role
+                            document.querySelectorAll('.doc-share-toggle[data-role="' + role + '"]').forEach(function(cb) {
+                                cb.checked = shared;
+                            });
+                        } else {
+                            appAlert('Erreur : ' + (data.error || 'Erreur inconnue'), 'danger');
+                        }
+                    })
+                    .catch(function() { appAlert('Erreur réseau', 'danger'); });
+                    }); // end appConfirm
+                });
+            });
+        })();
+        </script>
+
+    </div>
+</body>
+</html>

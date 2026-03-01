@@ -122,7 +122,7 @@ class AuthControllerTest {
     @Test
     @DisplayName("✓ Pages CSS/JS accessibles sans authentification")
     void staticResourcesArePublic() throws Exception {
-        mockMvc.perform(get("/css/main.css"))
+        mockMvc.perform(get("/css/global-unified-theme.css"))
             .andExpect(status().isOk());
     }
 }

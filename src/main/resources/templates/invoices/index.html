@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout}">
@@ -8,19 +8,19 @@
 <div layout:fragment="content">
     <div class="container-fluid">
         <!-- En-tête -->
-        <div class="hero-banner mb-4">
+        <div class="hero-banner mb-4" style="background: #0F172A !important; border: 2px solid #C6A75E !important; padding: 2rem !important; border-radius: 12px !important;">
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
                 <div>
-                    <h1>
+                    <h1 style="color: #FFFFFF !important; font-size: 1.75rem !important; font-weight: 700 !important; margin-bottom: 0.5rem !important;">
                         <i class="fas fa-file-invoice-dollar"></i> Facturation
                     </h1>
-                    <p>Gérez vos factures clients</p>
+                    <p style="color: rgba(255,255,255,0.9) !important; font-size: 1rem !important; margin: 0 !important;">Gérez vos factures clients</p>
                 </div>
                 <div class="d-flex gap-2 flex-wrap">
-                    <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#importModal">
+                    <button type="button" class="btn btn-light" data-bs-toggle="modal" data-bs-target="#importModal" style="background: #FFFFFF !important; color: #0F172A !important; border: 2px solid #FFFFFF !important; font-weight: 600 !important;">
                         <i class="fas fa-file-import"></i> Importer une facture
                     </button>
-                    <a href="/invoices/new" class="btn btn-primary">
+                    <a href="/invoices/new" class="btn btn-primary" style="background: #C6A75E !important; color: #0F172A !important; border: 2px solid #C6A75E !important; font-weight: 600 !important;">
                         <i class="fas fa-plus"></i> Nouvelle facture
                     </a>
                 </div>
@@ -108,7 +108,7 @@
                         <input type="date" name="dateTo" class="form-control">
                     </div>
                     <div class="col-md-2 d-flex align-items-end">
-                        <button type="submit" class="btn btn-primary w-100" style="border-radius:var(--radius-md);font-weight:600">
+                        <button type="submit" class="btn btn-primary w-100 rounded-md fw-600">
                             <i class="fas fa-search"></i> Filtrer
                         </button>
                     </div>
@@ -140,7 +140,7 @@
                                         <i class="fas fa-inbox fa-2x" style="color:var(--text-tertiary)"></i>
                                     </div>
                                     <p class="text-muted">Aucune facture pour le moment</p>
-                                    <a href="/invoices/new" class="btn btn-primary" style="border-radius:var(--radius-md);font-weight:600">
+                                    <a href="/invoices/new" class="btn btn-primary rounded-md fw-600">
                                         <i class="fas fa-plus"></i> Créer ma première facture
                                     </a>
                                 </td>
@@ -257,7 +257,7 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                        <button type="submit" class="btn btn-primary" style="border-radius:var(--radius-md);font-weight:600">
+                        <button type="submit" class="btn btn-primary rounded-md fw-600">
                             <i class="fas fa-file-import"></i> Importer
                         </button>
                     </div>

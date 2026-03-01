@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout}">
@@ -27,13 +27,13 @@
                 <h5 class="mb-0"><i class="fas fa-list"></i> Liste des communications</h5>
             </div>
             <div class="card-body">
-                <div th:if="${communications == null or #lists.isEmpty(communications)}" class="text-center text-muted py-5">
+                <div th:if="${communications == null or communications.isEmpty()}" class="text-center text-muted py-5">
                     <div style="width:64px;height:64px;border-radius:50%;background:var(--bg-secondary);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
                         <i class="fas fa-inbox" style="font-size:24px;color:var(--text-tertiary);"></i>
                     </div>
                     <p>Aucune communication reçue.</p>
                 </div>
-                <table th:if="${communications != null and not #lists.isEmpty(communications)}" class="table table-hover">
+                <table th:if="${communications != null and !communications.isEmpty()}" class="table table-hover">
                     <thead>
                         <tr>
                             <th>Date</th>
