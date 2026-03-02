@@ -19,11 +19,11 @@ for dir in "$UPLOAD_DIR" "$SIGNATURE_DIR" "$INVOICE_DIR" "$TEMP_DIR" "$LOG_DIR" 
   mkdir -p "$dir" 2>/dev/null || true
 done
 
-# Fixer les permissions pour l'utilisateur docavocat (uid 999)
-chown -R docavocat:docavocat /opt/gedavocat 2>/dev/null || true
+# L'utilisateur docavocat est déjà défini par USER dans le Dockerfile
+# Pas besoin de chown ni de gosu
 
-# Lancer l'application en tant que docavocat
-exec gosu docavocat java \
+# Lancer l'application
+exec java \
     -Xms256m -Xmx512m \
     -XX:+UseContainerSupport \
     -XX:MaxRAMPercentage=75.0 \
