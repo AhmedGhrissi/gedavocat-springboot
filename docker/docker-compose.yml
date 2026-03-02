@@ -94,6 +94,12 @@ services:
       SPRING_PROFILES_ACTIVE: prod
       MAINTENANCE_ENABLED: ${MAINTENANCE_ENABLED:-false}
 
+      # Services externes (APIs)
+      YOUSIGN_API_KEY: ${YOUSIGN_API_KEY}
+      STRIPE_API_KEY: ${STRIPE_API_KEY:-}
+      STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+
       # Logs JSON structurés (lisibles par Loki/Promtail)
       LOGGING_STRUCTURED_FORMAT_CONSOLE_ENABLED: "false"
 
