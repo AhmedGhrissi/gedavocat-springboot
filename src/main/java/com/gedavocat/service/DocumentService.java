@@ -136,7 +136,11 @@ public class DocumentService {
             String uniqueFilename = UUID.randomUUID().toString() + fileExtension;
             
             // Sauvegarder le fichier
-            Path filePath = uploadPath.resolve(uniqueFilename);
+            Path filePath = uploadPath.resolve(uniqueFilename).normalize();
+            // SECURITE: Vérification path traversal
+            if (!filePath.startsWith(uploadPath.normalize())) {
+                throw new SecurityException("Path traversal détecté");
+            }
             Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
             
             // Créer l'entité document
@@ -210,7 +214,11 @@ public class DocumentService {
             }
             
             String uniqueFilename = UUID.randomUUID().toString() + fileExtension;
-            Path filePath = uploadPath.resolve(uniqueFilename);
+            Path filePath = uploadPath.resolve(uniqueFilename).normalize();
+            // SECURITE: Vérification path traversal
+            if (!filePath.startsWith(uploadPath.normalize())) {
+                throw new SecurityException("Path traversal détecté");
+            }
             Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
             
             Document newVersion = new Document();
