@@ -18,6 +18,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,6 +44,16 @@ public class CaseController {
     private final PermissionRepository permissionRepository;
     private final UserRepository userRepository;
     private final DocumentShareService documentShareService;
+
+    /**
+     * SEC-MASS-ASSIGN FIX CTL-02 : restreindre les champs bindables
+     * Empêche la manipulation des champs sensibles (lawyer, client, documents, permissions, etc.)
+     */
+    @InitBinder("case")
+    public void initBinder(WebDataBinder binder) {
+        binder.setAllowedFields("name", "reference", "caseType", "description",
+                "status", "openedDate", "closedDate", "deadline");
+    }
 
     /**
      * Liste des dossiers

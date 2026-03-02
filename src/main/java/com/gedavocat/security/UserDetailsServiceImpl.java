@@ -26,11 +26,9 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        // SEC FIX L-04 : vérifier le verrouillage de compte avant l'authentification
+        // SEC FIX L-04 + SEC-04/05 : vérifier le verrouillage sans divulguer les détails
         if (accountLockoutService.isLocked(email)) {
-            long minutes = accountLockoutService.getRemainingLockoutMinutes(email);
-            throw new UsernameNotFoundException(
-                "Compte temporairement verrouillé. Réessayez dans " + minutes + " minute(s).");
+            throw new UsernameNotFoundException("Identifiants invalides");
         }
         
         User user = userRepository.findByEmail(email)

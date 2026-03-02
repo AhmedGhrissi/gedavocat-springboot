@@ -184,10 +184,23 @@ public class AppointmentService {
     }
 
     /**
-     * Récupère un rendez-vous par son ID
+     * Récupère un rendez-vous par son ID (usage interne uniquement)
      */
     public Optional<Appointment> getAppointmentById(String appointmentId) {
         return appointmentRepository.findById(appointmentId);
+    }
+
+    /**
+     * Récupère un rendez-vous par son ID avec vérification d'ownership
+     * SEC-IDOR FIX SVC-03 : vérification que le rendez-vous appartient à l'avocat
+     */
+    public Appointment getAppointmentByIdForLawyer(String appointmentId, String lawyerId) {
+        Appointment appointment = appointmentRepository.findById(appointmentId)
+            .orElseThrow(() -> new RuntimeException("Rendez-vous non trouvé"));
+        if (appointment.getLawyer() == null || !appointment.getLawyer().getId().equals(lawyerId)) {
+            throw new SecurityException("Accès non autorisé à ce rendez-vous");
+        }
+        return appointment;
     }
 
     /**

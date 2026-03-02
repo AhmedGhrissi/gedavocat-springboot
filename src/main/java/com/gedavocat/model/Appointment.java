@@ -3,8 +3,10 @@ package com.gedavocat.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
@@ -25,7 +27,8 @@ import org.springframework.format.annotation.DateTimeFormat;
     @Index(name = "idx_appointment_date", columnList = "appointment_date"),
     @Index(name = "idx_appointment_status", columnList = "status")
 })
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString(exclude = {"lawyer", "client", "relatedCase"})
@@ -63,16 +66,19 @@ public class Appointment {
     // Relation avec l'avocat
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "lawyer_id", nullable = false)
+    @JsonIgnore
     private User lawyer;
 
     // Relation avec le client (optionnel pour les audiences)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "client_id")
+    @JsonIgnore
     private Client client;
 
     // Relation avec le dossier (optionnel)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "case_id")
+    @JsonIgnore
     private Case relatedCase;
 
     // Lieu du rendez-vous

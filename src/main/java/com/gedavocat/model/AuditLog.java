@@ -1,8 +1,10 @@
 package com.gedavocat.model;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
@@ -21,7 +23,8 @@ import java.util.UUID;
     @Index(name = "idx_entity_type", columnList = "entity_type"),
     @Index(name = "idx_created_at", columnList = "created_at")
 })
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString(exclude = {"user"})
@@ -34,6 +37,7 @@ public class AuditLog {
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
+    @JsonIgnore
     private User user;
     
     @Column(nullable = false, length = 100)
@@ -49,9 +53,11 @@ public class AuditLog {
     private String details;
     
     @Column(name = "ip_address", length = 45)
+    @JsonIgnore
     private String ipAddress;
     
     @Column(name = "user_agent", columnDefinition = "TEXT")
+    @JsonIgnore
     private String userAgent;
     
     @CreationTimestamp

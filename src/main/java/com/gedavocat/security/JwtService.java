@@ -34,6 +34,12 @@ public class JwtService {
     @Value("${jwt.expiration}")
     private long jwtExpiration;
 
+    private final JwtBlacklistService jwtBlacklistService;
+
+    public JwtService(JwtBlacklistService jwtBlacklistService) {
+        this.jwtBlacklistService = jwtBlacklistService;
+    }
+
     /**
      * SEC-01 FIX : Valide que le secret JWT est correctement défini au démarrage.
      * Interdit les valeurs par défaut ou trop courtes.
@@ -101,9 +107,13 @@ public class JwtService {
     }
     
     /**
-     * Valide un token
+     * Valide un token (vérifie signature, expiration, et blacklist)
+     * SEC-01 FIX : ajout vérification blacklist pour révocation
      */
     public boolean isTokenValid(String token, UserDetails userDetails) {
+        if (jwtBlacklistService.isBlacklisted(token)) {
+            return false;
+        }
         final String username = extractUsername(token);
         return (username.equals(userDetails.getUsername())) && !isTokenExpired(token);
     }
@@ -116,9 +126,9 @@ public class JwtService {
     }
     
     /**
-     * Extrait la date d'expiration du token
+     * Extrait la date d'expiration du token (public pour le logout/blacklist)
      */
-    private Date extractExpiration(String token) {
+    public Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
     }
     

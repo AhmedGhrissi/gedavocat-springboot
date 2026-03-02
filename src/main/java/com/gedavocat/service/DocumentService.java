@@ -191,10 +191,14 @@ public class DocumentService {
     
     /**
      * Upload une nouvelle version d'un document
+     * SEC-IDOR FIX SVC-02 : vérification ownership avant upload nouvelle version
      */
     @Transactional
     public Document uploadNewVersion(String parentDocumentId, MultipartFile file, String userId) {
         Document parentDoc = getDocumentById(parentDocumentId);
+        
+        // SÉCURITÉ SVC-02 : vérifier que l'utilisateur est propriétaire du document
+        verifyDocumentOwnership(parentDoc, userId);
         
         // Marquer l'ancienne version comme non-latest
         parentDoc.setIsLatest(false);

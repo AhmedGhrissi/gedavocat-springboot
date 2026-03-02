@@ -325,7 +325,7 @@
         const orig = btn.innerHTML;
         btn.disabled = true;
         btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> En cours...';
-        fetch('/api/admin/gc', { method: 'POST', credentials: 'same-origin' })
+        fetch('/api/admin/gc', { method: 'POST', credentials: 'same-origin', headers: { [_csrfHeader]: _csrfToken } })
             .then(r => r.json())
             .then(d => { showToastSys(d.message || 'GC terminé', true); window.location.reload(); })
             .catch(() => showToastSys('Erreur lors du GC', false))

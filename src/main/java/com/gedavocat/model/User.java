@@ -7,7 +7,8 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -26,7 +27,8 @@ import java.util.UUID;
     @Index(name = "idx_user_email", columnList = "email"),
     @Index(name = "idx_user_role", columnList = "role")
 })
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class User {
@@ -144,7 +146,7 @@ public class User {
     // ==========================================
 
     @Column(name = "email_verified", nullable = false)
-    private boolean emailVerified = true; // true par défaut pour les utilisateurs existants
+    private boolean emailVerified = false; // SEC FIX MDL-02 : false par défaut — doit être vérifié par email
 
     @Column(name = "account_enabled", nullable = false)
     private boolean accountEnabled = true;
@@ -153,6 +155,7 @@ public class User {
     private LocalDateTime accessEndsAt;
 
     @Column(name = "invitation_id", length = 36)
+    @JsonIgnore
     private String invitationId;
 
     // Réinitialisation du mot de passe (persisté en base, résiste aux redémarrages)
@@ -176,7 +179,7 @@ public class User {
     @JsonIgnore
     private Set<Case> cases = new HashSet<>();
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "user", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JsonIgnore
     private Set<AuditLog> auditLogs = new HashSet<>();
 

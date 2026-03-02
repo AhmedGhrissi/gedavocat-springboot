@@ -2,8 +2,10 @@ package com.gedavocat.model;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
@@ -22,7 +24,8 @@ import java.util.UUID;
     @Index(name = "idx_document_uploaded_by", columnList = "uploaded_by"),
     @Index(name = "idx_document_deleted_at", columnList = "deleted_at")
 })
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString(exclude = {"caseEntity", "uploadedBy", "parentDocument"})
@@ -35,10 +38,12 @@ public class Document {
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "case_id", nullable = false)
+    @JsonIgnore
     private Case caseEntity;
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "uploaded_by", nullable = false)
+    @JsonIgnore
     private User uploadedBy;
     
     @NotBlank
@@ -61,6 +66,7 @@ public class Document {
     
     @NotBlank(message = "Le chemin du fichier est obligatoire")
     @Column(nullable = false, columnDefinition = "TEXT")
+    @JsonIgnore
     private String path;
     
     @Column(nullable = false)
@@ -68,6 +74,7 @@ public class Document {
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_document_id")
+    @JsonIgnore
     private Document parentDocument;
     
     @Column(name = "is_latest", nullable = false)

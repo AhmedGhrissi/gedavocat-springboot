@@ -51,6 +51,8 @@ class AuthServiceTest {
         testUser.setEmail("jean.dupont@gedavocat.com");
         testUser.setPassword("$2a$10$hashedPassword");
         testUser.setRole(User.UserRole.LAWYER);
+        testUser.setEmailVerified(true);
+        testUser.setAccountEnabled(true);
     }
 
     // ===================================================================

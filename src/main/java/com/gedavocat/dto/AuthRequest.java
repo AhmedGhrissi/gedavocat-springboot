@@ -2,6 +2,7 @@ package com.gedavocat.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -16,5 +17,6 @@ public class AuthRequest {
     private String email;
     
     @NotBlank(message = "Le mot de passe est obligatoire")
+    @Size(max = 128, message = "Le mot de passe ne doit pas dépasser 128 caractères")
     private String password;
 }

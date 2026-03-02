@@ -5,6 +5,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;
@@ -44,10 +45,12 @@ public class Client {
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "lawyer_id", nullable = false)
+    @JsonIgnore
     private User lawyer;
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "client_user_id")
+    @JsonIgnore
     private User clientUser;
     
     @NotBlank(message = "Le nom est obligatoire")
@@ -72,6 +75,7 @@ public class Client {
     private LocalDateTime accessEndsAt;
     
     @Column(name = "invitation_id", length = 36)
+    @JsonIgnore
     private String invitationId;
 
     @Column(name = "invited_at")
@@ -113,9 +117,11 @@ public class Client {
     
     // Relations
     @OneToMany(mappedBy = "client", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private Set<Case> cases = new HashSet<>();
     
     @OneToMany(mappedBy = "client", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private Set<Invoice> invoices = new HashSet<>();
     
     // Méthodes utilitaires

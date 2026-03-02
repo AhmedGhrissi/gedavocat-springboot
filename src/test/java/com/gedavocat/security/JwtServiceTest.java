@@ -25,7 +25,8 @@ class JwtServiceTest {
 
     @BeforeEach
     void setUp() {
-        jwtService = new JwtService();
+        JwtBlacklistService blacklistService = new JwtBlacklistService();
+        jwtService = new JwtService(blacklistService);
         ReflectionTestUtils.setField(jwtService, "secretKey", SECRET);
         ReflectionTestUtils.setField(jwtService, "jwtExpiration", EXPIRATION);
 

@@ -146,9 +146,12 @@ public class InvoiceService {
     public InvoiceResponse getInvoiceById(String invoiceId, String lawyerId) {
         Invoice invoice = invoiceRepository.findById(invoiceId)
             .orElseThrow(() -> new RuntimeException("Facture non trouvée"));
-        // SÉCURITÉ : vérifier que la facture appartient bien à l'avocat connecté
+        // SÉCURITÉ SVC-01 FIX : vérification ownership stricte — lawyerId obligatoire
+        if (lawyerId == null) {
+            throw new SecurityException("Identifiant avocat requis pour accéder à une facture");
+        }
         if (invoice.getClient() != null && invoice.getClient().getLawyer() != null
-                && lawyerId != null && !invoice.getClient().getLawyer().getId().equals(lawyerId)) {
+                && !invoice.getClient().getLawyer().getId().equals(lawyerId)) {
             throw new SecurityException("Accès non autorisé à cette facture");
         }
         return convertToResponse(invoice);
@@ -161,8 +164,11 @@ public class InvoiceService {
     @Transactional(readOnly = true)
     public List<InvoiceResponse> getInvoicesByClient(String clientId, String lawyerId) {
         List<Invoice> invoices = invoiceRepository.findByClientId(clientId);
-        // SEC-IDOR FIX : vérifier que le client appartient bien à l'avocat
-        if (lawyerId != null && !invoices.isEmpty()) {
+        // SÉCURITÉ SVC-01 FIX : vérification ownership stricte — lawyerId obligatoire
+        if (lawyerId == null) {
+            throw new SecurityException("Identifiant avocat requis pour accéder aux factures");
+        }
+        if (!invoices.isEmpty()) {
             Invoice first = invoices.get(0);
             if (first.getClient() != null && first.getClient().getLawyer() != null
                     && !first.getClient().getLawyer().getId().equals(lawyerId)) {

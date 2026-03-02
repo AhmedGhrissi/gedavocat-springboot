@@ -119,11 +119,12 @@
 
                     <form th:action="@{/settings/yousign}" method="post">
                         <div class="form-floating">
-                            <input type="text" id="apiKey" name="apiKey" 
-                                   th:value="${yousignApiKey}" class="form-control" 
+                            <input type="password" id="apiKey" name="apiKey" 
+                                   class="form-control" 
+                                   th:attr="placeholder=${yousignConfigured ? '••••••••••••(clé configurée)' : 'Votre clé API Yousign'}"
                                    placeholder="Votre clé API Yousign">
                             <label for="apiKey">Clé API Yousign</label>
-                            <small class="text-muted">Format: prod_XXXXXXXX ou test_XXXXXXXX</small>
+                            <small class="text-muted">Format: prod_XXXXXXXX ou test_XXXXXXXX — Laissez vide pour conserver la clé actuelle</small>
                         </div>
 
                         <div class="form-check mb-3">

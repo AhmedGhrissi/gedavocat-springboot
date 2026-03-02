@@ -100,12 +100,19 @@ public class InvoiceController {
     public ResponseEntity<List<InvoiceResponse>> getInvoicesByClient(@PathVariable String clientId,
                                                                       Authentication authentication) {
         try {
-            // SÉCURITÉ : forcer clientId du user authentifié si CLIENT, sinon vérifier ownership
+            // SÉCURITÉ CTL-12 FIX : vérifier ownership pour CLIENT et LAWYER
             User user = getCurrentUser(authentication);
             boolean isClient = authentication.getAuthorities().stream()
                     .anyMatch(a -> a.getAuthority().equals("ROLE_CLIENT"));
             if (isClient && !user.getId().equals(clientId)) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
+            // Pour LAWYER : utiliser la version avec vérification ownership
+            boolean isLawyer = authentication.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_LAWYER"));
+            if (isLawyer) {
+                List<InvoiceResponse> invoices = invoiceService.getInvoicesByClient(clientId, user.getId());
+                return ResponseEntity.ok(invoices);
             }
             List<InvoiceResponse> invoices = invoiceService.getInvoicesByClient(clientId);
             return ResponseEntity.ok(invoices);

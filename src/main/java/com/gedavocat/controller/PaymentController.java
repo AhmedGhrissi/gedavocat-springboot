@@ -66,8 +66,13 @@ public class PaymentController {
             // Créer le paiement PayPlug
             String paymentUrl = payPlugService.createPayment(user, plan, amount);
 
-            if (paymentUrl != null) {
+            // SEC FIX CTL-05 : validation de l'URL de redirection (open redirect)
+            if (paymentUrl != null && isAllowedPaymentRedirect(paymentUrl)) {
                 return "redirect:" + paymentUrl;
+            } else if (paymentUrl != null) {
+                log.warn("URL de paiement rejetée (domaine non autorisé) : {}", paymentUrl);
+                redirectAttributes.addFlashAttribute("error", "Erreur lors de la création du paiement");
+                return "redirect:/payment/pricing";
             } else {
                 redirectAttributes.addFlashAttribute("error", "Erreur lors de la création du paiement");
                 return "redirect:/payment/pricing";
@@ -225,6 +230,24 @@ public class PaymentController {
             return monthlyAmount;
         } catch (IllegalArgumentException e) {
             return 0.0;
+        }
+    }
+
+    /**
+     * SEC FIX CTL-05/06 : Vérifie que l'URL de redirection de paiement
+     * pointe vers un domaine autorisé (PayPlug ou Stripe uniquement).
+     */
+    private boolean isAllowedPaymentRedirect(String url) {
+        if (url == null || url.isBlank()) return false;
+        try {
+            java.net.URI uri = new java.net.URI(url);
+            String host = uri.getHost();
+            if (host == null) return false;
+            host = host.toLowerCase();
+            return host.endsWith(".payplug.com") || host.equals("payplug.com")
+                || host.endsWith(".stripe.com") || host.equals("stripe.com");
+        } catch (Exception e) {
+            return false;
         }
     }
 

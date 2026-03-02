@@ -276,7 +276,7 @@
         const originalHtml = btnEl.innerHTML;
         btnEl.disabled = true;
         btnEl.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> En cours...';
-        fetch(endpoint, { method: 'POST', credentials: 'same-origin' })
+        fetch(endpoint, { method: 'POST', credentials: 'same-origin', headers: { [_csrfHeader]: _csrfToken } })
             .then(r => r.json())
             .then(d => showToast(d.message || 'Terminé', d.success !== false))
             .catch(() => showToast('Erreur réseau', false))

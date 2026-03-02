@@ -21,10 +21,25 @@ public class DocumentShareService {
     private final DocumentShareRepository documentShareRepository;
 
     /**
+     * SEC-IDOR FIX SVC-04 : Vérifie que l'utilisateur est propriétaire du dossier lié au document.
+     */
+    private void verifyOwnership(Document document, String lawyerId) {
+        if (lawyerId == null) {
+            throw new SecurityException("Identifiant avocat requis");
+        }
+        if (document.getCaseEntity() == null || document.getCaseEntity().getLawyer() == null
+                || !document.getCaseEntity().getLawyer().getId().equals(lawyerId)) {
+            throw new SecurityException("Accès non autorisé au partage de ce document");
+        }
+    }
+
+    /**
      * Partage un document avec un rôle (collaborateur ou huissier).
+     * SEC-IDOR FIX SVC-04 : vérification ownership
      */
     @Transactional
-    public DocumentShare shareDocument(Document document, Case caseEntity, User.UserRole targetRole, boolean canDownload) {
+    public DocumentShare shareDocument(Document document, Case caseEntity, User.UserRole targetRole, boolean canDownload, String lawyerId) {
+        verifyOwnership(document, lawyerId);
         // Vérifier si un partage existe déjà
         Optional<DocumentShare> existing = documentShareRepository.findByDocumentIdAndRole(document.getId(), targetRole);
         if (existing.isPresent()) {
@@ -43,6 +58,7 @@ public class DocumentShareService {
 
     /**
      * Retire le partage d'un document pour un rôle.
+     * SEC-IDOR FIX SVC-04 : vérification ownership
      */
     @Transactional
     public void unshareDocument(String documentId, User.UserRole targetRole) {
@@ -81,17 +97,17 @@ public class DocumentShareService {
 
     /**
      * Partage/départage en masse tous les documents d'un dossier pour un rôle.
-     *
-     * @param caseId      ID du dossier
-     * @param documents   Liste des documents du dossier
-     * @param targetRole  Rôle cible
-     * @param share       true = partager, false = retirer
+     * SEC-IDOR FIX SVC-04 : vérification ownership via lawyerId
      */
     @Transactional
-    public void bulkShare(String caseId, List<Document> documents, Case caseEntity, User.UserRole targetRole, boolean share) {
+    public void bulkShare(String caseId, List<Document> documents, Case caseEntity, User.UserRole targetRole, boolean share, String lawyerId) {
+        // Vérifier que l'avocat est propriétaire du dossier
+        if (lawyerId == null || caseEntity.getLawyer() == null || !caseEntity.getLawyer().getId().equals(lawyerId)) {
+            throw new SecurityException("Accès non autorisé au partage de ce dossier");
+        }
         if (share) {
             for (Document doc : documents) {
-                shareDocument(doc, caseEntity, targetRole, false);
+                shareDocument(doc, caseEntity, targetRole, false, lawyerId);
             }
             log.info("[DocShare] Tous les documents du dossier {} partagés avec {}", caseId, targetRole);
         } else {
@@ -102,19 +118,18 @@ public class DocumentShareService {
 
     /**
      * Met à jour les partages pour un dossier en fonction des documents sélectionnés.
-     *
-     * @param caseId          ID du dossier
-     * @param caseEntity      Entité Case
-     * @param allDocuments    Tous les documents du dossier
-     * @param selectedDocIds  IDs des documents sélectionnés pour partage
-     * @param targetRole      Rôle cible
+     * SEC-IDOR FIX SVC-04 : vérification ownership via lawyerId
      */
     @Transactional
     public void updateShares(String caseId, Case caseEntity, List<Document> allDocuments,
-                             Set<String> selectedDocIds, User.UserRole targetRole) {
+                             Set<String> selectedDocIds, User.UserRole targetRole, String lawyerId) {
+        // Vérifier que l'avocat est propriétaire du dossier
+        if (lawyerId == null || caseEntity.getLawyer() == null || !caseEntity.getLawyer().getId().equals(lawyerId)) {
+            throw new SecurityException("Accès non autorisé au partage de ce dossier");
+        }
         for (Document doc : allDocuments) {
             if (selectedDocIds.contains(doc.getId())) {
-                shareDocument(doc, caseEntity, targetRole, false);
+                shareDocument(doc, caseEntity, targetRole, false, lawyerId);
             } else {
                 unshareDocument(doc.getId(), targetRole);
             }

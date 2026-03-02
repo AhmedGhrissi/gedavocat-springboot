@@ -3,6 +3,7 @@ package com.gedavocat.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;
@@ -54,6 +55,7 @@ public class Invoice {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "client_id", nullable = false)
     @NotNull(message = "Le client est obligatoire")
+    @JsonIgnore
     private Client client;
     
     @Column(name = "invoice_date", nullable = false)
@@ -94,6 +96,7 @@ public class Invoice {
     private String paymentMethod;
     
     @Column(name = "document_url", length = 500)
+    @JsonIgnore
     private String documentUrl;
     
     @CreationTimestamp
