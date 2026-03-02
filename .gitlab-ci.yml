@@ -261,6 +261,15 @@ deploy:
     # On met a jour APP_IMAGE dans le .env existant (sans ecraser les autres variables)
     - ssh root@$SERVER_HOST "sed -i '/^APP_IMAGE=/d' $REMOTE_DIR/.env && echo \"APP_IMAGE=$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA\" >> $REMOTE_DIR/.env"
 
+    #  Migration SQL (idempotente — ADD COLUMN IF NOT EXISTS) 
+    - scp docker/init/02-migration-version-columns.sql root@$SERVER_HOST:$REMOTE_DIR/02-migration.sql
+    - |
+      ssh root@$SERVER_HOST "
+        docker cp $REMOTE_DIR/02-migration.sql docavocat-mysql:/tmp/migration.sql
+        docker exec docavocat-mysql sh -c 'mysql -u root -p\$MYSQL_ROOT_PASSWORD < /tmp/migration.sql'
+        echo 'Migration SQL appliquee'
+      "
+
     #  Envoi des configs Loki / Promtail / Grafana 
     - ssh root@$SERVER_HOST "mkdir -p $REMOTE_DIR/loki $REMOTE_DIR/promtail $REMOTE_DIR/grafana/provisioning/datasources $REMOTE_DIR/grafana/provisioning/dashboards"
     - scp docker/loki/local-config.yaml root@$SERVER_HOST:$REMOTE_DIR/loki/local-config.yaml
