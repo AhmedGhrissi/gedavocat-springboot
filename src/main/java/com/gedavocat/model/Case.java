@@ -9,6 +9,9 @@ import lombok.ToString;
 import lombok.EqualsAndHashCode;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.ParamDef;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -17,13 +20,17 @@ import java.util.UUID;
 
 /**
  * Entité représentant un dossier juridique (affaire)
+ * MULTI-TENANT: Isolation automatique par firmId
  */
 @Entity
 @Table(name = "cases", indexes = {
     @Index(name = "idx_case_lawyer_id", columnList = "lawyer_id"),
     @Index(name = "idx_case_client_id", columnList = "client_id"),
-    @Index(name = "idx_case_status", columnList = "status")
+    @Index(name = "idx_case_status", columnList = "status"),
+    @Index(name = "idx_case_firm_id", columnList = "firm_id")
 })
+@FilterDef(name = "firmFilter", parameters = @ParamDef(name = "firmId", type = String.class))
+@Filter(name = "firmFilter", condition = "firm_id = :firmId")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -35,6 +42,11 @@ public class Case {
     @Column(length = 36)
     @EqualsAndHashCode.Include
     private String id;
+    
+    // MULTI-TENANT: Lien vers le cabinet
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "firm_id", nullable = false)
+    private Firm firm;
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "lawyer_id", nullable = false)

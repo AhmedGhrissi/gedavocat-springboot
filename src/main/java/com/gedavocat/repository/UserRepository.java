@@ -98,4 +98,25 @@ public interface UserRepository extends JpaRepository<User, String> {
     List<User> findWithFilters(@Param("search") String search,
                                @Param("role") UserRole role,
                                @Param("accountEnabled") Boolean accountEnabled);
+
+    // ==========================================
+    // REQUÊTES MULTI-TENANT (firmId)
+    // ==========================================
+
+    /**
+     * Compte le nombre d'avocats dans un cabinet
+     */
+    @Query("SELECT COUNT(u) FROM User u WHERE u.firm.id = :firmId AND u.role IN :roles")
+    long countByFirmIdAndRoleIn(@Param("firmId") String firmId, @Param("roles") List<UserRole> roles);
+
+    /**
+     * Trouve tous les utilisateurs d'un cabinet
+     */
+    List<User> findByFirmId(String firmId);
+
+    /**
+     * Trouve tous les avocats d'un cabinet
+     */
+    @Query("SELECT u FROM User u WHERE u.firm.id = :firmId AND (u.role = 'LAWYER' OR u.role = 'LAWYER_SECONDARY')")
+    List<User> findLawyersByFirmId(@Param("firmId") String firmId);
 }

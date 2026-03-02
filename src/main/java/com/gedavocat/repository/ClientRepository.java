@@ -69,4 +69,18 @@ public interface ClientRepository extends JpaRepository<Client, String> {
     @org.springframework.transaction.annotation.Transactional
     @org.springframework.data.jpa.repository.Query("UPDATE Client c SET c.clientUser = null WHERE c.clientUser.id = :userId")
     void clearClientUserById(@org.springframework.data.repository.query.Param("userId") String userId);
+
+    // ==========================================
+    // REQUÊTES MULTI-TENANT (firmId)
+    // ==========================================
+
+    /**
+     * Compte le nombre de clients dans un cabinet
+     */
+    long countByFirmId(String firmId);
+
+    /**
+     * Trouve tous les clients d'un cabinet
+     */
+    List<Client> findByFirmId(String firmId);
 }

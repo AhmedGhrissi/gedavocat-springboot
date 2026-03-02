@@ -126,3 +126,10 @@ tests/playwright-report/
 test-results/
 playwright-report/
 playwright/.cache/
+
+# JWT RSA Keys (CRITICAL - DO NOT COMMIT)
+config/keys/
+config/keys/*.pem
+*.pem
+private_key.pem
+public_key.pem

@@ -22,7 +22,8 @@ import java.util.UUID;
 @Entity
 @Table(name = "users", indexes = {
     @Index(name = "idx_user_email", columnList = "email"),
-    @Index(name = "idx_user_role", columnList = "role")
+    @Index(name = "idx_user_role", columnList = "role"),
+    @Index(name = "idx_user_firm_id", columnList = "firm_id")
 })
 @Data
 @NoArgsConstructor
@@ -66,6 +67,22 @@ public class User {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private UserRole role;
+
+    // ==========================================
+    // MULTI-TENANT : LIEN VERS LE CABINET
+    // ==========================================
+
+    /**
+     * Identifiant du cabinet auquel appartient cet utilisateur
+     * NULL pour les ADMIN (super-administrateurs système)
+     * OBLIGATOIRE pour LAWYER, LAWYER_SECONDARY, CLIENT
+     * 
+     * Isolation des données : chaque utilisateur ne voit que les données de son cabinet
+     * Référence: docs/RAPPORT_AUDIT_SECURITE_Phase1.md §6.1 VULN-01
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "firm_id")
+    private Firm firm;
 
     // ==========================================
     // ABONNEMENT (Tous les champs)

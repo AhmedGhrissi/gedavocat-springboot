@@ -9,19 +9,26 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.ParamDef;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 /**
  * Entité représentant un document stocké dans le système
+ * MULTI-TENANT: Isolation automatique par firmId
  */
 @Entity
 @Table(name = "documents", indexes = {
     @Index(name = "idx_document_case_id", columnList = "case_id"),
     @Index(name = "idx_document_uploaded_by", columnList = "uploaded_by"),
-    @Index(name = "idx_document_deleted_at", columnList = "deleted_at")
+    @Index(name = "idx_document_deleted_at", columnList = "deleted_at"),
+    @Index(name = "idx_document_firm_id", columnList = "firm_id")
 })
+@FilterDef(name = "firmFilter", parameters = @ParamDef(name = "firmId", type = String.class))
+@Filter(name = "firmFilter", condition = "firm_id = :firmId")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -32,6 +39,11 @@ public class Document {
     @Id
     @Column(length = 36)
     private String id = UUID.randomUUID().toString();
+    
+    // MULTI-TENANT: Lien vers le cabinet
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "firm_id", nullable = false)
+    private Firm firm;
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "case_id", nullable = false)
