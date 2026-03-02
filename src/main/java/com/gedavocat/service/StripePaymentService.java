@@ -156,10 +156,12 @@ public class StripePaymentService {
             // Extraire les données de l'Event vérifié
             Map<String, Object> eventData = new HashMap<>();
             eventData.put("type", eventType);
-            if (verifiedEvent.getData() != null && verifiedEvent.getData().getObject() != null) {
-                var obj = verifiedEvent.getData().getObject();
+            var eventDataObj = verifiedEvent.getData();
+            @SuppressWarnings("deprecation")
+            var stripeObj = (eventDataObj != null) ? eventDataObj.getObject() : null;
+            if (stripeObj != null) {
                 // Extraire les métadonnées depuis l'objet Stripe vérifié
-                if (obj instanceof com.stripe.model.checkout.Session session) {
+                if (stripeObj instanceof com.stripe.model.checkout.Session session) {
                     eventData.put("metadata", session.getMetadata());
                 }
             }
@@ -290,14 +292,6 @@ public class StripePaymentService {
      */
     protected void handlePaymentFailed(Map<String, Object> event) {
         log.error("Échec de paiement");
-    }
-    
-    /**
-     * Parser le payload du webhook (simulation)
-     */
-    private Map<String, Object> parseWebhookPayload(String payload) {
-        // En production: parser le JSON réel
-        return new HashMap<>();
     }
     
     /**
