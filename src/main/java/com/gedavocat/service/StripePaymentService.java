@@ -2,6 +2,9 @@ package com.gedavocat.service;
 
 import com.gedavocat.model.User;
 import com.gedavocat.repository.UserRepository;
+import com.stripe.exception.SignatureVerificationException;
+import com.stripe.model.Event;
+import com.stripe.net.Webhook;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -130,36 +133,46 @@ public class StripePaymentService {
     @Transactional
     public void handleWebhook(String payload, String signature) {
         try {
-            // En production: vérifier la signature du webhook
-            // Event event = Webhook.constructEvent(payload, signature, webhookSecret);
+            // Vérifier la signature du webhook Stripe (SECURITE: obligatoire en production)
+            if (webhookSecret != null && !webhookSecret.isBlank() && !webhookSecret.startsWith("whsec_dummy")) {
+                try {
+                    Event event = Webhook.constructEvent(payload, signature, webhookSecret);
+                    log.info("Webhook Stripe verifie avec succes, type: {}", event.getType());
+                } catch (SignatureVerificationException e) {
+                    log.error("Signature webhook Stripe invalide - rejet de la requete");
+                    throw new SecurityException("Signature webhook invalide", e);
+                }
+            } else {
+                log.warn("SECURITE: Webhook secret non configure - verification signature desactivee. Configurer stripe.webhook.secret en production!");
+            }
             
-            // Simuler le parsing de l'événement
-            Map<String, Object> event = parseWebhookPayload(payload);
-            String eventType = (String) event.get("type");
+            // Parser l'événement
+            Map<String, Object> eventData = parseWebhookPayload(payload);
+            String eventType = (String) eventData.get("type");
             
             switch (eventType) {
                 case "checkout.session.completed":
-                    handleCheckoutCompleted(event);
+                    handleCheckoutCompleted(eventData);
                     break;
                     
                 case "customer.subscription.created":
-                    handleSubscriptionCreated(event);
+                    handleSubscriptionCreated(eventData);
                     break;
                     
                 case "customer.subscription.updated":
-                    handleSubscriptionUpdated(event);
+                    handleSubscriptionUpdated(eventData);
                     break;
                     
                 case "customer.subscription.deleted":
-                    handleSubscriptionCancelled(event);
+                    handleSubscriptionCancelled(eventData);
                     break;
                     
                 case "invoice.payment_succeeded":
-                    handlePaymentSucceeded(event);
+                    handlePaymentSucceeded(eventData);
                     break;
                     
                 case "invoice.payment_failed":
-                    handlePaymentFailed(event);
+                    handlePaymentFailed(eventData);
                     break;
                     
                 default:

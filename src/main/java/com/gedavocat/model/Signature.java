@@ -33,6 +33,10 @@ public class Signature {
     @Id
     @Column(length = 36)
     private String id = UUID.randomUUID().toString();
+
+    @Version
+    @Column(name = "entity_version")
+    private Long entityVersion;
     
     @Column(name = "yousign_signature_request_id", length = 255, unique = true)
     private String yousignSignatureRequestId;

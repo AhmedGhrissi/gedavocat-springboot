@@ -187,7 +187,28 @@ public class DocumentService {
         try {
             Path uploadPath = Paths.get(uploadDir);
             String originalFilename = file.getOriginalFilename();
-            String fileExtension = originalFilename.substring(originalFilename.lastIndexOf("."));
+            if (originalFilename == null || originalFilename.isBlank()) {
+                throw new RuntimeException("Nom de fichier invalide");
+            }
+            // SECURITE: Sanitize filename — remove path separators and null bytes
+            originalFilename = originalFilename.replaceAll("[/\\\\\\x00]", "_");
+            
+            // Validate extension
+            String fileExtension = "";
+            int dotIndex = originalFilename.lastIndexOf(".");
+            if (dotIndex > 0) {
+                fileExtension = originalFilename.substring(dotIndex).toLowerCase();
+            }
+            if (!ALLOWED_EXTENSIONS.contains(fileExtension)) {
+                throw new RuntimeException("Type de fichier non autorisé: " + fileExtension);
+            }
+            
+            // Validate MIME type
+            String mimeType = file.getContentType();
+            if (mimeType == null || !ALLOWED_MIMETYPES.contains(mimeType.toLowerCase())) {
+                throw new RuntimeException("Type MIME non autorisé: " + mimeType);
+            }
+            
             String uniqueFilename = UUID.randomUUID().toString() + fileExtension;
             Path filePath = uploadPath.resolve(uniqueFilename);
             Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);

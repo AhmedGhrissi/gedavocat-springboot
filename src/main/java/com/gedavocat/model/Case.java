@@ -35,6 +35,10 @@ public class Case {
     @Column(length = 36)
     @EqualsAndHashCode.Include
     private String id;
+
+    @Version
+    @Column(name = "entity_version")
+    private Long entityVersion;
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "lawyer_id", nullable = false)

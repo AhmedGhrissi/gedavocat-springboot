@@ -1,6 +1,7 @@
 package com.gedavocat.config;
 
 import com.gedavocat.security.JwtAuthenticationFilter;
+import com.gedavocat.security.SubscriptionEnforcementFilter;
 import com.gedavocat.security.UserDetailsServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -32,6 +33,7 @@ public class SecurityConfig {
 
 	private final UserDetailsServiceImpl userDetailsService;
 	private final JwtAuthenticationFilter jwtAuthFilter;
+	private final SubscriptionEnforcementFilter subscriptionFilter;
 
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -125,6 +127,8 @@ public class SecurityConfig {
 				.authenticationProvider(authenticationProvider())
 				// Filtre JWT uniquement pour les API REST
 				.addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+				// Filtre de vérification d'abonnement (après authentification)
+				.addFilterAfter(subscriptionFilter, UsernamePasswordAuthenticationFilter.class)
 				.formLogin(form -> form.loginPage("/login").loginProcessingUrl("/login") // Spring Security gère POST
 																	// /login
 							.usernameParameter("email") // Le champ input s'appelle "email"

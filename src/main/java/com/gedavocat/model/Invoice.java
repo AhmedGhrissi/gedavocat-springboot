@@ -42,6 +42,10 @@ public class Invoice {
     @Column(length = 36)
     @EqualsAndHashCode.Include
     private String id;
+
+    @Version
+    @Column(name = "entity_version")
+    private Long entityVersion;
     
     @NotNull(message = "Le numéro de facture est obligatoire")
     @Column(name = "invoice_number", nullable = false, unique = true, length = 50)

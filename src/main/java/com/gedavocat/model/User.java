@@ -33,6 +33,10 @@ public class User {
     @Column(length = 36)
     private String id;
 
+    @Version
+    @Column(name = "entity_version")
+    private Long entityVersion;
+
     @NotBlank(message = "Le nom est obligatoire")
     @Size(min = 2, max = 100, message = "Le nom doit contenir entre 2 et 100 caractères")
     @Column(nullable = false, length = 100)

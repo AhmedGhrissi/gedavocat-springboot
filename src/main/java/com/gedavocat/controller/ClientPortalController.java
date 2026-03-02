@@ -572,13 +572,23 @@ public class ClientPortalController {
     }
 
     /**
-     * Debug endpoint for client to see link status and cases count (protected by CLIENT role).
-     * Use for troubleshooting: GET /my-cases/api/debug-status
+     * Debug endpoint for client to see link status and cases count.
+     * SECURITE: restreint aux environnements de développement uniquement.
+     * Désactivé en production via la condition sur le profil actif.
      */
     @GetMapping("/api/debug-status")
     @ResponseBody
     @Transactional(readOnly = true)
-    public ResponseEntity<Map<String, Object>> debugStatus(Authentication authentication) {
+    public ResponseEntity<Map<String, Object>> debugStatus(
+            Authentication authentication,
+            org.springframework.core.env.Environment env) {
+        // SECURITE: désactiver en production
+        String[] activeProfiles = env.getActiveProfiles();
+        boolean isProd = java.util.Arrays.stream(activeProfiles)
+                .anyMatch(p -> p.equalsIgnoreCase("prod") || p.equalsIgnoreCase("production"));
+        if (isProd) {
+            return ResponseEntity.status(404).body(Map.of("error", "Not found"));
+        }
         try {
             User user = getCurrentUser(authentication);
             java.util.Optional<Client> clientById = clientRepository.findByClientUserId(user.getId());
