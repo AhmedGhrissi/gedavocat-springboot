@@ -147,8 +147,8 @@ public class InvoiceService {
         Invoice invoice = invoiceRepository.findById(invoiceId)
             .orElseThrow(() -> new RuntimeException("Facture non trouvée"));
         // SÉCURITÉ : vérifier que la facture appartient bien à l'avocat connecté
-        if (lawyerId != null && invoice.getClient() != null && invoice.getClient().getLawyer() != null
-                && !invoice.getClient().getLawyer().getId().equals(lawyerId)) {
+        if (invoice.getClient() != null && invoice.getClient().getLawyer() != null
+                && lawyerId != null && !invoice.getClient().getLawyer().getId().equals(lawyerId)) {
             throw new SecurityException("Accès non autorisé à cette facture");
         }
         return convertToResponse(invoice);
@@ -156,6 +156,26 @@ public class InvoiceService {
 
     /**
      * Récupère toutes les factures d'un client
+     * SEC-IDOR FIX : vérification ownership
+     */
+    @Transactional(readOnly = true)
+    public List<InvoiceResponse> getInvoicesByClient(String clientId, String lawyerId) {
+        List<Invoice> invoices = invoiceRepository.findByClientId(clientId);
+        // SEC-IDOR FIX : vérifier que le client appartient bien à l'avocat
+        if (lawyerId != null && !invoices.isEmpty()) {
+            Invoice first = invoices.get(0);
+            if (first.getClient() != null && first.getClient().getLawyer() != null
+                    && !first.getClient().getLawyer().getId().equals(lawyerId)) {
+                throw new SecurityException("Accès non autorisé aux factures de ce client");
+            }
+        }
+        return invoices.stream()
+            .map(this::convertToResponse)
+            .collect(Collectors.toList());
+    }
+
+    /**
+     * Récupère toutes les factures d'un client (usage interne)
      */
     @Transactional(readOnly = true)
     public List<InvoiceResponse> getInvoicesByClient(String clientId) {
@@ -231,7 +251,8 @@ public class InvoiceService {
     /**
      * Génère un numéro de facture automatique
      */
-    public String generateInvoiceNumber() {
+    // SEC FIX M-03 : synchronize pour éviter la race condition sur le numéro de facture
+    public synchronized String generateInvoiceNumber() {
         int year = LocalDate.now().getYear();
         long count = invoiceRepository.count() + 1;
         return String.format("FACT-%d-%05d", year, count);

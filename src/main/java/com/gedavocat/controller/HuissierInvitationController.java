@@ -7,6 +7,7 @@ import com.gedavocat.repository.PermissionRepository;
 import com.gedavocat.repository.UserRepository;
 import com.gedavocat.service.CaseShareService;
 import com.gedavocat.service.CollaboratorInvitationService;
+import com.gedavocat.util.PasswordValidator;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -93,13 +94,13 @@ public class HuissierInvitationController {
             model.addAttribute("error", "Les mots de passe ne correspondent pas.");
             return "huissier-portal/accept-invitation";
         }
-        if (password.length() < 8) {
+        if (!PasswordValidator.isValid(password)) {
             String resolvedEmail = resolveEmail(token, email);
             model.addAttribute("token", token);
             model.addAttribute("email", resolvedEmail);
             model.addAttribute("firstName", firstName);
             model.addAttribute("lastName", lastName);
-            model.addAttribute("error", "Le mot de passe doit contenir au moins 8 caractères.");
+            model.addAttribute("error", PasswordValidator.PASSWORD_REQUIREMENTS_MESSAGE);
             return "huissier-portal/accept-invitation";
         }
 
@@ -123,9 +124,7 @@ public class HuissierInvitationController {
                 resolvedEmail = entry.get().email();
             }
 
-            if (email != null && !email.isBlank()) {
-                resolvedEmail = email;
-            }
+            // SEC-IDOR FIX : ne PAS permettre l'override de l'email par le formulaire
 
             if (resolvedEmail == null || resolvedEmail.isBlank()) {
                 model.addAttribute("token", token);
@@ -203,25 +202,13 @@ public class HuissierInvitationController {
         }
     }
 
+    /**
+     * SEC FIX : endpoint supprimé — fuite d'information (emails, tokens) sans authentification
+     */
     @GetMapping("/invitation-info")
     @ResponseBody
     public ResponseEntity<?> invitationInfo(@RequestParam String token) {
-        Map<String, Object> out = new HashMap<>();
-        try {
-            CaseShareLink link = caseShareService.getLinkByToken(token);
-            out.put("found", true);
-            out.put("token", link.getToken());
-            out.put("recipientEmail", link.getRecipientEmail());
-            out.put("invitedAt", link.getInvitedAt());
-            out.put("createdAt", link.getCreatedAt());
-            out.put("expiresAt", link.getExpiresAt());
-            out.put("isValid", link.isValid());
-            return ResponseEntity.ok(out);
-        } catch (Exception e) {
-            out.put("found", false);
-            out.put("error", e.getMessage());
-            return ResponseEntity.ok(out);
-        }
+        return ResponseEntity.status(404).body(Map.of("error", "Endpoint désactivé"));
     }
 
     private String resolveEmail(String token, String fallbackEmail) {

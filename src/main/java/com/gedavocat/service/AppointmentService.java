@@ -252,6 +252,19 @@ public class AppointmentService {
 
     /**
      * Sauvegarde directe d'un rendez-vous (pour mises à jour simples)
+     * SEC-IDOR FIX : vérification ownership
+     */
+    @Transactional
+    public Appointment saveAppointment(Appointment appointment, String lawyerId) {
+        if (appointment.getLawyer() == null || !appointment.getLawyer().getId().equals(lawyerId)) {
+            throw new SecurityException("Accès non autorisé à ce rendez-vous");
+        }
+        return appointmentRepository.save(appointment);
+    }
+
+    /**
+     * Sauvegarde directe d'un rendez-vous — usage interne uniquement
+     * (quand l'ownership est déjà vérifiée par le controller appelant)
      */
     @Transactional
     public Appointment saveAppointment(Appointment appointment) {

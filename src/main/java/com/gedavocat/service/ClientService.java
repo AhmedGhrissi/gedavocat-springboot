@@ -52,14 +52,31 @@ public class ClientService {
     }
     
     /**
-     * Récupère un client par ID
+     * Récupère un client par ID avec vérification ownership
+     * SEC-IDOR FIX : exige lawyerId pour vérifier l'appartenance
+     */
+    @Transactional(readOnly = true)
+    public Client getClientById(String clientId, String lawyerId) {
+        Client client = clientRepository.findById(clientId)
+                .orElseThrow(() -> new RuntimeException("Client non trouvé"));
+        // SEC-IDOR FIX : vérifier ownership
+        if (lawyerId != null && client.getLawyer() != null 
+                && !client.getLawyer().getId().equals(lawyerId)) {
+            throw new SecurityException("Accès non autorisé à ce client");
+        }
+        // Initialiser les collections lazy pour éviter LazyInitializationException
+        client.getCases().size(); // Force le chargement des cases
+        return client;
+    }
+
+    /**
+     * Récupère un client par ID (usage interne/admin uniquement)
      */
     @Transactional(readOnly = true)
     public Client getClientById(String clientId) {
         Client client = clientRepository.findById(clientId)
                 .orElseThrow(() -> new RuntimeException("Client non trouvé"));
-        // Initialiser les collections lazy pour éviter LazyInitializationException
-        client.getCases().size(); // Force le chargement des cases
+        client.getCases().size();
         return client;
     }
     

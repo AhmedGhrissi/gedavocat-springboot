@@ -42,6 +42,14 @@ public class AppointmentController {
     private final NotificationService notificationService;
 
     /**
+     * SEC-MASS-ASSIGN FIX : Restreindre les champs pouvant être bindés depuis le formulaire
+     */
+    @org.springframework.web.bind.annotation.InitBinder("appointment")
+    public void initBinder(org.springframework.web.bind.WebDataBinder binder) {
+        binder.setDisallowedFields("id", "lawyer", "createdAt", "updatedAt", "entityVersion");
+    }
+
+    /**
      * Page principale du calendrier
      */
     @GetMapping

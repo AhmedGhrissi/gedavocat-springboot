@@ -268,13 +268,17 @@ public class YousignService {
      */
     private byte[] readDocumentFile(String documentPath) {
         try {
-            Path path = Paths.get(documentPath);
+            Path path = Paths.get(documentPath).normalize();
+            // SEC FIX H-09 : validation path traversal — empêcher la lecture de fichiers en dehors du répertoire d'upload
+            if (path.toString().contains("..") || !path.isAbsolute()) {
+                throw new SecurityException("Path traversal détecté dans le chemin du document");
+            }
             if (!Files.exists(path)) {
-                throw new RuntimeException("Le fichier n'existe pas: " + documentPath);
+                throw new RuntimeException("Le fichier n'existe pas");
             }
             return Files.readAllBytes(path);
         } catch (IOException e) {
-            throw new RuntimeException("Impossible de lire le fichier: " + documentPath, e);
+            throw new RuntimeException("Impossible de lire le fichier", e);
         }
     }
     

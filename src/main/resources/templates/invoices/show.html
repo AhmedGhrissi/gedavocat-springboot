@@ -299,7 +299,8 @@
           <h6>Document joint</h6>
         </div>
         <div class="inv-card-body">
-          <a th:href="${invoice.documentUrl}" target="_blank" class="pdf-badge">
+          <!-- SEC FIX H-07 : validation URL pour prévenir XSS via javascript: -->
+          <a th:if="${invoice.documentUrl != null and (invoice.documentUrl.startsWith('http://') or invoice.documentUrl.startsWith('https://') or invoice.documentUrl.startsWith('/'))}" th:href="${invoice.documentUrl}" target="_blank" rel="noopener noreferrer" class="pdf-badge">
             <i class="fas fa-file-pdf pdf-icon"></i>
             <div>
               <span class="pdf-name">Facture originale</span>

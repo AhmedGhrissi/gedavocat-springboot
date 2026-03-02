@@ -103,7 +103,8 @@ public class EmailVerificationService {
             SimpleMailMessage msg = new SimpleMailMessage();
             msg.setFrom(fromEmail);
             msg.setTo(to);
-            msg.setSubject("Confirmation de votre compte DocAvocat - Code " + code);
+            // SEC FIX M-05 : ne pas inclure le code dans le sujet de l'email
+            msg.setSubject("Confirmation de votre compte DocAvocat");
             msg.setText(
                 "Bonjour,\n\n" +
                 "Votre code de vérification pour DocAvocat est :\n\n" +

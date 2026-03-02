@@ -203,7 +203,8 @@
                                               th:text="${apt.status?.displayName ?: 'Planifié'}" style="font-size: .7rem;">Planifié</span>
                                     </div>
                                     <div th:if="${apt.videoConferenceLink}" class="mt-1">
-                                        <a th:href="${apt.videoConferenceLink}" target="_blank" class="btn btn-sm btn-outline-primary" style="font-size: .75rem;">
+                                        <!-- SEC FIX H-07 : validation URL -->
+                                        <a th:if="${apt.videoConferenceLink.startsWith('http://') or apt.videoConferenceLink.startsWith('https://')}" th:href="${apt.videoConferenceLink}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-primary" style="font-size: .75rem;">
                                             <i class="fas fa-video"></i> Visio
                                         </a>
                                     </div>

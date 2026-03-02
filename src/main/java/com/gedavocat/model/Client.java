@@ -3,6 +3,8 @@ package com.gedavocat.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;
@@ -49,6 +51,7 @@ public class Client {
     private User clientUser;
     
     @NotBlank(message = "Le nom est obligatoire")
+    @Size(min = 1, max = 100, message = "Le nom doit contenir entre 1 et 100 caract\u00e8res")
     @Column(nullable = false, length = 100)
     private String name;
     
@@ -57,6 +60,8 @@ public class Client {
     @Column(nullable = false, length = 255)
     private String email;
     
+    // SEC FIX L-06 : validation du format téléphone
+    @Pattern(regexp = "^(\\+?[0-9\\s\\-\\.()]{0,20})?$", message = "Format de t\u00e9l\u00e9phone invalide")
     @Column(length = 20)
     private String phone;
     
@@ -93,6 +98,8 @@ public class Client {
     private String companyName;
 
     /** SIRET (pour les professionnels) */
+    // SEC FIX L-06 : validation du format SIRET (14 chiffres)
+    @Pattern(regexp = "^([0-9]{14})?$", message = "Le SIRET doit contenir exactement 14 chiffres")
     @Column(name = "siret", length = 20)
     private String siret;
     

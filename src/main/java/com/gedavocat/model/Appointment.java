@@ -134,6 +134,11 @@ public class Appointment {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    // SEC FIX L-05 : @Version pour le verrouillage optimiste
+    @Version
+    @Column(name = "entity_version")
+    private Long entityVersion;
+
     // ==========================================
     // ÉNUMÉRATIONS
     // ==========================================

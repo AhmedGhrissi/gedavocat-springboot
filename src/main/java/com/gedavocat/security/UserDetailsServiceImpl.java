@@ -22,9 +22,17 @@ import java.util.List;
 public class UserDetailsServiceImpl implements UserDetailsService {
     
     private final UserRepository userRepository;
+    private final AccountLockoutService accountLockoutService;
     
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        // SEC FIX L-04 : vérifier le verrouillage de compte avant l'authentification
+        if (accountLockoutService.isLocked(email)) {
+            long minutes = accountLockoutService.getRemainingLockoutMinutes(email);
+            throw new UsernameNotFoundException(
+                "Compte temporairement verrouillé. Réessayez dans " + minutes + " minute(s).");
+        }
+        
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException(
                     "Identifiants invalides"

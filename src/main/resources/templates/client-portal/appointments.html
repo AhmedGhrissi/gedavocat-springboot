@@ -103,7 +103,8 @@
                         Dossier : <span th:text="${apt.relatedCase.name}">Nom du dossier</span>
                     </div>
                     <div th:if="${apt.videoConferenceLink}" class="mt-1">
-                        <a th:href="${apt.videoConferenceLink}" target="_blank" class="btn btn-sm btn-outline-primary">
+                        <!-- SEC FIX H-07 : validation URL pour prévenir XSS via javascript: -->
+                        <a th:if="${apt.videoConferenceLink.startsWith('http://') or apt.videoConferenceLink.startsWith('https://')}" th:href="${apt.videoConferenceLink}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-primary">
                             <i class="fas fa-video"></i> Rejoindre la visioconférence
                         </a>
                     </div>

@@ -109,6 +109,11 @@ public class AuthService {
         String userEmail = jwtService.extractUsername(oldToken);
         UserDetails userDetails = userDetailsService.loadUserByUsername(userEmail);
         
+        // SEC FIX : vérifier que le compte est toujours actif avant de renouveler le token
+        if (!userDetails.isEnabled()) {
+            throw new RuntimeException("Compte désactivé");
+        }
+        
         if (jwtService.isTokenValid(oldToken, userDetails)) {
             String newToken = jwtService.generateToken(userDetails);
             User user = userRepository.findByEmail(userEmail)
