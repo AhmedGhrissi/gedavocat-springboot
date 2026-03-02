@@ -34,19 +34,19 @@ END //
 
 DELIMITER ;
 
--- ── Tables avec @Version ─────────────────────────────────────
+-- ── Tables avec @Version (colonne = entity_version) ─────────
 
-CALL add_column_if_not_exists('users',            'version', 'BIGINT DEFAULT 0');
-CALL add_column_if_not_exists('clients',          'version', 'BIGINT DEFAULT 0');
-CALL add_column_if_not_exists('cases',            'version', 'BIGINT DEFAULT 0');
-CALL add_column_if_not_exists('documents',        'version', 'BIGINT DEFAULT 0');
-CALL add_column_if_not_exists('appointments',     'version', 'BIGINT DEFAULT 0');
-CALL add_column_if_not_exists('invoices',         'version', 'BIGINT DEFAULT 0');
-CALL add_column_if_not_exists('signatures',       'version', 'BIGINT DEFAULT 0');
-CALL add_column_if_not_exists('notifications',    'version', 'BIGINT DEFAULT 0');
-CALL add_column_if_not_exists('permissions',      'version', 'BIGINT DEFAULT 0');
-CALL add_column_if_not_exists('document_shares',  'version', 'BIGINT DEFAULT 0');
-CALL add_column_if_not_exists('case_share_links', 'version', 'BIGINT DEFAULT 0');
+CALL add_column_if_not_exists('users',            'entity_version', 'BIGINT DEFAULT 0');
+CALL add_column_if_not_exists('clients',          'entity_version', 'BIGINT DEFAULT 0');
+CALL add_column_if_not_exists('cases',            'entity_version', 'BIGINT DEFAULT 0');
+CALL add_column_if_not_exists('documents',        'entity_version', 'BIGINT DEFAULT 0');
+CALL add_column_if_not_exists('appointments',     'entity_version', 'BIGINT DEFAULT 0');
+CALL add_column_if_not_exists('invoices',         'entity_version', 'BIGINT DEFAULT 0');
+CALL add_column_if_not_exists('signatures',       'entity_version', 'BIGINT DEFAULT 0');
+CALL add_column_if_not_exists('notifications',    'entity_version', 'BIGINT DEFAULT 0');
+CALL add_column_if_not_exists('permissions',      'entity_version', 'BIGINT DEFAULT 0');
+CALL add_column_if_not_exists('document_shares',  'entity_version', 'BIGINT DEFAULT 0');
+CALL add_column_if_not_exists('case_share_links', 'entity_version', 'BIGINT DEFAULT 0');
 
 -- ── Colonnes users manquantes ────────────────────────────────
 
