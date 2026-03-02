@@ -42,6 +42,14 @@ public class AppointmentController {
     private final NotificationService notificationService;
 
     /**
+     * SEC-MASS-ASSIGN FIX : Restreindre les champs pouvant être bindés depuis le formulaire
+     */
+    @org.springframework.web.bind.annotation.InitBinder("appointment")
+    public void initBinder(org.springframework.web.bind.WebDataBinder binder) {
+        binder.setDisallowedFields("id", "lawyer", "createdAt", "updatedAt", "entityVersion");
+    }
+
+    /**
      * Page principale du calendrier
      */
     @GetMapping
@@ -268,7 +276,7 @@ public class AppointmentController {
                 });
             }
             
-            appointmentService.updateAppointment(id, appointment);
+            appointmentService.updateAppointment(id, appointment, user.getId());
             
             redirectAttributes.addFlashAttribute("success", "Rendez-vous mis à jour avec succès");
             return "redirect:/appointments";
@@ -298,7 +306,7 @@ public class AppointmentController {
                 return "redirect:/appointments";
             }
             
-            appointmentService.deleteAppointment(id);
+            appointmentService.deleteAppointment(id, user.getId());
             redirectAttributes.addFlashAttribute("success", "Rendez-vous supprimé avec succès");
             
         } catch (Exception e) {
@@ -326,7 +334,7 @@ public class AppointmentController {
                 return "redirect:/appointments";
             }
             
-            appointmentService.cancelAppointment(id);
+            appointmentService.cancelAppointment(id, user.getId());
             redirectAttributes.addFlashAttribute("success", "Rendez-vous annulé");
             
         } catch (Exception e) {
@@ -354,7 +362,7 @@ public class AppointmentController {
                 return "redirect:/appointments";
             }
 
-            appointmentService.confirmAppointment(id);
+            appointmentService.confirmAppointment(id, user.getId());
 
             // Notifier le client (email + notif in-app si user lié)
             if (appointment.getClient() != null) {

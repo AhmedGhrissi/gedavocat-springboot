@@ -297,7 +297,7 @@ public class DocumentController {
             return ResponseEntity.ok()
                     .contentType(MediaType.parseMediaType(document.getMimetype()))
                     .header(HttpHeaders.CONTENT_DISPOSITION,
-                            "inline; filename=\"" + document.getOriginalName() + "\"")
+                            "inline; filename=\"" + document.getOriginalName().replaceAll("[\\r\\n\"\\\\]", "_") + "\"")
                     .body(resource);
         } catch (Exception e) {
             throw new RuntimeException("Erreur lors de la prévisualisation: " + e.getMessage());

@@ -48,6 +48,7 @@ class SecurityConfigTest {
         defaultUser.setPassword(passwordEncoder.encode("password"));
         defaultUser.setRole(User.UserRole.LAWYER);
         defaultUser.setSubscriptionStatus(User.SubscriptionStatus.ACTIVE);
+        defaultUser.setSubscriptionEndsAt(java.time.LocalDateTime.now().plusDays(30));
         userRepository.saveAndFlush(defaultUser);
         
         // Créer un utilisateur lawyer spécifique
@@ -58,6 +59,7 @@ class SecurityConfigTest {
         lawyer.setPassword(passwordEncoder.encode("password"));
         lawyer.setRole(User.UserRole.LAWYER);
         lawyer.setSubscriptionStatus(User.SubscriptionStatus.ACTIVE);
+        lawyer.setSubscriptionEndsAt(java.time.LocalDateTime.now().plusDays(30));
         userRepository.saveAndFlush(lawyer);
         
         // Créer un utilisateur admin spécifique

@@ -3,9 +3,12 @@ package com.gedavocat.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -25,7 +28,8 @@ import java.util.UUID;
     @Index(name = "idx_user_role", columnList = "role"),
     @Index(name = "idx_user_firm_id", columnList = "firm_id")
 })
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class User {
@@ -33,6 +37,10 @@ public class User {
     @Id
     @Column(length = 36)
     private String id;
+
+    @Version
+    @Column(name = "entity_version")
+    private Long entityVersion;
 
     @NotBlank(message = "Le nom est obligatoire")
     @Size(min = 2, max = 100, message = "Le nom doit contenir entre 2 et 100 caractères")
@@ -46,9 +54,13 @@ public class User {
     @Column(name = "last_name", length = 100)
     private String lastName;
 
+    // SEC FIX L-06 : validation format téléphone
+    @Pattern(regexp = "^(\\+?[0-9\\s\\-\\.()]{0,20})?$", message = "Format de téléphone invalide")
     @Column(name = "phone", length = 20)
     private String phone;
 
+    // SEC FIX L-06 : validation numéro de barreau
+    @Pattern(regexp = "^[A-Za-z0-9\\-\\s]{0,50}$", message = "Numéro de barreau invalide")
     @Column(name = "bar_number", length = 50)
     private String barNumber;
 
@@ -62,6 +74,7 @@ public class User {
 
     @NotBlank(message = "Le mot de passe est obligatoire")
     @Column(nullable = false, length = 255)
+    @JsonIgnore
     private String password;
 
     @Enumerated(EnumType.STRING)
@@ -109,6 +122,7 @@ public class User {
 
     // ✅ Identifiant client Stripe (pour relier les webhooks au bon utilisateur)
     @Column(name = "stripe_customer_id", length = 100)
+    @JsonIgnore
     private String stripeCustomerId;
 
     // ✅ ALIAS pour compatibilité avec templates
@@ -149,7 +163,7 @@ public class User {
     // ==========================================
 
     @Column(name = "email_verified", nullable = false)
-    private boolean emailVerified = true; // true par défaut pour les utilisateurs existants
+    private boolean emailVerified = false; // SEC FIX MDL-02 : false par défaut — doit être vérifié par email
 
     @Column(name = "account_enabled", nullable = false)
     private boolean accountEnabled = true;
@@ -158,13 +172,16 @@ public class User {
     private LocalDateTime accessEndsAt;
 
     @Column(name = "invitation_id", length = 36)
+    @JsonIgnore
     private String invitationId;
 
     // Réinitialisation du mot de passe (persisté en base, résiste aux redémarrages)
     @Column(name = "reset_token", length = 36)
+    @JsonIgnore
     private String resetToken;
 
     @Column(name = "reset_token_expiry")
+    @JsonIgnore
     private LocalDateTime resetTokenExpiry;
 
     // ==========================================
@@ -172,12 +189,15 @@ public class User {
     // ==========================================
 
     @OneToMany(mappedBy = "lawyer", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private Set<Client> clients = new HashSet<>();
 
     @OneToMany(mappedBy = "lawyer", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private Set<Case> cases = new HashSet<>();
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "user", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @JsonIgnore
     private Set<AuditLog> auditLogs = new HashSet<>();
 
     // ==========================================

@@ -48,9 +48,11 @@ public class StripeService {
      */
     public boolean isConfigured() {
         return stripeSecretKey != null &&
-               !stripeSecretKey.equals("sk_test_dummy_key") &&
+               !stripeSecretKey.isBlank() &&
+               !stripeSecretKey.startsWith("sk_test_dummy") &&
                stripePublishableKey != null &&
-               !stripePublishableKey.equals("pk_test_dummy_key");
+               !stripePublishableKey.isBlank() &&
+               !stripePublishableKey.startsWith("pk_test_dummy");
     }
 
     /**

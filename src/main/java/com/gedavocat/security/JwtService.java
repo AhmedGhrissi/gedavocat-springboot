@@ -10,6 +10,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PostConstruct;
+
 import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
@@ -18,15 +19,25 @@ import java.util.function.Function;
 
 /**
  * Service de gestion des tokens JWT
+ * SEC-JWT FIX : ajout validation issuer/audience
  */
 @Service
 public class JwtService {
+    
+    private static final String JWT_ISSUER = "docavocat.fr";
+    private static final String JWT_AUDIENCE = "docavocat-api";
     
     @Value("${jwt.secret}")
     private String secretKey;
     
     @Value("${jwt.expiration}")
     private long jwtExpiration;
+
+    private final JwtBlacklistService jwtBlacklistService;
+
+    public JwtService(JwtBlacklistService jwtBlacklistService) {
+        this.jwtBlacklistService = jwtBlacklistService;
+    }
 
     /**
      * SEC-01 FIX : Valide que le secret JWT est correctement défini au démarrage.
@@ -86,6 +97,8 @@ public class JwtService {
                 .builder()
                 .setClaims(extraClaims)
                 .setSubject(userDetails.getUsername())
+                .setIssuer(JWT_ISSUER)
+                .setAudience(JWT_AUDIENCE)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(getSignInKey(), SignatureAlgorithm.HS256)
@@ -93,9 +106,13 @@ public class JwtService {
     }
     
     /**
-     * Valide un token
+     * Valide un token (vérifie signature, expiration, et blacklist)
+     * SEC-01 FIX : ajout vérification blacklist pour révocation
      */
     public boolean isTokenValid(String token, UserDetails userDetails) {
+        if (jwtBlacklistService.isBlacklisted(token)) {
+            return false;
+        }
         final String username = extractUsername(token);
         return (username.equals(userDetails.getUsername())) && !isTokenExpired(token);
     }
@@ -108,9 +125,9 @@ public class JwtService {
     }
     
     /**
-     * Extrait la date d'expiration du token
+     * Extrait la date d'expiration du token (public pour le logout/blacklist)
      */
-    private Date extractExpiration(String token) {
+    public Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
     }
     
@@ -121,6 +138,8 @@ public class JwtService {
         return Jwts
                 .parserBuilder()
                 .setSigningKey(getSignInKey())
+                .requireIssuer(JWT_ISSUER)
+                .requireAudience(JWT_AUDIENCE)
                 .build()
                 .parseClaimsJws(token)
                 .getBody();

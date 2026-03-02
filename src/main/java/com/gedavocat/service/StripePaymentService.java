@@ -2,6 +2,9 @@ package com.gedavocat.service;
 
 import com.gedavocat.model.User;
 import com.gedavocat.repository.UserRepository;
+import com.stripe.exception.SignatureVerificationException;
+import com.stripe.model.Event;
+import com.stripe.net.Webhook;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -126,46 +129,74 @@ public class StripePaymentService {
     
     /**
      * Gérer les webhooks Stripe
+     * SEC-WEBHOOK FIX : utilise l'Event vérifié, rejette si secret non configuré
      */
     @Transactional
     public void handleWebhook(String payload, String signature) {
         try {
-            // En production: vérifier la signature du webhook
-            // Event event = Webhook.constructEvent(payload, signature, webhookSecret);
+            // SÉCURITÉ : rejeter tous les webhooks si le secret n'est pas configuré
+            if (webhookSecret == null || webhookSecret.isBlank() || webhookSecret.startsWith("whsec_dummy")) {
+                log.error("SECURITE: Webhook Stripe rejeté — secret non configuré. Configurer stripe.webhook.secret en production!");
+                throw new SecurityException("Webhook secret non configuré — webhook rejeté");
+            }
+
+            // Vérifier la signature du webhook Stripe et UTILISER l'Event vérifié
+            Event verifiedEvent;
+            try {
+                verifiedEvent = Webhook.constructEvent(payload, signature, webhookSecret);
+                log.info("Webhook Stripe vérifié avec succès, type: {}", verifiedEvent.getType());
+            } catch (SignatureVerificationException e) {
+                log.error("Signature webhook Stripe invalide — rejet de la requête");
+                throw new SecurityException("Signature webhook invalide", e);
+            }
+
+            // Utiliser l'Event vérifié (pas le payload brut)
+            String eventType = verifiedEvent.getType();
             
-            // Simuler le parsing de l'événement
-            Map<String, Object> event = parseWebhookPayload(payload);
-            String eventType = (String) event.get("type");
+            // Extraire les données de l'Event vérifié
+            Map<String, Object> eventData = new HashMap<>();
+            eventData.put("type", eventType);
+            var eventDataObj = verifiedEvent.getData();
+            @SuppressWarnings("deprecation")
+            var stripeObj = (eventDataObj != null) ? eventDataObj.getObject() : null;
+            if (stripeObj != null) {
+                // Extraire les métadonnées depuis l'objet Stripe vérifié
+                if (stripeObj instanceof com.stripe.model.checkout.Session session) {
+                    eventData.put("metadata", session.getMetadata());
+                }
+            }
             
             switch (eventType) {
                 case "checkout.session.completed":
-                    handleCheckoutCompleted(event);
+                    handleCheckoutCompleted(eventData);
                     break;
                     
                 case "customer.subscription.created":
-                    handleSubscriptionCreated(event);
+                    handleSubscriptionCreated(eventData);
                     break;
                     
                 case "customer.subscription.updated":
-                    handleSubscriptionUpdated(event);
+                    handleSubscriptionUpdated(eventData);
                     break;
                     
                 case "customer.subscription.deleted":
-                    handleSubscriptionCancelled(event);
+                    handleSubscriptionCancelled(eventData);
                     break;
                     
                 case "invoice.payment_succeeded":
-                    handlePaymentSucceeded(event);
+                    handlePaymentSucceeded(eventData);
                     break;
                     
                 case "invoice.payment_failed":
-                    handlePaymentFailed(event);
+                    handlePaymentFailed(eventData);
                     break;
                     
                 default:
                     log.info("Événement Stripe non géré: {}", eventType);
             }
             
+        } catch (SecurityException e) {
+            throw e; // Re-throw security exceptions
         } catch (Exception e) {
             log.error("Erreur lors du traitement du webhook: {}", e.getMessage());
             throw new RuntimeException("Erreur webhook", e);
@@ -261,14 +292,6 @@ public class StripePaymentService {
      */
     protected void handlePaymentFailed(Map<String, Object> event) {
         log.error("Échec de paiement");
-    }
-    
-    /**
-     * Parser le payload du webhook (simulation)
-     */
-    private Map<String, Object> parseWebhookPayload(String payload) {
-        // En production: parser le JSON réel
-        return new HashMap<>();
     }
     
     /**

@@ -93,6 +93,14 @@ public class AuthService {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
         
+        // SEC FIX SVC-05 : vérification explicite emailVerified et accountEnabled
+        if (!user.isEmailVerified()) {
+            throw new RuntimeException("Veuillez vérifier votre email avant de vous connecter");
+        }
+        if (!user.isAccountEnabled()) {
+            throw new RuntimeException("Compte désactivé");
+        }
+        
         UserDetails userDetails = userDetailsService.loadUserByUsername(user.getEmail());
         String token = jwtService.generateToken(userDetails);
         
@@ -108,6 +116,11 @@ public class AuthService {
     public AuthResponse refreshToken(String oldToken) {
         String userEmail = jwtService.extractUsername(oldToken);
         UserDetails userDetails = userDetailsService.loadUserByUsername(userEmail);
+        
+        // SEC FIX : vérifier que le compte est toujours actif avant de renouveler le token
+        if (!userDetails.isEnabled()) {
+            throw new RuntimeException("Compte désactivé");
+        }
         
         if (jwtService.isTokenValid(oldToken, userDetails)) {
             String newToken = jwtService.generateToken(userDetails);

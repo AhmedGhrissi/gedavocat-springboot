@@ -1,8 +1,10 @@
 package com.gedavocat.model;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
@@ -20,7 +22,8 @@ import java.util.UUID;
     @Index(name = "idx_notif_read", columnList = "is_read"),
     @Index(name = "idx_notif_created", columnList = "created_at")
 })
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString(exclude = {"user"})
@@ -33,6 +36,7 @@ public class Notification {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonIgnore
     private User user;
 
     /** Type de notification (SIGNATURE_PENDING, SIGNATURE_SIGNED, DOCUMENT_UPLOADED, etc.) */
@@ -61,6 +65,11 @@ public class Notification {
 
     @Column(name = "is_read", nullable = false)
     private boolean read = false;
+
+    // SEC FIX MDL-08 : @Version pour le verrouillage optimiste
+    @Version
+    @Column(name = "entity_version")
+    private Long entityVersion;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

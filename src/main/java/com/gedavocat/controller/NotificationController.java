@@ -85,7 +85,10 @@ public class NotificationController {
             @PathVariable String id,
             @AuthenticationPrincipal UserDetails userDetails
     ) {
-        notificationService.markAsRead(id);
+        // SEC-IDOR FIX : passer l'ID utilisateur pour vérification ownership
+        User user = userRepository.findByEmail(userDetails.getUsername()).orElse(null);
+        if (user == null) return ResponseEntity.ok(Map.of("success", false));
+        notificationService.markAsRead(id, user.getId());
         return ResponseEntity.ok(Map.of("success", true));
     }
 

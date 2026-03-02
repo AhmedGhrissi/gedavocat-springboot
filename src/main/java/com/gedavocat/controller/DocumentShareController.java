@@ -64,7 +64,7 @@ public class DocumentShareController {
             Document document = documentService.getDocumentById(documentId);
 
             if (shared) {
-                documentShareService.shareDocument(document, caseEntity, targetRole, false);
+                documentShareService.shareDocument(document, caseEntity, targetRole, false, user.getId());
             } else {
                 documentShareService.unshareDocument(documentId, targetRole);
             }
@@ -110,7 +110,7 @@ public class DocumentShareController {
 
             User.UserRole targetRole = User.UserRole.valueOf(role);
             List<Document> documents = documentService.getLatestVersions(caseId);
-            documentShareService.bulkShare(caseId, documents, caseEntity, targetRole, shared);
+            documentShareService.bulkShare(caseId, documents, caseEntity, targetRole, shared, user.getId());
 
             result.put("success", true);
             result.put("caseId", caseId);

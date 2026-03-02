@@ -6,6 +6,8 @@ import com.gedavocat.dto.RegisterRequest;
 import com.gedavocat.repository.UserRepository;
 import com.gedavocat.service.AuthService;
 import com.gedavocat.service.EmailVerificationService;
+import com.gedavocat.security.JwtBlacklistService;
+import com.gedavocat.security.JwtService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -30,6 +32,8 @@ public class AuthController {
     private final AuthService authService;
     private final EmailVerificationService emailVerificationService;
     private final UserRepository userRepository;
+    private final JwtBlacklistService jwtBlacklistService;
+    private final JwtService jwtService;
 
     /**
      * Page de connexion
@@ -175,13 +179,21 @@ public class AuthController {
 
     /**
      * API REST - Inscription
+     * SEC-AUTH FIX : ne retourne plus de JWT directement — exige la vérification email
      */
     @PostMapping("/api/auth/register")
     @ResponseBody
     public ResponseEntity<?> registerApi(@Valid @RequestBody RegisterRequest request) {
         try {
-            AuthResponse response = authService.register(request);
-            return ResponseEntity.ok(response);
+            authService.register(request);
+            // Envoyer le code de vérification (comme le flow web)
+            String email = request.getEmail().trim().toLowerCase();
+            emailVerificationService.generateAndSend(email);
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Inscription réussie. Un code de vérification a été envoyé à " + email + ". Veuillez vérifier votre email avant de vous connecter.",
+                "requiresVerification", true
+            ));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of(
                 "error", true,
@@ -202,5 +214,24 @@ public class AuthController {
         String jwt = token.substring(7);
         AuthResponse response = authService.refreshToken(jwt);
         return ResponseEntity.ok(response);
+    }
+
+    /**
+     * API REST - Logout (blackliste le JWT)
+     * SEC-01 FIX : permet la révocation côté serveur du token JWT
+     */
+    @PostMapping("/api/auth/logout")
+    @ResponseBody
+    public ResponseEntity<?> logoutApi(@RequestHeader(value = "Authorization", required = false) String token) {
+        if (token != null && token.startsWith("Bearer ")) {
+            String jwt = token.substring(7);
+            try {
+                java.util.Date expiration = jwtService.extractExpiration(jwt);
+                jwtBlacklistService.blacklist(jwt, expiration);
+            } catch (Exception e) {
+                // Token déjà expiré ou invalide — on ignore silencieusement
+            }
+        }
+        return ResponseEntity.ok(Map.of("message", "Déconnexion réussie"));
     }
 }

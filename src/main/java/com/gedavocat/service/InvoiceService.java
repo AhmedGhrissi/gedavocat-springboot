@@ -38,12 +38,18 @@ public class InvoiceService {
 
     /**
      * Crée une nouvelle facture
+     * SEC-IDOR FIX : vérification ownership client → avocat
      */
     @Transactional
-    public InvoiceResponse createInvoice(InvoiceRequest request) {
+    public InvoiceResponse createInvoice(InvoiceRequest request, String lawyerId) {
         // Vérifier que le client existe
         Client client = clientRepository.findById(request.getClientId())
             .orElseThrow(() -> new RuntimeException("Client non trouvé"));
+
+        // SÉCURITÉ : vérifier que le client appartient bien à l'avocat connecté
+        if (client.getLawyer() == null || !client.getLawyer().getId().equals(lawyerId)) {
+            throw new SecurityException("Accès non autorisé : ce client ne vous appartient pas");
+        }
 
         // Vérifier que le numéro de facture n'existe pas déjà
         if (invoiceRepository.existsByInvoiceNumber(request.getInvoiceNumber())) {
@@ -84,11 +90,18 @@ public class InvoiceService {
 
     /**
      * Met à jour une facture existante
+     * SEC-IDOR FIX : vérification ownership
      */
     @Transactional
-    public InvoiceResponse updateInvoice(String invoiceId, InvoiceRequest request) {
+    public InvoiceResponse updateInvoice(String invoiceId, InvoiceRequest request, String lawyerId) {
         Invoice invoice = invoiceRepository.findById(invoiceId)
             .orElseThrow(() -> new RuntimeException("Facture non trouvée"));
+
+        // SÉCURITÉ : vérifier que la facture appartient bien à l'avocat connecté
+        if (invoice.getClient() == null || invoice.getClient().getLawyer() == null
+                || !invoice.getClient().getLawyer().getId().equals(lawyerId)) {
+            throw new SecurityException("Accès non autorisé à cette facture");
+        }
 
         // Vérifier que le numéro de facture n'est pas déjà utilisé par une autre facture
         if (!invoice.getInvoiceNumber().equals(request.getInvoiceNumber())
@@ -127,16 +140,48 @@ public class InvoiceService {
 
     /**
      * Récupère une facture par son ID
+     * SEC-IDOR FIX : vérification ownership
      */
     @Transactional(readOnly = true)
-    public InvoiceResponse getInvoiceById(String invoiceId) {
+    public InvoiceResponse getInvoiceById(String invoiceId, String lawyerId) {
         Invoice invoice = invoiceRepository.findById(invoiceId)
             .orElseThrow(() -> new RuntimeException("Facture non trouvée"));
+        // SÉCURITÉ SVC-01 FIX : vérification ownership stricte — lawyerId obligatoire
+        if (lawyerId == null) {
+            throw new SecurityException("Identifiant avocat requis pour accéder à une facture");
+        }
+        if (invoice.getClient() != null && invoice.getClient().getLawyer() != null
+                && !invoice.getClient().getLawyer().getId().equals(lawyerId)) {
+            throw new SecurityException("Accès non autorisé à cette facture");
+        }
         return convertToResponse(invoice);
     }
 
     /**
      * Récupère toutes les factures d'un client
+     * SEC-IDOR FIX : vérification ownership
+     */
+    @Transactional(readOnly = true)
+    public List<InvoiceResponse> getInvoicesByClient(String clientId, String lawyerId) {
+        List<Invoice> invoices = invoiceRepository.findByClientId(clientId);
+        // SÉCURITÉ SVC-01 FIX : vérification ownership stricte — lawyerId obligatoire
+        if (lawyerId == null) {
+            throw new SecurityException("Identifiant avocat requis pour accéder aux factures");
+        }
+        if (!invoices.isEmpty()) {
+            Invoice first = invoices.get(0);
+            if (first.getClient() != null && first.getClient().getLawyer() != null
+                    && !first.getClient().getLawyer().getId().equals(lawyerId)) {
+                throw new SecurityException("Accès non autorisé aux factures de ce client");
+            }
+        }
+        return invoices.stream()
+            .map(this::convertToResponse)
+            .collect(Collectors.toList());
+    }
+
+    /**
+     * Récupère toutes les factures d'un client (usage interne)
      */
     @Transactional(readOnly = true)
     public List<InvoiceResponse> getInvoicesByClient(String clientId) {
@@ -170,11 +215,18 @@ public class InvoiceService {
 
     /**
      * Marque une facture comme payée
+     * SEC-IDOR FIX : vérification ownership
      */
     @Transactional
-    public InvoiceResponse markAsPaid(String invoiceId, String paymentMethod) {
+    public InvoiceResponse markAsPaid(String invoiceId, String paymentMethod, String lawyerId) {
         Invoice invoice = invoiceRepository.findById(invoiceId)
             .orElseThrow(() -> new RuntimeException("Facture non trouvée"));
+
+        // SÉCURITÉ : vérifier que la facture appartient bien à l'avocat connecté
+        if (invoice.getClient() == null || invoice.getClient().getLawyer() == null
+                || !invoice.getClient().getLawyer().getId().equals(lawyerId)) {
+            throw new SecurityException("Accès non autorisé à cette facture");
+        }
 
         invoice.setStatus(InvoiceStatus.PAID);
         invoice.setPaidDate(LocalDate.now());
@@ -188,18 +240,25 @@ public class InvoiceService {
 
     /**
      * Supprime une facture
+     * SEC-IDOR FIX : vérification ownership
      */
     @Transactional
-    public void deleteInvoice(String invoiceId) {
+    public void deleteInvoice(String invoiceId, String lawyerId) {
         Invoice invoice = invoiceRepository.findById(invoiceId)
             .orElseThrow(() -> new RuntimeException("Facture non trouvée"));
+        // SÉCURITÉ : vérifier que la facture appartient bien à l'avocat connecté
+        if (invoice.getClient() == null || invoice.getClient().getLawyer() == null
+                || !invoice.getClient().getLawyer().getId().equals(lawyerId)) {
+            throw new SecurityException("Accès non autorisé à cette facture");
+        }
         invoiceRepository.delete(invoice);
     }
 
     /**
      * Génère un numéro de facture automatique
      */
-    public String generateInvoiceNumber() {
+    // SEC FIX M-03 : synchronize pour éviter la race condition sur le numéro de facture
+    public synchronized String generateInvoiceNumber() {
         int year = LocalDate.now().getYear();
         long count = invoiceRepository.count() + 1;
         return String.format("FACT-%d-%05d", year, count);
@@ -263,9 +322,14 @@ public class InvoiceService {
 
 
   @Transactional(readOnly = true)
-public byte[] generatePdf(String invoiceId) {
+public byte[] generatePdf(String invoiceId, String lawyerId) {
     Invoice invoice = invoiceRepository.findByIdWithDetails(invoiceId)
             .orElseThrow(() -> new RuntimeException("Facture introuvable : " + invoiceId));
+    // SÉCURITÉ : vérifier que la facture appartient bien à l'avocat connecté
+    if (lawyerId != null && invoice.getClient() != null && invoice.getClient().getLawyer() != null
+            && !invoice.getClient().getLawyer().getId().equals(lawyerId)) {
+        throw new SecurityException("Accès non autorisé à cette facture");
+    }
 
     try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
 

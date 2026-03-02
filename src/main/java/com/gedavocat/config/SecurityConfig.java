@@ -1,7 +1,9 @@
 package com.gedavocat.config;
 
 import com.gedavocat.security.JwtAuthenticationFilter;
+import com.gedavocat.security.SubscriptionEnforcementFilter;
 import com.gedavocat.security.UserDetailsServiceImpl;
+import com.gedavocat.security.AccountLockoutService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -32,13 +34,21 @@ public class SecurityConfig {
 
 	private final UserDetailsServiceImpl userDetailsService;
 	private final JwtAuthenticationFilter jwtAuthFilter;
+	private final SubscriptionEnforcementFilter subscriptionFilter;
+	private final AccountLockoutService accountLockoutService;
 
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 		http
-				// CSRF désactivé uniquement pour les endpoints API REST et webhooks externes
-				.csrf(csrf -> csrf.ignoringRequestMatchers("/api/**", "/subscription/webhook", "/payment/webhook"))
+				// CSRF désactivé uniquement pour les endpoints API auth (JWT stateless) et webhooks externes
+				.csrf(csrf -> csrf.ignoringRequestMatchers("/api/auth/**", "/subscription/webhook", "/payment/webhook", "/api/webhooks/**"))
 				.authorizeHttpRequests(auth -> auth
+						// SEC FIX H-12 : bloquer /h2-console en prod
+						.requestMatchers("/h2-console/**").denyAll()
+						// SEC FIX M-10 : bloquer /test/** en prod (même si @Profile le fait déjà)
+						.requestMatchers("/test/**").denyAll()
+						// SEC FIX M-11 : bloquer /api/debug-status
+						.requestMatchers("/api/debug-status").denyAll()
 						// Pages publiques
 						.requestMatchers("/", "/login", "/register", "/maintenance", "/subscription/pricing",
 						"/api/auth/**", "/css/**", "/js/**", "/images/**", "/img/**", "/favicon.ico", "/favicon.svg",
@@ -100,6 +110,9 @@ public class SecurityConfig {
 							final String extraFontOrigins = " data: https://cdnjs.cloudflare.com https://fonts.gstatic.com";
 
 							final String scriptSrc = "'self' 'unsafe-inline' https://js.stripe.com" + extraScriptOrigins;
+						// Note: 'unsafe-inline' is kept for script-src because Thymeleaf templates
+						// use inline onclick/onsubmit handlers. For full CSP Level 3 compliance,
+						// migrate to nonce-based CSP with th:attr in a future sprint.
 							final String styleSrc = "'self' 'unsafe-inline'" + extraStyleOrigins;
 							final String fontSrc  = "'self'" + extraFontOrigins;
 
@@ -108,7 +121,8 @@ public class SecurityConfig {
 									"script-src " + scriptSrc + "; " +
 									"style-src " + styleSrc + "; " +
 									"font-src " + fontSrc + "; " +
-									"img-src 'self' data: https:; " +
+									// SEC-CSP FIX : restrict img-src to self + data: only (no wildcard https:)
+						"img-src 'self' data:; " +
 									"connect-src " + connectSrc + "; " +
 									"frame-src 'self' https://js.stripe.com https://hooks.stripe.com; " +
 									"object-src 'none'; " +
@@ -121,15 +135,25 @@ public class SecurityConfig {
 									org.springframework.security.web.header.writers.CrossOriginResourcePolicyHeaderWriter.CrossOriginResourcePolicy.SAME_ORIGIN));
 							})
 				// Session avec état pour le formLogin (pas stateless)
-				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
+				// SEC FIX L-02 : protection contre session fixation
+				// SEC FIX L-03 : limite de sessions concurrentes à 1
+				.sessionManagement(session -> session
+					.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
+					.sessionFixation(fix -> fix.newSession())
+					.maximumSessions(1)
+					.expiredUrl("/login?expired"))
 				.authenticationProvider(authenticationProvider())
 				// Filtre JWT uniquement pour les API REST
 				.addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+				// Filtre de vérification d'abonnement (après authentification)
+				.addFilterAfter(subscriptionFilter, UsernamePasswordAuthenticationFilter.class)
 				.formLogin(form -> form.loginPage("/login").loginProcessingUrl("/login") // Spring Security gère POST
 																	// /login
 							.usernameParameter("email") // Le champ input s'appelle "email"
 							.passwordParameter("password")
 							.successHandler((request, response, authentication) -> {
+								// SEC FIX L-04 : réinitialiser les tentatives après succès
+								accountLockoutService.resetAttempts(authentication.getName());
 								// Déterminer les rôles présents de manière sûre
 								java.util.Set<String> roles = new java.util.HashSet<>();
 								authentication.getAuthorities().forEach(a -> roles.add(a.getAuthority()));
@@ -152,7 +176,14 @@ public class SecurityConfig {
 								// Par défaut, envoyer vers le dashboard (avocat / autre)
 								response.sendRedirect("/dashboard");
 							})
-						.failureUrl("/login?error=true").permitAll())
+						.failureHandler((request, response, exception) -> {
+								// SEC FIX L-04 : enregistrer l'échec de tentative
+								String email = request.getParameter("email");
+								if (email != null) {
+									accountLockoutService.recordFailedAttempt(email);
+								}
+								response.sendRedirect("/login?error=true");
+							}).permitAll())
 				.logout(logout -> logout.logoutUrl("/logout").logoutSuccessUrl("/login")
 							.deleteCookies("JSESSIONID").invalidateHttpSession(true).permitAll());
 
@@ -178,18 +209,17 @@ public class SecurityConfig {
 	}
 
 	/**
-	 * Configuration d'un HttpFirewall plus permissif pour éviter les erreurs
-	 * "RequestRejectedException" avec les caractères spéciaux dans les URLs
+	 * SEC-FIREWALL FIX : Configuration HttpFirewall stricté
+	 * Suppression des relaxations inutiles (encoded slash/percent/period)
+	 * qui pouvaient faciliter des attaques de path traversal.
 	 */
 	@Bean
 	public HttpFirewall allowUrlEncodedSlashHttpFirewall() {
 		StrictHttpFirewall firewall = new StrictHttpFirewall();
-		firewall.setAllowUrlEncodedSlash(true);
-		firewall.setAllowUrlEncodedPercent(true);
-		firewall.setAllowUrlEncodedPeriod(true);
-		// Désactivé : setAllowSemicolon et setAllowBackSlash — risque de path traversal
-		// firewall.setAllowSemicolon(true);
-		// firewall.setAllowBackSlash(true);
+		// Tous les encodages restent interdits (défaut strict)
+		firewall.setAllowUrlEncodedSlash(false);
+		firewall.setAllowUrlEncodedPercent(false);
+		firewall.setAllowUrlEncodedPeriod(false);
 		firewall.setAllowUrlEncodedDoubleSlash(false);
 		return firewall;
 	}

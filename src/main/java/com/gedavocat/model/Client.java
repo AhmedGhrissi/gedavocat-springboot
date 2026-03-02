@@ -3,6 +3,9 @@ package com.gedavocat.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;
@@ -42,6 +45,10 @@ public class Client {
     @Column(length = 36)
     @EqualsAndHashCode.Include
     private String id;
+
+    @Version
+    @Column(name = "entity_version")
+    private Long entityVersion;
     
     // MULTI-TENANT: Lien vers le cabinet
     @ManyToOne(fetch = FetchType.LAZY)
@@ -50,13 +57,16 @@ public class Client {
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "lawyer_id", nullable = false)
+    @JsonIgnore
     private User lawyer;
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "client_user_id")
+    @JsonIgnore
     private User clientUser;
     
     @NotBlank(message = "Le nom est obligatoire")
+    @Size(min = 1, max = 100, message = "Le nom doit contenir entre 1 et 100 caract\u00e8res")
     @Column(nullable = false, length = 100)
     private String name;
     
@@ -65,6 +75,8 @@ public class Client {
     @Column(nullable = false, length = 255)
     private String email;
     
+    // SEC FIX L-06 : validation du format téléphone
+    @Pattern(regexp = "^(\\+?[0-9\\s\\-\\.()]{0,20})?$", message = "Format de t\u00e9l\u00e9phone invalide")
     @Column(length = 20)
     private String phone;
     
@@ -75,6 +87,7 @@ public class Client {
     private LocalDateTime accessEndsAt;
     
     @Column(name = "invitation_id", length = 36)
+    @JsonIgnore
     private String invitationId;
 
     @Column(name = "invited_at")
@@ -101,6 +114,8 @@ public class Client {
     private String companyName;
 
     /** SIRET (pour les professionnels) */
+    // SEC FIX L-06 : validation du format SIRET (14 chiffres)
+    @Pattern(regexp = "^([0-9]{14})?$", message = "Le SIRET doit contenir exactement 14 chiffres")
     @Column(name = "siret", length = 20)
     private String siret;
     
@@ -114,9 +129,11 @@ public class Client {
     
     // Relations
     @OneToMany(mappedBy = "client", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private Set<Case> cases = new HashSet<>();
     
     @OneToMany(mappedBy = "client", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private Set<Invoice> invoices = new HashSet<>();
     
     // Méthodes utilitaires

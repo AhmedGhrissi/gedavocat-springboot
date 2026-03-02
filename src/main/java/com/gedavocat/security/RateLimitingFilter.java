@@ -10,7 +10,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Filtre de rate limiting pour les endpoints d'authentification.
@@ -29,12 +28,17 @@ public class RateLimitingFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
-        // Appliquer aux endpoints sensibles d'authentification ET verification email
+        // SEC FIX M-14 : rate limiting étendu aux invitations et webhooks
         return !path.startsWith("/login") && !path.startsWith("/register")
                 && !path.startsWith("/api/auth/")
                 && !path.startsWith("/forgot-password")
                 && !path.startsWith("/reset-password")
-                && !path.startsWith("/verify-email");
+                && !path.startsWith("/verify-email")
+                && !path.startsWith("/collaborators/accept-invitation")
+                && !path.startsWith("/huissiers/accept-invitation")
+                && !path.startsWith("/subscription/webhook")
+                && !path.startsWith("/payment/webhook")
+                && !path.startsWith("/api/webhooks/");
     }
 
     @Override
@@ -85,18 +89,20 @@ public class RateLimitingFilter extends OncePerRequestFilter {
     }
 
     private static class RateBucket {
-        volatile long windowStart = System.currentTimeMillis();
-        final AtomicInteger count = new AtomicInteger(0);
+        private long windowStart = System.currentTimeMillis();
+        private int count = 0;
 
-        boolean tryConsume() {
+        // SEC FIX : synchronize pour éviter la race condition sur le reset de fenêtre
+        synchronized boolean tryConsume() {
             long now = System.currentTimeMillis();
             if (now - windowStart > WINDOW_MILLIS) {
                 // Reset window
                 windowStart = now;
-                count.set(1);
+                count = 1;
                 return true;
             }
-            return count.incrementAndGet() <= MAX_REQUESTS_PER_MINUTE;
+            count++;
+            return count <= MAX_REQUESTS_PER_MINUTE;
         }
     }
 }

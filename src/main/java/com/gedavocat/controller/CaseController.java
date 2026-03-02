@@ -18,6 +18,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,6 +44,16 @@ public class CaseController {
     private final PermissionRepository permissionRepository;
     private final UserRepository userRepository;
     private final DocumentShareService documentShareService;
+
+    /**
+     * SEC-MASS-ASSIGN FIX CTL-02 : restreindre les champs bindables
+     * Empêche la manipulation des champs sensibles (lawyer, client, documents, permissions, etc.)
+     */
+    @InitBinder("case")
+    public void initBinder(WebDataBinder binder) {
+        binder.setAllowedFields("name", "reference", "caseType", "description",
+                "status", "openedDate", "closedDate", "deadline");
+    }
 
     /**
      * Liste des dossiers
@@ -148,6 +159,10 @@ public class CaseController {
 
             // Récupérer et associer le client
             Client client = clientService.getClientById(clientId);
+            // SEC-IDOR FIX : vérifier que le client appartient bien à l'avocat connecté
+            if (!isAdmin(authentication) && (client.getLawyer() == null || !client.getLawyer().getId().equals(user.getId()))) {
+                throw new RuntimeException("Ce client ne vous appartient pas");
+            }
             caseEntity.setClient(client);
 
             Case savedCase = caseService.createCase(caseEntity, user.getId());
@@ -331,6 +346,10 @@ public class CaseController {
             User user = getCurrentUser(authentication);
             // Récupérer et associer le client
             Client client = clientService.getClientById(clientId);
+            // SEC-IDOR FIX : vérifier ownership du client pour l'update
+            if (!isAdmin(authentication) && (client.getLawyer() == null || !client.getLawyer().getId().equals(user.getId()))) {
+                throw new RuntimeException("Ce client ne vous appartient pas");
+            }
             caseEntity.setClient(client);
 
             // Pour ADMIN, passer l'ID du LAWYER propriétaire du dossier afin de

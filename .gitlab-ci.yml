@@ -261,6 +261,16 @@ deploy:
     # On met a jour APP_IMAGE dans le .env existant (sans ecraser les autres variables)
     - ssh root@$SERVER_HOST "sed -i '/^APP_IMAGE=/d' $REMOTE_DIR/.env && echo \"APP_IMAGE=$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA\" >> $REMOTE_DIR/.env"
 
+    #  Migration SQL (idempotente) 
+    - scp docker/init/02-migration-version-columns.sql root@$SERVER_HOST:$REMOTE_DIR/02-migration.sql
+    - |
+      ssh root@$SERVER_HOST "
+        set -e
+        docker cp $REMOTE_DIR/02-migration.sql docavocat-mysql:/tmp/migration.sql
+        docker exec docavocat-mysql sh -c 'mysql -u root -p\$MYSQL_ROOT_PASSWORD gedavocat < /tmp/migration.sql' 2>&1
+        echo 'Migration SQL appliquee avec succes'
+      "
+
     #  Envoi des configs Loki / Promtail / Grafana 
     - ssh root@$SERVER_HOST "mkdir -p $REMOTE_DIR/loki $REMOTE_DIR/promtail $REMOTE_DIR/grafana/provisioning/datasources $REMOTE_DIR/grafana/provisioning/dashboards"
     - scp docker/loki/local-config.yaml root@$SERVER_HOST:$REMOTE_DIR/loki/local-config.yaml
@@ -286,11 +296,12 @@ deploy:
     #  Verification HTTP (~60s demarrage Spring Boot) 
     - sleep 60
     - |
-      HTTP=$(ssh root@$SERVER_HOST "curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8080/")
+      HTTP=$(ssh root@$SERVER_HOST "curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8080/" 2>/dev/null) || true
       echo "HTTP: $HTTP"
       [ "$HTTP" = "200" ] || [ "$HTTP" = "302" ] || {
         echo "ERREUR: site ne repond pas (HTTP $HTTP)"
-        ssh root@$SERVER_HOST "docker logs docavocat-app --tail=30 2>&1"
+        echo "--- Docker logs (50 dernieres lignes) ---"
+        ssh root@$SERVER_HOST "docker logs docavocat-app --tail=50 2>&1"
         exit 1
       }
       echo "Deploiement OK -> https://docavocat.fr"

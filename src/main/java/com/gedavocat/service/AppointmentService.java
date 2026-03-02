@@ -64,13 +64,19 @@ public class AppointmentService {
 
     /**
      * Met à jour un rendez-vous existant
+     * SEC-IDOR FIX : vérification ownership
      */
     @Transactional
-    public Appointment updateAppointment(String appointmentId, Appointment updatedAppointment) {
+    public Appointment updateAppointment(String appointmentId, Appointment updatedAppointment, String lawyerId) {
         log.info("Mise à jour du rendez-vous: {}", appointmentId);
 
         Appointment existing = appointmentRepository.findById(appointmentId)
             .orElseThrow(() -> new RuntimeException("Rendez-vous non trouvé"));
+
+        // SÉCURITÉ : vérifier que le rendez-vous appartient à l'avocat connecté
+        if (existing.getLawyer() == null || !existing.getLawyer().getId().equals(lawyerId)) {
+            throw new SecurityException("Accès non autorisé à ce rendez-vous");
+        }
 
         // Vérifier les conflits si la date a changé
         if (!existing.getAppointmentDate().equals(updatedAppointment.getAppointmentDate())) {
@@ -178,21 +184,40 @@ public class AppointmentService {
     }
 
     /**
-     * Récupère un rendez-vous par son ID
+     * Récupère un rendez-vous par son ID (usage interne uniquement)
      */
     public Optional<Appointment> getAppointmentById(String appointmentId) {
         return appointmentRepository.findById(appointmentId);
     }
 
     /**
+     * Récupère un rendez-vous par son ID avec vérification d'ownership
+     * SEC-IDOR FIX SVC-03 : vérification que le rendez-vous appartient à l'avocat
+     */
+    public Appointment getAppointmentByIdForLawyer(String appointmentId, String lawyerId) {
+        Appointment appointment = appointmentRepository.findById(appointmentId)
+            .orElseThrow(() -> new RuntimeException("Rendez-vous non trouvé"));
+        if (appointment.getLawyer() == null || !appointment.getLawyer().getId().equals(lawyerId)) {
+            throw new SecurityException("Accès non autorisé à ce rendez-vous");
+        }
+        return appointment;
+    }
+
+    /**
      * Annule un rendez-vous
+     * SEC-IDOR FIX : vérification ownership
      */
     @Transactional
-    public Appointment cancelAppointment(String appointmentId) {
+    public Appointment cancelAppointment(String appointmentId, String lawyerId) {
         log.info("Annulation du rendez-vous: {}", appointmentId);
 
         Appointment appointment = appointmentRepository.findById(appointmentId)
             .orElseThrow(() -> new RuntimeException("Rendez-vous non trouvé"));
+
+        // SÉCURITÉ : vérifier ownership
+        if (appointment.getLawyer() == null || !appointment.getLawyer().getId().equals(lawyerId)) {
+            throw new SecurityException("Accès non autorisé à ce rendez-vous");
+        }
 
         appointment.setStatus(Appointment.AppointmentStatus.CANCELLED);
         return appointmentRepository.save(appointment);
@@ -200,13 +225,19 @@ public class AppointmentService {
 
     /**
      * Confirme un rendez-vous
+     * SEC-IDOR FIX : vérification ownership
      */
     @Transactional
-    public Appointment confirmAppointment(String appointmentId) {
+    public Appointment confirmAppointment(String appointmentId, String lawyerId) {
         log.info("Confirmation du rendez-vous: {}", appointmentId);
 
         Appointment appointment = appointmentRepository.findById(appointmentId)
             .orElseThrow(() -> new RuntimeException("Rendez-vous non trouvé"));
+
+        // SÉCURITÉ : vérifier ownership
+        if (appointment.getLawyer() == null || !appointment.getLawyer().getId().equals(lawyerId)) {
+            throw new SecurityException("Accès non autorisé à ce rendez-vous");
+        }
 
         appointment.setStatus(Appointment.AppointmentStatus.CONFIRMED);
         return appointmentRepository.save(appointment);
@@ -214,13 +245,19 @@ public class AppointmentService {
 
     /**
      * Marque un rendez-vous comme terminé
+     * SEC-IDOR FIX : vérification ownership
      */
     @Transactional
-    public Appointment completeAppointment(String appointmentId) {
+    public Appointment completeAppointment(String appointmentId, String lawyerId) {
         log.info("Marquage du rendez-vous comme terminé: {}", appointmentId);
 
         Appointment appointment = appointmentRepository.findById(appointmentId)
             .orElseThrow(() -> new RuntimeException("Rendez-vous non trouvé"));
+
+        // SÉCURITÉ : vérifier ownership
+        if (appointment.getLawyer() == null || !appointment.getLawyer().getId().equals(lawyerId)) {
+            throw new SecurityException("Accès non autorisé à ce rendez-vous");
+        }
 
         appointment.setStatus(Appointment.AppointmentStatus.COMPLETED);
         return appointmentRepository.save(appointment);
@@ -228,6 +265,19 @@ public class AppointmentService {
 
     /**
      * Sauvegarde directe d'un rendez-vous (pour mises à jour simples)
+     * SEC-IDOR FIX : vérification ownership
+     */
+    @Transactional
+    public Appointment saveAppointment(Appointment appointment, String lawyerId) {
+        if (appointment.getLawyer() == null || !appointment.getLawyer().getId().equals(lawyerId)) {
+            throw new SecurityException("Accès non autorisé à ce rendez-vous");
+        }
+        return appointmentRepository.save(appointment);
+    }
+
+    /**
+     * Sauvegarde directe d'un rendez-vous — usage interne uniquement
+     * (quand l'ownership est déjà vérifiée par le controller appelant)
      */
     @Transactional
     public Appointment saveAppointment(Appointment appointment) {
@@ -236,10 +286,17 @@ public class AppointmentService {
 
     /**
      * Supprime un rendez-vous
+     * SEC-IDOR FIX : vérification ownership
      */
     @Transactional
-    public void deleteAppointment(String appointmentId) {
+    public void deleteAppointment(String appointmentId, String lawyerId) {
         log.info("Suppression du rendez-vous: {}", appointmentId);
+        Appointment appointment = appointmentRepository.findById(appointmentId)
+            .orElseThrow(() -> new RuntimeException("Rendez-vous non trouvé"));
+        // SÉCURITÉ : vérifier ownership
+        if (appointment.getLawyer() == null || !appointment.getLawyer().getId().equals(lawyerId)) {
+            throw new SecurityException("Accès non autorisé à ce rendez-vous");
+        }
         appointmentRepository.deleteById(appointmentId);
     }
 

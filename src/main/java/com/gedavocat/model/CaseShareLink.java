@@ -1,6 +1,7 @@
 package com.gedavocat.model;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;
@@ -32,15 +33,18 @@ public class CaseShareLink {
     /** Dossier partagé */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "case_id", nullable = false)
+    @JsonIgnore
     private Case sharedCase;
 
     /** Avocat qui a créé le lien */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id", nullable = false)
+    @JsonIgnore
     private User owner;
 
     /** Token unique inclus dans l'URL */
     @Column(name = "token", nullable = false, unique = true, length = 72)
+    @JsonIgnore
     private String token;
 
     /** Email du destinataire de l'invitation */
@@ -78,6 +82,11 @@ public class CaseShareLink {
     /** Lien révoqué manuellement */
     @Column(name = "revoked", nullable = false)
     private boolean revoked = false;
+
+    // SEC FIX MDL-08 : @Version pour le verrouillage optimiste
+    @Version
+    @Column(name = "entity_version")
+    private Long entityVersion;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

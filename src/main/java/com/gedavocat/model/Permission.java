@@ -1,8 +1,10 @@
 package com.gedavocat.model;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
@@ -23,7 +25,8 @@ import java.util.UUID;
         @Index(name = "idx_permission_granted_by", columnList = "granted_by")
     }
 )
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString(exclude = {"caseEntity", "grantedBy", "lawyer"})
@@ -36,14 +39,17 @@ public class Permission {
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "case_id", nullable = false)
+    @JsonIgnore
     private Case caseEntity;
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "granted_by", nullable = false)
+    @JsonIgnore
     private User grantedBy;
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "lawyer_id", nullable = false)
+    @JsonIgnore
     private User lawyer;
     
     @Column(name = "can_read", nullable = false)
@@ -67,6 +73,11 @@ public class Permission {
     
     @Column(name = "revoked_at")
     private LocalDateTime revokedAt;
+
+    // SEC FIX MDL-08 : @Version pour le verrouillage optimiste
+    @Version
+    @Column(name = "entity_version")
+    private Long entityVersion;
     
     // Méthodes utilitaires
     public boolean isValid() {

@@ -90,8 +90,13 @@ public class RPVAService {
             String status
     ) {
         try {
-            String url = String.format("%s/v1/communications/received?start=%s&end=%s&status=%s",
-                apiUrl, startDate, endDate, status);
+            // SEC FIX : utiliser UriComponentsBuilder pour encoder les paramètres URL
+            String url = org.springframework.web.util.UriComponentsBuilder
+                .fromUriString(apiUrl + "/v1/communications/received")
+                .queryParam("start", startDate)
+                .queryParam("end", endDate)
+                .queryParam("status", status)
+                .build().toUriString();
             
             HttpHeaders headers = createHeaders();
             HttpEntity<?> entity = new HttpEntity<>(headers);
@@ -116,7 +121,10 @@ public class RPVAService {
      */
     public Map<String, Object> getCommunicationStatus(String communicationId) {
         try {
-            String url = String.format("%s/v1/communications/%s/status", apiUrl, communicationId);
+            // SEC FIX : utiliser UriComponentsBuilder pour encoder le communicationId
+            String url = org.springframework.web.util.UriComponentsBuilder
+                .fromUriString(apiUrl + "/v1/communications/{id}/status")
+                .buildAndExpand(communicationId).toUriString();
             
             HttpHeaders headers = createHeaders();
             HttpEntity<?> entity = new HttpEntity<>(headers);

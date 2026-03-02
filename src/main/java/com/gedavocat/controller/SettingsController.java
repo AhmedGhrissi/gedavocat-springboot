@@ -327,10 +327,38 @@ public class SettingsController {
             Authentication authentication,
             RedirectAttributes redirectAttributes) {
         User user = getCurrentUser(authentication);
-        user.setEmailSignature(emailSignature.isBlank() ? null : emailSignature.trim());
+        // SEC-XSS FIX : sanitizer la signature email HTML (supprimer <script>, onXxx=, javascript:)
+        String sanitized = emailSignature.isBlank() ? null : sanitizeHtml(emailSignature.trim());
+        user.setEmailSignature(sanitized);
         userRepository.save(user);
         redirectAttributes.addFlashAttribute("message", "Signature email sauvegardée avec succès");
         return "redirect:/settings?tab=email";
+    }
+
+    /**
+     * SEC-XSS FIX M-04 : Sanitisation robuste du HTML de la signature email.
+     * Approche whitelist : seules les balises autorisées sont conservées, tout le reste est échappé.
+     */
+    private String sanitizeHtml(String html) {
+        if (html == null) return null;
+        // Étape 1 : Supprimer les balises <script>...</script> (y compris multilignes)
+        String sanitized = html.replaceAll("(?is)<script[^>]*>.*?</script>", "");
+        // Étape 2 : Supprimer les balises dangereuses (iframe, object, embed, form, input, button, textarea, select, meta, link, style, applet, base)
+        sanitized = sanitized.replaceAll("(?i)</?\\s*(script|iframe|object|embed|form|input|button|textarea|select|meta|link|style|applet|base|svg|math)\\b[^>]*>", "");
+        // Étape 3 : Supprimer TOUS les event handlers (on*=...)
+        sanitized = sanitized.replaceAll("(?i)\\s+on\\w+\\s*=\\s*\"[^\"]*\"", "");
+        sanitized = sanitized.replaceAll("(?i)\\s+on\\w+\\s*=\\s*'[^']*'", "");
+        sanitized = sanitized.replaceAll("(?i)\\s+on\\w+\\s*=\\s*[^\\s>]+", "");
+        // Étape 4 : Supprimer javascript:, vbscript:, data: dans les attributs href/src/action/formaction/xlink:href
+        sanitized = sanitized.replaceAll("(?i)(href|src|action|formaction|xlink:href)\\s*=\\s*[\"']\\s*(javascript|vbscript|data)\\s*:", "$1=\"");
+        // Étape 5 : Supprimer les expressions CSS (expression(), url(javascript:))
+        sanitized = sanitized.replaceAll("(?i)expression\\s*\\(", "");
+        sanitized = sanitized.replaceAll("(?i)url\\s*\\(\\s*[\"']?\\s*javascript:", "url(");
+        // Étape 6 : Limiter la longueur de la signature
+        if (sanitized.length() > 5000) {
+            sanitized = sanitized.substring(0, 5000);
+        }
+        return sanitized;
     }
 
     private User getCurrentUser(Authentication authentication) {

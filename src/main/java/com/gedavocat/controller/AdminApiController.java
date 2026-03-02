@@ -76,10 +76,18 @@ public class AdminApiController {
                 writer.write("-- Database: " + dbName + "\n\n");
                 writer.write("SET FOREIGN_KEY_CHECKS=0;\n\n");
 
-                // Liste des tables
+                // Liste des tables (SEC FIX CTL-03 : validation du nom de table)
                 List<String> tables = new ArrayList<>();
+                java.util.regex.Pattern validTableName = java.util.regex.Pattern.compile("^[a-zA-Z0-9_]{1,64}$");
                 try (ResultSet rs = conn.getMetaData().getTables(dbName, null, "%", new String[]{"TABLE"})) {
-                    while (rs.next()) tables.add(rs.getString("TABLE_NAME"));
+                    while (rs.next()) {
+                        String tname = rs.getString("TABLE_NAME");
+                        if (tname != null && validTableName.matcher(tname).matches()) {
+                            tables.add(tname);
+                        } else {
+                            log.warn("Table ignorée (nom invalide) : {}", tname);
+                        }
+                    }
                 }
 
                 for (String table : tables) {

@@ -2,6 +2,7 @@ package com.gedavocat.model;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;
@@ -42,6 +43,10 @@ public class Case {
     @Column(length = 36)
     @EqualsAndHashCode.Include
     private String id;
+
+    @Version
+    @Column(name = "entity_version")
+    private Long entityVersion;
     
     // MULTI-TENANT: Lien vers le cabinet
     @ManyToOne(fetch = FetchType.LAZY)
@@ -50,10 +55,12 @@ public class Case {
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "lawyer_id", nullable = false)
+    @JsonIgnore
     private User lawyer;
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "client_id", nullable = false)
+    @JsonIgnore
     private Client client;
     
     @NotBlank(message = "Le nom du dossier est obligatoire")
@@ -93,9 +100,11 @@ public class Case {
     
     // Relations
     @OneToMany(mappedBy = "caseEntity", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private Set<Document> documents = new HashSet<>();
     
     @OneToMany(mappedBy = "caseEntity", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private Set<Permission> permissions = new HashSet<>();
     
     // Énumération du statut

@@ -13,6 +13,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -30,6 +31,16 @@ public class ClientController {
     private final ClientService clientService;
     private final UserRepository userRepository;
     private final ClientInvitationService invitationService;
+
+    /**
+     * SEC-MASS-ASSIGN FIX CTL-01 : restreindre les champs bindables
+     * Empêche la manipulation des champs sensibles (lawyer, clientUser, cases, invoices, etc.)
+     */
+    @InitBinder
+    public void initBinder(WebDataBinder binder) {
+        binder.setAllowedFields("name", "email", "phone", "address",
+                "clientType", "companyName", "siret");
+    }
 
     /**
      * Liste des clients

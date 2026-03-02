@@ -57,8 +57,8 @@ RUN chown docavocat:docavocat app.jar
 COPY docker/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-# On reste root pour l'entrypoint — le script fait gosu docavocat
-# USER docavocat
+# Sécurité : exécution en tant qu'utilisateur non-root
+USER docavocat
 
 EXPOSE 8080
 

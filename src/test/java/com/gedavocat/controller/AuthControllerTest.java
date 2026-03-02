@@ -59,6 +59,7 @@ class AuthControllerTest {
         lawyer.setPassword(passwordEncoder.encode("password"));
         lawyer.setRole(User.UserRole.LAWYER);
         lawyer.setSubscriptionStatus(User.SubscriptionStatus.ACTIVE);
+        lawyer.setSubscriptionEndsAt(java.time.LocalDateTime.now().plusDays(30));
         userRepository.saveAndFlush(lawyer);
     }
 

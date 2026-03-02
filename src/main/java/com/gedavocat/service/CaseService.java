@@ -120,6 +120,18 @@ public class CaseService {
     }
     
     /**
+     * SEC FIX M-12 : Récupère un dossier par ID avec vérification de propriété
+     */
+    @Transactional(readOnly = true)
+    public Case getCaseById(String caseId, String lawyerId) {
+        Case c = getCaseById(caseId);
+        if (c.getLawyer() == null || !c.getLawyer().getId().equals(lawyerId)) {
+            throw new SecurityException("Accès non autorisé à ce dossier");
+        }
+        return c;
+    }
+    
+    /**
      * Récupère les dossiers d'un client
      */
     public List<Case> getCasesByClient(String clientId) {

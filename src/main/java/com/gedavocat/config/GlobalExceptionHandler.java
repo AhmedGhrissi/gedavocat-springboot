@@ -163,11 +163,13 @@ public class GlobalExceptionHandler {
                 || "XMLHttpRequest".equals(xRequestedWith);
     }
 
+    /**
+     * SEC-HEADER FIX : ne pas utiliser X-Forwarded-For directement car il peut être forgé.
+     * En production, le reverse proxy (nginx) gère les headers de forwarding
+     * et Spring Boot utilise server.forward-headers-strategy=NATIVE.
+     * Ici on se contente de request.getRemoteAddr() qui est l'IP vue par le serveur.
+     */
     private String getClientIp(HttpServletRequest request) {
-        String xff = request.getHeader("X-Forwarded-For");
-        if (xff != null && !xff.isEmpty()) {
-            return xff.split(",")[0].trim();
-        }
         return request.getRemoteAddr();
     }
 }

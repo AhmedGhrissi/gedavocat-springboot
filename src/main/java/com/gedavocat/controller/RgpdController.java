@@ -22,6 +22,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -154,7 +155,8 @@ public class RgpdController {
     public String deleteMyAccount(
             Authentication authentication,
             @RequestParam(required = false) String confirmEmail,
-            RedirectAttributes redirectAttributes
+            RedirectAttributes redirectAttributes,
+            HttpServletRequest request
     ) {
         User user = userRepository.findByEmail(authentication.getName())
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
@@ -177,7 +179,12 @@ public class RgpdController {
         user.setAccountEnabled(false);
         userRepository.save(user);
 
-        // Invalider la session
+        // SEC-RGPD FIX : invalider la session HTTP immédiatement après suppression
+        try {
+            request.getSession().invalidate();
+        } catch (Exception ignored) {}
+        org.springframework.security.core.context.SecurityContextHolder.clearContext();
+
         return "redirect:/login?accountDeleted=true";
     }
 }

@@ -1,7 +1,9 @@
 package com.gedavocat.model;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import lombok.ToString;
@@ -25,7 +27,8 @@ import java.util.UUID;
         @Index(name = "idx_docshare_role", columnList = "target_role")
     }
 )
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString(exclude = {"document", "caseEntity"})
@@ -38,10 +41,12 @@ public class DocumentShare {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "document_id", nullable = false)
+    @JsonIgnore
     private Document document;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "case_id", nullable = false)
+    @JsonIgnore
     private Case caseEntity;
 
     /**
@@ -56,6 +61,11 @@ public class DocumentShare {
      */
     @Column(name = "can_download", nullable = false)
     private Boolean canDownload = false;
+
+    // SEC FIX MDL-08 : @Version pour le verrouillage optimiste
+    @Version
+    @Column(name = "entity_version")
+    private Long entityVersion;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
