@@ -1,0 +1,301 @@
+name: CI/CD - Build, Test, Deploy
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  release:
+    types: [ published ]
+
+env:
+  JAVA_VERSION: '17'
+  NODE_VERSION: '20'
+
+jobs:
+  # ========================================
+  # BUILD & TEST BACKEND
+  # ========================================
+  build-backend:
+    name: Build & Test Backend
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Cache Maven dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: Build with Maven
+        run: mvn clean install -DskipTests
+
+      - name: Run Unit Tests
+        run: mvn test
+
+      - name: Run Integration Tests (Multi-Tenant)
+        run: mvn verify -Pintegration-tests
+
+      - name: Generate Test Coverage Report
+        run: mvn jacoco:report
+
+      - name: Upload Coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./target/site/jacoco/jacoco.xml
+          flags: backend
+          name: backend-coverage
+
+      - name: Build Docker Image
+        run: |
+          docker build -t gedavocat-app:${{ github.sha }} -f docker/Dockerfile .
+          docker tag gedavocat-app:${{ github.sha }} gedavocat-app:latest
+
+      - name: Save Docker Image
+        run: docker save gedavocat-app:latest | gzip > gedavocat-app.tar.gz
+
+      - name: Upload Docker Image Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: docker-image
+          path: gedavocat-app.tar.gz
+          retention-days: 1
+
+  # ========================================
+  # SECURITY SCAN
+  # ========================================
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: build-backend
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+      - name: Download Docker Image
+        uses: actions/download-artifact@v3
+        with:
+          name: docker-image
+
+      - name: Load Docker Image
+        run: docker load < gedavocat-app.tar.gz
+
+      - name: Scan Docker Image with Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'gedavocat-app:latest'
+          format: 'table'
+          exit-code: '1'
+          severity: 'CRITICAL,HIGH'
+
+  # ========================================
+  # E2E TESTS (PLAYWRIGHT)
+  # ========================================
+  e2e-tests:
+    name: E2E Tests (Playwright)
+    runs-on: ubuntu-latest
+    needs: build-backend
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: e2e/package-lock.json
+
+      - name: Install Playwright dependencies
+        working-directory: e2e
+        run: |
+          npm ci
+          npx playwright install --with-deps
+
+      - name: Download Docker Image
+        uses: actions/download-artifact@v3
+        with:
+          name: docker-image
+
+      - name: Load and Start Docker Compose
+        run: |
+          docker load < gedavocat-app.tar.gz
+          docker compose -f docker/docker-compose.test.yml up -d
+
+      - name: Wait for Application
+        run: |
+          timeout 120 bash -c 'until curl -f http://localhost:8080/actuator/health; do sleep 2; done'
+
+      - name: Run Playwright E2E Tests
+        working-directory: e2e
+        run: npx playwright test
+
+      - name: Upload Playwright Report
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: playwright-report
+          path: e2e/playwright-report/
+          retention-days: 7
+
+      - name: Stop Docker Compose
+        if: always()
+        run: docker compose -f docker/docker-compose.test.yml down
+
+  # ========================================
+  # DEPLOY TO STAGING (develop branch)
+  # ========================================
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [build-backend, security-scan, e2e-tests]
+    if: github.ref == 'refs/heads/develop'
+    environment:
+      name: staging
+      url: https://staging.gedavocat.fr
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download Docker Image
+        uses: actions/download-artifact@v3
+        with:
+          name: docker-image
+
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.STAGING_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.STAGING_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Deploy to Staging Server
+        run: |
+          scp gedavocat-app.tar.gz ${{ secrets.STAGING_USER }}@${{ secrets.STAGING_HOST }}:/tmp/
+          ssh ${{ secrets.STAGING_USER }}@${{ secrets.STAGING_HOST }} << 'EOF'
+            cd /home/gedavocat/apps/gedavocat-springboot
+            docker load < /tmp/gedavocat-app.tar.gz
+            docker compose down
+            docker compose up -d
+            rm /tmp/gedavocat-app.tar.gz
+          EOF
+
+      - name: Health Check Staging
+        run: |
+          sleep 30
+          curl -f https://staging.gedavocat.fr/actuator/health || exit 1
+
+  # ========================================
+  # DEPLOY TO PRODUCTION (main branch + tag)
+  # ========================================
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [build-backend, security-scan, e2e-tests]
+    if: github.ref == 'refs/heads/main' && startsWith(github.event.head_commit.message, 'Release:')
+    environment:
+      name: production
+      url: https://gedavocat.fr
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download Docker Image
+        uses: actions/download-artifact@v3
+        with:
+          name: docker-image
+
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.PROD_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.PROD_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Backup Production Database
+        run: |
+          ssh ${{ secrets.PROD_USER }}@${{ secrets.PROD_HOST }} << 'EOF'
+            /home/gedavocat/scripts/backup-mysql.sh
+          EOF
+
+      - name: Deploy to Production Server (Hetzner)
+        run: |
+          scp gedavocat-app.tar.gz ${{ secrets.PROD_USER }}@${{ secrets.PROD_HOST }}:/tmp/
+          ssh ${{ secrets.PROD_USER }}@${{ secrets.PROD_HOST }} << 'EOF'
+            cd /home/gedavocat/apps/gedavocat-springboot
+            docker load < /tmp/gedavocat-app.tar.gz
+            docker compose down
+            docker compose up -d
+            rm /tmp/gedavocat-app.tar.gz
+          EOF
+
+      - name: Health Check Production
+        run: |
+          sleep 30
+          curl -f https://gedavocat.fr/actuator/health || exit 1
+
+      - name: Notify Deployment Success
+        if: success()
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: |
+            {
+              "text": "✅ GedAvocat ${{ github.sha }} deployed to PRODUCTION successfully!"
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      - name: Notify Deployment Failure
+        if: failure()
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: |
+            {
+              "text": "❌ GedAvocat ${{ github.sha }} deployment to PRODUCTION FAILED!"
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  # ========================================
+  # CLEANUP
+  # ========================================
+  cleanup:
+    name: Cleanup Artifacts
+    runs-on: ubuntu-latest
+    needs: [deploy-staging, deploy-production]
+    if: always()
+    
+    steps:
+      - name: Delete Docker Image Artifact
+        uses: geekyeggo/delete-artifact@v2
+        with:
+          name: docker-image

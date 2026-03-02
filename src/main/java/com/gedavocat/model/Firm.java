@@ -10,6 +10,8 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.ParamDef;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -32,6 +34,7 @@ import java.util.UUID;
     @Index(name = "idx_firm_created_at", columnList = "created_at"),
     @Index(name = "idx_firm_subscription_status", columnList = "subscription_status")
 })
+@FilterDef(name = "firmFilter", parameters = @ParamDef(name = "firmId", type = String.class))
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

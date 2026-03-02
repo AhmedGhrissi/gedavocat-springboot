@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -149,10 +150,11 @@ public class CaseService {
      * Crée un nouveau dossier
      */
     @Transactional
-    public Case createCase(Case caseEntity, String lawyerId) {
+    public Case createCase(Case caseEntity, String lawyerId, String clientId) {
         log.debug("Création d'un dossier pour l'avocat: {}", lawyerId);
         
-        Client client = clientRepository.findById(caseEntity.getClient().getId())
+        // Charger le client avec ses relations dans cette transaction
+        Client client = clientRepository.findById(clientId)
                 .orElseThrow(() -> new RuntimeException("Client non trouvé"));
         
         // Vérifier que le client appartient à l'avocat
@@ -165,8 +167,16 @@ public class CaseService {
             caseEntity.setId(UUID.randomUUID().toString());
         }
         
+        // Générer une référence unique si non fournie
+        if (caseEntity.getReference() == null || caseEntity.getReference().isEmpty()) {
+            String dateStr = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+            String uniquePart = caseEntity.getId().substring(0, 5).toUpperCase();
+            caseEntity.setReference("DOS-" + dateStr + "-" + uniquePart);
+        }
+        
         caseEntity.setLawyer(client.getLawyer());
         caseEntity.setClient(client);
+        caseEntity.setFirm(client.getFirm()); // Hériter le firm_id du client
         caseEntity.setStatus(CaseStatus.OPEN);
         caseEntity.setCreatedAt(LocalDateTime.now());
         
@@ -209,6 +219,7 @@ public class CaseService {
                 throw new RuntimeException("Ce client ne vous appartient pas");
             }
             caseEntity.setClient(newClient);
+            caseEntity.setFirm(newClient.getFirm()); // Hériter le firm_id du nouveau client
         }
         
         // Mettre à jour le statut seulement si fourni

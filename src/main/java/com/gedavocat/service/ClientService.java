@@ -90,6 +90,11 @@ public class ClientService {
         User lawyer = userRepository.findById(lawyerId)
                 .orElseThrow(() -> new RuntimeException("Avocat non trouvé"));
         
+        // Vérifier que l'avocat a un cabinet (firm_id obligatoire)
+        if (lawyer.getFirm() == null) {
+            throw new RuntimeException("L'avocat doit être rattaché à un cabinet pour créer des clients");
+        }
+        
         // Vérifier si l'email existe déjà pour cet avocat
         if (clientRepository.existsByLawyerIdAndEmail(lawyerId, client.getEmail())) {
             throw new RuntimeException("Un client avec cet email existe déjà");
@@ -107,6 +112,7 @@ public class ClientService {
         }
         
         client.setLawyer(lawyer);
+        client.setFirm(lawyer.getFirm()); // Hériter du cabinet de l'avocat
         client.setCreatedAt(LocalDateTime.now());
         
         Client savedClient = clientRepository.save(client);

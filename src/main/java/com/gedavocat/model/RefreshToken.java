@@ -35,7 +35,7 @@ public class RefreshToken {
     @Column(length = 36)
     private String id;
 
-    @Column(nullable = false, unique = true, columnDefinition = "TEXT")
+    @Column(nullable = false, unique = true, length = 512)
     private String token;
 
     @ManyToOne(fetch = FetchType.LAZY)

@@ -16,6 +16,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import com.gedavocat.model.Firm;
+import com.gedavocat.service.FirmService;
 
 @Service
 @RequiredArgsConstructor
@@ -26,6 +28,7 @@ public class AuthService {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final UserDetailsService userDetailsService;
+    private final FirmService firmService;
     
     @Transactional
     public AuthResponse register(RegisterRequest request) {
@@ -57,6 +60,9 @@ public class AuthService {
             fullName = (request.getFirstName() + " " + request.getLastName()).trim();
         }
         user.setName(fullName);
+        // Remplir firstName / lastName pour la table users (schéma exigeant)
+        user.setFirstName(request.getFirstName());
+        user.setLastName(request.getLastName());
         
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
@@ -67,8 +73,58 @@ public class AuthService {
         user.setTermsAcceptedAt(LocalDateTime.now());
         user.setGdprConsentAt(LocalDateTime.now());
         user.setEmailVerified(false);  // doit être vérifié par email avant connexion
+        user.setAccountEnabled(true);  // compte activé, mais connexion bloquée jusqu'à vérification email
         
         user = userRepository.save(user);
+        
+        // Si des informations de cabinet ont été fournies, créer le cabinet et l'associer
+        if (request.getFirmName() != null && !request.getFirmName().trim().isEmpty()) {
+            Firm firm = new Firm();
+            firm.setName(request.getFirmName().trim());
+            firm.setSiren(request.getFirmSiren());
+            firm.setPhone(request.getFirmPhone());
+            firm.setAddress(request.getFirmAddress());
+
+            // Mapper le plan d'abonnement si présent
+            String plan = request.getSubscriptionPlan();
+            if (plan != null) {
+                String p = plan.trim().toUpperCase();
+                if (p.contains("CABINET_PLUS") || p.contains("CABINET+")) {
+                    firm.setSubscriptionPlan(Firm.SubscriptionPlan.ENTERPRISE);
+                } else if (p.contains("PROFESSIONNEL") || p.contains("PROFESSIONNEL")) {
+                    firm.setSubscriptionPlan(Firm.SubscriptionPlan.CABINET);
+                } else {
+                    firm.setSubscriptionPlan(Firm.SubscriptionPlan.SOLO);
+                }
+            }
+
+            firm.setSubscriptionStatus(Firm.SubscriptionStatus.ACTIVE);
+            firm.setSubscriptionStartsAt(LocalDateTime.now());
+            firm.setSubscriptionEndsAt(LocalDateTime.now().plusYears(1));
+
+            firm = firmService.createFirm(firm);
+            user.setFirm(firm);
+
+            // Synchroniser quelques champs d'abonnement sur l'utilisateur
+            try {
+                String p = request.getSubscriptionPlan() == null ? "" : request.getSubscriptionPlan().trim().toUpperCase();
+                if (p.contains("ESSENTIEL") || p.contains("ESSENTIEL")) {
+                    user.setSubscriptionPlan(User.SubscriptionPlan.ESSENTIEL);
+                } else if (p.contains("PROFESSIONNEL")) {
+                    user.setSubscriptionPlan(User.SubscriptionPlan.PROFESSIONNEL);
+                } else if (p.contains("CABINET_PLUS") || p.contains("CABINET+")) {
+                    user.setSubscriptionPlan(User.SubscriptionPlan.CABINET_PLUS);
+                } else {
+                    user.setSubscriptionPlan(User.SubscriptionPlan.SOLO);
+                }
+                user.setSubscriptionStatus(User.SubscriptionStatus.ACTIVE);
+                user.setSubscriptionStartDate(LocalDateTime.now());
+                user.setSubscriptionEndsAt(LocalDateTime.now().plusYears(1));
+            } catch (Exception ignored) {
+            }
+            // Sauvegarder l'utilisateur avec la référence au cabinet
+            user = userRepository.save(user);
+        }
         
         // SÉCURITÉ : ne PAS générer de JWT avant la vérification email
         // L'utilisateur doit d'abord vérifier son email via /verify-email

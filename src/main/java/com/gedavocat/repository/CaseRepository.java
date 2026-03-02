@@ -83,4 +83,11 @@ public interface CaseRepository extends JpaRepository<Case, String> {
 
     @Query("SELECT c FROM Case c LEFT JOIN FETCH c.lawyer LEFT JOIN FETCH c.client WHERE c.client.id = :clientId")
     List<Case> findByClientIdWithLawyerAndClient(@Param("clientId") String clientId);
+
+    /**
+     * Trouve un dossier par ID avec le filtre multi-tenant activé
+     * Cette méthode utilise JPQL donc le filtre Hibernate s'applique automatiquement
+     */
+    @Query("SELECT c FROM Case c WHERE c.id = :id")
+    Optional<Case> findByIdWithFilter(@Param("id") String id);
 }

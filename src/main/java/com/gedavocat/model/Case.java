@@ -10,9 +10,7 @@ import lombok.ToString;
 import lombok.EqualsAndHashCode;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.Filter;
-import org.hibernate.annotations.ParamDef;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -30,7 +28,6 @@ import java.util.UUID;
     @Index(name = "idx_case_status", columnList = "status"),
     @Index(name = "idx_case_firm_id", columnList = "firm_id")
 })
-@FilterDef(name = "firmFilter", parameters = @ParamDef(name = "firmId", type = String.class))
 @Filter(name = "firmFilter", condition = "firm_id = :firmId")
 @Getter
 @Setter
@@ -64,14 +61,18 @@ public class Case {
     private Client client;
     
     @NotBlank(message = "Le nom du dossier est obligatoire")
-    @Column(nullable = false, length = 255)
+    @Column(name = "title", nullable = false, length = 255)
     private String name;
+
+    // Legacy column present in some schemas — keep synchronized with `name`
+    @Column(name = "name", nullable = false, length = 255)
+    private String legacyName;
     
-    @Column(length = 100)
+    @Column(length = 50, nullable = false)
     private String reference;
     
     @Enumerated(EnumType.STRING)
-    @Column(name = "case_type", length = 50)
+    @Column(name = "type", length = 50, nullable = false)
     private CaseType caseType;
     
     @Column(columnDefinition = "TEXT")
@@ -81,10 +82,10 @@ public class Case {
     @Column(nullable = false, length = 20)
     private CaseStatus status = CaseStatus.OPEN;
     
-    @Column(name = "opened_date")
+    @Column(name = "opened_at")
     private LocalDateTime openedDate;
     
-    @Column(name = "closed_date")
+    @Column(name = "closed_at")
     private LocalDateTime closedDate;
     
     @Column(name = "deadline")
@@ -182,5 +183,12 @@ public class Case {
         if (status == null) {
             status = CaseStatus.OPEN;
         }
+        // Synchronize legacy column
+        this.legacyName = this.name;
+    }
+
+    @PreUpdate
+    public void preUpdate() {
+        this.legacyName = this.name;
     }
 }

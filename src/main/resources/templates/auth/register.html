@@ -134,6 +134,25 @@
                     <label for="barNumber">Numéro d'inscription au barreau</label>
                 </div>
 
+                <!-- Cabinet creation (optional) -->
+                <div class="mt-3 mb-2"><strong>Informations du cabinet (optionnel)</strong></div>
+                <div class="form-floating">
+                    <input type="text" id="firmName" th:field="*{firmName}" class="form-control" placeholder="Nom du cabinet">
+                    <label for="firmName">Nom du cabinet</label>
+                </div>
+                <div class="form-floating">
+                    <input type="text" id="firmSiren" th:field="*{firmSiren}" class="form-control" placeholder="SIREN">
+                    <label for="firmSiren">SIREN</label>
+                </div>
+                <div class="form-floating">
+                    <input type="tel" id="firmPhone" th:field="*{firmPhone}" class="form-control" placeholder="Téléphone du cabinet">
+                    <label for="firmPhone">Téléphone du cabinet</label>
+                </div>
+                <div class="form-floating">
+                    <input type="text" id="firmAddress" th:field="*{firmAddress}" class="form-control" placeholder="Adresse du cabinet">
+                    <label for="firmAddress">Adresse du cabinet</label>
+                </div>
+
                 <div class="form-floating pwd-row">
                     <input type="password" id="password" th:field="*{password}" class="form-control" placeholder="Mot de passe" required minlength="8" autocomplete="new-password">
                     <label for="password">Mot de passe *</label>

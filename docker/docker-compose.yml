@@ -157,6 +157,81 @@ services:
     depends_on:
       - loki
 
+  # ── Prometheus (métriques time-series) ──────────────────────
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    container_name: docavocat-prometheus
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    volumes:
+      - prometheus_data:/prometheus
+      - ./prometheus:/etc/prometheus:ro
+    networks:
+      - docavocat-net
+    ports:
+      - "127.0.0.1:9090:9090"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+
+  # ── Node Exporter (métriques système) ───────────────────────
+  node-exporter:
+    image: prom/node-exporter:v1.8.2
+    container_name: docavocat-node-exporter
+    restart: unless-stopped
+    command:
+      - '--path.rootfs=/host'
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    volumes:
+      - /:/host:ro,rslave
+    networks:
+      - docavocat-net
+    ports:
+      - "127.0.0.1:9100:9100"
+
+  # ── MySQL Exporter (métriques MySQL) ────────────────────────
+  mysql-exporter:
+    image: prom/mysqld-exporter:v0.15.1
+    container_name: docavocat-mysql-exporter
+    restart: unless-stopped
+    environment:
+      DATA_SOURCE_NAME: "gedavocat:${MYSQL_PASSWORD}@(mysql:3306)/"
+    networks:
+      - docavocat-net
+    ports:
+      - "127.0.0.1:9104:9104"
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  # ── cAdvisor (métriques Docker) ─────────────────────────────
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.49.1
+    container_name: docavocat-cadvisor
+    restart: unless-stopped
+    privileged: true
+    devices:
+      - /dev/kmsg
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker:/var/lib/docker:ro
+      - /dev/disk:/dev/disk:ro
+    networks:
+      - docavocat-net
+    ports:
+      - "127.0.0.1:8081:8080"
+
   # ── Grafana (interface web de visualisation) ────────────────
   # Accès : ssh -L 3000:localhost:3000 root@88.198.163.251
   # puis ouvrir http://localhost:3000 (admin/admin au premier login)
@@ -173,11 +248,13 @@ services:
       GF_ANALYTICS_REPORTING_ENABLED: "false"
     volumes:
       - grafana_data:/var/lib/grafana
-      - /opt/gedavocat/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
     networks:
       - docavocat-net
     depends_on:
       - loki
+      - prometheus
 
 # ── Réseau interne ──────────────────────────────────────────
 networks:
@@ -193,4 +270,6 @@ volumes:
   grafana_data:
     driver: local
   promtail_positions:
+    driver: local
+  prometheus_data:
     driver: local

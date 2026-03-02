@@ -1,0 +1,75 @@
+# ========================================
+# PROMETHEUS - Monitoring Configuration
+# ========================================
+# https://prometheus.io/docs/prometheus/latest/configuration/configuration/
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    environment: 'production'
+    application: 'gedavocat'
+
+# Alertmanager configuration (optionnel)
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          # - alertmanager:9093
+
+# Load rules once and periodically evaluate them
+rule_files:
+  - "alerts.yml"
+
+# Scrape configurations
+scrape_configs:
+  # ==========================================
+  # SPRING BOOT APPLICATION (Actuator)
+  # ==========================================
+  - job_name: 'gedavocat-app'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['app:8080']
+        labels:
+          service: 'gedavocat-backend'
+          instance: 'app-prod-01'
+
+  # ==========================================
+  # MYSQL DATABASE
+  # ==========================================
+  - job_name: 'mysql'
+    static_configs:
+      - targets: ['mysql-exporter:9104']
+        labels:
+          service: 'mysql'
+          instance: 'mysql-prod-01'
+
+  # ==========================================
+  # NGINX
+  # ==========================================
+  - job_name: 'nginx'
+    static_configs:
+      - targets: ['nginx-exporter:9113']
+        labels:
+          service: 'nginx'
+          instance: 'nginx-prod-01'
+
+  # ==========================================
+  # NODE EXPORTER (System Metrics)
+  # ==========================================
+  - job_name: 'node'
+    static_configs:
+      - targets: ['node-exporter:9100']
+        labels:
+          service: 'system'
+          instance: 'hetzner-prod-01'
+
+  # ==========================================
+  # DOCKER
+  # ==========================================
+  - job_name: 'docker'
+    static_configs:
+      - targets: ['cadvisor:8080']
+        labels:
+          service: 'docker'
+          instance: 'containers-prod-01'

@@ -66,11 +66,15 @@ public class TestDataController {
 
         // Create a client and link to lawyer
         Client client = clientRepository.findByEmail(clientEmail).orElseGet(() -> {
+            if (lawyer.getFirm() == null) {
+                throw new RuntimeException("L'avocat doit avoir un cabinet pour créer des clients");
+            }
             Client c = new Client();
             c.setId(UUID.randomUUID().toString());
             c.setName(clientName);
             c.setEmail(clientEmail);
             c.setLawyer(lawyer);
+            c.setFirm(lawyer.getFirm()); // Hériter du cabinet de l'avocat
             return clientRepository.save(c);
         });
 

@@ -4,7 +4,6 @@ import com.gedavocat.model.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -14,7 +13,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.security.*;
 import java.security.spec.PKCS8EncodedKeySpec;
@@ -86,6 +84,10 @@ public class JwtServiceRS256 {
         String privateKeyPEM = new String(privateKeyBytes)
             .replace("-----BEGIN PRIVATE KEY-----", "")
             .replace("-----END PRIVATE KEY-----", "")
+            .replace("-----BEGIN RSA PRIVATE KEY-----", "")
+            .replace("-----END RSA PRIVATE KEY-----", "")
+            .replace("-----BEGIN OPENSSH PRIVATE KEY-----", "")
+            .replace("-----END OPENSSH PRIVATE KEY-----", "")
             .replaceAll("\\s", "");
         byte[] privateKeyDecoded = Base64.getDecoder().decode(privateKeyPEM);
         PKCS8EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(privateKeyDecoded);
@@ -97,6 +99,10 @@ public class JwtServiceRS256 {
         String publicKeyPEM = new String(publicKeyBytes)
             .replace("-----BEGIN PUBLIC KEY-----", "")
             .replace("-----END PUBLIC KEY-----", "")
+            .replace("-----BEGIN RSA PUBLIC KEY-----", "")
+            .replace("-----END RSA PUBLIC KEY-----", "")
+            .replace("-----BEGIN OPENSSH PUBLIC KEY-----", "")
+            .replace("-----END OPENSSH PUBLIC KEY-----", "")
             .replaceAll("\\s", "");
         byte[] publicKeyDecoded = Base64.getDecoder().decode(publicKeyPEM);
         X509EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(publicKeyDecoded);

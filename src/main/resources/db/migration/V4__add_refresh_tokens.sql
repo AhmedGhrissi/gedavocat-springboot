@@ -7,7 +7,7 @@
 
 CREATE TABLE IF NOT EXISTS refresh_tokens (
     id VARCHAR(36) PRIMARY KEY,
-    token TEXT NOT NULL,
+    token VARCHAR(512) NOT NULL UNIQUE,
     user_id VARCHAR(36) NOT NULL,
     expires_at DATETIME NOT NULL,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -15,10 +15,8 @@ CREATE TABLE IF NOT EXISTS refresh_tokens (
     device_fingerprint VARCHAR(500),
     ip_address VARCHAR(45),
     
-    -- Contrainte d'unicité sur le token
-    UNIQUE KEY unique_token (token(255)),
-    
     -- Index
+    INDEX idx_refresh_token (token),
     INDEX idx_refresh_token_user_id (user_id),
     INDEX idx_refresh_token_expires_at (expires_at),
     

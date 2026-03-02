@@ -1,8 +1,5 @@
-# ========================================
-# JWT RS256 Key Generation (PowerShell)
-# ========================================
-# Ce script génère une paire de clés RSA (2048 bits)
-# pour la signature des JWT avec l'algorithme RS256
+# JWT RS256 Key Generation
+# PowerShell Script
 
 $KEYS_DIR = "config\keys"
 $PRIVATE_KEY = "$KEYS_DIR\private_key.pem"
@@ -13,15 +10,15 @@ Write-Host "  JWT RS256 Key Generation" -ForegroundColor Cyan
 Write-Host "=========================================" -ForegroundColor Cyan
 Write-Host ""
 
-# Créer le répertoire si nécessaire
+# Create directory if needed
 if (-Not (Test-Path $KEYS_DIR)) {
     New-Item -ItemType Directory -Path $KEYS_DIR | Out-Null
-    Write-Host "✓ Created directory: $KEYS_DIR" -ForegroundColor Green
+    Write-Host "[OK] Created directory: $KEYS_DIR" -ForegroundColor Green
 }
 
-# Vérifier si les clés existent déjà
+# Check if keys already exist
 if ((Test-Path $PRIVATE_KEY) -or (Test-Path $PUBLIC_KEY)) {
-    Write-Host "⚠️  Keys already exist!" -ForegroundColor Yellow
+    Write-Host "[WARNING] Keys already exist!" -ForegroundColor Yellow
     Write-Host ""
     $response = Read-Host "Do you want to overwrite them? (y/N)"
     if ($response -ne 'y' -and $response -ne 'Y') {
@@ -30,33 +27,41 @@ if ((Test-Path $PRIVATE_KEY) -or (Test-Path $PUBLIC_KEY)) {
     }
 }
 
-# Générer la clé privée RSA (2048 bits)
+# Generate RSA private key
 Write-Host ""
-Write-Host "Generating RSA private key (2048 bits)..." -ForegroundColor Cyan
+Write-Host "Generating RSA private key..." -ForegroundColor Cyan
 try {
-    & openssl genpkey -algorithm RSA -out $PRIVATE_KEY -pkeyopt rsa_keygen_bits:2048
-    Write-Host "✓ Private key generated: $PRIVATE_KEY" -ForegroundColor Green
+    $null = & openssl genpkey -algorithm RSA -out $PRIVATE_KEY -pkeyopt rsa_keygen_bits:2048 2>&1
+    if ($LASTEXITCODE -eq 0) {
+        Write-Host "[OK] Private key generated: $PRIVATE_KEY" -ForegroundColor Green
+    } else {
+        throw "OpenSSL failed"
+    }
 } catch {
-    Write-Host "❌ Failed to generate private key" -ForegroundColor Red
-    Write-Host "Make sure OpenSSL is installed: https://slproweb.com/products/Win32OpenSSL.html" -ForegroundColor Yellow
+    Write-Host "[ERROR] Failed to generate private key" -ForegroundColor Red
+    Write-Host "Install OpenSSL from: https://slproweb.com/products/Win32OpenSSL.html" -ForegroundColor Yellow
     exit 1
 }
 
-# Extraire la clé publique depuis la clé privée
+# Extract public key
 Write-Host ""
 Write-Host "Extracting public key..." -ForegroundColor Cyan
 try {
-    & openssl rsa -pubout -in $PRIVATE_KEY -out $PUBLIC_KEY
-    Write-Host "✓ Public key generated: $PUBLIC_KEY" -ForegroundColor Green
+    $null = & openssl rsa -pubout -in $PRIVATE_KEY -out $PUBLIC_KEY 2>&1
+    if ($LASTEXITCODE -eq 0) {
+        Write-Host "[OK] Public key generated: $PUBLIC_KEY" -ForegroundColor Green
+    } else {
+        throw "OpenSSL failed"
+    }
 } catch {
-    Write-Host "❌ Failed to generate public key" -ForegroundColor Red
+    Write-Host "[ERROR] Failed to generate public key" -ForegroundColor Red
     exit 1
 }
 
-# Afficher les clés
+# Display success
 Write-Host ""
 Write-Host "=========================================" -ForegroundColor Cyan
-Write-Host "  Keys generated successfully!" -ForegroundColor Green
+Write-Host "  Success! Keys generated" -ForegroundColor Green
 Write-Host "=========================================" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "Private Key:" -ForegroundColor Yellow
@@ -65,15 +70,8 @@ Write-Host ""
 Write-Host "Public Key:" -ForegroundColor Yellow
 Get-Content $PUBLIC_KEY | Write-Host
 Write-Host ""
-Write-Host "⚠️  IMPORTANT:" -ForegroundColor Red
-Write-Host "   - Keep private_key.pem SECRET and SECURE" -ForegroundColor Yellow
-Write-Host "   - Add config/keys/ to .gitignore" -ForegroundColor Yellow
-Write-Host "   - Backup your keys in a secure location" -ForegroundColor Yellow
-Write-Host ""
-Write-Host "To use in production:" -ForegroundColor Cyan
-Write-Host "   1. Copy these keys to your production server"
-Write-Host "   2. Set appropriate file permissions"
-Write-Host "   3. Configure paths in application.properties:"
-Write-Host "      jwt.keys.private-key-path=config/keys/private_key.pem"
-Write-Host "      jwt.keys.public-key-path=config/keys/public_key.pem"
+Write-Host "IMPORTANT:" -ForegroundColor Red
+Write-Host "  - Keep private_key.pem SECRET" -ForegroundColor Yellow
+Write-Host "  - Backup keys in a secure location" -ForegroundColor Yellow
+Write-Host "  - Keys are in .gitignore" -ForegroundColor Yellow
 Write-Host ""

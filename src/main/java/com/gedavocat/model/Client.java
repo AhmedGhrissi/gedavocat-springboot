@@ -13,9 +13,7 @@ import lombok.ToString;
 import lombok.EqualsAndHashCode;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.Filter;
-import org.hibernate.annotations.ParamDef;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -32,7 +30,6 @@ import java.util.UUID;
     @Index(name = "idx_client_email", columnList = "email"),
     @Index(name = "idx_client_firm_id", columnList = "firm_id")
 })
-@FilterDef(name = "firmFilter", parameters = @ParamDef(name = "firmId", type = String.class))
 @Filter(name = "firmFilter", condition = "firm_id = :firmId")
 @Getter
 @Setter

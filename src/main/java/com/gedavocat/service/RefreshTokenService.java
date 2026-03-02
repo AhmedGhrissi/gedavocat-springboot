@@ -3,7 +3,6 @@ package com.gedavocat.service;
 import com.gedavocat.model.RefreshToken;
 import com.gedavocat.model.User;
 import com.gedavocat.repository.RefreshTokenRepository;
-import com.gedavocat.repository.UserRepository;
 import com.gedavocat.security.JwtServiceRS256;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,7 +32,6 @@ import java.util.UUID;
 public class RefreshTokenService {
 
     private final RefreshTokenRepository refreshTokenRepository;
-    private final UserRepository userRepository;
     private final JwtServiceRS256 jwtService;
 
     /**

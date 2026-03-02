@@ -45,6 +45,12 @@ public class RegisterRequest {
     
     // Nouveau champ pour le plan d'abonnement
     private String subscriptionPlan; // ESSENTIEL, PROFESSIONNEL, CABINET_PLUS
+
+    // Informations du cabinet (optionnel — créé lors de l'inscription si fourni)
+    private String firmName;
+    private String firmSiren;
+    private String firmPhone;
+    private String firmAddress;
     
     private Boolean termsAccepted = false;
     private Boolean gdprConsent = false;
