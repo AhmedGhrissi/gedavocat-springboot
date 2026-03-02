@@ -73,6 +73,11 @@ gedavocat_dump.sql
 deploiement-hetzner-o2switch.pdf
 generate_pdf.py
 
+# Database dumps (RGPD - données sensibles)
+dump_*.sql
+*_dump.sql
+backup_*.sql
+
 # Scripts et artefacts générés localement
 generate_docs.py
 *.pdf
@@ -121,9 +126,3 @@ tests/playwright-report/
 test-results/
 playwright-report/
 playwright/.cache/
-
-# Ignore all markdown and properties files (added)
-*.md
-*.properties
-*.txt
-*.cmd

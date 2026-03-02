@@ -7,7 +7,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.2.2</version>
+		<version>3.2.4</version>
 		<relativePath />
 	</parent>
 
@@ -110,13 +110,6 @@
 			<version>0.4</version>
 		</dependency>
 
-		<!-- Apache Commons FileUpload -->
-		<dependency>
-			<groupId>commons-fileupload</groupId>
-			<artifactId>commons-fileupload</artifactId>
-			<version>1.5</version>
-		</dependency>
-
 		<!-- Apache Commons IO -->
 		<dependency>
 			<groupId>commons-io</groupId>
@@ -146,7 +139,7 @@
 			<version>7.2.5</version>
 		</dependency>
 
-		<!-- PDF -->
+		<!-- OpenPDF (utilisé pour génération factures - InvoiceService) -->
 		<dependency>
 			<groupId>com.github.librepdf</groupId>
 			<artifactId>openpdf</artifactId>
