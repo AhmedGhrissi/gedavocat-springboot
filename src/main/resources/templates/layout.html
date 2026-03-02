@@ -1084,20 +1084,25 @@
                     // Build list
                     if (data.notifications && data.notifications.length > 0) {
                         empty.style.display = 'none';
+                        // SEC-XSS FIX : escape HTML entities in notification data
+                        function escN(s) { if (!s) return ''; var d = document.createElement('div'); d.appendChild(document.createTextNode(s)); return d.innerHTML; }
                         list.innerHTML = data.notifications.map(n => {
                             const colorMap = { success: '#10b981', warning: '#f59e0b', danger: '#ef4444', primary: '#1E3A5F' };
                             const bgMap = { success: '#ecfdf5', warning: '#fef3c7', danger: '#fee2e2', primary: '#EEF2F7' };
                             const c = colorMap[n.color] || '#1E3A5F';
                             const bg = bgMap[n.color] || '#EEF2F7';
                             const unreadStyle = n.read ? '' : 'background:#f8fafc;';
-                            return '<a href="' + (n.link || '#') + '" onclick="markNotifRead(\'' + n.id + '\')" '
+                            // SEC-XSS FIX : sanitize link to prevent javascript: protocol
+                            const safeLink = (n.link && !n.link.toLowerCase().trim().startsWith('javascript:')) ? encodeURI(n.link) : '#';
+                            const safeIcon = escN(n.icon || 'fa-bell');
+                            return '<a href="' + safeLink + '" onclick="markNotifRead(\'' + escN(n.id) + '\')" '
                                 + 'style="display:flex;gap:12px;padding:12px 18px;text-decoration:none;color:inherit;border-bottom:1px solid #f1f5f9;' + unreadStyle + '">'
                                 + '<div style="width:36px;height:36px;border-radius:8px;background:' + bg + ';display:flex;align-items:center;justify-content:center;flex-shrink:0">'
-                                + '<i class="fas ' + (n.icon || 'fa-bell') + '" style="color:' + c + ';font-size:14px"></i></div>'
+                                + '<i class="fas ' + safeIcon + '" style="color:' + c + ';font-size:14px"></i></div>'
                                 + '<div style="flex:1;min-width:0">'
-                                + '<div style="font-weight:600;font-size:13px;margin-bottom:2px">' + n.title + '</div>'
-                                + '<div style="font-size:12px;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + n.message + '</div>'
-                                + '<div style="font-size:11px;color:#94a3b8;margin-top:2px">' + n.time + '</div>'
+                                + '<div style="font-weight:600;font-size:13px;margin-bottom:2px">' + escN(n.title) + '</div>'
+                                + '<div style="font-size:12px;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escN(n.message) + '</div>'
+                                + '<div style="font-size:11px;color:#94a3b8;margin-top:2px">' + escN(n.time) + '</div>'
                                 + '</div>'
                                 + (n.read ? '' : '<div style="width:8px;height:8px;border-radius:50%;background:var(--brand-500);flex-shrink:0;margin-top:6px"></div>')
                                 + '</a>';

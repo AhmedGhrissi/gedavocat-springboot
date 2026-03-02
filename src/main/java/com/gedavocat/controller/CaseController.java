@@ -148,6 +148,10 @@ public class CaseController {
 
             // Récupérer et associer le client
             Client client = clientService.getClientById(clientId);
+            // SEC-IDOR FIX : vérifier que le client appartient bien à l'avocat connecté
+            if (!isAdmin(authentication) && (client.getLawyer() == null || !client.getLawyer().getId().equals(user.getId()))) {
+                throw new RuntimeException("Ce client ne vous appartient pas");
+            }
             caseEntity.setClient(client);
 
             Case savedCase = caseService.createCase(caseEntity, user.getId());
@@ -331,6 +335,10 @@ public class CaseController {
             User user = getCurrentUser(authentication);
             // Récupérer et associer le client
             Client client = clientService.getClientById(clientId);
+            // SEC-IDOR FIX : vérifier ownership du client pour l'update
+            if (!isAdmin(authentication) && (client.getLawyer() == null || !client.getLawyer().getId().equals(user.getId()))) {
+                throw new RuntimeException("Ce client ne vous appartient pas");
+            }
             caseEntity.setClient(client);
 
             // Pour ADMIN, passer l'ID du LAWYER propriétaire du dossier afin de

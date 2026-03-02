@@ -31,8 +31,11 @@ public class EmailVerificationService {
 
     /** Map email → VerificationEntry */
     private final Map<String, VerificationEntry> pendingCodes = new ConcurrentHashMap<>();
+    /** SEC-RATELIMIT FIX : compteur de tentatives échouées par email */
+    private final Map<String, Integer> failedAttempts = new ConcurrentHashMap<>();
 
     private static final int CODE_EXPIRY_MINUTES = 15;
+    private static final int MAX_FAILED_ATTEMPTS = 5;
 
     // =========================================================================
     // API publique
@@ -52,17 +55,36 @@ public class EmailVerificationService {
 
     /**
      * Vérifie le code fourni par l'utilisateur.
+     * SEC-RATELIMIT FIX : bloque après MAX_FAILED_ATTEMPTS tentatives échouées
      * @return true si valide et non expiré, false sinon
      */
     public boolean verifyCode(String email, String code) {
-        VerificationEntry entry = pendingCodes.get(email.toLowerCase());
-        if (entry == null) return false;
-        if (LocalDateTime.now().isAfter(entry.expiry())) {
-            pendingCodes.remove(email.toLowerCase());
+        String emailLower = email.toLowerCase();
+        
+        // Vérifier le nombre de tentatives échouées
+        int attempts = failedAttempts.getOrDefault(emailLower, 0);
+        if (attempts >= MAX_FAILED_ATTEMPTS) {
+            log.warn("[EmailVerification] Trop de tentatives échouées pour {} — code invalidé", emailLower);
+            pendingCodes.remove(emailLower);
+            failedAttempts.remove(emailLower);
             return false;
         }
-        if (!entry.code().equals(code)) return false;
-        pendingCodes.remove(email.toLowerCase());
+        
+        VerificationEntry entry = pendingCodes.get(emailLower);
+        if (entry == null) return false;
+        if (LocalDateTime.now().isAfter(entry.expiry())) {
+            pendingCodes.remove(emailLower);
+            failedAttempts.remove(emailLower);
+            return false;
+        }
+        if (!entry.code().equals(code)) {
+            failedAttempts.merge(emailLower, 1, Integer::sum);
+            log.warn("[EmailVerification] Tentative échouée pour {} (tentative {}/{})", 
+                     emailLower, attempts + 1, MAX_FAILED_ATTEMPTS);
+            return false;
+        }
+        pendingCodes.remove(emailLower);
+        failedAttempts.remove(emailLower);
         return true;
     }
 

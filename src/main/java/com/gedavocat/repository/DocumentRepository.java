@@ -75,6 +75,12 @@ public interface DocumentRepository extends JpaRepository<Document, String> {
     long countNonDeleted();
 
     /**
+     * SEC-TENANT FIX : Compte les documents NON supprimés d'un avocat (via case.lawyer)
+     */
+    @Query("SELECT COUNT(d) FROM Document d WHERE d.deletedAt IS NULL AND d.caseEntity.lawyer.id = :lawyerId")
+    long countNonDeletedByLawyerId(@Param("lawyerId") String lawyerId);
+
+    /**
      * Compte les documents créés après une date donnée, non supprimés
      */
     @Query("SELECT COUNT(d) FROM Document d WHERE d.deletedAt IS NULL AND d.createdAt > :date")

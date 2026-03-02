@@ -42,14 +42,9 @@ public class InvoiceController {
     public ResponseEntity<InvoiceResponse> createInvoice(@Valid @RequestBody InvoiceRequest request,
                                                           Authentication authentication) {
         try {
-            // SÉCURITÉ : vérifier que le client appartient au lawyer authentifié
+            // SEC-IDOR FIX : passer le lawyerId pour vérification ownership dans le service
             User user = getCurrentUser(authentication);
-            InvoiceResponse response = invoiceService.createInvoice(request);
-            // Vérifier que la facture créée appartient bien au lawyer via client.lawyer
-            if (response.getLawyerId() != null && !user.getId().equals(response.getLawyerId())) {
-                invoiceService.deleteInvoice(response.getId()); // rollback
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-            }
+            InvoiceResponse response = invoiceService.createInvoice(request, user.getId());
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (Exception e) {
             log.error("Erreur lors de la création de la facture", e);
@@ -67,13 +62,9 @@ public class InvoiceController {
             @Valid @RequestBody InvoiceRequest request,
             Authentication authentication) {
         try {
-            // SÉCURITÉ : vérifier ownership via service
+            // SEC-IDOR FIX : ownership vérifié dans le service
             User user = getCurrentUser(authentication);
-            InvoiceResponse existing = invoiceService.getInvoiceById(invoiceId);
-            if (existing == null || !user.getId().equals(existing.getLawyerId())) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-            }
-            InvoiceResponse response = invoiceService.updateInvoice(invoiceId, request);
+            InvoiceResponse response = invoiceService.updateInvoice(invoiceId, request, user.getId());
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
@@ -88,14 +79,13 @@ public class InvoiceController {
     public ResponseEntity<InvoiceResponse> getInvoiceById(@PathVariable String invoiceId,
                                                            Authentication authentication) {
         try {
+            // SEC-IDOR FIX : ownership vérifié dans le service (null lawyerId pour clients — vérifié ci-dessous)
             User user = getCurrentUser(authentication);
-            InvoiceResponse response = invoiceService.getInvoiceById(invoiceId);
-            // SÉCURITÉ : vérifier que l'utilisateur est le lawyer ou le client de cette facture
             boolean isAdmin = authentication.getAuthorities().stream()
                     .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
-            if (!isAdmin && !user.getId().equals(response.getLawyerId()) && !user.getId().equals(response.getClientId())) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-            }
+            // Les admins passent null pour bypass, les lawyers passent leur ID
+            String checkLawyerId = isAdmin ? null : user.getId();
+            InvoiceResponse response = invoiceService.getInvoiceById(invoiceId, checkLawyerId);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.notFound().build();
@@ -173,13 +163,10 @@ public class InvoiceController {
             @RequestBody(required = false) Map<String, String> body,
             Authentication authentication) {
         try {
+            // SEC-IDOR FIX : ownership vérifié dans le service
             User user = getCurrentUser(authentication);
-            InvoiceResponse existing = invoiceService.getInvoiceById(invoiceId);
-            if (!user.getId().equals(existing.getLawyerId())) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-            }
             String paymentMethod = body != null ? body.get("paymentMethod") : null;
-            InvoiceResponse response = invoiceService.markAsPaid(invoiceId, paymentMethod);
+            InvoiceResponse response = invoiceService.markAsPaid(invoiceId, paymentMethod, user.getId());
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
@@ -194,12 +181,9 @@ public class InvoiceController {
     public ResponseEntity<Void> deleteInvoice(@PathVariable String invoiceId,
                                                Authentication authentication) {
         try {
+            // SEC-IDOR FIX : ownership vérifié dans le service
             User user = getCurrentUser(authentication);
-            InvoiceResponse existing = invoiceService.getInvoiceById(invoiceId);
-            if (!user.getId().equals(existing.getLawyerId())) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-            }
-            invoiceService.deleteInvoice(invoiceId);
+            invoiceService.deleteInvoice(invoiceId, user.getId());
             return ResponseEntity.noContent().build();
         } catch (Exception e) {
             return ResponseEntity.notFound().build();

@@ -175,13 +175,21 @@ public class AuthController {
 
     /**
      * API REST - Inscription
+     * SEC-AUTH FIX : ne retourne plus de JWT directement — exige la vérification email
      */
     @PostMapping("/api/auth/register")
     @ResponseBody
     public ResponseEntity<?> registerApi(@Valid @RequestBody RegisterRequest request) {
         try {
-            AuthResponse response = authService.register(request);
-            return ResponseEntity.ok(response);
+            authService.register(request);
+            // Envoyer le code de vérification (comme le flow web)
+            String email = request.getEmail().trim().toLowerCase();
+            emailVerificationService.generateAndSend(email);
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Inscription réussie. Un code de vérification a été envoyé à " + email + ". Veuillez vérifier votre email avant de vous connecter.",
+                "requiresVerification", true
+            ));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of(
                 "error", true,

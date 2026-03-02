@@ -129,26 +129,40 @@ public class StripePaymentService {
     
     /**
      * Gérer les webhooks Stripe
+     * SEC-WEBHOOK FIX : utilise l'Event vérifié, rejette si secret non configuré
      */
     @Transactional
     public void handleWebhook(String payload, String signature) {
         try {
-            // Vérifier la signature du webhook Stripe (SECURITE: obligatoire en production)
-            if (webhookSecret != null && !webhookSecret.isBlank() && !webhookSecret.startsWith("whsec_dummy")) {
-                try {
-                    Event event = Webhook.constructEvent(payload, signature, webhookSecret);
-                    log.info("Webhook Stripe verifie avec succes, type: {}", event.getType());
-                } catch (SignatureVerificationException e) {
-                    log.error("Signature webhook Stripe invalide - rejet de la requete");
-                    throw new SecurityException("Signature webhook invalide", e);
-                }
-            } else {
-                log.warn("SECURITE: Webhook secret non configure - verification signature desactivee. Configurer stripe.webhook.secret en production!");
+            // SÉCURITÉ : rejeter tous les webhooks si le secret n'est pas configuré
+            if (webhookSecret == null || webhookSecret.isBlank() || webhookSecret.startsWith("whsec_dummy")) {
+                log.error("SECURITE: Webhook Stripe rejeté — secret non configuré. Configurer stripe.webhook.secret en production!");
+                throw new SecurityException("Webhook secret non configuré — webhook rejeté");
             }
+
+            // Vérifier la signature du webhook Stripe et UTILISER l'Event vérifié
+            Event verifiedEvent;
+            try {
+                verifiedEvent = Webhook.constructEvent(payload, signature, webhookSecret);
+                log.info("Webhook Stripe vérifié avec succès, type: {}", verifiedEvent.getType());
+            } catch (SignatureVerificationException e) {
+                log.error("Signature webhook Stripe invalide — rejet de la requête");
+                throw new SecurityException("Signature webhook invalide", e);
+            }
+
+            // Utiliser l'Event vérifié (pas le payload brut)
+            String eventType = verifiedEvent.getType();
             
-            // Parser l'événement
-            Map<String, Object> eventData = parseWebhookPayload(payload);
-            String eventType = (String) eventData.get("type");
+            // Extraire les données de l'Event vérifié
+            Map<String, Object> eventData = new HashMap<>();
+            eventData.put("type", eventType);
+            if (verifiedEvent.getData() != null && verifiedEvent.getData().getObject() != null) {
+                var obj = verifiedEvent.getData().getObject();
+                // Extraire les métadonnées depuis l'objet Stripe vérifié
+                if (obj instanceof com.stripe.model.checkout.Session session) {
+                    eventData.put("metadata", session.getMetadata());
+                }
+            }
             
             switch (eventType) {
                 case "checkout.session.completed":
@@ -179,6 +193,8 @@ public class StripePaymentService {
                     log.info("Événement Stripe non géré: {}", eventType);
             }
             
+        } catch (SecurityException e) {
+            throw e; // Re-throw security exceptions
         } catch (Exception e) {
             log.error("Erreur lors du traitement du webhook: {}", e.getMessage());
             throw new RuntimeException("Erreur webhook", e);

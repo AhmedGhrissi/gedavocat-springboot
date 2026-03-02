@@ -11,6 +11,7 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
@@ -53,7 +54,9 @@ public class PayPlugService {
             mac.init(keySpec);
             byte[] hmacBytes = mac.doFinal(payload.getBytes(StandardCharsets.UTF_8));
             String computed = Base64.getEncoder().encodeToString(hmacBytes);
-            return computed.equals(signature);
+            // SEC-TIMING FIX : utiliser comparaison constant-time pour éviter timing attack
+            return MessageDigest.isEqual(computed.getBytes(StandardCharsets.UTF_8), 
+                                         signature.getBytes(StandardCharsets.UTF_8));
         } catch (NoSuchAlgorithmException | InvalidKeyException e) {
             return false;
         }

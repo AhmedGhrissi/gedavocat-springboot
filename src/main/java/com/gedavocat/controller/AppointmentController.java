@@ -268,7 +268,7 @@ public class AppointmentController {
                 });
             }
             
-            appointmentService.updateAppointment(id, appointment);
+            appointmentService.updateAppointment(id, appointment, user.getId());
             
             redirectAttributes.addFlashAttribute("success", "Rendez-vous mis à jour avec succès");
             return "redirect:/appointments";
@@ -298,7 +298,7 @@ public class AppointmentController {
                 return "redirect:/appointments";
             }
             
-            appointmentService.deleteAppointment(id);
+            appointmentService.deleteAppointment(id, user.getId());
             redirectAttributes.addFlashAttribute("success", "Rendez-vous supprimé avec succès");
             
         } catch (Exception e) {
@@ -326,7 +326,7 @@ public class AppointmentController {
                 return "redirect:/appointments";
             }
             
-            appointmentService.cancelAppointment(id);
+            appointmentService.cancelAppointment(id, user.getId());
             redirectAttributes.addFlashAttribute("success", "Rendez-vous annulé");
             
         } catch (Exception e) {
@@ -354,7 +354,7 @@ public class AppointmentController {
                 return "redirect:/appointments";
             }
 
-            appointmentService.confirmAppointment(id);
+            appointmentService.confirmAppointment(id, user.getId());
 
             // Notifier le client (email + notif in-app si user lié)
             if (appointment.getClient() != null) {

@@ -102,6 +102,9 @@ public class SecurityConfig {
 							final String extraFontOrigins = " data: https://cdnjs.cloudflare.com https://fonts.gstatic.com";
 
 							final String scriptSrc = "'self' 'unsafe-inline' https://js.stripe.com" + extraScriptOrigins;
+						// Note: 'unsafe-inline' is kept for script-src because Thymeleaf templates
+						// use inline onclick/onsubmit handlers. For full CSP Level 3 compliance,
+						// migrate to nonce-based CSP with th:attr in a future sprint.
 							final String styleSrc = "'self' 'unsafe-inline'" + extraStyleOrigins;
 							final String fontSrc  = "'self'" + extraFontOrigins;
 
@@ -110,7 +113,8 @@ public class SecurityConfig {
 									"script-src " + scriptSrc + "; " +
 									"style-src " + styleSrc + "; " +
 									"font-src " + fontSrc + "; " +
-									"img-src 'self' data: https:; " +
+									// SEC-CSP FIX : restrict img-src to self + data: only (no wildcard https:)
+						"img-src 'self' data:; " +
 									"connect-src " + connectSrc + "; " +
 									"frame-src 'self' https://js.stripe.com https://hooks.stripe.com; " +
 									"object-src 'none'; " +
@@ -182,18 +186,17 @@ public class SecurityConfig {
 	}
 
 	/**
-	 * Configuration d'un HttpFirewall plus permissif pour éviter les erreurs
-	 * "RequestRejectedException" avec les caractères spéciaux dans les URLs
+	 * SEC-FIREWALL FIX : Configuration HttpFirewall stricté
+	 * Suppression des relaxations inutiles (encoded slash/percent/period)
+	 * qui pouvaient faciliter des attaques de path traversal.
 	 */
 	@Bean
 	public HttpFirewall allowUrlEncodedSlashHttpFirewall() {
 		StrictHttpFirewall firewall = new StrictHttpFirewall();
-		firewall.setAllowUrlEncodedSlash(true);
-		firewall.setAllowUrlEncodedPercent(true);
-		firewall.setAllowUrlEncodedPeriod(true);
-		// Désactivé : setAllowSemicolon et setAllowBackSlash — risque de path traversal
-		// firewall.setAllowSemicolon(true);
-		// firewall.setAllowBackSlash(true);
+		// Tous les encodages restent interdits (défaut strict)
+		firewall.setAllowUrlEncodedSlash(false);
+		firewall.setAllowUrlEncodedPercent(false);
+		firewall.setAllowUrlEncodedPeriod(false);
 		firewall.setAllowUrlEncodedDoubleSlash(false);
 		return firewall;
 	}

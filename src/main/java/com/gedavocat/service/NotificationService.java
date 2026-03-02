@@ -120,9 +120,16 @@ public class NotificationService {
         notificationRepository.markAllAsRead(userId);
     }
 
+    /**
+     * SEC-IDOR FIX : vérification ownership avant marquage comme lu
+     */
     @Transactional
-    public void markAsRead(String notificationId) {
+    public void markAsRead(String notificationId, String userId) {
         notificationRepository.findById(notificationId).ifPresent(n -> {
+            // SÉCURITÉ : vérifier que la notification appartient bien à l'utilisateur
+            if (n.getUser() != null && !n.getUser().getId().equals(userId)) {
+                throw new SecurityException("Accès non autorisé à cette notification");
+            }
             n.setRead(true);
             notificationRepository.save(n);
         });

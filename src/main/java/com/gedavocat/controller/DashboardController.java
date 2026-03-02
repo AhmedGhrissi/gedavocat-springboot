@@ -106,9 +106,17 @@ public class DashboardController {
         if (recentClients.size() > 5) recentClients = recentClients.subList(0, 5);
 
         // Variables pour le template dashboard
+        // SEC-TENANT FIX : documentsCount scopé au lawyer (pas global)
+        long lawyerDocumentsCount = 0;
+        try {
+            lawyerDocumentsCount = documentRepository.countNonDeletedByLawyerId(user.getId());
+        } catch (Exception e) {
+            // Fallback si la méthode n'existe pas encore
+            try { lawyerDocumentsCount = documentRepository.countNonDeleted(); } catch (Exception ignored) {}
+        }
         model.addAttribute("clientsCount",     clients.size());
         model.addAttribute("casesCount",       cases.size());
-        model.addAttribute("documentsCount",   documentRepository.countNonDeleted());
+        model.addAttribute("documentsCount",   lawyerDocumentsCount);
         model.addAttribute("signaturesCount",  signatureRepository.countPendingByUserId(user.getId()));
         
         // Variables pour statistiques détaillées

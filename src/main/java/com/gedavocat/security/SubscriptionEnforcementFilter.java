@@ -131,10 +131,16 @@ public class SubscriptionEnforcementFilter extends OncePerRequestFilter {
         try {
             User user = userRepository.findByEmail(email).orElse(null);
             
-            // Si l'utilisateur n'est pas trouvé en DB (ex: mock tests), laisser passer
+            // SEC-FAILCLOSED FIX : Si l'utilisateur n'est pas trouvé en DB, bloquer l'accès (fail-closed)
             if (user == null) {
-                log.debug("Utilisateur {} non trouvé en base - vérification abonnement ignorée", email);
-                filterChain.doFilter(request, response);
+                log.warn("Utilisateur {} non trouvé en base — accès refusé (fail-closed)", email);
+                if (request.getRequestURI().startsWith("/api/")) {
+                    response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                    response.setContentType("application/json");
+                    response.getWriter().write("{\"error\": \"Utilisateur non trouvé\"}");
+                    return;
+                }
+                response.sendRedirect("/login?error=true");
                 return;
             }
             
@@ -160,9 +166,14 @@ public class SubscriptionEnforcementFilter extends OncePerRequestFilter {
             
         } catch (Exception e) {
             log.error("Erreur lors de la vérification d'abonnement pour {}: {}", email, e.getMessage());
-            // En cas d'erreur technique, laisser passer (fail-open temporaire)
-            // TODO: passer en fail-closed une fois la stabilité confirmée
-            filterChain.doFilter(request, response);
+            // SEC-FAILCLOSED FIX : En cas d'erreur technique, bloquer l'accès (fail-closed)
+            if (request.getRequestURI().startsWith("/api/")) {
+                response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+                response.setContentType("application/json");
+                response.getWriter().write("{\"error\": \"Service temporairement indisponible\"}");
+                return;
+            }
+            response.sendRedirect("/login?error=true");
         }
     }
 }

@@ -214,7 +214,7 @@ public class InvoiceWebController {
     public String show(@PathVariable String id, Model model, Authentication authentication) {
         try {
             User user = getCurrentUser(authentication);
-            var invoice = invoiceService.getInvoiceById(id);
+            var invoice = invoiceService.getInvoiceById(id, null); // null=no filter, ownership checked below
 
             // Ownership check: lawyer must own the invoice, client must be the invoice's client
             boolean isAdmin = authentication.getAuthorities().stream()
@@ -254,7 +254,7 @@ public class InvoiceWebController {
     public String edit(@PathVariable String id, Model model, Authentication authentication) {
         try {
             String lawyerId = getCurrentUser(authentication).getId();
-            var invoice = invoiceService.getInvoiceById(id);
+            var invoice = invoiceService.getInvoiceById(id, null); // null=no filter, ownership checked below
 
             // Ownership check: only the owning lawyer (or admin) can edit
             boolean isAdmin = authentication.getAuthorities().stream()
@@ -303,7 +303,7 @@ public class InvoiceWebController {
                                                Authentication authentication) {
         try {
             User user = getCurrentUser(authentication);
-            var invoice = invoiceService.getInvoiceById(id);
+            var invoice = invoiceService.getInvoiceById(id, null); // null=no filter, ownership checked below
 
             boolean isAdmin = authentication.getAuthorities().stream()
                     .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
@@ -323,7 +323,7 @@ public class InvoiceWebController {
                 }
             }
 
-            byte[] pdfBytes = invoiceService.generatePdf(id);
+            byte[] pdfBytes = invoiceService.generatePdf(id, user.getId());
             String filename = "facture-" + invoice.getInvoiceNumber() + ".pdf";
 
             return ResponseEntity.ok()

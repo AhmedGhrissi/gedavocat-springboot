@@ -10,6 +10,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Value;
+
 import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
@@ -18,9 +20,13 @@ import java.util.function.Function;
 
 /**
  * Service de gestion des tokens JWT
+ * SEC-JWT FIX : ajout validation issuer/audience
  */
 @Service
 public class JwtService {
+    
+    private static final String JWT_ISSUER = "docavocat.fr";
+    private static final String JWT_AUDIENCE = "docavocat-api";
     
     @Value("${jwt.secret}")
     private String secretKey;
@@ -86,6 +92,8 @@ public class JwtService {
                 .builder()
                 .setClaims(extraClaims)
                 .setSubject(userDetails.getUsername())
+                .setIssuer(JWT_ISSUER)
+                .setAudience(JWT_AUDIENCE)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(getSignInKey(), SignatureAlgorithm.HS256)
@@ -121,6 +129,8 @@ public class JwtService {
         return Jwts
                 .parserBuilder()
                 .setSigningKey(getSignInKey())
+                .requireIssuer(JWT_ISSUER)
+                .requireAudience(JWT_AUDIENCE)
                 .build()
                 .parseClaimsJws(token)
                 .getBody();

@@ -327,10 +327,31 @@ public class SettingsController {
             Authentication authentication,
             RedirectAttributes redirectAttributes) {
         User user = getCurrentUser(authentication);
-        user.setEmailSignature(emailSignature.isBlank() ? null : emailSignature.trim());
+        // SEC-XSS FIX : sanitizer la signature email HTML (supprimer <script>, onXxx=, javascript:)
+        String sanitized = emailSignature.isBlank() ? null : sanitizeHtml(emailSignature.trim());
+        user.setEmailSignature(sanitized);
         userRepository.save(user);
         redirectAttributes.addFlashAttribute("message", "Signature email sauvegardée avec succès");
         return "redirect:/settings?tab=email";
+    }
+
+    /**
+     * SEC-XSS FIX : Sanitisation basique du HTML de la signature email.
+     * Supprime les balises script, les event handlers et les protocoles dangereux.
+     */
+    private String sanitizeHtml(String html) {
+        if (html == null) return null;
+        // Supprimer les balises <script>...</script>
+        String sanitized = html.replaceAll("(?i)<script[^>]*>.*?</script>", "");
+        // Supprimer les balises <script> orphelines
+        sanitized = sanitized.replaceAll("(?i)</?script[^>]*>", "");
+        // Supprimer les event handlers (onclick, onerror, onload, etc.)
+        sanitized = sanitized.replaceAll("(?i)\\s+on\\w+\\s*=\\s*\"[^\"]*\"", "");
+        sanitized = sanitized.replaceAll("(?i)\\s+on\\w+\\s*=\\s*'[^']*'", "");
+        sanitized = sanitized.replaceAll("(?i)\\s+on\\w+\\s*=\\s*[^\\s>]+", "");
+        // Supprimer javascript: dans les href/src
+        sanitized = sanitized.replaceAll("(?i)(href|src)\\s*=\\s*[\"']\\s*javascript:", "$1=\"");
+        return sanitized;
     }
 
     private User getCurrentUser(Authentication authentication) {
