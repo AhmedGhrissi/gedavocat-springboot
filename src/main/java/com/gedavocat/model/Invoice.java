@@ -58,9 +58,23 @@ public class Invoice {
     @JsonIgnore
     private Client client;
     
-    @Column(name = "invoice_date", nullable = false)
-    @NotNull(message = "La date de facture est obligatoire")
-    private LocalDate invoiceDate;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "case_id")
+    @JsonIgnore
+    private Case caseEntity;
+    
+    // MULTI-TENANT: Lien vers le cabinet (obligatoire en base)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "firm_id", nullable = false)
+    @JsonIgnore
+    private Firm firm;
+    
+    @Column(name = "issue_date")
+    private LocalDate invoiceDate = LocalDate.now();
+    
+    // Legacy column synchronized with issue_date for backward compatibility
+    @Column(name = "invoice_date")
+    private LocalDate legacyInvoiceDate;
     
     @Column(name = "due_date")
     private LocalDate dueDate;
@@ -69,22 +83,35 @@ public class Invoice {
     private LocalDate paidDate;
     
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
+    @Column(nullable = false, length = 50)
     private InvoiceStatus status = InvoiceStatus.DRAFT;
     
-    @NotNull(message = "Le montant total HT est obligatoire")
-    @PositiveOrZero(message = "Le montant total HT doit être positif ou nul")
-    @Column(name = "total_ht", nullable = false, precision = 10, scale = 2)
-    private BigDecimal totalHT;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "payment_status", length = 50)
+    private PaymentStatus paymentStatus = PaymentStatus.UNPAID;
     
-    @NotNull(message = "Le montant de la TVA est obligatoire")
-    @Column(name = "total_tva", nullable = false, precision = 10, scale = 2)
+    @Column(name = "subtotal_amount", precision = 10, scale = 2)
+    private BigDecimal subtotalAmount = BigDecimal.ZERO;
+    
+    @Column(name = "tax_amount", precision = 10, scale = 2)
+    private BigDecimal taxAmount = BigDecimal.ZERO;
+    
+    @Column(name = "total_amount", precision = 10, scale = 2)
+    private BigDecimal totalAmount = BigDecimal.ZERO;
+    
+    // Legacy columns - keep synchronized with new column names
+    @Column(name = "total_ht", precision = 10, scale = 2)
+    private BigDecimal totalHT = BigDecimal.ZERO;
+    
+    @Column(name = "total_tva", precision = 10, scale = 2)
     private BigDecimal totalTVA = BigDecimal.ZERO;
     
-    @NotNull(message = "Le montant total TTC est obligatoire")
-    @PositiveOrZero(message = "Le montant total TTC doit être positif ou nul")
-    @Column(name = "total_ttc", nullable = false, precision = 10, scale = 2)
-    private BigDecimal totalTTC;
+    @Column(name = "total_ttc", precision = 10, scale = 2)
+    private BigDecimal totalTTC = BigDecimal.ZERO;
+    
+    @PositiveOrZero(message = "Le montant payé doit être positif ou nul")
+    @Column(name = "paid_amount", precision = 10, scale = 2)
+    private BigDecimal paidAmount = BigDecimal.ZERO;
     
     @Column(length = 3)
     private String currency = "EUR";
@@ -130,6 +157,24 @@ public class Invoice {
         }
     }
     
+    // Énumération des statuts de paiement
+    public enum PaymentStatus {
+        UNPAID("Non payée"),
+        PARTIAL("Partiellement payée"),
+        PAID("Payée"),
+        REFUNDED("Remboursée");
+        
+        private final String displayName;
+        
+        PaymentStatus(String displayName) {
+            this.displayName = displayName;
+        }
+        
+        public String getDisplayName() {
+            return displayName;
+        }
+    }
+    
     // Méthodes utilitaires
     @PrePersist
     public void prePersist() {
@@ -139,9 +184,65 @@ public class Invoice {
         if (invoiceDate == null) {
             invoiceDate = LocalDate.now();
         }
+        // Synchronize legacy invoice_date column with issue_date
+        this.legacyInvoiceDate = this.invoiceDate;
+        
+        // Synchronize legacy amount columns with new columns
+        syncAmountColumns();
+        
         if (status == InvoiceStatus.SENT && dueDate == null) {
             dueDate = invoiceDate.plusDays(30); // Échéance par défaut : 30 jours
         }
+    }
+    
+    @PreUpdate
+    public void preUpdate() {
+        // Keep legacy invoice_date synchronized on updates
+        this.legacyInvoiceDate = this.invoiceDate;
+        
+        // Synchronize legacy amount columns with new columns
+        syncAmountColumns();
+    }
+    
+    /**
+     * Synchronize legacy columns (total_ht, total_tva, total_ttc) 
+     * with new columns (subtotal_amount, tax_amount, total_amount)
+     */
+    private void syncAmountColumns() {
+        // Sync subtotal_amount <-> total_ht
+        if (subtotalAmount != null && totalHT == null) {
+            this.totalHT = this.subtotalAmount;
+        } else if (totalHT != null && subtotalAmount == null) {
+            this.subtotalAmount = this.totalHT;
+        } else if (subtotalAmount != null) {
+            this.totalHT = this.subtotalAmount;
+        }
+        
+        // Sync tax_amount <-> total_tva
+        if (taxAmount != null && totalTVA == null) {
+            this.totalTVA = this.taxAmount;
+        } else if (totalTVA != null && taxAmount == null) {
+            this.taxAmount = this.totalTVA;
+        } else if (taxAmount != null) {
+            this.totalTVA = this.taxAmount;
+        }
+        
+        // Sync total_amount <-> total_ttc
+        if (totalAmount != null && totalTTC == null) {
+            this.totalTTC = this.totalAmount;
+        } else if (totalTTC != null && totalAmount == null) {
+            this.totalAmount = this.totalTTC;
+        } else if (totalAmount != null) {
+            this.totalTTC = this.totalAmount;
+        }
+        
+        // Ensure all amounts are initialized
+        if (totalHT == null) totalHT = BigDecimal.ZERO;
+        if (totalTVA == null) totalTVA = BigDecimal.ZERO;
+        if (totalTTC == null) totalTTC = BigDecimal.ZERO;
+        if (subtotalAmount == null) subtotalAmount = BigDecimal.ZERO;
+        if (taxAmount == null) taxAmount = BigDecimal.ZERO;
+        if (totalAmount == null) totalAmount = BigDecimal.ZERO;
     }
     
     public boolean isOverdue() {
@@ -180,8 +281,14 @@ public class Invoice {
             .reduce(BigDecimal.ZERO, BigDecimal::add)
             .setScale(2, RoundingMode.HALF_UP);
 
+        BigDecimal ttc = ht.add(tva).setScale(2, RoundingMode.HALF_UP);
+        
+        // Set both old and new column values
         this.totalHT = ht;
         this.totalTVA = tva;
-        this.totalTTC = ht.add(tva).setScale(2, RoundingMode.HALF_UP);
+        this.totalTTC = ttc;
+        this.subtotalAmount = ht;
+        this.taxAmount = tva;
+        this.totalAmount = ttc;
     }
 }

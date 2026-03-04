@@ -414,7 +414,7 @@
                             <div th:each="perm : ${permissions}" style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem; background: #F8FAFC; border-radius: 8px; border: 1px solid #E2E8F0;">
                                 <div style="flex: 1;">
                                     <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
-                                        <span style="font-size: 0.875rem; font-weight: 600; color: #0F172A;" th:text="${perm.lawyer.firstName + ' ' + perm.lawyer.lastName}">Nom</span>
+                                        <span style="font-size: 0.875rem; font-weight: 600; color: #0F172A;" th:text="${perm.lawyer.fullName}">Nom</span>
                                         <span class="badge badge-info" style="font-size: 0.625rem;" th:if="${perm.lawyer.role.name() == 'LAWYER_SECONDARY'}">Collab</span>
                                         <span class="badge badge-warning" style="font-size: 0.625rem;" th:if="${perm.lawyer.role.name() == 'HUISSIER'}">Huissier</span>
                                     </div>

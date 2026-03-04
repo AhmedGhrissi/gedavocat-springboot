@@ -7,6 +7,7 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;
@@ -48,9 +49,11 @@ public class User {
     private String name;
 
     // Nouveaux champs pour les détails du profil
+    @Getter(AccessLevel.NONE)  // Désactiver le getter Lombok - on fournit notre propre getter safe
     @Column(name = "first_name", length = 100)
     private String firstName;
 
+    @Getter(AccessLevel.NONE)  // Désactiver le getter Lombok - on fournit notre propre getter safe
     @Column(name = "last_name", length = 100)
     private String lastName;
 
@@ -353,6 +356,62 @@ public class User {
     public int getRemainingClientsSlots() {
         if (maxClients == null) return 0;
         return Math.max(0, maxClients - clients.size());
+    }
+
+    // ===== CHAMPS MFA (MULTI-FACTOR AUTHENTICATION) =====
+    
+    @Column(name = "mfa_secret", length = 32)
+    private String mfaSecret;
+    
+    @Column(name = "mfa_enabled")
+    private Boolean mfaEnabled = Boolean.FALSE;
+    
+    @Column(name = "mfa_backup_codes", length = 1000)
+    private String mfaBackupCodes;
+    
+    @Column(name = "mfa_temp_setup")
+    private LocalDateTime mfaTempSetup;
+    
+    @Column(name = "mfa_last_used")
+    private LocalDateTime mfaLastUsed;
+
+    // Lombok generates a Boolean getter named getMfaEnabled(), but much of the
+    // codebase expects a conventional isMfaEnabled() returning primitive boolean.
+    // Provide a safe helper that returns false for null values coming from DB.
+    public boolean isMfaEnabled() {
+        return Boolean.TRUE.equals(this.mfaEnabled);
+    }
+
+    /**
+     * Safe getter for firstName that never returns null
+     */
+    public String getFirstName() {
+        return firstName != null ? firstName : "";
+    }
+    
+    /**
+     * Safe getter for lastName that never returns null
+     */
+    public String getLastName() {
+        return lastName != null ? lastName : "";
+    }
+    
+    /**
+     * Returns full name (firstName + lastName) with safe null handling.
+     * Falls back to 'name' field or email if firstName/lastName are null.
+     */
+    @Transient
+    public String getFullName() {
+        if (firstName != null && lastName != null && !firstName.isEmpty() && !lastName.isEmpty()) {
+            return firstName + " " + lastName;
+        } else if (firstName != null && !firstName.isEmpty()) {
+            return firstName;
+        } else if (lastName != null && !lastName.isEmpty()) {
+            return lastName;
+        } else if (name != null && !name.isEmpty()) {
+            return name;
+        }
+        return email != null ? email : "Utilisateur";
     }
 
     @PrePersist

@@ -3,6 +3,7 @@ package com.gedavocat.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;
@@ -61,14 +62,17 @@ public class Case {
     private Client client;
     
     @NotBlank(message = "Le nom du dossier est obligatoire")
-    @Column(name = "title", nullable = false, length = 255)
-    private String name;
-
-    // Legacy column present in some schemas — keep synchronized with `name`
-    @Column(name = "name", nullable = false, length = 255)
-    private String legacyName;
+    @Column(name = "title", length = 255)
+    private String title;
     
-    @Column(length = 50, nullable = false)
+    // Keep 'name' column synchronized with 'title' for database compatibility
+    // Getter/Setter provided manually to ensure synchronization
+    @lombok.Getter(AccessLevel.NONE)
+    @lombok.Setter(AccessLevel.NONE)
+    @Column(name = "name", length = 255)
+    private String name;
+    
+    @Column(length = 50)
     private String reference;
     
     @Enumerated(EnumType.STRING)
@@ -151,6 +155,23 @@ public class Case {
     }
     
     // Méthodes utilitaires
+    
+    /**
+     * Getter pour le nom du dossier (utilise 'title' comme source principale)
+     * Pour compatibilité avec le code existant qui pourrait utiliser getName()
+     */
+    public String getName() {
+        return title != null ? title : name;
+    }
+    
+    /**
+     * Setter pour le nom du dossier (synchronise title et name)
+     */
+    public void setName(String name) {
+        this.title = name;
+        this.name = name;
+    }
+    
     public boolean isOpen() {
         return status == CaseStatus.OPEN;
     }
@@ -183,12 +204,31 @@ public class Case {
         if (status == null) {
             status = CaseStatus.OPEN;
         }
-        // Synchronize legacy column
-        this.legacyName = this.name;
+        // Ensure caseType is not null to match DB constraint
+        if (caseType == null) {
+            caseType = CaseType.AUTRE;
+        }
+        // Synchronize 'name' column with 'title' for database compatibility
+        if (title != null && name == null) {
+            this.name = this.title;
+        } else if (name != null && title == null) {
+            this.title = this.name;
+        } else if (title != null) {
+            this.name = this.title;
+        }
     }
 
     @PreUpdate
     public void preUpdate() {
-        this.legacyName = this.name;
+        // Ensure caseType is not null on update/merge as well
+        if (caseType == null) {
+            caseType = CaseType.AUTRE;
+        }
+        // Synchronize 'name' column with 'title' for database compatibility
+        if (title != null) {
+            this.name = this.title;
+        } else if (name != null) {
+            this.title = this.name;
+        }
     }
 }

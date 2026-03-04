@@ -1,0 +1,191 @@
+{
+  "scoring_config": {
+    "version": "2.0",
+    "last_updated": "2026-03-03",
+    "total_points": 100,
+    
+    "domains": {
+      "acpr": {
+        "weight": 30,
+        "max_points": 30,
+        "criteria": {
+          "kyc_process": {
+            "points": 8,
+            "mandatory": true,
+            "description": "Client identification and verification"
+          },
+          "transaction_monitoring": {
+            "points": 6,
+            "mandatory": true,
+            "description": "Automated suspicious transaction detection"
+          },
+          "pep_screening": {
+            "points": 5,
+            "mandatory": true,
+            "description": "Politically Exposed Persons screening"
+          },
+          "sanctions_check": {
+            "points": 5,
+            "mandatory": true,
+            "description": "International sanctions lists verification"
+          },
+          "tracfin_reporting": {
+            "points": 6,
+            "mandatory": true,
+            "description": "Suspicious activity reporting to TRACFIN"
+          }
+        }
+      },
+      
+      "rgpd": {
+        "weight": 25,
+        "max_points": 25,
+        "criteria": {
+          "dpo_designation": {
+            "points": 5,
+            "mandatory": true,
+            "description": "Data Protection Officer formally appointed"
+          },
+          "data_retention": {
+            "points": 4,
+            "mandatory": true,
+            "description": "Clear data retention policies implemented"
+          },
+          "consent_management": {
+            "points": 4,
+            "mandatory": true,
+            "description": "User consent tracking and management"
+          },
+          "data_rights": {
+            "points": 3,
+            "mandatory": true,
+            "description": "Data subject rights (access, rectification, deletion)"
+          },
+          "privacy_impact": {
+            "points": 4,
+            "mandatory": true,
+            "description": "Privacy Impact Assessments for high-risk processing"
+          },
+          "breach_procedures": {
+            "points": 3,
+            "mandatory": true,
+            "description": "Data breach notification procedures (72h)"
+          },
+          "international_transfers": {
+            "points": 2,
+            "mandatory": false,
+            "description": "Adequate safeguards for international transfers"
+          }
+        }
+      },
+      
+      "iso27001": {
+        "weight": 25,
+        "max_points": 25,
+        "criteria": {
+          "access_control": {
+            "points": 5,
+            "mandatory": true,
+            "description": "Role-based access control (RBAC) system"
+          },
+          "encryption": {
+            "points": 4,
+            "mandatory": true,
+            "description": "Data encryption at rest and in transit"
+          },
+          "multi_factor_auth": {
+            "points": 4,
+            "mandatory": true,
+            "description": "Multi-factor authentication for admin access"
+          },
+          "backup_recovery": {
+            "points": 5,
+            "mandatory": true,
+            "description": "Business continuity and disaster recovery"
+          },
+          "incident_management": {
+            "points": 4,
+            "mandatory": true,
+            "description": "Security incident response procedures"
+          },
+          "audit_logging": {
+            "points": 3,
+            "mandatory": true,
+            "description": "Comprehensive audit trail logging"
+          }
+        }
+      },
+      
+      "eidas": {
+        "weight": 20,
+        "max_points": 20,
+        "criteria": {
+          "qualified_timestamps": {
+            "points": 5,
+            "mandatory": true,
+            "description": "TSA qualified electronic timestamps"
+          },
+          "longterm_signatures": {
+            "points": 4,
+            "mandatory": true,
+            "description": "XAdES-LTA long-term signature format"
+          },
+          "archive_containers": {
+            "points": 4,
+            "mandatory": true,
+            "description": "ASIC-E archive container format"
+          },
+          "legal_retention": {
+            "points": 4,
+            "mandatory": true,
+            "description": "30-year minimum legal retention period"
+          },
+          "integrity_verification": {
+            "points": 3,
+            "mandatory": false,
+            "description": "Periodic signature integrity verification"
+          }
+        }
+      }
+    },
+    
+    "risk_levels": {
+      "critical": {
+        "min_score": 0,
+        "max_score": 49,
+        "color": "#FF0000",
+        "description": "Conformité critique - Action immédiate requise"
+      },
+      "high": {
+        "min_score": 50,
+        "max_score": 69,
+        "color": "#FF8000",
+        "description": "Risque élevé - Plan d'action prioritaire"
+      },
+      "moderate": {
+        "min_score": 70,
+        "max_score": 84,
+        "color": "#FFD700",
+        "description": "Risque modéré - Surveillance renforcée"
+      },
+      "low": {
+        "min_score": 85,
+        "max_score": 100,
+        "color": "#00FF00",
+        "description": "Risque faible - Conformité satisfaisante"
+      }
+    },
+    
+    "penalties": {
+      "missing_mandatory": -5,
+      "incomplete_implementation": -2,
+      "outdated_procedures": -1
+    },
+    
+    "bonuses": {
+      "certification_iso27001": 3,
+      "external_audit_passed": 2,
+      "continuous_monitoring": 1
+    }
+  }
+}

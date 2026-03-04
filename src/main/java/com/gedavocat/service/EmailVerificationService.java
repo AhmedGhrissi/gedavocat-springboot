@@ -78,7 +78,7 @@ public class EmailVerificationService {
             return false;
         }
         if (!entry.code().equals(code)) {
-            failedAttempts.merge(emailLower, 1, Integer::sum);
+            failedAttempts.put(emailLower, failedAttempts.getOrDefault(emailLower, 0) + 1);
             log.warn("[EmailVerification] Tentative échouée pour {} (tentative {}/{})", 
                      emailLower, attempts + 1, MAX_FAILED_ATTEMPTS);
             return false;

@@ -163,31 +163,11 @@ public class AppointmentController {
         try {
             User user = getCurrentUser(authentication);
             
-            // Associer le client si spécifié
-            if (clientId != null && !clientId.isEmpty()) {
-                clientRepository.findById(clientId).ifPresent(c -> {
-                    // Ownership check: verify client belongs to this lawyer
-                    if (c.getLawyer() != null && c.getLawyer().getId().equals(user.getId())) {
-                        appointment.setClient(c);
-                    } else {
-                        throw new RuntimeException("Client non autorisé");
-                    }
-                });
-            }
+            // NE PAS assigner le client/case ici - laisser le service le faire
+            // pour éviter les problèmes de transaction JPA
             
-            // Associer le dossier si spécifié
-            if (caseId != null && !caseId.isEmpty()) {
-                caseRepository.findById(caseId).ifPresent(cs -> {
-                    // Ownership check: verify case belongs to this lawyer
-                    if (cs.getLawyer() != null && cs.getLawyer().getId().equals(user.getId())) {
-                        appointment.setRelatedCase(cs);
-                    } else {
-                        throw new RuntimeException("Dossier non autorisé");
-                    }
-                });
-            }
-            
-            Appointment created = appointmentService.createAppointment(appointment, user.getId());
+            Appointment created = appointmentService.createAppointment(
+                appointment, user.getId(), clientId, caseId);
             
             redirectAttributes.addFlashAttribute("success", 
                 "Rendez-vous créé avec succès: " + created.getTitle());

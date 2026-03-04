@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.gedavocat.listener.LABFTListener;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;
@@ -23,6 +24,7 @@ import java.util.UUID;
 /**
  * Entité représentant un client du cabinet d'avocats
  * MULTI-TENANT: Isolation automatique par firmId
+ * LAB-FT: Contrôles automatiques ACPR lors de la création
  */
 @Entity
 @Table(name = "clients", indexes = {
@@ -31,6 +33,7 @@ import java.util.UUID;
     @Index(name = "idx_client_firm_id", columnList = "firm_id")
 })
 @Filter(name = "firmFilter", condition = "firm_id = :firmId")
+@EntityListeners(LABFTListener.class)
 @Getter
 @Setter
 @NoArgsConstructor

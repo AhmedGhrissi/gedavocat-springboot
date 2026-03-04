@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout}">
@@ -13,22 +13,22 @@
         </div>
 
         <div class="row">
-            <div class="col-lg-8">
+            <div class="col-12 col-xl-8 mb-4">
                 <div class="card">
                     <div class="card-body">
                         <form id="invoiceForm">
                             <!-- Informations de base -->
                             <div class="row mb-4">
-                                <div class="col-md-6">
+                                <div class="col-12 col-md-6 mb-3 mb-md-0">
                                     <label class="form-label">Numéro de facture *</label>
                                     <div class="input-group">
                                         <input type="text" id="invoiceNumber" name="invoiceNumber" class="form-control" required>
                                         <button type="button" class="btn btn-outline-secondary" onclick="generateInvoiceNumber()">
-                                            <i class="fas fa-sync"></i> Générer
+                                            <i class="fas fa-sync"></i><span class="d-none d-sm-inline ms-1">Générer</span>
                                         </button>
                                     </div>
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-12 col-md-6">
                                     <label class="form-label">Client *</label>
                                     <select id="clientId" name="clientId" class="form-select" required>
                                         <option value="">Sélectionner un client</option>
@@ -38,15 +38,15 @@
                             </div>
 
                             <div class="row mb-4">
-                                <div class="col-md-4">
+                                <div class="col-12 col-md-4 mb-3 mb-md-0">
                                     <label class="form-label">Date de facture *</label>
                                     <input type="date" id="invoiceDate" name="invoiceDate" class="form-control" required th:value="${T(java.time.LocalDate).now()}">
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-12 col-md-4 mb-3 mb-md-0">
                                     <label class="form-label">Date d'échéance</label>
                                     <input type="date" id="dueDate" name="dueDate" class="form-control">
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-12 col-md-4">
                                     <label class="form-label">Statut</label>
                                     <select id="status" name="status" class="form-select">
                                         <option value="DRAFT">Brouillon</option>
@@ -73,7 +73,7 @@
                             </div>
 
                             <!-- Boutons d'action -->
-                            <div class="d-flex gap-2">
+                            <div class="d-flex flex-column flex-sm-row gap-2">
                                 <button type="submit" class="btn btn-primary rounded-md fw-600">
                                     <i class="fas fa-save"></i> Enregistrer
                                 </button>
@@ -90,7 +90,7 @@
             </div>
 
             <!-- Aperçu des totaux -->
-            <div class="col-lg-4">
+            <div class="col-12 col-xl-4">
                 <div class="card sticky-top" style="top: 80px;">
                     <div class="card-body">
                         <h5 class="card-title mb-3">Résumé</h5>
@@ -123,19 +123,19 @@
                 <div class="card mb-3" id="item-${itemCounter}">
                     <div class="card-body">
                         <div class="row">
-                            <div class="col-md-6 mb-3">
+                            <div class="col-12 col-md-6 mb-3">
                                 <label class="form-label">Description</label>
                                 <input type="text" class="form-control item-description" placeholder="Ex: Consultation juridique" required>
                             </div>
-                            <div class="col-md-2 mb-3">
+                            <div class="col-6 col-md-2 mb-3">
                                 <label class="form-label">Quantité</label>
                                 <input type="number" class="form-control item-quantity" value="1" min="0" step="0.01" required onchange="calculateTotals()">
                             </div>
-                            <div class="col-md-2 mb-3">
+                            <div class="col-6 col-md-2 mb-3">
                                 <label class="form-label">Prix unit. HT</label>
                                 <input type="number" class="form-control item-unitPrice" value="0" min="0" step="0.01" required onchange="calculateTotals()">
                             </div>
-                            <div class="col-md-2 mb-3">
+                            <div class="col-12 col-md-2 mb-3">
                                 <label class="form-label">TVA (%)</label>
                                 <input type="number" class="form-control item-tva" value="20" min="0" max="100" step="0.01" required onchange="calculateTotals()">
                             </div>

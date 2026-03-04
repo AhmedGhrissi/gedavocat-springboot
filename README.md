@@ -11,8 +11,6 @@
 
 **Système de Gestion Électronique de Documents sécurisé pour cabinets d'avocats**
 
-[Installation](#-installation) • [Documentation](#-documentation) • [Sécurité](#-sécurité) • [Support](#-support)
-
 </div>
 
 ---
@@ -379,8 +377,7 @@ Développé avec ❤️ par l'équipe DocAvocat
 
 <div align="center">
 
-**[⬆ Retour en haut](#-docavocat---gestion-électronique-de-documents-pour-avocats)**
-
 Made with ☕ and 💻 in France
 
 </div>
+

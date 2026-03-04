@@ -2,8 +2,12 @@ package com.gedavocat.service;
 
 import com.gedavocat.model.Appointment;
 import com.gedavocat.model.User;
+import com.gedavocat.model.Client;
+import com.gedavocat.model.Case;
 import com.gedavocat.repository.AppointmentRepository;
 import com.gedavocat.repository.UserRepository;
+import com.gedavocat.repository.ClientRepository;
+import com.gedavocat.repository.CaseRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -26,24 +30,73 @@ public class AppointmentService {
 
     private final AppointmentRepository appointmentRepository;
     private final UserRepository userRepository;
+    private final ClientRepository clientRepository;
+    private final CaseRepository caseRepository;
     private final AppointmentReminderService appointmentReminderService;
 
     /**
      * Crée un nouveau rendez-vous
      */
     @Transactional
-    public Appointment createAppointment(Appointment appointment, String lawyerId) {
+    public Appointment createAppointment(Appointment appointment, String lawyerId, 
+                                         String clientId, String caseId) {
         log.info("Création d'un rendez-vous pour l'avocat: {}", lawyerId);
 
         // Générer un ID si nécessaire
         if (appointment.getId() == null || appointment.getId().isEmpty()) {
             appointment.setId(UUID.randomUUID().toString());
         }
+        
+        // Ensure appointmentDate is never null
+        if (appointment.getAppointmentDate() == null) {
+            appointment.setAppointmentDate(LocalDateTime.now());
+        }
+        
+        // Ensure type is never null
+        if (appointment.getType() == null) {
+            appointment.setType(Appointment.AppointmentType.CLIENT_MEETING);
+        }
+        
+        // Ensure status is never null
+        if (appointment.getStatus() == null) {
+            appointment.setStatus(Appointment.AppointmentStatus.SCHEDULED);
+        }
 
         // Associer l'avocat
         User lawyer = userRepository.findById(lawyerId)
             .orElseThrow(() -> new RuntimeException("Avocat non trouvé"));
         appointment.setLawyer(lawyer);
+        
+        // Associer le firm_id depuis l'avocat
+        if (lawyer.getFirm() != null) {
+            appointment.setFirm(lawyer.getFirm());
+        }
+        
+        // Charger et associer le client si spécifié
+        if (clientId != null && !clientId.isEmpty()) {
+            Client client = clientRepository.findById(clientId)
+                .orElseThrow(() -> new RuntimeException("Client non trouvé"));
+            
+            // SÉCURITÉ : vérifier que le client appartient à l'avocat
+            if (client.getLawyer() == null || !client.getLawyer().getId().equals(lawyerId)) {
+                throw new SecurityException("Accès non autorisé : ce client ne vous appartient pas");
+            }
+            
+            appointment.setClient(client);
+        }
+        
+        // Charger et associer le dossier si spécifié
+        if (caseId != null && !caseId.isEmpty()) {
+            Case caseEntity = caseRepository.findById(caseId)
+                .orElseThrow(() -> new RuntimeException("Dossier non trouvé"));
+            
+            // SÉCURITÉ : vérifier que le dossier appartient à l'avocat
+            if (caseEntity.getLawyer() == null || !caseEntity.getLawyer().getId().equals(lawyerId)) {
+                throw new SecurityException("Accès non autorisé : ce dossier ne vous appartient pas");
+            }
+            
+            appointment.setRelatedCase(caseEntity);
+        }
 
         // Vérifier les conflits d'horaires
         if (hasScheduleConflict(lawyerId, appointment.getAppointmentDate(), appointment.getId())) {
@@ -60,6 +113,14 @@ public class AppointmentService {
         }
 
         return saved;
+    }
+    
+    /**
+     * Version alternative pour compatibilité (sans clientId/caseId)
+     */
+    @Transactional
+    public Appointment createAppointment(Appointment appointment, String lawyerId) {
+        return createAppointment(appointment, lawyerId, null, null);
     }
 
     /**
@@ -90,9 +151,15 @@ public class AppointmentService {
         // Mettre à jour les champs
         existing.setTitle(updatedAppointment.getTitle());
         existing.setDescription(updatedAppointment.getDescription());
-        existing.setAppointmentDate(updatedAppointment.getAppointmentDate());
+        // Ensure appointmentDate is never null (keep existing if not provided)
+        existing.setAppointmentDate(updatedAppointment.getAppointmentDate() != null 
+            ? updatedAppointment.getAppointmentDate() 
+            : existing.getAppointmentDate());
         existing.setEndDate(updatedAppointment.getEndDate());
-        existing.setType(updatedAppointment.getType());
+        // Ensure type is never null (keep existing if not provided)
+        existing.setType(updatedAppointment.getType() != null 
+            ? updatedAppointment.getType() 
+            : existing.getType());
         existing.setStatus(updatedAppointment.getStatus());
         existing.setLocation(updatedAppointment.getLocation());
         existing.setCourtName(updatedAppointment.getCourtName());

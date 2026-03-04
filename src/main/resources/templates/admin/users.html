@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout}">
@@ -208,7 +208,7 @@
                                              style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
                                             <span th:text="${user.firstName != null and user.firstName.length() > 0 ? user.firstName.substring(0, 1).toUpperCase() : 'U'}">J</span>
                                         </div>
-                                        <span th:text="${user.firstName + ' ' + user.lastName}">John Doe</span>
+                                        <span th:text="${user.fullName}">John Doe</span>
                                     </div>
                                 </td>
                                 <td th:text="${user.email}">john@example.com</td>
@@ -253,7 +253,7 @@
                                         </button>
                                         <button class="btn btn-outline-danger btn-delete-user"
                                                 th:data-user-id="${user.id}"
-                                                th:data-user-name="${user.firstName + ' ' + user.lastName}"
+                                                th:data-user-name="${user.fullName}"
                                                 title="Supprimer">
                                             <i class="fas fa-trash"></i>
                                         </button>

@@ -9,6 +9,8 @@ import com.gedavocat.service.ClientInvitationService;
 import com.gedavocat.service.LogService;
 import com.gedavocat.service.MaintenanceService;
 import com.gedavocat.service.UserService;
+import com.gedavocat.security.monitoring.SecurityMonitoringService;
+import com.gedavocat.security.monitoring.SecurityMonitoringService.SecurityMonitoringReport;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -40,6 +42,7 @@ public class AdminController {
     private final MaintenanceService maintenanceService;
     private final ClientRepository clientRepository;
     private final ClientInvitationService invitationService;
+    private final SecurityMonitoringService securityMonitoringService;
 
     /**
      * Dashboard principal de l'admin
@@ -259,6 +262,27 @@ public class AdminController {
     public String settings(Model model) {
         model.addAttribute("maintenanceEnabled", maintenanceService.isMaintenanceEnabled());
         return "admin/settings";
+    }
+
+    /**
+     * Page de monitoring de sécurité
+     */
+    @GetMapping("/security")
+    public String security(Model model) {
+        try {
+            SecurityMonitoringReport report = securityMonitoringService.generateSecurityReport();
+            if (report != null) {
+                model.addAttribute("report", report);
+                model.addAttribute("metrics", report.getMetrics());
+                model.addAttribute("topIPs", report.getTopSuspiciousIPs());
+                model.addAttribute("status", report.getOverallStatus());
+                model.addAttribute("timestamp", report.getTimestamp());
+            }
+            return "admin/security";
+        } catch (Exception e) {
+            model.addAttribute("error", "Erreur lors du chargement du monitoring de sécurité: " + e.getMessage());
+            return "admin/security";
+        }
     }
 
     /**

@@ -63,12 +63,12 @@
                                     </span>
                                 </td>
                                 <td>
-                                    <div class="d-flex gap-2">
-                                        <a th:href="@{/invoices/{id}(id=${invoice.id})}" class="btn btn-outline-primary" title="Voir">
-                                            <i class="fas fa-eye"></i> Voir
+                                    <div class="d-flex flex-wrap gap-2">
+                                        <a th:href="@{/invoices/{id}(id=${invoice.id})}" class="btn btn-sm btn-outline-primary" title="Voir">
+                                            <i class="fas fa-eye"></i><span class="d-none d-lg-inline ms-1">Voir</span>
                                         </a>
-                                        <a th:href="@{/invoices/{id}/pdf(id=${invoice.id})}" class="btn btn-outline-info" title="Télécharger PDF" target="_blank">
-                                            <i class="fas fa-download"></i> PDF
+                                        <a th:href="@{/invoices/{id}/pdf(id=${invoice.id})}" class="btn btn-sm btn-outline-info" title="Télécharger PDF" target="_blank">
+                                            <i class="fas fa-download"></i><span class="d-none d-lg-inline ms-1">PDF</span>
                                         </a>
                                     </div>
                                 </td>

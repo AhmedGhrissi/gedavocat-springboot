@@ -180,6 +180,11 @@ public class CaseService {
         caseEntity.setStatus(CaseStatus.OPEN);
         caseEntity.setCreatedAt(LocalDateTime.now());
         
+        // Ensure caseType is set to a default if not provided to avoid DB non-null constraint
+        if (caseEntity.getCaseType() == null) {
+            caseEntity.setCaseType(Case.CaseType.AUTRE);
+        }
+        
         Case savedCase = caseRepository.save(caseEntity);
         
         log.info("Dossier créé: {} ({})", savedCase.getName(), savedCase.getId());

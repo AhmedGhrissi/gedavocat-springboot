@@ -446,9 +446,13 @@ CREATE TABLE invoice_items (
     id VARCHAR(36) PRIMARY KEY,
     invoice_id VARCHAR(36) NOT NULL,
     description VARCHAR(500) NOT NULL,
-    quantity DECIMAL(10,2) DEFAULT 1.00,
-    unit_price DECIMAL(10,2) NOT NULL,
-    total_price DECIMAL(10,2) NOT NULL,
+    quantity DECIMAL(10,2) NOT NULL DEFAULT 1.00,
+    unit_price_ht DECIMAL(10,2) NOT NULL COMMENT 'Prix unitaire Hors Taxe',
+    tva_rate DECIMAL(5,2) NOT NULL DEFAULT 20.00 COMMENT 'Taux de TVA en pourcentage',
+    total_ht DECIMAL(10,2) NULL COMMENT 'Total Hors Taxe (calculé)',
+    total_tva DECIMAL(10,2) NULL COMMENT 'Total TVA (calculé)',
+    total_ttc DECIMAL(10,2) NULL COMMENT 'Total Toutes Taxes Comprises (calculé)',
+    display_order INT NULL COMMENT 'Ordre d''affichage',
     
     -- Dates
     created_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6),

@@ -2,7 +2,6 @@ package com.gedavocat.model;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -46,22 +45,34 @@ public class Appointment {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @NotNull(message = "La date du rendez-vous est obligatoire")
     @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
-    @Column(name = "appointment_date", nullable = false)
-    private LocalDateTime appointmentDate;
+    @Column(name = "start_time")
+    private LocalDateTime appointmentDate = LocalDateTime.now();
+    
+    // Legacy column synchronized with start_time for backward compatibility
+    @Column(name = "appointment_date")
+    private LocalDateTime legacyAppointmentDate;
 
     @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
-    @Column(name = "end_date")
+    @Column(name = "end_time")
     private LocalDateTime endDate;
+    
+    @Column(name = "is_all_day")
+    private Boolean isAllDay = false;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)
-    private AppointmentType type;
+    private AppointmentType type = AppointmentType.CLIENT_MEETING;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)
     private AppointmentStatus status = AppointmentStatus.SCHEDULED;
+
+    // MULTI-TENANT: Lien vers le cabinet
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "firm_id", nullable = false)
+    @JsonIgnore
+    private Firm firm;
 
     // Relation avec l'avocat
     @ManyToOne(fetch = FetchType.LAZY)
@@ -192,6 +203,34 @@ public class Appointment {
     // ==========================================
     // MÉTHODES UTILITAIRES
     // ==========================================
+
+    @PrePersist
+    public void prePersist() {
+        if (id == null || id.isEmpty()) {
+            id = java.util.UUID.randomUUID().toString();
+        }
+        if (appointmentDate == null) {
+            appointmentDate = LocalDateTime.now();
+        }
+        if (type == null) {
+            type = AppointmentType.CLIENT_MEETING;
+        }
+        if (status == null) {
+            status = AppointmentStatus.SCHEDULED;
+        }
+        // Synchronize legacy appointment_date column with start_time
+        this.legacyAppointmentDate = this.appointmentDate;
+    }
+
+    @PreUpdate
+    public void preUpdate() {
+        // Keep legacy appointment_date synchronized on updates
+        this.legacyAppointmentDate = this.appointmentDate;
+        // Ensure type is never null
+        if (type == null) {
+            type = AppointmentType.CLIENT_MEETING;
+        }
+    }
 
     public boolean isUpcoming() {
         return appointmentDate != null && appointmentDate.isAfter(LocalDateTime.now());

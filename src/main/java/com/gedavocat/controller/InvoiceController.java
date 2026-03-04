@@ -39,16 +39,21 @@ public class InvoiceController {
      */
     @PostMapping
     @PreAuthorize("hasRole('LAWYER')")
-    public ResponseEntity<InvoiceResponse> createInvoice(@Valid @RequestBody InvoiceRequest request,
-                                                          Authentication authentication) {
+    public ResponseEntity<?> createInvoice(@Valid @RequestBody InvoiceRequest request,
+                                           Authentication authentication) {
         try {
             // SEC-IDOR FIX : passer le lawyerId pour vérification ownership dans le service
             User user = getCurrentUser(authentication);
             InvoiceResponse response = invoiceService.createInvoice(request, user.getId());
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (Exception e) {
+            // Log error for monitoring
             log.error("Erreur lors de la création de la facture", e);
-            return ResponseEntity.badRequest().body(null);
+            Map<String, Object> body = Map.of(
+                    "error", true,
+                    "message", e.getMessage() != null ? e.getMessage() : "Erreur interne"
+            );
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
         }
     }
     
@@ -75,19 +80,27 @@ public class InvoiceController {
      * Récupère une facture par son ID
      */
     @GetMapping("/{invoiceId}")
-    @PreAuthorize("hasAnyRole('LAWYER', 'CLIENT')")
+    @PreAuthorize("hasAnyRole('LAWYER', 'CLIENT', 'ADMIN')")
     public ResponseEntity<InvoiceResponse> getInvoiceById(@PathVariable String invoiceId,
                                                            Authentication authentication) {
         try {
-            // SEC-IDOR FIX : ownership vérifié dans le service (null lawyerId pour clients — vérifié ci-dessous)
             User user = getCurrentUser(authentication);
+            
+            // Vérifier le rôle de l'utilisateur
             boolean isAdmin = authentication.getAuthorities().stream()
                     .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
-            // Les admins passent null pour bypass, les lawyers passent leur ID
-            String checkLawyerId = isAdmin ? null : user.getId();
+            boolean isLawyer = authentication.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_LAWYER"));
+            
+            // Pour les admins : accès complet sans vérification
+            // Pour les lawyers : vérification via leur ID
+            // Pour les clients : vérification via leur ID
+            String checkLawyerId = isAdmin ? "ADMIN_BYPASS" : (isLawyer ? user.getId() : user.getId());
+            
             InvoiceResponse response = invoiceService.getInvoiceById(invoiceId, checkLawyerId);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
+            log.error("Erreur lors de la récupération de la facture {}: {}", invoiceId, e.getMessage());
             return ResponseEntity.notFound().build();
         }
     }

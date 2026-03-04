@@ -17,12 +17,25 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
-
-import com.lowagie.text.*;
-import com.lowagie.text.Font;
-import com.lowagie.text.pdf.*;
-import com.lowagie.text.pdf.draw.LineSeparator;
-import java.awt.Color;
+import com.itextpdf.kernel.pdf.PdfWriter;
+import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.kernel.geom.PageSize;
+import com.itextpdf.kernel.colors.ColorConstants;
+import com.itextpdf.kernel.colors.DeviceRgb;
+import com.itextpdf.layout.Document;
+import com.itextpdf.layout.element.Paragraph;
+import com.itextpdf.layout.element.Table;
+import com.itextpdf.layout.element.Cell;
+import com.itextpdf.layout.element.LineSeparator;
+import com.itextpdf.layout.properties.TextAlignment;
+import com.itextpdf.layout.properties.UnitValue;
+import com.itextpdf.layout.properties.VerticalAlignment;
+import com.itextpdf.layout.borders.SolidBorder;
+import com.itextpdf.kernel.pdf.canvas.draw.SolidLine;
+import com.itextpdf.kernel.colors.Color;
+import com.itextpdf.io.font.constants.StandardFonts;
+import com.itextpdf.kernel.font.PdfFontFactory;
+import com.itextpdf.kernel.font.PdfFont;
 import java.io.ByteArrayOutputStream;
 
 /**
@@ -60,13 +73,19 @@ public class InvoiceService {
         Invoice invoice = new Invoice();
         invoice.setInvoiceNumber(request.getInvoiceNumber());
         invoice.setClient(client);
-        invoice.setInvoiceDate(request.getInvoiceDate());
+        // Ensure invoiceDate is never null (use current date if not provided)
+        invoice.setInvoiceDate(request.getInvoiceDate() != null ? request.getInvoiceDate() : LocalDate.now());
         invoice.setDueDate(request.getDueDate());
         invoice.setPaidDate(request.getPaidDate());
         invoice.setStatus(request.getStatus() != null ? request.getStatus() : InvoiceStatus.DRAFT);
         invoice.setNotes(request.getNotes());
         invoice.setPaymentMethod(request.getPaymentMethod());
         invoice.setDocumentUrl(request.getDocumentUrl());
+
+        // Associer le firm via le client (multi-tenant)
+        if (client.getFirm() != null) {
+            invoice.setFirm(client.getFirm());
+        }
 
         // Ajouter les lignes de facture
         for (InvoiceItemRequest itemRequest : request.getItems()) {
@@ -111,7 +130,8 @@ public class InvoiceService {
 
         // Mettre à jour les champs
         invoice.setInvoiceNumber(request.getInvoiceNumber());
-        invoice.setInvoiceDate(request.getInvoiceDate());
+        // Ensure invoiceDate is never null (keep existing if not provided)
+        invoice.setInvoiceDate(request.getInvoiceDate() != null ? request.getInvoiceDate() : invoice.getInvoiceDate());
         invoice.setDueDate(request.getDueDate());
         invoice.setPaidDate(request.getPaidDate());
         invoice.setStatus(request.getStatus() != null ? request.getStatus() : invoice.getStatus());
@@ -146,14 +166,23 @@ public class InvoiceService {
     public InvoiceResponse getInvoiceById(String invoiceId, String lawyerId) {
         Invoice invoice = invoiceRepository.findById(invoiceId)
             .orElseThrow(() -> new RuntimeException("Facture non trouvée"));
-        // SÉCURITÉ SVC-01 FIX : vérification ownership stricte — lawyerId obligatoire
+        
+        // SÉCURITÉ SVC-01 FIX : vérification ownership stricte
         if (lawyerId == null) {
             throw new SecurityException("Identifiant avocat requis pour accéder à une facture");
         }
+        
+        // Bypass pour les admins
+        if ("ADMIN_BYPASS".equals(lawyerId)) {
+            return convertToResponse(invoice);
+        }
+        
+        // Vérification ownership pour lawyers et clients
         if (invoice.getClient() != null && invoice.getClient().getLawyer() != null
                 && !invoice.getClient().getLawyer().getId().equals(lawyerId)) {
             throw new SecurityException("Accès non autorisé à cette facture");
         }
+        
         return convertToResponse(invoice);
     }
 
@@ -333,17 +362,20 @@ public byte[] generatePdf(String invoiceId, String lawyerId) {
 
     try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
 
-        Document doc = new Document(PageSize.A4, 55, 55, 70, 55);
-        PdfWriter.getInstance(doc, baos);
-        doc.open();
+        PdfWriter writer = new PdfWriter(baos);
+        PdfDocument pdfDoc = new PdfDocument(writer);
+        Document doc = new Document(pdfDoc, PageSize.A4);
+        doc.setMargins(70, 55, 55, 55);
 
-        // ── Polices ──
-        Font fontSection = new Font(Font.HELVETICA, 10, Font.BOLD,   new Color(13, 27, 42));
-        Font fontNormal  = new Font(Font.HELVETICA,  9, Font.NORMAL, new Color(44, 62, 80));
-        Font fontMuted   = new Font(Font.HELVETICA,  8, Font.NORMAL, new Color(107, 114, 128));
-        Font fontHeader  = new Font(Font.HELVETICA,  8, Font.BOLD,   new Color(255, 255, 255));
-        Font fontTotal   = new Font(Font.HELVETICA, 13, Font.BOLD,   new Color(13, 27, 42));
-        Font fontGold    = new Font(Font.HELVETICA, 13, Font.BOLD,   new Color(139, 111, 30));
+        // ── Polices iText 7 ──
+        PdfFont helvetica = PdfFontFactory.createFont(StandardFonts.HELVETICA);
+        PdfFont helveticaBold = PdfFontFactory.createFont(StandardFonts.HELVETICA_BOLD);
+
+        // ── Couleurs ──
+        DeviceRgb navyColor = new DeviceRgb(13, 27, 42);
+        DeviceRgb goldColor = new DeviceRgb(184, 149, 42);
+        DeviceRgb mutedColor = new DeviceRgb(107, 114, 128);
+        DeviceRgb slateColor = new DeviceRgb(44, 62, 80);
 
         // ── Variables ──
         String num          = invoice.getInvoiceNumber() != null ? invoice.getInvoiceNumber() : "—";
@@ -357,100 +389,121 @@ public byte[] generatePdf(String invoiceId, String lawyerId) {
         double ttc          = invoice.getTotalTTC() != null ? invoice.getTotalTTC().doubleValue() : 0;
 
         // ── En-tête : logo + numéro facture ──
-        PdfPTable headerTable = new PdfPTable(2);
-        headerTable.setWidthPercentage(100);
-        headerTable.setWidths(new float[]{1.5f, 1f});
-        headerTable.setSpacingAfter(20);
+        Table headerTable = new Table(UnitValue.createPercentArray(new float[]{1.5f, 1f}))
+            .useAllAvailableWidth()
+            .setMarginBottom(20);
 
-        PdfPCell logoCell = new PdfPCell();
-        logoCell.setBorder(Rectangle.NO_BORDER);
-        logoCell.setPaddingBottom(8);
-        logoCell.addElement(new Paragraph("GED AVOCAT",
-                new Font(Font.HELVETICA, 18, Font.BOLD, new Color(13, 27, 42))));
-        logoCell.addElement(new Paragraph("Cabinet de gestion documentaire", fontMuted));
+        Cell logoCell = new Cell()
+            .setBorder(null)
+            .setPaddingBottom(8);
+        logoCell.add(new Paragraph("GED AVOCAT")
+            .setFont(helveticaBold)
+            .setFontSize(18)
+            .setFontColor(navyColor));
+        logoCell.add(new Paragraph("Cabinet de gestion documentaire")
+            .setFont(helvetica)
+            .setFontSize(9)
+            .setFontColor(mutedColor));
         headerTable.addCell(logoCell);
 
-        PdfPCell numCell = new PdfPCell();
-        numCell.setBorder(Rectangle.NO_BORDER);
-        numCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
-        numCell.setPaddingBottom(8);
-        Paragraph labelFact = new Paragraph("FACTURE",
-                new Font(Font.HELVETICA, 9, Font.BOLD, new Color(184, 149, 42)));
-        labelFact.setAlignment(Element.ALIGN_RIGHT);
-        Paragraph numFact = new Paragraph(num,
-                new Font(Font.HELVETICA, 16, Font.BOLD, new Color(13, 27, 42)));
-        numFact.setAlignment(Element.ALIGN_RIGHT);
-        numCell.addElement(labelFact);
-        numCell.addElement(numFact);
+        Cell numCell = new Cell()
+            .setBorder(null)
+            .setTextAlignment(TextAlignment.RIGHT)
+            .setPaddingBottom(8);
+        numCell.add(new Paragraph("FACTURE")
+            .setFont(helveticaBold)
+            .setFontSize(9)
+            .setFontColor(goldColor)
+            .setTextAlignment(TextAlignment.RIGHT));
+        numCell.add(new Paragraph(num)
+            .setFont(helveticaBold)
+            .setFontSize(16)
+            .setFontColor(navyColor)
+            .setTextAlignment(TextAlignment.RIGHT));
         headerTable.addCell(numCell);
         doc.add(headerTable);
 
-        // ── Ligne dorée ──
-        LineSeparator sep = new LineSeparator(1f, 100, new Color(184, 149, 42), Element.ALIGN_CENTER, -2);
-        doc.add(new Chunk(sep));
-        doc.add(Chunk.NEWLINE);
+        // Ligne doree
+        SolidLine line1 = new SolidLine(1f);
+        line1.setColor(goldColor);
+        LineSeparator separator1 = new LineSeparator(line1);
+        separator1.setMarginBottom(10);
+        doc.add(separator1);
 
         // ── Infos client + dates ──
-        PdfPTable infoTable = new PdfPTable(2);
-        infoTable.setWidthPercentage(100);
-        infoTable.setWidths(new float[]{1.5f, 1f});
-        infoTable.setSpacingBefore(12);
-        infoTable.setSpacingAfter(20);
+        Table infoTable = new Table(UnitValue.createPercentArray(new float[]{1.5f, 1f}))
+            .useAllAvailableWidth()
+            .setMarginTop(12)
+            .setMarginBottom(20);
 
-        PdfPCell clientCell = new PdfPCell();
-        clientCell.setBorder(Rectangle.NO_BORDER);
-        clientCell.setPaddingBottom(6);
-        Paragraph clientLabel = new Paragraph("CLIENT",
-                new Font(Font.HELVETICA, 7, Font.BOLD, new Color(184, 149, 42)));
-        clientCell.addElement(clientLabel);
-        clientCell.addElement(new Paragraph(clientName, fontSection));
+        Cell clientCell = new Cell()
+            .setBorder(null)
+            .setPaddingBottom(6);
+        clientCell.add(new Paragraph("CLIENT")
+            .setFont(helveticaBold)
+            .setFontSize(7)
+            .setFontColor(goldColor));
+        clientCell.add(new Paragraph(clientName)
+            .setFont(helveticaBold)
+            .setFontSize(10)
+            .setFontColor(navyColor));
         infoTable.addCell(clientCell);
 
-        PdfPCell dateCell = new PdfPCell();
-        dateCell.setBorder(Rectangle.NO_BORDER);
-        dateCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
-        Paragraph pDate = new Paragraph("Date : " + dateFacture, fontNormal);
-        pDate.setAlignment(Element.ALIGN_RIGHT);
-        Paragraph pEch = new Paragraph("Échéance : " + dateEcheance, fontNormal);
-        pEch.setAlignment(Element.ALIGN_RIGHT);
-        Paragraph pStatut = new Paragraph("Statut : " + statut,
-                new Font(Font.HELVETICA, 9, Font.BOLD, new Color(13, 27, 42)));
-        pStatut.setAlignment(Element.ALIGN_RIGHT);
-        dateCell.addElement(pDate);
-        dateCell.addElement(pEch);
-        dateCell.addElement(pStatut);
+        Cell dateCell = new Cell()
+            .setBorder(null)
+            .setTextAlignment(TextAlignment.RIGHT);
+        dateCell.add(new Paragraph("Date : " + dateFacture)
+            .setFont(helvetica)
+            .setFontSize(9)
+            .setFontColor(slateColor)
+            .setTextAlignment(TextAlignment.RIGHT));
+        dateCell.add(new Paragraph("Échéance : " + dateEcheance)
+            .setFont(helvetica)
+            .setFontSize(9)
+            .setFontColor(slateColor)
+            .setTextAlignment(TextAlignment.RIGHT));
+        dateCell.add(new Paragraph("Statut : " + statut)
+            .setFont(helveticaBold)
+            .setFontSize(9)
+            .setFontColor(navyColor)
+            .setTextAlignment(TextAlignment.RIGHT));
         infoTable.addCell(dateCell);
         doc.add(infoTable);
 
         // ── Tableau des prestations ──
-        PdfPTable itemsTable = new PdfPTable(5);
-        itemsTable.setWidthPercentage(100);
-        itemsTable.setWidths(new float[]{4f, 1f, 1.5f, 1f, 1.5f});
-        itemsTable.setSpacingAfter(16);
+        Table itemsTable = new Table(UnitValue.createPercentArray(new float[]{4f, 1f, 1.5f, 1f, 1.5f}))
+            .useAllAvailableWidth()
+            .setMarginBottom(16);
 
-        Color navyBg = new Color(13, 27, 42);
-        String[] cols  = {"Description", "Qté", "Prix unit. HT", "TVA", "Total HT"};
-        int[]    aligns = {Element.ALIGN_LEFT, Element.ALIGN_CENTER, Element.ALIGN_RIGHT,
-                           Element.ALIGN_CENTER, Element.ALIGN_RIGHT};
+        // En-têtes de colonnes
+        String[] cols = {"Description", "Qté", "Prix unit. HT", "TVA", "Total HT"};
+        TextAlignment[] aligns = {TextAlignment.LEFT, TextAlignment.CENTER, TextAlignment.RIGHT,
+                                  TextAlignment.CENTER, TextAlignment.RIGHT};
 
         for (int i = 0; i < cols.length; i++) {
-            PdfPCell c = new PdfPCell(new Phrase(cols[i], fontHeader));
-            c.setBackgroundColor(navyBg);
-            c.setPadding(7);
-            c.setBorder(Rectangle.NO_BORDER);
-            c.setHorizontalAlignment(aligns[i]);
-            itemsTable.addCell(c);
+            Cell c = new Cell()
+                .add(new Paragraph(cols[i])
+                    .setFont(helveticaBold)
+                    .setFontSize(8)
+                    .setFontColor(ColorConstants.WHITE))
+                .setBackgroundColor(navyColor)
+                .setPadding(7)
+                .setBorder(null)
+                .setTextAlignment(aligns[i]);
+            itemsTable.addHeaderCell(c);
         }
 
-        Color rowAlt = new Color(250, 248, 243);
+        DeviceRgb rowAltColor = new DeviceRgb(250, 248, 243);
+        DeviceRgb borderColor = new DeviceRgb(220, 215, 205);
+
         List<InvoiceItem> itemList = invoice.getItems();
         if (itemList != null && !itemList.isEmpty()) {
             int rowIdx = 0;
             for (InvoiceItem item : itemList) {
-                Color bg      = (rowIdx % 2 == 0) ? Color.WHITE : rowAlt;
-                double qty    = item.getQuantity()    != null ? item.getQuantity().doubleValue()    : 0;
-                double price  = item.getUnitPriceHT() != null ? item.getUnitPriceHT().doubleValue() : 0;
-                double tvaRate= item.getTvaRate()     != null ? item.getTvaRate().doubleValue()     : 0;
+                Color bgColor = (rowIdx % 2 == 0) ? ColorConstants.WHITE : rowAltColor;
+                double qty = item.getQuantity() != null ? item.getQuantity().doubleValue() : 0;
+                double price = item.getUnitPriceHT() != null ? item.getUnitPriceHT().doubleValue() : 0;
+                double tvaRate = item.getTvaRate() != null ? item.getTvaRate().doubleValue() : 0;
                 double lineHT = qty * price;
 
                 String[] vals = {
@@ -460,52 +513,123 @@ public byte[] generatePdf(String invoiceId, String lawyerId) {
                     String.format("%.1f %%", tvaRate),
                     String.format("%.2f €", lineHT)
                 };
+
                 for (int i = 0; i < vals.length; i++) {
-                    PdfPCell c = new PdfPCell(new Phrase(vals[i], fontNormal));
-                    c.setBackgroundColor(bg);
-                    c.setPadding(7);
-                    c.setBorderColor(new Color(220, 215, 205));
-                    c.setBorderWidth(0.5f);
-                    c.setHorizontalAlignment(aligns[i]);
+                    Cell c = new Cell()
+                        .add(new Paragraph(vals[i])
+                            .setFont(helvetica)
+                            .setFontSize(9)
+                            .setFontColor(slateColor))
+                        .setBackgroundColor(bgColor)
+                        .setPadding(7)
+                        .setBorder(new SolidBorder(borderColor, 0.5f))
+                        .setTextAlignment(aligns[i]);
                     itemsTable.addCell(c);
                 }
                 rowIdx++;
             }
         } else {
             // Ligne vide si aucune prestation
-            PdfPCell empty = new PdfPCell(new Phrase("Aucune prestation", fontMuted));
-            empty.setColspan(5);
-            empty.setPadding(10);
-            empty.setHorizontalAlignment(Element.ALIGN_CENTER);
-            empty.setBorderColor(new Color(220, 215, 205));
-            empty.setBorderWidth(0.5f);
+            Cell empty = new Cell(1, 5)
+                .add(new Paragraph("Aucune prestation")
+                    .setFont(helvetica)
+                    .setFontSize(9)
+                    .setFontColor(mutedColor))
+                .setPadding(10)
+                .setTextAlignment(TextAlignment.CENTER)
+                .setBorder(new SolidBorder(borderColor, 0.5f));
             itemsTable.addCell(empty);
         }
         doc.add(itemsTable);
 
         // ── Totaux ──
-        PdfPTable totauxTable = new PdfPTable(2);
-        totauxTable.setWidthPercentage(38);
-        totauxTable.setHorizontalAlignment(Element.ALIGN_RIGHT);
-        totauxTable.setWidths(new float[]{1.6f, 1f});
-        totauxTable.setSpacingAfter(20);
+        Table totauxTable = new Table(UnitValue.createPercentArray(new float[]{1.6f, 1f}))
+            .setWidth(UnitValue.createPercentValue(38))
+            .setHorizontalAlignment(com.itextpdf.layout.properties.HorizontalAlignment.RIGHT)
+            .setMarginBottom(20);
 
-        addTotalRow(totauxTable, "Total HT",  String.format("%.2f €", ht),  fontNormal, fontNormal, false);
-        addTotalRow(totauxTable, "TVA",       String.format("%.2f €", tva), fontNormal, fontNormal, false);
-        addTotalRow(totauxTable, "Total TTC", String.format("%.2f €", ttc), fontTotal,  fontGold,   true);
+        // Total HT
+        totauxTable.addCell(new Cell()
+            .add(new Paragraph("Total HT")
+                .setFont(helvetica)
+                .setFontSize(9)
+                .setFontColor(slateColor))
+            .setBackgroundColor(ColorConstants.WHITE)
+            .setPadding(6)
+            .setBorder(new SolidBorder(borderColor, 0.5f)));
+
+        totauxTable.addCell(new Cell()
+            .add(new Paragraph(String.format("%.2f €", ht))
+                .setFont(helvetica)
+                .setFontSize(9)
+                .setFontColor(slateColor))
+            .setBackgroundColor(ColorConstants.WHITE)
+            .setPadding(6)
+            .setBorder(new SolidBorder(borderColor, 0.5f))
+            .setTextAlignment(TextAlignment.RIGHT));
+
+        // TVA
+        totauxTable.addCell(new Cell()
+            .add(new Paragraph("TVA")
+                .setFont(helvetica)
+                .setFontSize(9)
+                .setFontColor(slateColor))
+            .setBackgroundColor(ColorConstants.WHITE)
+            .setPadding(6)
+            .setBorder(new SolidBorder(borderColor, 0.5f)));
+
+        totauxTable.addCell(new Cell()
+            .add(new Paragraph(String.format("%.2f €", tva))
+                .setFont(helvetica)
+                .setFontSize(9)
+                .setFontColor(slateColor))
+            .setBackgroundColor(ColorConstants.WHITE)
+            .setPadding(6)
+            .setBorder(new SolidBorder(borderColor, 0.5f))
+            .setTextAlignment(TextAlignment.RIGHT));
+
+        // Total TTC (highlighted)
+        DeviceRgb highlightBg = new DeviceRgb(245, 243, 238);
+        totauxTable.addCell(new Cell()
+            .add(new Paragraph("Total TTC")
+                .setFont(helveticaBold)
+                .setFontSize(13)
+                .setFontColor(navyColor))
+            .setBackgroundColor(highlightBg)
+            .setPadding(6)
+            .setBorder(new SolidBorder(borderColor, 0.5f)));
+
+        totauxTable.addCell(new Cell()
+            .add(new Paragraph(String.format("%.2f €", ttc))
+                .setFont(helveticaBold)
+                .setFontSize(13)
+                .setFontColor(goldColor))
+            .setBackgroundColor(highlightBg)
+            .setPadding(6)
+            .setBorder(new SolidBorder(borderColor, 0.5f))
+            .setTextAlignment(TextAlignment.RIGHT));
+
         doc.add(totauxTable);
 
         // ── Notes ──
         if (invoice.getNotes() != null && !invoice.getNotes().isBlank()) {
-            doc.add(new Chunk(new LineSeparator(0.5f, 100,
-                    new Color(220, 215, 205), Element.ALIGN_CENTER, -2)));
-            doc.add(Chunk.NEWLINE);
-            Paragraph titreNotes = new Paragraph("Conditions de paiement", fontSection);
-            titreNotes.setSpacingBefore(8);
-            doc.add(titreNotes);
-            Paragraph notes = new Paragraph(invoice.getNotes(), fontMuted);
-            notes.setSpacingBefore(4);
-            doc.add(notes);
+            SolidLine line2 = new SolidLine(0.5f);
+            line2.setColor(borderColor);
+            LineSeparator separator2 = new LineSeparator(line2);
+            separator2.setMarginTop(8);
+            doc.add(separator2);
+
+            doc.add(new Paragraph("Conditions de paiement")
+                .setFont(helveticaBold)
+                .setFontSize(10)
+                .setFontColor(navyColor)
+                .setMarginTop(8));
+
+            doc.add(new Paragraph(invoice.getNotes())
+                .setFont(helvetica)
+                .setFontSize(8)
+                .setFontColor(mutedColor)
+                .setMarginTop(4));
         }
 
         doc.close();
@@ -516,29 +640,4 @@ public byte[] generatePdf(String invoiceId, String lawyerId) {
         throw new RuntimeException("Impossible de générer le PDF", e);
     }
 }
-
-// ── Méthode utilitaire ──
-private void addTotalRow(PdfPTable table, String label, String value,
-                          Font labelFont, Font valueFont, boolean highlight) {
-    Color bg = highlight ? new Color(245, 243, 238) : Color.WHITE;
-
-    PdfPCell lCell = new PdfPCell(new Phrase(label, labelFont));
-    lCell.setBorderColor(new Color(220, 215, 205));
-    lCell.setBorderWidth(0.5f);
-    lCell.setPadding(6);
-    lCell.setBackgroundColor(bg);
-
-    PdfPCell vCell = new PdfPCell(new Phrase(value, valueFont));
-    vCell.setBorderColor(new Color(220, 215, 205));
-    vCell.setBorderWidth(0.5f);
-    vCell.setPadding(6);
-    vCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
-    vCell.setBackgroundColor(bg);
-
-    table.addCell(lCell);
-    table.addCell(vCell);
-}
-
-
-
 }

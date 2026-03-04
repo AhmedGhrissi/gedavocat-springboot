@@ -57,7 +57,9 @@ public interface ClientRepository extends JpaRepository<Client, String> {
 
     /**
      * Clients sans compte utilisateur lié (client_user_id IS NULL)
+     * Avec chargement eager du lawyer pour éviter LazyInitializationException
      */
+    @EntityGraph(attributePaths = {"lawyer"})
     List<Client> findByClientUserIsNull();
 
     /**

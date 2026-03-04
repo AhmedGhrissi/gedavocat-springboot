@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout}">
@@ -68,7 +68,7 @@
                     <div class="text-muted" style="font-size: .85rem;">
                         Demandé le <span th:text="${#temporals.format(sig.createdAt, 'dd/MM/yyyy')}">01/01/2025</span>
                         <span th:if="${sig.requestedBy}" class="ms-2">
-                            par <span th:text="${sig.requestedBy.firstName + ' ' + sig.requestedBy.lastName}">Avocat</span>
+                            par <span th:text="${sig.requestedBy.fullName}">Avocat</span>
                         </span>
                     </div>
                 </div>
@@ -86,7 +86,7 @@
                     <div class="text-muted" style="font-size: .85rem;">
                         Signé le <span th:if="${sig.signedAt}" th:text="${#temporals.format(sig.signedAt, 'dd/MM/yyyy HH:mm')}">01/01/2025</span>
                         <span th:if="${sig.requestedBy}" class="ms-2">
-                            • Demandé par <span th:text="${sig.requestedBy.firstName + ' ' + sig.requestedBy.lastName}">Avocat</span>
+                            • Demandé par <span th:text="${sig.requestedBy.fullName}">Avocat</span>
                         </span>
                     </div>
                 </div>

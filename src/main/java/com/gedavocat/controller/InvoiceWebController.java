@@ -175,7 +175,8 @@ public class InvoiceWebController {
             Invoice invoice = new Invoice();
             invoice.setInvoiceNumber(invoiceNumber);
             invoice.setClient(client);
-            invoice.setInvoiceDate(invoiceDate);
+            // Ensure invoiceDate is never null
+            invoice.setInvoiceDate(invoiceDate != null ? invoiceDate : LocalDate.now());
             invoice.setDueDate(dueDate);
             invoice.setStatus(Invoice.InvoiceStatus.SENT);
             invoice.setTotalHT(totalHT.setScale(2, RoundingMode.HALF_UP));

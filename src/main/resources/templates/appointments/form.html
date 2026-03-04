@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout}">
@@ -21,7 +21,7 @@
 
         <!-- Formulaire -->
         <div class="row">
-            <div class="col-lg-8">
+            <div class="col-12 col-xl-8 mb-4">
                 <div class="card">
                     <div class="card-header bg-primary text-white">
                         <h5 class="mb-0"><i class="fas fa-calendar-plus"></i> Informations du rendez-vous</h5>
@@ -31,7 +31,7 @@
                             
                             <!-- Type de rendez-vous -->
                             <div class="row mb-3">
-                                <div class="col-md-6">
+                                <div class="col-12 col-md-6 mb-3 mb-md-0">
                                     <label class="form-label">Type de rendez-vous <span class="text-danger">*</span></label>
                                     <select name="type" class="form-select" required>
                                         <option th:each="type : ${appointmentTypes}" 
@@ -40,7 +40,7 @@
                                                 th:selected="${appointment.type != null and appointment.type == type}">Type</option>
                                     </select>
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-12 col-md-6">
                                     <label class="form-label">Statut</label>
                                     <select name="status" class="form-select">
                                         <option th:each="status : ${appointmentStatuses}" 
@@ -62,23 +62,23 @@
 
                             <!-- Date et heure -->
                             <div class="row mb-3">
-                                <div class="col-md-6">
+                                <div class="col-12 col-md-6 mb-3 mb-md-0">
                                     <label class="form-label">Date et heure de début <span class="text-danger">*</span></label>
                                     <input type="datetime-local" name="appointmentDate" class="form-control" 
                                            th:value="${appointment.appointmentDate != null ? #temporals.format(appointment.appointmentDate, 'yyyy-MM-dd''T''HH:mm') : ''}"
                                            required>
                                 </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Date et heure de fin</label>
+                                <div class="col-12 col-md-6">
+                                    <label class="form-label">Date et heure de fin <span class="text-danger">*</span></label>
                                     <input type="datetime-local" name="endDate" class="form-control" 
-                                           th:value="${appointment.endDate != null ? #temporals.format(appointment.endDate, 'yyyy-MM-dd''T''HH:mm') : ''}">
-                                    <small class="text-muted">Optionnel</small>
+                                           th:value="${appointment.endDate != null ? #temporals.format(appointment.endDate, 'yyyy-MM-dd''T''HH:mm') : ''}"
+                                           required>
                                 </div>
                             </div>
 
                             <!-- Client et Dossier -->
                             <div class="row mb-3">
-                                <div class="col-md-6">
+                                <div class="col-12 col-md-6 mb-3 mb-md-0">
                                     <label class="form-label">Client</label>
                                     <select name="clientId" class="form-select">
                                         <option value="">Aucun client</option>
@@ -88,7 +88,7 @@
                                                 th:selected="${appointment.client != null and appointment.client.id == client.id}">Client</option>
                                     </select>
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-12 col-md-6">
                                     <label class="form-label">Dossier associé</label>
                                     <select name="caseId" class="form-select">
                                         <option value="">Aucun dossier</option>
@@ -113,13 +113,13 @@
                                 <hr>
                                 <h6 class="mb-3"><i class="fas fa-gavel"></i> Informations tribunal</h6>
                                 <div class="row mb-3">
-                                    <div class="col-md-6">
+                                    <div class="col-12 col-md-6 mb-3 mb-md-0">
                                         <label class="form-label">Nom du tribunal</label>
                                         <input type="text" name="courtName" class="form-control" 
                                                th:value="${appointment.courtName}" 
                                                placeholder="Ex: Tribunal de grande instance">
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-12 col-md-6">
                                         <label class="form-label">Salle d'audience</label>
                                         <input type="text" name="courtRoom" class="form-control" 
                                                th:value="${appointment.courtRoom}" 
@@ -161,14 +161,14 @@
 
                             <!-- Rappel -->
                             <div class="row mb-3">
-                                <div class="col-md-6">
+                                <div class="col-12 col-md-6 mb-3 mb-md-0">
                                     <div class="form-check">
                                         <input type="checkbox" name="sendReminder" class="form-check-input" 
                                                th:checked="${appointment.sendReminder}" value="true">
                                         <label class="form-check-label">Envoyer un rappel</label>
                                     </div>
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-12 col-md-6">
                                     <label class="form-label">Rappel avant (minutes)</label>
                                     <input type="number" name="reminderMinutesBefore" class="form-control" 
                                            th:value="${appointment.reminderMinutesBefore}" 
@@ -184,7 +184,7 @@
                             </div>
 
                             <!-- Boutons -->
-                            <div class="d-flex justify-content-between">
+                            <div class="d-flex flex-column flex-sm-row justify-content-between gap-2">
                                 <a href="/appointments" class="btn btn-secondary">
                                     <i class="fas fa-times"></i> Annuler
                                 </a>
@@ -198,8 +198,8 @@
             </div>
 
             <!-- Panneau d'aide -->
-            <div class="col-lg-4">
-                <div class="card">
+            <div class="col-12 col-xl-4">
+                <div class="card mb-3">
                     <div class="card-header bg-info text-white">
                         <h6 class="mb-0"><i class="fas fa-info-circle"></i> Aide</h6>
                     </div>
@@ -230,29 +230,29 @@
                 </div>
 
                 <!-- Actions rapides si édition -->
-                <div th:if="${appointment.id != null}" class="card mt-3">
+                <div th:if="${appointment.id != null}" class="card">
                     <div class="card-header bg-warning">
                         <h6 class="mb-0"><i class="fas fa-cog"></i> Actions</h6>
                     </div>
                     <div class="card-body">
-                        <form th:action="@{/appointments/{id}/confirm(id=${appointment.id})}" method="post" class="d-inline">
+                        <form th:action="@{/appointments/{id}/confirm(id=${appointment.id})}" method="post" class="d-inline w-100">
                             <button type="submit" class="btn btn-sm btn-success w-100 mb-2">
                                 <i class="fas fa-check"></i> Confirmer
                             </button>
                         </form>
-                        <form th:action="@{/appointments/{id}/cancel(id=${appointment.id})}" method="post" class="d-inline">
+                        <form th:action="@{/appointments/{id}/cancel(id=${appointment.id})}" method="post" class="d-inline w-100">
                             <button type="submit" class="btn btn-sm btn-warning w-100 mb-2"
                                     data-confirm="Annuler ce rendez-vous ?" data-confirm-type="warning">
                                 <i class="fas fa-ban"></i> Annuler
                             </button>
                         </form>
-                        <form th:action="@{/appointments/{id}/complete(id=${appointment.id})}" method="post" class="d-inline">
+                        <form th:action="@{/appointments/{id}/complete(id=${appointment.id})}" method="post" class="d-inline w-100">
                             <button type="submit" class="btn btn-sm btn-secondary w-100 mb-2">
                                 <i class="fas fa-check-circle"></i> Marquer terminé
                             </button>
                         </form>
                         <hr>
-                        <form th:action="@{/appointments/{id}/delete(id=${appointment.id})}" method="post" class="d-inline">
+                        <form th:action="@{/appointments/{id}/delete(id=${appointment.id})}" method="post" class="d-inline w-100">
                             <button type="submit" class="btn btn-sm btn-danger w-100"
                                     data-confirm="Supprimer définitivement ce rendez-vous ?" data-confirm-type="danger">
                                 <i class="fas fa-trash"></i> Supprimer

@@ -52,7 +52,7 @@
                                     <small class="text-muted">
                                         <i class="fas fa-info-circle"></i> 
                                         <strong>Partagé par :</strong>
-                                        <span th:text="${link.owner.firstName + ' ' + link.owner.lastName}">Avocat</span>
+                                        <span th:text="${link.owner.fullName}">Avocat</span>
                                         <br>
                                         <span th:if="${link.expiresAt}">
                                             <i class="fas fa-clock"></i>

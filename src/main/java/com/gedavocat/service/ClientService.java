@@ -90,10 +90,7 @@ public class ClientService {
         User lawyer = userRepository.findById(lawyerId)
                 .orElseThrow(() -> new RuntimeException("Avocat non trouvé"));
         
-        // Vérifier que l'avocat a un cabinet (firm_id obligatoire)
-        if (lawyer.getFirm() == null) {
-            throw new RuntimeException("L'avocat doit être rattaché à un cabinet pour créer des clients");
-        }
+        // Si l'avocat a un cabinet, le transmettre au client (sinon laisser null)
         
         // Vérifier si l'email existe déjà pour cet avocat
         if (clientRepository.existsByLawyerIdAndEmail(lawyerId, client.getEmail())) {

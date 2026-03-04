@@ -3,6 +3,7 @@ package com.gedavocat.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import com.gedavocat.listener.LABFTListener;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -16,6 +17,7 @@ import java.util.UUID;
 
 /**
  * Entité représentant un paiement (historique des transactions)
+ * LAB-FT: Contrôles automatiques ACPR pour montants > 1000€
  */
 @Entity
 @Table(name = "payments", indexes = {
@@ -23,6 +25,7 @@ import java.util.UUID;
     @Index(name = "idx_payment_status", columnList = "status"),
     @Index(name = "idx_payment_payplug", columnList = "payplug_payment_id")
 })
+@EntityListeners(LABFTListener.class)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

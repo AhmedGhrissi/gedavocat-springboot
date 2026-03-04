@@ -17,7 +17,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import com.gedavocat.model.Firm;
-import com.gedavocat.service.FirmService;
 
 @Service
 @RequiredArgsConstructor
