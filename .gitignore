@@ -94,10 +94,6 @@ Dockerfile.deploy
 # Docker infrastructure configs (déjà sur serveur)
 # SEC-HARDENED : Dockerfile DOIT être versionné pour la CI/CD
 docker/docker-compose.dev.yml
-docker/grafana/
-docker/prometheus/
-docker/promtail/
-docker/loki/
 docker/init/
 
 # E2E tests (Playwright - dev only)
