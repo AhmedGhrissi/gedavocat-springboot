@@ -47,6 +47,7 @@ CALL add_column_if_not_exists('notifications',    'entity_version', 'BIGINT DEFA
 CALL add_column_if_not_exists('permissions',      'entity_version', 'BIGINT DEFAULT 0');
 CALL add_column_if_not_exists('document_shares',  'entity_version', 'BIGINT DEFAULT 0');
 CALL add_column_if_not_exists('case_share_links', 'entity_version', 'BIGINT DEFAULT 0');
+CALL add_column_if_not_exists('labft_checks',     'entity_version', 'BIGINT DEFAULT 0');
 
 -- ── Colonnes users manquantes ────────────────────────────────
 

@@ -9,6 +9,7 @@ import com.gedavocat.model.LABFTCheck;
 import com.gedavocat.model.Payment;
 import com.gedavocat.repository.LABFTCheckRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -28,6 +29,7 @@ import java.util.*;
  * @author DPO Marie DUBOIS
  * @version 3.0 - Traçabilité complète ACPR
  */
+@Slf4j
 @Service
 @Transactional
 public class LABFTService {
@@ -437,5 +439,160 @@ public class LABFTService {
             case ELEVE -> LABFTCheck.CheckResult.SUSPECT;
             case CRITIQUE -> LABFTCheck.CheckResult.BLOQUE;
         };
+    }
+
+    // =============================================================================
+    // Contrôles automatiques (appelés explicitement depuis les services)
+    // =============================================================================
+
+    /**
+     * Effectue les contrôles LAB-FT automatiques lors de la création d'un client.
+     * Remplace l'ancien @PostPersist du LABFTListener (anti-pattern JPA).
+     * 
+     * @param client Le client nouvellement créé
+     */
+    public void performAutoClientChecks(Client client) {
+        try {
+            log.info("LAB-FT: Contrôle automatique nouveau client: {}", client.getId());
+
+            // 1. Scoring de risque
+            RiskLevel riskLevel = calculateClientRiskScore(client);
+
+            // 2. Contrôle PEP
+            boolean isPEP = isPoliticallyExposedPerson(client);
+            if (isPEP) {
+                LABFTCheck pepCheck = new LABFTCheck();
+                pepCheck.setClient(client);
+                pepCheck.setFirm(client.getFirm());
+                pepCheck.setCheckType(LABFTCheck.CheckType.PEP_CHECK);
+                pepCheck.setCheckResult(LABFTCheck.CheckResult.ALERTE);
+                pepCheck.setPepDetected(true);
+                pepCheck.setAutomaticCheck(true);
+                pepCheck.setCheckedBy("SYSTEM_AUTO_PEP");
+                pepCheck.setComments("Personne Politiquement Exposée détectée - Vigilance renforcée requise");
+                labftCheckRepository.save(pepCheck);
+                log.warn("LAB-FT ALERTE: Client PEP détecté: {}", client.getId());
+            }
+
+            // 3. Contrôle sanctions
+            boolean isSanctioned = isOnSanctionsList(client);
+            if (isSanctioned) {
+                LABFTCheck sanctionsCheck = new LABFTCheck();
+                sanctionsCheck.setClient(client);
+                sanctionsCheck.setFirm(client.getFirm());
+                sanctionsCheck.setCheckType(LABFTCheck.CheckType.SANCTIONS_CHECK);
+                sanctionsCheck.setCheckResult(LABFTCheck.CheckResult.BLOQUE);
+                sanctionsCheck.setSanctionsDetected(true);
+                sanctionsCheck.setAutomaticCheck(true);
+                sanctionsCheck.setCheckedBy("SYSTEM_AUTO_SANCTIONS");
+                sanctionsCheck.setComments("Client présent sur liste de sanctions - BLOQUÉ");
+                labftCheckRepository.save(sanctionsCheck);
+                log.error("LAB-FT CRITIQUE: Client sanctionné détecté: {} - BLOQUÉ", client.getId());
+            }
+
+            // 4. Vigilance initiale
+            LABFTCheck vigilanceCheck = new LABFTCheck();
+            vigilanceCheck.setClient(client);
+            vigilanceCheck.setFirm(client.getFirm());
+            vigilanceCheck.setCheckType(LABFTCheck.CheckType.VIGILANCE_CLIENT);
+            vigilanceCheck.setRiskLevel(convertToCheckRiskLevel(riskLevel));
+            vigilanceCheck.setCheckResult(determineAutoCheckResult(riskLevel, isPEP, isSanctioned));
+            vigilanceCheck.setPepDetected(isPEP);
+            vigilanceCheck.setSanctionsDetected(isSanctioned);
+            vigilanceCheck.setAutomaticCheck(true);
+            vigilanceCheck.setCheckedBy("SYSTEM_AUTO_VIGILANCE");
+            vigilanceCheck.setComments("Contrôle de vigilance initiale automatique");
+            labftCheckRepository.save(vigilanceCheck);
+
+            log.info("LAB-FT: Contrôles automatiques terminés pour client: {}, Risque: {}",
+                    client.getId(), riskLevel);
+
+        } catch (Exception e) {
+            log.error("LAB-FT: Erreur lors du contrôle automatique client {}: {}",
+                    client.getId(), e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Effectue les contrôles LAB-FT automatiques pour un paiement > 1000€.
+     * Remplace l'ancien @PostPersist du LABFTListener (anti-pattern JPA).
+     * 
+     * @param payment Le paiement nouvellement créé
+     */
+    public void performAutoPaymentChecks(Payment payment) {
+        try {
+            BigDecimal amount = payment.getAmount();
+
+            // Seuil de vigilance ACPR: 1000€
+            if (amount.compareTo(new BigDecimal("1000.00")) <= 0) {
+                return;
+            }
+
+            log.info("LAB-FT: Contrôle automatique paiement >1000€: {}, Montant: {}€",
+                    payment.getId(), amount);
+
+            List<String> alertReasons = new ArrayList<>();
+            boolean isSuspicious = false;
+
+            if (amount.compareTo(new BigDecimal("10000.00")) > 0) {
+                alertReasons.add("Montant > 10000€ - Déclaration TRACFIN requise");
+                isSuspicious = true;
+            }
+
+            if (amount.compareTo(new BigDecimal("8000.00")) > 0 &&
+                amount.compareTo(new BigDecimal("9900.00")) < 0) {
+                alertReasons.add("Montant proche du seuil 10000€ - Possible fractionnement");
+                isSuspicious = true;
+            }
+
+            LABFTCheck transactionCheck = new LABFTCheck();
+            transactionCheck.setPayment(payment);
+            transactionCheck.setFirm(payment.getUser() != null ? payment.getUser().getFirm() : null);
+            transactionCheck.setCheckType(LABFTCheck.CheckType.TRANSACTION_ANALYSIS);
+            transactionCheck.setAmount(amount);
+            transactionCheck.setTransactionType(
+                    payment.getSubscriptionPlan() != null ? payment.getSubscriptionPlan().toString() : "UNKNOWN");
+            transactionCheck.setCheckResult(isSuspicious ?
+                    LABFTCheck.CheckResult.SUSPECT : LABFTCheck.CheckResult.CONFORME);
+
+            if (isSuspicious) {
+                try {
+                    transactionCheck.setAlertReasons(objectMapper.writeValueAsString(alertReasons));
+                } catch (Exception e) {
+                    transactionCheck.setAlertReasons(String.join(", ", alertReasons));
+                }
+                transactionCheck.setTracfinDeclared(amount.compareTo(new BigDecimal("10000.00")) > 0);
+                if (transactionCheck.isTracfinDeclared()) {
+                    transactionCheck.setTracfinReference("TRACFIN-" + System.currentTimeMillis());
+                }
+            }
+
+            transactionCheck.setAutomaticCheck(true);
+            transactionCheck.setCheckedBy("SYSTEM_AUTO_TRANSACTION");
+            transactionCheck.setComments("Contrôle automatique paiement > 1000€");
+            labftCheckRepository.save(transactionCheck);
+
+            if (isSuspicious) {
+                log.warn("LAB-FT ALERTE: Transaction suspecte: {}, Montant: {}€, Raisons: {}",
+                        payment.getId(), amount, alertReasons);
+            }
+
+        } catch (Exception e) {
+            log.error("LAB-FT: Erreur lors du contrôle automatique paiement {}: {}",
+                    payment.getId(), e.getMessage(), e);
+        }
+    }
+
+    private LABFTCheck.CheckResult determineAutoCheckResult(RiskLevel riskLevel, boolean isPEP, boolean isSanctioned) {
+        if (isSanctioned) {
+            return LABFTCheck.CheckResult.BLOQUE;
+        }
+        if (riskLevel == RiskLevel.CRITIQUE || isPEP) {
+            return LABFTCheck.CheckResult.SUSPECT;
+        }
+        if (riskLevel == RiskLevel.ELEVE) {
+            return LABFTCheck.CheckResult.ALERTE;
+        }
+        return LABFTCheck.CheckResult.CONFORME;
     }
 }

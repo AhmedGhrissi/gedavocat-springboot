@@ -29,6 +29,7 @@ public class ClientService {
     private final AuditService auditService;
     private final AppointmentRepository appointmentRepository;
     private final CaseRepository caseRepository;
+    private final LABFTService labftService;
     
     /**
      * Récupère tous les clients d'un avocat
@@ -115,6 +116,13 @@ public class ClientService {
         Client savedClient = clientRepository.save(client);
         
         log.info("Client créé: {} ({})", savedClient.getName(), savedClient.getId());
+        
+        // Contrôles LAB-FT automatiques (conformité ACPR)
+        try {
+            labftService.performAutoClientChecks(savedClient);
+        } catch (Exception e) {
+            log.error("Erreur lors des contrôles LAB-FT du client: {}", e.getMessage());
+        }
         
         // Audit
         try {

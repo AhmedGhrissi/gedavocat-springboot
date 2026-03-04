@@ -35,6 +35,7 @@ class ClientServiceTest {
     @Mock private AppointmentRepository appointmentRepository;
     @Mock private CaseRepository caseRepository;
     @Mock private CaseService caseService;
+    @Mock private LABFTService labftService;
 
     @InjectMocks
     private ClientService clientService;

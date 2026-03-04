@@ -14,9 +14,7 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Listener JPA pour déclencher automatiquement les contrôles LAB-FT
@@ -47,16 +45,19 @@ public class LABFTListener {
     }
 
     /**
-     * Déclenché après la création d'un nouveau client
-     * Effectue automatiquement le contrôle de vigilance client initial
+     * Déclenché après la création d'un client ou paiement
+     * Effectue automatiquement les contrôles de vigilance LAB-FT
      */
     @PostPersist
-    public void onClientCreated(Object entity) {
-        if (!(entity instanceof Client)) {
-            return;
+    public void onEntityCreated(Object entity) {
+        if (entity instanceof Client client) {
+            handleClientCreated(client);
+        } else if (entity instanceof Payment payment) {
+            handlePaymentCreated(payment);
         }
+    }
 
-        Client client = (Client) entity;
+    private void handleClientCreated(Client client) {
         
         try {
             log.info("LAB-FT: Contrôle automatique nouveau client: {}", client.getId());
@@ -121,17 +122,7 @@ public class LABFTListener {
         }
     }
 
-    /**
-     * Déclenché après la création d'un paiement
-     * Effectue automatiquement le contrôle si montant > 1000€
-     */
-    @PostPersist
-    public void onPaymentCreated(Object entity) {
-        if (!(entity instanceof Payment)) {
-            return;
-        }
-
-        Payment payment = (Payment) entity;
+    private void handlePaymentCreated(Payment payment) {
         
         try {
             BigDecimal amount = payment.getAmount();
