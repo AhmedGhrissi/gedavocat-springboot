@@ -286,8 +286,8 @@ deploy:
       echo "HTTP: $HTTP"
       [ "$HTTP" = "200" ] || [ "$HTTP" = "302" ] || {
         echo "ERREUR: site ne repond pas (HTTP $HTTP)"
-        echo "--- Docker logs (50 dernieres lignes) ---"
-        ssh root@$SERVER_HOST "docker logs docavocat-app --tail=50 2>&1"
+        echo "--- Docker logs (200 dernieres lignes) ---"
+        ssh root@$SERVER_HOST "docker logs docavocat-app --tail=200 2>&1"
         exit 1
       }
       echo "Deploiement OK -> https://docavocat.fr"
