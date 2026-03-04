@@ -46,7 +46,8 @@ public class SecureCryptographyService {
     private static final String AES_ALGORITHM = "AES";
     private static final String AES_TRANSFORMATION = "AES/GCM/NoPadding";
     private static final String RSA_ALGORITHM = "RSA";
-    private static final String SIGNATURE_ALGORITHM = "SHA256withRSA";
+    // SEC-HARDENED : RSA-PSS (PKCS#1 v2.1) plus résistant que PKCS1v15
+    private static final String SIGNATURE_ALGORITHM = "SHA256withRSA/PSS";
     private static final String HASH_ALGORITHM = "SHA3-256";
     
     private static final int AES_KEY_LENGTH = 256;
@@ -61,6 +62,7 @@ public class SecureCryptographyService {
     private int keyRotationDays;
 
     private final SecureRandom secureRandom;
+    // SEC-HARDENED : ConcurrentHashMap pour thread-safety
     private final Map<String, CryptoKey> keyStore;
 
     public SecureCryptographyService() {
@@ -69,7 +71,7 @@ public class SecureCryptographyService {
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException("Impossible d'initialiser SecureRandom: " + e.getMessage(), e);
         }
-        this.keyStore = new HashMap<>();
+        this.keyStore = new java.util.concurrent.ConcurrentHashMap<>();
     }
 
     @PostConstruct

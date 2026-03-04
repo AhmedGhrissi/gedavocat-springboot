@@ -1,6 +1,7 @@
 package com.gedavocat.security.monitoring;
 
 import org.springframework.stereotype.Service;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
@@ -41,6 +42,7 @@ import java.time.Duration;
  * - MITRE ATT&CK Framework
  */
 @Service
+@Slf4j
 public class SecurityMonitoringService {
 
     @Autowired
@@ -122,7 +124,7 @@ public class SecurityMonitoringService {
 
         } catch (Exception e) {
             // Log erreur sans faire échouer l'application
-            System.err.println("Erreur monitoring failed login: " + e.getMessage());
+            log.error("SEC-MONITOR: Erreur monitoring failed login", e);
         }
     }
 
@@ -172,7 +174,7 @@ public class SecurityMonitoringService {
             requestCountByIP.computeIfAbsent(ipAddress, k -> new AtomicLong(0)).incrementAndGet();
 
         } catch (Exception e) {
-            System.err.println("Erreur monitoring user activity: " + e.getMessage());
+            log.error("SEC-MONITOR: Erreur monitoring user activity", e);
         }
     }
 
@@ -210,7 +212,7 @@ public class SecurityMonitoringService {
             }
 
         } catch (Exception e) {
-            System.err.println("Erreur monitoring HTTP request: " + e.getMessage());
+            log.error("SEC-MONITOR: Erreur monitoring HTTP request", e);
         }
     }
 
@@ -240,7 +242,7 @@ public class SecurityMonitoringService {
             }
 
         } catch (Exception e) {
-            System.err.println("Erreur monitoring data access: " + e.getMessage());
+            log.error("SEC-MONITOR: Erreur monitoring data access", e);
         }
     }
 
@@ -281,7 +283,7 @@ public class SecurityMonitoringService {
             );
 
         } catch (Exception e) {
-            System.err.println("Erreur génération rapport sécurité: " + e.getMessage());
+            log.error("SEC-MONITOR: Erreur génération rapport sécurité", e);
             return null;
         }
     }
@@ -330,7 +332,7 @@ public class SecurityMonitoringService {
             scheduleAlertRemoval(alertKey, 3600000); // 1h
 
         } catch (Exception e) {
-            System.err.println("Erreur envoi alerte brute force: " + e.getMessage());
+            log.error("SEC-MONITOR: Erreur envoi alerte brute force", e);
         }
     }
 
@@ -370,7 +372,7 @@ public class SecurityMonitoringService {
             scheduleAlertRemoval(alertKey, 1800000); // 30min
 
         } catch (Exception e) {
-            System.err.println("Erreur alerte activité suspecte: " + e.getMessage());
+            log.error("SEC-MONITOR: Erreur alerte activité suspecte", e);
         }
     }
 
@@ -410,7 +412,7 @@ public class SecurityMonitoringService {
             scheduleAlertRemoval(alertKey, 3600000);
 
         } catch (Exception e) {
-            System.err.println("Erreur alerte payload malveillant: " + e.getMessage());
+            log.error("SEC-MONITOR: Erreur alerte payload malveillant", e);
         }
     }
 
@@ -440,7 +442,7 @@ public class SecurityMonitoringService {
             scheduleAlertRemoval(alertKey, 1800000);
 
         } catch (Exception e) {
-            System.err.println("Erreur alerte scanning: " + e.getMessage());
+            log.error("SEC-MONITOR: Erreur alerte scanning", e);
         }
     }
 
@@ -471,7 +473,7 @@ public class SecurityMonitoringService {
             scheduleAlertRemoval(alertKey, 900000); // 15min
 
         } catch (Exception e) {
-            System.err.println("Erreur alerte rate limit: " + e.getMessage());
+            log.error("SEC-MONITOR: Erreur alerte rate limit", e);
         }
     }
 
@@ -503,7 +505,7 @@ public class SecurityMonitoringService {
             scheduleAlertRemoval(alertKey, 1800000);
 
         } catch (Exception e) {
-            System.err.println("Erreur alerte accès données: " + e.getMessage());
+            log.error("SEC-MONITOR: Erreur alerte accès données", e);
         }
     }
 
@@ -545,7 +547,7 @@ public class SecurityMonitoringService {
             scheduleAlertRemoval(alertKey, 1800000);
 
         } catch (Exception e) {
-            System.err.println("Erreur alerte ML anomalie: " + e.getMessage());
+            log.error("SEC-MONITOR: Erreur alerte ML anomalie", e);
         }
     }
 
@@ -585,7 +587,7 @@ public class SecurityMonitoringService {
             scheduleAlertRemoval(alertKey, 3600000);
 
         } catch (Exception e) {
-            System.err.println("Erreur alerte attaque distribuée: " + e.getMessage());
+            log.error("SEC-MONITOR: Erreur alerte attaque distribuée", e);
         }
     }
 
@@ -650,7 +652,7 @@ public class SecurityMonitoringService {
             }
             
         } catch (Exception e) {
-            System.err.println("Erreur analyse ML patterns: " + e.getMessage());
+            log.error("SEC-MONITOR: Erreur analyse ML patterns", e);
         }
     }
 
@@ -749,16 +751,15 @@ public class SecurityMonitoringService {
             }
 
         } catch (Exception e) {
-            System.err.println("Erreur envoi alerte: " + e.getMessage());
+            log.error("SEC-MONITOR: Erreur envoi alerte", e);
         }
     }
 
     private void sendEmailAlert(String subject, String message) {
         
-        // Implémentation simplifiée - en production utiliser service email
-        System.out.println("EMAIL ALERT TO: " + alertEmail);
-        System.out.println("SUBJECT: " + subject);
-        System.out.println("MESSAGE: " + message);
+        // SEC-HARDENED : utiliser SLF4J au lieu de System.out
+        log.info("SEC-ALERT EMAIL TO: {}, SUBJECT: {}", alertEmail, subject);
+        log.debug("SEC-ALERT MESSAGE: {}", message);
     }
 
     private void sendWebhookAlert(String subject, String message) throws Exception {

@@ -14,6 +14,8 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.nio.file.Files;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.security.*;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
@@ -21,27 +23,35 @@ import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 
 /**
- * Service de gestion des tokens JWT avec RS256 (RSA)
+ * Service de gestion des tokens JWT avec RS256 (RSA) — NIVEAU MILITAIRE/BANCAIRE
  * 
  * Architecture de sécurité renforcée :
- * - RS256 (RSA-SHA256) au lieu de HS256
- * - Clés privée/publique asymétriques (2048 bits)
- * - Access Token + Refresh Token
- * - Rotation automatique des clés (optionnel)
+ * - RS256 (RSA-SHA256)
+ * - Clés privée/publique asymétriques (4096 bits — ANSSI 2026+)
+ * - Access Token (15 min) + Refresh Token (7 jours)
+ * - Validation issuer/audience
+ * - Blacklist pour révocation
+ * - Permissions fichiers restrictives (600)
  * 
  * Référence: docs/RAPPORT_AUDIT_SECURITE_Phase1.md §6.3
  * 
  * @author Gedavocat Security Team
- * @version 2.0 (RS256)
+ * @version 3.0 (SEC-HARDENED : RS256-4096, blacklist, issuer/audience)
  */
 @Service
 @Slf4j
 public class JwtServiceRS256 {
     
-    @Value("${jwt.expiration:3600000}") // 1 heure par défaut
+    private static final String JWT_ISSUER = "docavocat.fr";
+    private static final String JWT_AUDIENCE = "docavocat-api";
+    // SEC-HARDENED : RSA 4096 bits minimum (ANSSI recommandation ≥3072 pour 2026+)
+    private static final int RSA_KEY_SIZE = 4096;
+    
+    @Value("${jwt.expiration:900000}") // SEC-HARDENED : 15 minutes par défaut (OWASP)
     private long accessTokenExpiration;
     
     @Value("${jwt.refresh.expiration:604800000}") // 7 jours par défaut
@@ -55,12 +65,27 @@ public class JwtServiceRS256 {
     
     private PrivateKey privateKey;
     private PublicKey publicKey;
+    
+    private final JwtBlacklistService jwtBlacklistService;
+    
+    public JwtServiceRS256(JwtBlacklistService jwtBlacklistService) {
+        this.jwtBlacklistService = jwtBlacklistService;
+    }
 
     @PostConstruct
     public void init() {
         try {
             loadOrGenerateKeys();
-            log.info("JWT RS256 keys loaded successfully");
+            // SEC-HARDENED : Valider la taille de la clé RSA
+            if (publicKey instanceof java.security.interfaces.RSAPublicKey rsaPub) {
+                int keySize = rsaPub.getModulus().bitLength();
+                if (keySize < 3072) {
+                    log.error("SEC-CRITICAL: RSA key size {} bits is too small. Minimum 3072 bits required (ANSSI). "
+                            + "Delete existing keys and restart to auto-generate 4096-bit keys.", keySize);
+                    throw new IllegalStateException("RSA key too small: " + keySize + " bits (min 3072)");
+                }
+                log.info("JWT RS256 keys loaded successfully (RSA-{} bits)", keySize);
+            }
         } catch (Exception e) {
             log.error("Failed to load/generate JWT keys: {}", e.getMessage());
             throw new IllegalStateException("JWT initialization failed", e);
@@ -75,7 +100,7 @@ public class JwtServiceRS256 {
         File publicKeyFile = new File(publicKeyPath);
         
         if (!privateKeyFile.exists() || !publicKeyFile.exists()) {
-            log.warn("JWT keys not found. Generating new RSA key pair...");
+            log.warn("SEC-WARN: JWT keys not found. Generating new RSA-{} key pair...", RSA_KEY_SIZE);
             generateAndSaveKeys();
         }
         
@@ -111,10 +136,12 @@ public class JwtServiceRS256 {
 
     /**
      * Génère et sauvegarde une nouvelle paire de clés RSA
+     * SEC-HARDENED : 4096 bits + permissions fichiers restrictives
      */
     private void generateAndSaveKeys() throws Exception {
         KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
-        keyGen.initialize(2048);
+        // SEC-HARDENED : 4096 bits (ANSSI recommandation ≥3072 pour 2026+)
+        keyGen.initialize(RSA_KEY_SIZE, SecureRandom.getInstanceStrong());
         KeyPair keyPair = keyGen.generateKeyPair();
         
         // Créer le répertoire si nécessaire
@@ -137,7 +164,17 @@ public class JwtServiceRS256 {
             fos.write("\n-----END PUBLIC KEY-----\n".getBytes());
         }
         
-        log.info("Generated new RSA key pair at: {}", keysDir.getAbsolutePath());
+        // SEC-HARDENED : Définir permissions restrictives sur les fichiers de clés (600)
+        try {
+            Set<PosixFilePermission> ownerOnly = PosixFilePermissions.fromString("rw-------");
+            Files.setPosixFilePermissions(new File(privateKeyPath).toPath(), ownerOnly);
+            Files.setPosixFilePermissions(new File(publicKeyPath).toPath(), ownerOnly);
+            log.info("SEC: File permissions set to 600 on RSA key files");
+        } catch (UnsupportedOperationException e) {
+            log.warn("SEC-WARN: Cannot set POSIX permissions (Windows?). Secure key files manually.");
+        }
+        
+        log.info("Generated new RSA-{} key pair at: {}", RSA_KEY_SIZE, keysDir.getAbsolutePath());
         
         privateKey = keyPair.getPrivate();
         publicKey = keyPair.getPublic();
@@ -207,6 +244,7 @@ public class JwtServiceRS256 {
     
     /**
      * Construit le token JWT signé avec RS256
+     * SEC-HARDENED : ajout issuer/audience
      */
     private String buildToken(
             Map<String, Object> extraClaims,
@@ -217,6 +255,8 @@ public class JwtServiceRS256 {
                 .builder()
                 .setClaims(extraClaims)
                 .setSubject(userDetails.getUsername())
+                .setIssuer(JWT_ISSUER)
+                .setAudience(JWT_AUDIENCE)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(privateKey, SignatureAlgorithm.RS256)
@@ -240,11 +280,14 @@ public class JwtServiceRS256 {
     
     /**
      * Extrait toutes les claims du token (vérifié avec la clé publique)
+     * SEC-HARDENED : validation issuer/audience obligatoire
      */
     private Claims extractAllClaims(String token) {
         return Jwts
                 .parserBuilder()
                 .setSigningKey(publicKey)
+                .requireIssuer(JWT_ISSUER)
+                .requireAudience(JWT_AUDIENCE)
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
@@ -252,13 +295,19 @@ public class JwtServiceRS256 {
     
     /**
      * Valide un token
+     * SEC-HARDENED : ajout vérification blacklist pour révocation
      */
     public boolean isTokenValid(String token, UserDetails userDetails) {
         try {
+            // SEC-HARDENED : vérifier la blacklist avant toute autre validation
+            if (jwtBlacklistService.isBlacklisted(token)) {
+                log.debug("Token RS256 rejected: blacklisted");
+                return false;
+            }
             final String username = extractUsername(token);
             return (username.equals(userDetails.getUsername())) && !isTokenExpired(token);
         } catch (Exception e) {
-            log.debug("Token validation failed: {}", e.getMessage());
+            log.debug("Token RS256 validation failed: {}", e.getMessage());
             return false;
         }
     }
@@ -271,9 +320,9 @@ public class JwtServiceRS256 {
     }
     
     /**
-     * Extrait la date d'expiration du token
+     * Extrait la date d'expiration du token (public pour logout/blacklist)
      */
-    private Date extractExpiration(String token) {
+    public Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
     }
     

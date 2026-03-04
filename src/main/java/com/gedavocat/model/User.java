@@ -364,7 +364,9 @@ public class User {
 
     // ===== CHAMPS MFA (MULTI-FACTOR AUTHENTICATION) =====
     
-    @Column(name = "mfa_secret", length = 32)
+    // SEC-HARDENED : chiffrement AES-256-GCM transparent via JPA Converter
+    @Convert(converter = com.gedavocat.security.crypto.MfaSecretAttributeConverter.class)
+    @Column(name = "mfa_secret", length = 512)
     private String mfaSecret;
     
     @Column(name = "mfa_enabled")

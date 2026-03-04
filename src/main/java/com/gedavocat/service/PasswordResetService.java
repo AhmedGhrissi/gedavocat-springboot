@@ -49,7 +49,7 @@ public class PasswordResetService {
     public void requestReset(String email) {
         Optional<User> userOpt = userRepository.findByEmail(email.toLowerCase());
         if (userOpt.isEmpty()) {
-            log.warn("[PasswordReset] Tentative pour email inexistant : {}", email);
+            log.warn("[PasswordReset] Tentative pour email inexistant (masqué)");
             return;
         }
         User user = userOpt.get();
@@ -58,7 +58,7 @@ public class PasswordResetService {
         user.setResetTokenExpiry(LocalDateTime.now().plusHours(TOKEN_EXPIRY_HOURS));
         userRepository.save(user);
         sendResetEmail(email, token);
-        log.info("[PasswordReset] Token créé (DB) pour {}", email);
+        log.info("[PasswordReset] Token créé (DB) pour utilisateur ID: {}", user.getId());
     }
 
     /**
@@ -95,7 +95,7 @@ public class PasswordResetService {
         user.setResetToken(null);
         user.setResetTokenExpiry(null);
         userRepository.save(user);
-        log.info("[PasswordReset] Mot de passe réinitialisé pour {}", user.getEmail());
+        log.info("[PasswordReset] Mot de passe réinitialisé pour utilisateur ID: {}", user.getId());
         return true;
     }
 
@@ -120,9 +120,9 @@ public class PasswordResetService {
                 "L'équipe DocAvocat\n" + baseUrl
             );
             mailSender.send(msg);
-            log.info("[PasswordReset] Email envoyé à {}", to);
+            log.info("[PasswordReset] Email de réinitialisation envoyé");
         } catch (Exception e) {
-            log.warn("[PasswordReset] Impossible d'envoyer l'email à {} : {}", to, e.getMessage());
+            log.warn("[PasswordReset] Impossible d'envoyer l'email de réinitialisation : {}", e.getMessage());
         }
     }
 }
