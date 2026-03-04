@@ -86,9 +86,28 @@ __pycache__/
 .env.*
 !docker/.env.example
 
-# Docker production artifacts
+# Docker production/deploy artifacts
 Dockerfile.prod
 Dockerfile.hotfix
+Dockerfile.deploy
+
+# Docker infrastructure configs (déjà sur serveur)
+docker/Dockerfile
+docker/docker-compose.dev.yml
+docker/grafana/
+docker/prometheus/
+docker/promtail/
+docker/loki/
+docker/init/
+
+# E2E tests (Playwright - dev only)
+e2e/
+
+# Scripts (backup, SQL - déjà sur serveur)
+scripts/
+
+# Nginx config (déjà sur serveur)
+config/nginx.conf
 
 # H2 Database files
 *.db
@@ -109,12 +128,21 @@ config/keys/
 *.pem
 *.key
 
+# Backup templates / old files
+*.backup
+*.old
+
 # Fichiers locaux divers
 grafana.bat
 start-h2.bat
 start-local.bat
 *.sh.bak
 generate_docs.py
+
+# Application configs (non-prod)
+src/main/resources/application-backup.properties
+src/main/resources/application-clean.properties
+src/main/resources/application-secure.properties
 
 # Backup folder
 backup/
