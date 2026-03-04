@@ -40,7 +40,7 @@ buildNumber.properties
 build/
 
 # IntelliJ IDEA
-.idea
+.idea/
 *.iws
 *.iml
 *.ipr
@@ -65,71 +65,56 @@ Thumbs.db
 # Application specific
 uploads/
 temp/
-logs/
-
-# Fichiers sensibles et utilitaires locaux
-gedavocat_dump.sql
-*.sql.bak
-deploiement-hetzner-o2switch.pdf
-generate_pdf.py
 
 # Database dumps (RGPD - données sensibles)
+*.sql.bak
 dump_*.sql
 *_dump.sql
 backup_*.sql
 
-# Scripts et artefacts générés localement
-generate_docs.py
+# Python (audit scripts locaux)
+*.py
+*.pyc
+__pycache__/
+.venv/
+
+# PDF / documents générés
 *.pdf
 
-# Python virtual environment
-.venv/
-__pycache__/
-*.pyc
-
-# Config de production (contient les credentials)
-application-o2switch.properties
-
-# Environment files
+# Environment files (credentials)
 .env
-.env.local
-.env.production
-.env.prod
+.env.*
+!docker/.env.example
 
-# Docker production artifacts (contiennent les credentials)
+# Docker production artifacts
 Dockerfile.prod
 Dockerfile.hotfix
-
-# Rapports d'audit (documents internes)
-QA-AUDIT-REPORT.md
-SECURITY-AUDIT-REPORT.md
-
-# Application properties (contains sensitive data)
-# Uncomment if you want to exclude it
-# src/main/resources/application.properties
-# src/main/resources/application-prod.properties
 
 # H2 Database files
 *.db
 
-# Node (if using frontend build tools)
+# Node
 node_modules/
 npm-debug.log
 yarn-error.log
-grafana.bat
 
 # Playwright / Tests artifacts
 tests/
-tests/node_modules/
-tests/test-results/
-tests/playwright-report/
 test-results/
 playwright-report/
 playwright/.cache/
 
 # JWT RSA Keys (CRITICAL - DO NOT COMMIT)
 config/keys/
-config/keys/*.pem
 *.pem
-private_key.pem
-public_key.pem
+*.key
+
+# Fichiers locaux divers
+grafana.bat
+start-h2.bat
+start-local.bat
+*.sh.bak
+generate_docs.py
+
+# Backup folder
+backup/
