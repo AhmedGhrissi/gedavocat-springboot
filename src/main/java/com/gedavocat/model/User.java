@@ -48,13 +48,17 @@ public class User {
     @Column(nullable = false, length = 100)
     private String name;
 
-    // Nouveaux champs pour les détails du profil
+    // Champs obligatoires pour le profil
+    @NotBlank(message = "Le prénom est obligatoire")
+    @Size(min = 2, max = 100, message = "Le prénom doit contenir entre 2 et 100 caractères")
     @Getter(AccessLevel.NONE)  // Désactiver le getter Lombok - on fournit notre propre getter safe
-    @Column(name = "first_name", length = 100)
+    @Column(name = "first_name", nullable = false, length = 100)
     private String firstName;
 
+    @NotBlank(message = "Le nom est obligatoire")
+    @Size(min = 2, max = 100, message = "Le nom doit contenir entre 2 et 100 caractères")
     @Getter(AccessLevel.NONE)  // Désactiver le getter Lombok - on fournit notre propre getter safe
-    @Column(name = "last_name", length = 100)
+    @Column(name = "last_name", nullable = false, length = 100)
     private String lastName;
 
     // SEC FIX L-06 : validation format téléphone

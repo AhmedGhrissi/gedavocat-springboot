@@ -63,8 +63,16 @@ public class Client {
     @JsonIgnore
     private User clientUser;
     
+    @NotBlank(message = "Le prénom est obligatoire")
+    @Size(min = 1, max = 100, message = "Le prénom doit contenir entre 1 et 100 caractères")
+    @Column(name = "first_name", nullable = false, length = 100)
+    private String firstName;
+
     @NotBlank(message = "Le nom est obligatoire")
-    @Size(min = 1, max = 100, message = "Le nom doit contenir entre 1 et 100 caract\u00e8res")
+    @Size(min = 1, max = 100, message = "Le nom doit contenir entre 1 et 100 caractères")
+    @Column(name = "last_name", nullable = false, length = 100)
+    private String lastName;
+
     @Column(nullable = false, length = 100)
     private String name;
     
@@ -149,10 +157,39 @@ public class Client {
         return "EXPIRED";
     }
     
+    /**
+     * Retourne le nom complet (prénom + nom)
+     */
+    @Transient
+    public String getFullName() {
+        if (firstName != null && lastName != null && !firstName.isEmpty() && !lastName.isEmpty()) {
+            return firstName + " " + lastName;
+        } else if (firstName != null && !firstName.isEmpty()) {
+            return firstName;
+        } else if (lastName != null && !lastName.isEmpty()) {
+            return lastName;
+        }
+        return name != null ? name : "";
+    }
+
     @PrePersist
     public void prePersist() {
         if (id == null || id.isEmpty()) {
             id = UUID.randomUUID().toString();
+        }
+        // Synchroniser le champ name à partir de firstName/lastName
+        if (firstName != null && lastName != null) {
+            this.name = (firstName + " " + lastName).trim();
+        } else if (name == null || name.isEmpty()) {
+            this.name = firstName != null ? firstName : (lastName != null ? lastName : "");
+        }
+    }
+
+    @PreUpdate
+    public void preUpdate() {
+        // Synchroniser le champ name à partir de firstName/lastName
+        if (firstName != null && lastName != null) {
+            this.name = (firstName + " " + lastName).trim();
         }
     }
 }

@@ -117,6 +117,8 @@ public class MultiTenantIsolationTest {
         lawyerA.setId(UUID.randomUUID().toString());
         lawyerA.setEmail("avocat.a@cabinet-dupont.fr");
         lawyerA.setName("Maître Dupont");
+        lawyerA.setFirstName("Maître");
+        lawyerA.setLastName("Dupont");
         lawyerA.setPassword("password_encoded");
         lawyerA.setRole(User.UserRole.LAWYER);
         lawyerA.setFirm(firmA);
@@ -129,6 +131,8 @@ public class MultiTenantIsolationTest {
         lawyerB.setId(UUID.randomUUID().toString());
         lawyerB.setEmail("avocat.b@cabinet-martin.fr");
         lawyerB.setName("Maître Martin");
+        lawyerB.setFirstName("Maître");
+        lawyerB.setLastName("Martin");
         lawyerB.setPassword("password_encoded");
         lawyerB.setRole(User.UserRole.LAWYER);
         lawyerB.setFirm(firmB);
@@ -149,6 +153,8 @@ public class MultiTenantIsolationTest {
         clientA1.setId(UUID.randomUUID().toString());
         clientA1.setFirm(firmA);
         clientA1.setLawyer(lawyerA);
+        clientA1.setFirstName("Jean");
+        clientA1.setLastName("Dupuis");
         clientA1.setName("Jean Dupuis");
         clientA1.setEmail("jean.dupuis@example.com");
         clientA1.setPhone("0601020304");
@@ -159,6 +165,8 @@ public class MultiTenantIsolationTest {
         clientB1.setId(UUID.randomUUID().toString());
         clientB1.setFirm(firmB);
         clientB1.setLawyer(lawyerB);
+        clientB1.setFirstName("Marie");
+        clientB1.setLastName("Durand");
         clientB1.setName("Marie Durand");
         clientB1.setEmail("marie.durand@example.com");
         clientB1.setPhone("0607080910");
@@ -363,6 +371,8 @@ public class MultiTenantIsolationTest {
             lawyer.setId(UUID.randomUUID().toString());
             lawyer.setEmail("avocat" + i + "@cabinet-dupont.fr");
             lawyer.setName("Avocat " + i);
+            lawyer.setFirstName("Avocat");
+            lawyer.setLastName("Test" + i);
             lawyer.setPassword("password");
             lawyer.setRole(User.UserRole.LAWYER);
             lawyer.setFirm(firmA);

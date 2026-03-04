@@ -113,6 +113,11 @@ public class ClientService {
         client.setFirm(lawyer.getFirm()); // Hériter du cabinet de l'avocat
         client.setCreatedAt(LocalDateTime.now());
         
+        // Construire le champ name à partir de firstName + lastName
+        if (client.getFirstName() != null && client.getLastName() != null) {
+            client.setName((client.getFirstName() + " " + client.getLastName()).trim());
+        }
+        
         Client savedClient = clientRepository.save(client);
         
         log.info("Client créé: {} ({})", savedClient.getName(), savedClient.getId());
@@ -150,7 +155,9 @@ public class ClientService {
             throw new RuntimeException("Vous n'avez pas accès à ce client");
         }
         
-        client.setName(updatedClient.getName());
+        client.setFirstName(updatedClient.getFirstName());
+        client.setLastName(updatedClient.getLastName());
+        client.setName((updatedClient.getFirstName() + " " + updatedClient.getLastName()).trim());
         client.setEmail(updatedClient.getEmail());
         client.setPhone(updatedClient.getPhone());
         client.setAddress(updatedClient.getAddress());

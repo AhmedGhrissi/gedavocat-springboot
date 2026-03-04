@@ -53,6 +53,8 @@ class ClientServiceTest {
 
         client = new Client();
         client.setId("client-001");
+        client.setFirstName("Paul");
+        client.setLastName("Durand");
         client.setName("Paul Durand");
         client.setEmail("paul.durand@email.com");
         client.setPhone("0612345678");

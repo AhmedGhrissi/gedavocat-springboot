@@ -45,6 +45,8 @@ class AuthControllerTest {
         User admin = new User();
         admin.setId(UUID.randomUUID().toString());
         admin.setName("Admin Test");
+        admin.setFirstName("Admin");
+        admin.setLastName("Test");
         admin.setEmail("admin@gedavocat.com");
         admin.setPassword(passwordEncoder.encode("password"));
         admin.setRole(User.UserRole.ADMIN);
@@ -55,6 +57,8 @@ class AuthControllerTest {
         User lawyer = new User();
         lawyer.setId(UUID.randomUUID().toString());
         lawyer.setName("Jean Dupont");
+        lawyer.setFirstName("Jean");
+        lawyer.setLastName("Dupont");
         lawyer.setEmail("jean.dupont@gedavocat.com");
         lawyer.setPassword(passwordEncoder.encode("password"));
         lawyer.setRole(User.UserRole.LAWYER);

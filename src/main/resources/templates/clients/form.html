@@ -47,16 +47,30 @@
                                     <input type="hidden" id="clientTypeInput" name="clientType" th:value="${client.clientType ?: 'INDIVIDUAL'}"/>
                                 </div>
 
-                                <!-- Champs communs -->
-                                <div class="form-group mb-3">
-                                    <label for="name" class="form-label">
-                                        <span id="nameLabelText">Nom complet</span> *
-                                    </label>
-                                    <input type="text" id="name" th:field="*{name}" 
-                                           class="form-control" required
-                                           placeholder="Ex: Jean Dupont">
-                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('name')}" 
-                                         th:errors="*{name}">Erreur</div>
+                                <!-- Prénom et Nom -->
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="firstName" class="form-label">Prénom *</label>
+                                            <input type="text" id="firstName" th:field="*{firstName}" 
+                                                   class="form-control" required
+                                                   placeholder="Ex: Jean">
+                                            <div class="invalid-feedback" th:if="${#fields.hasErrors('firstName')}" 
+                                                 th:errors="*{firstName}">Erreur</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="lastName" class="form-label">
+                                                <span id="nameLabelText">Nom</span> *
+                                            </label>
+                                            <input type="text" id="lastName" th:field="*{lastName}" 
+                                                   class="form-control" required
+                                                   placeholder="Ex: Dupont">
+                                            <div class="invalid-feedback" th:if="${#fields.hasErrors('lastName')}" 
+                                                 th:errors="*{lastName}">Erreur</div>
+                                        </div>
+                                    </div>
                                 </div>
                                 
                                 <!-- Champs professionnels (masqués par défaut) -->
@@ -156,11 +170,13 @@
                 btnPro.classList.add('active', 'border-success');
                 proFields.style.display = 'block';
                 nameLabel.textContent = 'Nom du représentant';
+                document.getElementById('firstName').placeholder = 'Ex: Jean';
             } else {
                 btnPro.classList.remove('active', 'border-success');
                 btnInd.classList.add('active', 'border-primary');
                 proFields.style.display = 'none';
-                nameLabel.textContent = 'Nom complet';
+                nameLabel.textContent = 'Nom';
+                document.getElementById('firstName').placeholder = 'Ex: Jean';
             }
         }
 

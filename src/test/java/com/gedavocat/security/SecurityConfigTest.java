@@ -44,6 +44,8 @@ class SecurityConfigTest {
         User defaultUser = new User();
         defaultUser.setId(UUID.randomUUID().toString());
         defaultUser.setName("User Test");
+        defaultUser.setFirstName("User");
+        defaultUser.setLastName("Test");
         defaultUser.setEmail("user@test.com"); // Must be valid email format
         defaultUser.setPassword(passwordEncoder.encode("password"));
         defaultUser.setRole(User.UserRole.LAWYER);
@@ -55,6 +57,8 @@ class SecurityConfigTest {
         User lawyer = new User();
         lawyer.setId(UUID.randomUUID().toString());
         lawyer.setName("Lawyer Test");
+        lawyer.setFirstName("Lawyer");
+        lawyer.setLastName("Test");
         lawyer.setEmail("lawyer@test.com");
         lawyer.setPassword(passwordEncoder.encode("password"));
         lawyer.setRole(User.UserRole.LAWYER);
@@ -66,6 +70,8 @@ class SecurityConfigTest {
         User admin = new User();
         admin.setId(UUID.randomUUID().toString());
         admin.setName("Admin Test");
+        admin.setFirstName("Admin");
+        admin.setLastName("Test");
         admin.setEmail("admin@test.com");
         admin.setPassword(passwordEncoder.encode("password"));
         admin.setRole(User.UserRole.ADMIN);
@@ -76,6 +82,8 @@ class SecurityConfigTest {
         User client = new User();
         client.setId(UUID.randomUUID().toString());
         client.setName("Client Test");
+        client.setFirstName("Client");
+        client.setLastName("Test");
         client.setEmail("client@test.com");
         client.setPassword(passwordEncoder.encode("password"));
         client.setRole(User.UserRole.CLIENT);

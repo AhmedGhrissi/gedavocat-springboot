@@ -48,6 +48,8 @@ class AuthServiceTest {
         testUser = new User();
         testUser.setId("test-id-001");
         testUser.setName("Maitre Jean Dupont");
+        testUser.setFirstName("Jean");
+        testUser.setLastName("Dupont");
         testUser.setEmail("jean.dupont@gedavocat.com");
         testUser.setPassword("$2a$10$hashedPassword");
         testUser.setRole(User.UserRole.LAWYER);
