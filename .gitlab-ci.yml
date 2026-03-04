@@ -253,6 +253,21 @@ deploy:
         echo "Discord deploy-start: HTTP $RESPONSE"
       }
   script:
+    # Nettoyage disque avant deploiement (evite "No space left on device")
+    - |
+      ssh root@$SERVER_HOST "
+        echo '=== Espace disque avant nettoyage ==='
+        df -h / | tail -1
+        echo '--- Nettoyage Docker ---'
+        docker system prune -af --filter 'until=72h' 2>/dev/null || true
+        docker volume prune -f 2>/dev/null || true
+        truncate -s 0 /var/lib/docker/containers/*/*-json.log 2>/dev/null || true
+        apt-get clean 2>/dev/null || true
+        rm -rf /var/lib/apt/lists/* /tmp/* 2>/dev/null || true
+        echo '=== Espace disque apres nettoyage ==='
+        df -h / | tail -1
+      "
+
     # Envoi des fichiers de configuration
     - scp docker/docker-compose.yml root@$SERVER_HOST:$REMOTE_DIR/docker-compose.yml
 
