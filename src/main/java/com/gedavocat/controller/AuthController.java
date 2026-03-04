@@ -136,7 +136,7 @@ public class AuthController {
             u.setEmailVerified(true);
             userRepository.save(u);
         });
-        ra.addFlashAttribute("message", "Email vérifié avec succès ! Vous pouvez maintenant vous connecter.");
+        ra.addFlashAttribute("message", "Email vérifié avec succès ! Votre essai gratuit de 14 jours est actif. Connectez-vous pour commencer.");
         return "redirect:/login";
     }
 

@@ -319,10 +319,11 @@ public class User {
     }
 
     /**
-     * Vérifier si l'abonnement est actif
+     * Vérifier si l'abonnement est actif (inclut ACTIVE et TRIAL non expiré)
      */
     public boolean hasActiveSubscription() {
-        return subscriptionStatus == SubscriptionStatus.ACTIVE
+        return (subscriptionStatus == SubscriptionStatus.ACTIVE
+                || subscriptionStatus == SubscriptionStatus.TRIAL)
             && subscriptionEndsAt != null
             && subscriptionEndsAt.isAfter(LocalDateTime.now());
     }

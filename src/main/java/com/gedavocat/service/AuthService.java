@@ -74,6 +74,24 @@ public class AuthService {
         user.setEmailVerified(false);  // doit être vérifié par email avant connexion
         user.setAccountEnabled(true);  // compte activé, mais connexion bloquée jusqu'à vérification email
         
+        // Synchroniser le plan d'abonnement sur l'utilisateur (TOUJOURS, même sans cabinet)
+        try {
+            String p = request.getSubscriptionPlan() == null ? "" : request.getSubscriptionPlan().trim().toUpperCase();
+            if (p.contains("ESSENTIEL")) {
+                user.setSubscriptionPlan(User.SubscriptionPlan.ESSENTIEL);
+            } else if (p.contains("PROFESSIONNEL")) {
+                user.setSubscriptionPlan(User.SubscriptionPlan.PROFESSIONNEL);
+            } else if (p.contains("CABINET_PLUS") || p.contains("CABINET+")) {
+                user.setSubscriptionPlan(User.SubscriptionPlan.CABINET_PLUS);
+            } else {
+                user.setSubscriptionPlan(User.SubscriptionPlan.SOLO);
+            }
+            user.setSubscriptionStatus(User.SubscriptionStatus.TRIAL);
+            user.setSubscriptionStartDate(LocalDateTime.now());
+            user.setSubscriptionEndsAt(LocalDateTime.now().plusDays(14));
+        } catch (Exception ignored) {
+        }
+        
         user = userRepository.save(user);
         
         // Si des informations de cabinet ont été fournies, créer le cabinet et l'associer
@@ -87,40 +105,23 @@ public class AuthService {
             // Mapper le plan d'abonnement si présent
             String plan = request.getSubscriptionPlan();
             if (plan != null) {
-                String p = plan.trim().toUpperCase();
-                if (p.contains("CABINET_PLUS") || p.contains("CABINET+")) {
+                String p2 = plan.trim().toUpperCase();
+                if (p2.contains("CABINET_PLUS") || p2.contains("CABINET+")) {
                     firm.setSubscriptionPlan(Firm.SubscriptionPlan.ENTERPRISE);
-                } else if (p.contains("PROFESSIONNEL") || p.contains("PROFESSIONNEL")) {
+                } else if (p2.contains("PROFESSIONNEL")) {
                     firm.setSubscriptionPlan(Firm.SubscriptionPlan.CABINET);
                 } else {
                     firm.setSubscriptionPlan(Firm.SubscriptionPlan.SOLO);
                 }
             }
 
-            firm.setSubscriptionStatus(Firm.SubscriptionStatus.ACTIVE);
+            firm.setSubscriptionStatus(Firm.SubscriptionStatus.TRIAL);
             firm.setSubscriptionStartsAt(LocalDateTime.now());
-            firm.setSubscriptionEndsAt(LocalDateTime.now().plusYears(1));
+            firm.setSubscriptionEndsAt(LocalDateTime.now().plusDays(14));
 
             firm = firmService.createFirm(firm);
             user.setFirm(firm);
 
-            // Synchroniser quelques champs d'abonnement sur l'utilisateur
-            try {
-                String p = request.getSubscriptionPlan() == null ? "" : request.getSubscriptionPlan().trim().toUpperCase();
-                if (p.contains("ESSENTIEL") || p.contains("ESSENTIEL")) {
-                    user.setSubscriptionPlan(User.SubscriptionPlan.ESSENTIEL);
-                } else if (p.contains("PROFESSIONNEL")) {
-                    user.setSubscriptionPlan(User.SubscriptionPlan.PROFESSIONNEL);
-                } else if (p.contains("CABINET_PLUS") || p.contains("CABINET+")) {
-                    user.setSubscriptionPlan(User.SubscriptionPlan.CABINET_PLUS);
-                } else {
-                    user.setSubscriptionPlan(User.SubscriptionPlan.SOLO);
-                }
-                user.setSubscriptionStatus(User.SubscriptionStatus.ACTIVE);
-                user.setSubscriptionStartDate(LocalDateTime.now());
-                user.setSubscriptionEndsAt(LocalDateTime.now().plusYears(1));
-            } catch (Exception ignored) {
-            }
             // Sauvegarder l'utilisateur avec la référence au cabinet
             user = userRepository.save(user);
         }
