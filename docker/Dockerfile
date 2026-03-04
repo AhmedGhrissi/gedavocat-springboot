@@ -18,13 +18,11 @@ WORKDIR /build
 
 # Copier d'abord le POM pour profiter du cache Docker sur les dépendances
 COPY pom.xml .
-COPY .mvn .mvn
-COPY mvnw .
-RUN chmod +x mvnw && ./mvnw dependency:go-offline -B --no-transfer-progress
+RUN mvn dependency:go-offline -B --no-transfer-progress
 
 # Copier le code source et construire
 COPY src ./src
-RUN ./mvnw package -DskipTests -B --no-transfer-progress \
+RUN mvn package -DskipTests -B --no-transfer-progress \
     && mv target/*.jar target/app.jar
 
 # ── Stage 2 : Runtime ───────────────────────────────────────
