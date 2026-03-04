@@ -3,7 +3,6 @@ package com.gedavocat.security;
 import com.gedavocat.model.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -253,13 +252,13 @@ public class JwtServiceRS256 {
     ) {
         return Jwts
                 .builder()
-                .setClaims(extraClaims)
-                .setSubject(userDetails.getUsername())
-                .setIssuer(JWT_ISSUER)
-                .setAudience(JWT_AUDIENCE)
-                .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + expiration))
-                .signWith(privateKey, SignatureAlgorithm.RS256)
+                .claims(extraClaims)
+                .subject(userDetails.getUsername())
+                .issuer(JWT_ISSUER)
+                .audience().add(JWT_AUDIENCE).and()
+                .issuedAt(new Date(System.currentTimeMillis()))
+                .expiration(new Date(System.currentTimeMillis() + expiration))
+                .signWith(privateKey, Jwts.SIG.RS256)
                 .compact();
     }
     
@@ -284,13 +283,13 @@ public class JwtServiceRS256 {
      */
     private Claims extractAllClaims(String token) {
         return Jwts
-                .parserBuilder()
-                .setSigningKey(publicKey)
+                .parser()
+                .verifyWith(publicKey)
                 .requireIssuer(JWT_ISSUER)
                 .requireAudience(JWT_AUDIENCE)
                 .build()
-                .parseClaimsJws(token)
-                .getBody();
+                .parseSignedClaims(token)
+                .getPayload();
     }
     
     /**
