@@ -7,6 +7,7 @@ import com.gedavocat.model.User;
 import com.gedavocat.repository.UserRepository;
 import com.gedavocat.security.JwtService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -20,6 +21,7 @@ import com.gedavocat.model.Firm;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuthService {
     
     private final UserRepository userRepository;
@@ -31,9 +33,23 @@ public class AuthService {
     
     @Transactional
     public AuthResponse register(RegisterRequest request) {
-        // SEC-08 FIX : Message générique pour éviter l'énumération d'utilisateurs
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("Erreur lors de l'inscription. Vérifiez vos informations.");
+        String emailNormalized = request.getEmail().trim().toLowerCase();
+        request.setEmail(emailNormalized);
+        
+        // Vérifier si l'email existe déjà
+        var existingUser = userRepository.findByEmail(emailNormalized);
+        if (existingUser.isPresent()) {
+            User existing = existingUser.get();
+            // Si le compte n'est pas vérifié, supprimer le zombie et permettre la réinscription
+            if (!existing.isEmailVerified()) {
+                // Supprimer le compte zombie pour permettre la réinscription
+                userRepository.delete(existing);
+                userRepository.flush();
+                log.info("Compte non vérifié supprimé pour réinscription : {}", emailNormalized);
+            } else {
+                // SEC-08 FIX : Message générique pour éviter l'énumération d'utilisateurs
+                throw new RuntimeException("Erreur lors de l'inscription. Vérifiez vos informations.");
+            }
         }
         
         // Vérifier la confirmation du mot de passe

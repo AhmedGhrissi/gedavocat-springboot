@@ -116,7 +116,8 @@ public class EmailVerificationService {
             mailSender.send(msg);
             log.info("[EmailVerification] Email envoyé à {}", to);
         } catch (Exception e) {
-            log.warn("[EmailVerification] Impossible d'envoyer l'email à {} : {}", to, e.getMessage());
+            log.error("[EmailVerification] Échec d'envoi de l'email à {} : {}", to, e.getMessage());
+            throw new RuntimeException("Impossible d'envoyer l'email de vérification. Veuillez réessayer.", e);
         }
     }
 

@@ -37,6 +37,7 @@ class AuthServiceTest {
     @Mock private AuthenticationManager authenticationManager;
     @Mock private UserDetailsService userDetailsService;
     @Mock private UserDetails userDetails;
+    @Mock private FirmService firmService;
 
     @InjectMocks
     private AuthService authService;
@@ -129,6 +130,8 @@ class AuthServiceTest {
     void registerSuccess() {
         // Given
         RegisterRequest request = new RegisterRequest();
+        request.setFirstName("Nouveau");
+        request.setLastName("Utilisateur");
         request.setName("Maitre Nouveau");
         request.setEmail("nouveau@gedavocat.com");
         request.setPassword("password123");
@@ -137,7 +140,7 @@ class AuthServiceTest {
         request.setTermsAccepted(true);
         request.setGdprConsent(true);
 
-        when(userRepository.existsByEmail("nouveau@gedavocat.com")).thenReturn(false);
+        when(userRepository.findByEmail("nouveau@gedavocat.com")).thenReturn(Optional.empty());
         when(passwordEncoder.encode("password123")).thenReturn("$2a$10$hashed");
         when(userRepository.save(any(User.class))).thenReturn(testUser);
 
@@ -164,7 +167,11 @@ class AuthServiceTest {
         request.setPassword("password123");
         request.setConfirmPassword("password123");
 
-        when(userRepository.existsByEmail("jean.dupont@gedavocat.com")).thenReturn(true);
+        // Simuler un utilisateur existant avec email vérifié
+        User verifiedUser = new User();
+        verifiedUser.setEmail("jean.dupont@gedavocat.com");
+        verifiedUser.setEmailVerified(true);
+        when(userRepository.findByEmail("jean.dupont@gedavocat.com")).thenReturn(Optional.of(verifiedUser));
 
         // When / Then — SEC-08 FIX : message générique pour éviter l'énumération
         assertThatThrownBy(() -> authService.register(request))
@@ -181,7 +188,7 @@ class AuthServiceTest {
         request.setPassword("password123");
         request.setConfirmPassword("autreMotDePasse");
 
-        when(userRepository.existsByEmail(anyString())).thenReturn(false);
+        when(userRepository.findByEmail("test@email.com")).thenReturn(Optional.empty());
 
         // When / Then
         assertThatThrownBy(() -> authService.register(request))
