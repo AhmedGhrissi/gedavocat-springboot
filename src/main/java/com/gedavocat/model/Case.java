@@ -48,7 +48,7 @@ public class Case {
     
     // MULTI-TENANT: Lien vers le cabinet
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "firm_id", nullable = false)
+    @JoinColumn(name = "firm_id")
     private Firm firm;
     
     @ManyToOne(fetch = FetchType.LAZY)
@@ -76,7 +76,7 @@ public class Case {
     private String reference;
     
     @Enumerated(EnumType.STRING)
-    @Column(name = "type", length = 50, nullable = false)
+    @Column(name = "case_type", length = 50)
     private CaseType caseType;
     
     @Column(columnDefinition = "TEXT")
@@ -86,10 +86,10 @@ public class Case {
     @Column(nullable = false, length = 20)
     private CaseStatus status = CaseStatus.OPEN;
     
-    @Column(name = "opened_at")
+    @Column(name = "opened_date")
     private LocalDateTime openedDate;
     
-    @Column(name = "closed_at")
+    @Column(name = "closed_date")
     private LocalDateTime closedDate;
     
     @Column(name = "deadline")

@@ -65,16 +65,12 @@ public class Invoice {
     
     // MULTI-TENANT: Lien vers le cabinet (obligatoire en base)
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "firm_id", nullable = false)
+    @JoinColumn(name = "firm_id")
     @JsonIgnore
     private Firm firm;
     
-    @Column(name = "issue_date")
-    private LocalDate invoiceDate = LocalDate.now();
-    
-    // Legacy column synchronized with issue_date for backward compatibility
     @Column(name = "invoice_date")
-    private LocalDate legacyInvoiceDate;
+    private LocalDate invoiceDate = LocalDate.now();
     
     @Column(name = "due_date")
     private LocalDate dueDate;
@@ -184,9 +180,6 @@ public class Invoice {
         if (invoiceDate == null) {
             invoiceDate = LocalDate.now();
         }
-        // Synchronize legacy invoice_date column with issue_date
-        this.legacyInvoiceDate = this.invoiceDate;
-        
         // Synchronize legacy amount columns with new columns
         syncAmountColumns();
         
@@ -197,9 +190,6 @@ public class Invoice {
     
     @PreUpdate
     public void preUpdate() {
-        // Keep legacy invoice_date synchronized on updates
-        this.legacyInvoiceDate = this.invoiceDate;
-        
         // Synchronize legacy amount columns with new columns
         syncAmountColumns();
     }

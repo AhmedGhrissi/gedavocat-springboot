@@ -46,15 +46,11 @@ public class Appointment {
     private String description;
 
     @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
-    @Column(name = "start_time")
-    private LocalDateTime appointmentDate = LocalDateTime.now();
-    
-    // Legacy column synchronized with start_time for backward compatibility
     @Column(name = "appointment_date")
-    private LocalDateTime legacyAppointmentDate;
+    private LocalDateTime appointmentDate = LocalDateTime.now();
 
     @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
-    @Column(name = "end_time")
+    @Column(name = "end_date")
     private LocalDateTime endDate;
     
     @Column(name = "is_all_day")
@@ -70,7 +66,7 @@ public class Appointment {
 
     // MULTI-TENANT: Lien vers le cabinet
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "firm_id", nullable = false)
+    @JoinColumn(name = "firm_id")
     @JsonIgnore
     private Firm firm;
 
@@ -218,14 +214,10 @@ public class Appointment {
         if (status == null) {
             status = AppointmentStatus.SCHEDULED;
         }
-        // Synchronize legacy appointment_date column with start_time
-        this.legacyAppointmentDate = this.appointmentDate;
     }
 
     @PreUpdate
     public void preUpdate() {
-        // Keep legacy appointment_date synchronized on updates
-        this.legacyAppointmentDate = this.appointmentDate;
         // Ensure type is never null
         if (type == null) {
             type = AppointmentType.CLIENT_MEETING;

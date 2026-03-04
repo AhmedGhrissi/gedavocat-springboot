@@ -39,7 +39,7 @@ public class Document {
     
     // MULTI-TENANT: Lien vers le cabinet
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "firm_id", nullable = false)
+    @JoinColumn(name = "firm_id")
     private Firm firm;
     
     @ManyToOne(fetch = FetchType.LAZY)
