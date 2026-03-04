@@ -13,9 +13,10 @@ INVOICE_DIR="/opt/gedavocat/uploads/invoices"
 TEMP_DIR="${APP_TEMP_DIR:-/opt/gedavocat/temp}"
 LOG_DIR="/opt/gedavocat/logs"
 BACKUP_DIR="/opt/gedavocat/backups"
+CRYPTO_KEYS_DIR="/app/config/keys"
 
 # Créer les sous-répertoires si absents
-for dir in "$UPLOAD_DIR" "$SIGNATURE_DIR" "$INVOICE_DIR" "$TEMP_DIR" "$LOG_DIR" "$BACKUP_DIR"; do
+for dir in "$UPLOAD_DIR" "$SIGNATURE_DIR" "$INVOICE_DIR" "$TEMP_DIR" "$LOG_DIR" "$BACKUP_DIR" "$CRYPTO_KEYS_DIR"; do
   mkdir -p "$dir" 2>/dev/null || true
 done
 
