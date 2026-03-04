@@ -9,7 +9,7 @@
 # Ce compose gère : Spring Boot App + MySQL 8 + Loki + Grafana + Promtail
 #
 # Logs : Grafana accessible sur http://localhost:3000 (tunnel SSH recommandé)
-#   ssh -L 3000:localhost:3000 root@88.198.163.251
+#   ssh -L 3000:localhost:3000 user@<SERVER_IP>
 #
 # Utilisation :
 #   docker compose pull app
@@ -233,28 +233,86 @@ services:
       - "127.0.0.1:8081:8080"
 
   # ── Grafana (interface web de visualisation) ────────────────
-  # Accès : ssh -L 3000:localhost:3000 root@88.198.163.251
-  # puis ouvrir http://localhost:3000 (admin/admin au premier login)
+  # Accès UNIQUEMENT via tunnel SSH :
+  #   ssh -L 3000:localhost:3000 user@<SERVER_IP>
+  # puis ouvrir http://localhost:3000
+  #
+  # Sécurité : read-only filesystem, non-root, caps drop ALL,
+  #            no-new-privileges, limites mémoire/CPU, réseau interne.
   grafana:
     image: grafana/grafana:11.3.0
     container_name: docavocat-grafana
     restart: unless-stopped
+    # ── Exécution non-root ──
+    user: "472:472"
+    # ── Sécurité Linux ──
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    read_only: true
+    # ── Ports (localhost uniquement — jamais exposer sur 0.0.0.0) ──
     ports:
       - "127.0.0.1:3000:3000"
+    # ── Variables d'environnement ──
     environment:
+      # Admin credentials via .env
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD}
+      GF_SECURITY_SECRET_KEY: ${GRAFANA_SECRET_KEY}
+      # Désactiver toute inscription et télémétrie
       GF_USERS_ALLOW_SIGN_UP: "false"
-      GF_SERVER_ROOT_URL: "http://localhost:3000"
+      GF_USERS_ALLOW_ORG_CREATE: "false"
       GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+      # Paths internes (pour tmpfs)
+      GF_PATHS_DATA: /var/lib/grafana
+      GF_PATHS_LOGS: /var/log/grafana
+      GF_PATHS_PLUGINS: /var/lib/grafana/plugins
+      GF_PATHS_PROVISIONING: /etc/grafana/provisioning
+      # Installer aucun plugin (surface d'attaque minimale)
+      GF_INSTALL_PLUGINS: ""
     volumes:
+      # Données persistantes
       - grafana_data:/var/lib/grafana
-      - ./grafana/provisioning:/etc/grafana/provisioning:ro
-      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      # Configuration de sécurité personnalisée (read-only)
+      - ./grafana/grafana.ini:/etc/grafana/grafana.ini:ro
+      # Provisioning (read-only)
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+    # ── tmpfs pour les écritures temporaires (read-only rootfs) ──
+    tmpfs:
+      - /var/log/grafana:uid=472,gid=472
+      - /tmp:uid=472,gid=472
+    # ── Limites de ressources ──
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.50'
+        reservations:
+          memory: 128M
+          cpus: '0.10'
+    # ── Réseau interne uniquement ──
     networks:
       - docavocat-net
     depends_on:
       - loki
       - prometheus
+    # ── Healthcheck ──
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    # ── Logging ──
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        tag: "docavocat-grafana"
 
 # ── Réseau interne ──────────────────────────────────────────
 networks:

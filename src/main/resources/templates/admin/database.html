@@ -187,49 +187,15 @@
             </div>
         </div>
 
-        <!-- Accès direct à la BDD -->
+        <!-- Informations base de données -->
         <div class="row">
             <div class="col-lg-12">
                 <div class="card">
                     <div class="card-header bg-dark text-white">
-                        <h5 class="mb-0"><i class="fas fa-terminal"></i> Accès rapides</h5>
+                        <h5 class="mb-0"><i class="fas fa-database"></i> Informations serveur</h5>
                     </div>
                     <div class="card-body">
                         <div class="list-group">
-                            <div class="list-group-item">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <i class="fas fa-server me-2 text-primary"></i>
-                                        <strong>Serveur VPS Hetzner</strong>
-                                        <p class="mb-0 text-muted small">IP : 88.198.163.251 &nbsp;|&nbsp; MySQL local sur port 3306</p>
-                                    </div>
-                                    <span class="badge bg-success"><i class="fas fa-circle"></i> Hetzner CAX11</span>
-                                </div>
-                            </div>
-
-                            <div class="list-group-item">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <i class="fas fa-terminal me-2 text-dark"></i>
-                                        <strong>Connexion SSH</strong>
-                                        <p class="mb-0 text-muted small"><code>ssh -i ~/.ssh/gedavocat_hetzner root@88.198.163.251</code></p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="list-group-item">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <i class="fas fa-download me-2 text-info"></i>
-                                        <strong>Sauvegarde automatique</strong>
-                                        <p class="mb-0 text-muted small">Script <code>/opt/gedavocat/scripts/backup.sh</code> — logs dans <code>/opt/gedavocat/logs/</code></p>
-                                    </div>
-                                    <button class="btn btn-sm btn-outline-info" onclick="runBackup(this)">
-                                        <i class="fas fa-play"></i> Lancer
-                                    </button>
-                                </div>
-                            </div>
-
                             <div class="list-group-item">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
@@ -239,6 +205,15 @@
                                             DB : <code th:text="${metrics != null ? metrics.databaseProductName : 'MySQL'}">MySQL</code> 
                                             &nbsp;|&nbsp; URL : <code th:text="${metrics != null ? metrics.databaseUrl : 'N/A'}">...</code>
                                         </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <i class="fas fa-download me-2 text-info"></i>
+                                        <strong>Sauvegarde automatique</strong>
+                                        <p class="mb-0 text-muted small">Voir la documentation de déploiement pour les procédures de sauvegarde.</p>
                                     </div>
                                 </div>
                             </div>

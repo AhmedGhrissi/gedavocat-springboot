@@ -1,0 +1,15 @@
+apiVersion: 1
+
+# Datasource Prometheus — métriques (réseau Docker interne uniquement)
+datasources:
+  - name: Prometheus
+    uid: prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: false
+    editable: false
+    jsonData:
+      timeInterval: '15s'
+      queryTimeout: '30s'
+      httpMethod: POST

@@ -1,0 +1,17 @@
+apiVersion: 1
+
+# Provisioning sécurisé — dashboards en lecture seule
+providers:
+  - name: 'DocAvocat Production'
+    orgId: 1
+    folder: ''
+    type: file
+    # Interdit la suppression depuis l'UI
+    disableDeletion: true
+    # Mise à jour toutes les 5 min
+    updateIntervalSeconds: 300
+    # Interdit la modification depuis l'UI
+    allowUiUpdates: false
+    options:
+      path: /etc/grafana/provisioning/dashboards
+      foldersFromFilesStructure: false

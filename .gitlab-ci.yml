@@ -22,7 +22,7 @@
 #   5. Suivre les etapes, cliquer Play sur deploy pour mettre en prod
 #
 # VARIABLES GITLAB (Settings > CI/CD > Variables) :
-#   SSH_PRIVATE_KEY  File     Protected    Cle privee SSH gedavocat_hetzner
+#   SSH_PRIVATE_KEY  File     Protected    Cle privee SSH du serveur
 #   SSH_KNOWN_HOSTS  Variable Protected    Fingerprints serveur (ssh-keyscan)
 #   ENV_PROD         File     Protected    Contenu du fichier .env prod
 #   DISCORD_WEBHOOK  Variable Masked       URL du webhook Discord
@@ -51,7 +51,9 @@ default:
 variables:
   MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
   MAVEN_CLI_OPTS: "--batch-mode --no-transfer-progress"
-  SERVER_HOST: "88.198.163.251"
+  # SERVER_HOST et REMOTE_DIR configurés via GitLab CI/CD Variables (Settings > CI/CD > Variables)
+  # SERVER_HOST: IP du serveur de production (Protected, Masked)
+  # REMOTE_DIR: Répertoire de déploiement (par défaut /opt/gedavocat)
   REMOTE_DIR: "/opt/gedavocat"
 
 stages:
