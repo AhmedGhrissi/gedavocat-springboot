@@ -66,16 +66,19 @@ services:
     environment:
       SERVER_PORT: 8080
 
-      # Base de données
-      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/gedavocat?useSSL=false&serverTimezone=Europe/Paris&allowPublicKeyRetrieval=true&useUnicode=true&characterEncoding=UTF-8"
+      # Base de données — SEC-HARDENED : useSSL=true, ddl-auto=validate
+      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/gedavocat?useSSL=true&requireSSL=true&serverTimezone=Europe/Paris&allowPublicKeyRetrieval=true&useUnicode=true&characterEncoding=UTF-8"
       SPRING_DATASOURCE_USERNAME: gedavocat
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
 
-      # JWT
+      # JWT — SEC-HARDENED : 15 min access + 4h refresh (OWASP)
       JWT_SECRET: ${JWT_SECRET}
-      JWT_EXPIRATION: 86400000
-      JWT_REFRESH-EXPIRATION: 604800000
+      JWT_EXPIRATION: 900000
+      JWT_REFRESH_EXPIRATION: 14400000
+
+      # SEC-HARDENED : Clé AES-256 pour chiffrement secrets MFA en BDD
+      MFA_ENCRYPTION_KEY: ${MFA_ENCRYPTION_KEY}
 
       # Email SMTP
       SPRING_MAIL_HOST: ${MAIL_HOST}
@@ -118,7 +121,8 @@ services:
         max-file: "5"
         tag: "docavocat-app"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      # SEC-HARDENED : actuator désactivé en prod, vérifier la page de login
+      test: ["CMD", "curl", "-f", "http://localhost:8080/auth/login"]
       interval: 30s
       timeout: 10s
       retries: 5
