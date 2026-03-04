@@ -1,0 +1,309 @@
+# ============================================================
+# DocAvocat — Pipeline CI/CD GitLab
+#
+# COMPORTEMENT PAR BRANCHE :
+#
+#   Branche feature (ex: JC, dev, fix/...)  push :
+#     -> build + test automatiques (validation du code)
+#     -> JAMAIS de package ou deploy
+#
+#   Branche main  push automatique :
+#     -> AUCUN pipeline (protege la prod des pushs accidentels)
+#
+#   Branche main  Run pipeline MANUEL (GitLab UI) :
+#     -> build -> test -> package (image Docker ARM64) -> deploy (manuel)
+#     -> Notifications Discord a chaque etape
+#
+# WORKFLOW RECOMMANDE :
+#   1. Developper sur une branche feature
+#   2. Push -> CI valide automatiquement (build + test)
+#   3. Merge Request -> review -> merge dans main
+#   4. GitLab -> CI/CD -> Pipelines -> "Run pipeline" sur main
+#   5. Suivre les etapes, cliquer Play sur deploy pour mettre en prod
+#
+# VARIABLES GITLAB (Settings > CI/CD > Variables) :
+#   SSH_PRIVATE_KEY  File     Protected    Cle privee SSH gedavocat_hetzner
+#   SSH_KNOWN_HOSTS  Variable Protected    Fingerprints serveur (ssh-keyscan)
+#   ENV_PROD         File     Protected    Contenu du fichier .env prod
+#   DISCORD_WEBHOOK  Variable Masked       URL du webhook Discord
+# ============================================================
+
+# Controle du declenchement des pipelines
+workflow:
+  rules:
+    # main en push automatique -> bloque (protege la prod)
+    - if: $CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE == "push"
+      when: never
+    # main declenche manuellement (Run pipeline dans l'UI) -> OK
+    - if: $CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE == "web"
+      when: always
+    # Merge Requests -> build + test automatiques
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: always
+    # Branches feature -> build + test automatiques
+    - if: $CI_COMMIT_BRANCH && $CI_COMMIT_BRANCH != "main"
+      when: always
+
+default:
+  tags:
+    - vps
+
+variables:
+  MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
+  MAVEN_CLI_OPTS: "--batch-mode --no-transfer-progress"
+  SERVER_HOST: "88.198.163.251"
+  REMOTE_DIR: "/opt/gedavocat"
+
+stages:
+  - build
+  - test
+  - package
+  - deploy
+
+# Notification Discord — toutes branches
+.discord_commit_notify: &discord_commit_notify
+  - |
+    WEBHOOK="${DISCORD_WEBHOOK:-${DISCORD_COMMIT_WEBHOOK:-}}"
+    [ -z "$WEBHOOK" ] && exit 0
+    apt-get update -qq && apt-get install -yqq curl > /dev/null 2>&1 || apk add --no-cache curl --quiet 2>/dev/null || true
+    BRANCH="${CI_COMMIT_BRANCH:-MR}"
+    AUTHOR="${GITLAB_USER_NAME:-CI}"
+    SHA="${CI_COMMIT_SHORT_SHA:-????}"
+    TITLE="${CI_COMMIT_TITLE:-}"
+    COMMIT_MSG=$(printf '%s' "$TITLE" | head -c 80 | sed 's/\\/\\\\/g; s/"/\\"/g; s/	/ /g')
+    PAYLOAD=$(printf '{"embeds":[{"title":"%s %s","description":"**Branche :** `%s`\\n**Commit :** [`%s`](%s)\\n**Par :** %s\\n**Message :** %s\\n\\n[Logs job ->](%s/-/jobs/%s)","color":%s,"footer":{"text":"DocAvocat CI/CD"},"timestamp":"%s"}]}' \
+      "$EMOJI" "$STATUS" \
+      "$BRANCH" "$SHA" "$CI_PIPELINE_URL" "$AUTHOR" "$COMMIT_MSG" \
+      "$CI_PROJECT_URL" "$CI_JOB_ID" \
+      "$COLOR" \
+      "$(date -u '+%Y-%m-%dT%H:%M:%SZ')")
+    RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$WEBHOOK" \
+         -H "Content-Type: application/json" \
+         -d "$PAYLOAD")
+    echo "Discord commit notify: HTTP $RESPONSE"
+
+# Notification Discord — main uniquement (deploy)
+.discord_deploy_notify: &discord_deploy_notify
+  - |
+    [ -z "${DISCORD_WEBHOOK:-}" ] && exit 0
+    BRANCH="${CI_COMMIT_BRANCH:-MR}"
+    AUTHOR="${GITLAB_USER_NAME:-CI}"
+    SHA="${CI_COMMIT_SHORT_SHA:-????}"
+    TITLE="${CI_COMMIT_TITLE:-}"
+    COMMIT_MSG=$(printf '%s' "$TITLE" | head -c 80 | sed 's/\\/\\\\/g; s/"/\\"/g; s/	/ /g')
+    PAYLOAD=$(printf '{"embeds":[{"title":"%s %s","description":"**Branche :** `%s`\\n**Commit :** [`%s`](%s)\\n**Par :** %s\\n**Message :** %s\\n\\n[Logs job ->](%s/-/jobs/%s)","color":%s,"footer":{"text":"DocAvocat CI/CD"},"timestamp":"%s"}]}' \
+      "$EMOJI" "$STATUS" \
+      "$BRANCH" "$SHA" "$CI_PIPELINE_URL" "$AUTHOR" "$COMMIT_MSG" \
+      "$CI_PROJECT_URL" "$CI_JOB_ID" \
+      "$COLOR" \
+      "$(date -u '+%Y-%m-%dT%H:%M:%SZ')")
+    RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${DISCORD_WEBHOOK}" \
+         -H "Content-Type: application/json" \
+         -d "$PAYLOAD")
+    echo "Discord deploy notify: HTTP $RESPONSE"
+
+#
+# STAGE 1 : BUILD
+#
+build:
+  stage: build
+  image: maven:3.9-eclipse-temurin-17
+  before_script:
+    - apt-get update -qq && apt-get install -yqq curl > /dev/null 2>&1 || true
+    # Notification Discord : pipeline demarre
+    - |
+      WEBHOOK="${DISCORD_WEBHOOK:-${DISCORD_COMMIT_WEBHOOK:-}}"
+      [ -z "$WEBHOOK" ] && true || {
+        BRANCH="${CI_COMMIT_BRANCH:-MR}"
+        AUTHOR="${GITLAB_USER_NAME:-CI}"
+        SHA="${CI_COMMIT_SHORT_SHA:-????}"
+        TITLE="${CI_COMMIT_TITLE:-}"
+        COMMIT_MSG=$(printf '%s' "$TITLE" | head -c 80 | sed 's/\\/\\\\/g; s/"/\\"/g; s/	/ /g')
+        if [ "$BRANCH" = "main" ]; then
+          SCOPE="branche main - pipeline complet (build -> test -> package -> deploy)"
+        else
+          SCOPE="branche feature - build + test uniquement"
+        fi
+        PAYLOAD=$(printf '{"embeds":[{"title":"[START] Pipeline demarre","description":"**Branche :** `%s`\\n**Commit :** [`%s`](%s)\\n**Par :** %s\\n**Message :** %s\\n**Scope :** %s","color":16776960,"footer":{"text":"DocAvocat CI/CD"},"timestamp":"%s"}]}' \
+          "$BRANCH" "$SHA" "$CI_PIPELINE_URL" "$AUTHOR" "$COMMIT_MSG" "$SCOPE" "$(date -u '+%Y-%m-%dT%H:%M:%SZ')")
+        RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$WEBHOOK" \
+             -H "Content-Type: application/json" \
+             -d "$PAYLOAD")
+        echo "Discord pipeline-start: HTTP $RESPONSE"
+      }
+  script:
+    - mvn $MAVEN_CLI_OPTS compile
+  after_script:
+    - |
+      if [ "$CI_JOB_STATUS" = "success" ]; then
+        EMOJI="[OK]"; STATUS="Build compile avec succes"; COLOR=3066993
+      else
+        EMOJI="[FAIL]"; STATUS="ECHEC de compilation - voir logs"; COLOR=15158332
+      fi
+      JOB_NAME="Build Maven"
+    - *discord_commit_notify
+  cache:
+    key: "maven-$CI_COMMIT_REF_SLUG"
+    paths:
+      - .m2/repository/
+
+#
+# STAGE 2 : TEST
+#
+test:
+  stage: test
+  image: maven:3.9-eclipse-temurin-17
+  needs: [build]
+  before_script:
+    - apt-get update -qq && apt-get install -yqq curl > /dev/null 2>&1 || true
+  script:
+    - mvn $MAVEN_CLI_OPTS test
+  after_script:
+    - |
+      if [ "$CI_JOB_STATUS" = "success" ]; then
+        EMOJI="[OK]"; STATUS="Tests unitaires passes"; COLOR=3066993
+      else
+        EMOJI="[FAIL]"; STATUS="TESTS ECHOUES - deploiement bloque !"; COLOR=15158332
+      fi
+      JOB_NAME="Tests unitaires"
+    - *discord_commit_notify
+  cache:
+    key: "maven-$CI_COMMIT_REF_SLUG"
+    paths:
+      - .m2/repository/
+    policy: pull
+  artifacts:
+    when: always
+    reports:
+      junit: target/surefire-reports/TEST-*.xml
+    paths:
+      - target/surefire-reports/
+    expire_in: 2 weeks
+
+#
+# STAGE 3 : PACKAGE
+# Build image Docker + push GitLab Container Registry
+# UNIQUEMENT sur main declenche manuellement
+#
+package:
+  stage: package
+  image: docker:27-cli
+  needs: [test]
+  variables:
+    DOCKER_BUILDKIT: "1"
+  before_script:
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
+  script:
+    - |
+      docker build \
+        --file docker/Dockerfile \
+        --tag "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA" \
+        --tag "$CI_REGISTRY_IMAGE:latest" \
+        .
+    - docker push "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA"
+    - docker push "$CI_REGISTRY_IMAGE:latest"
+    - echo "Image poussee -> $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA"
+  after_script:
+    - apk add --no-cache curl --quiet 2>/dev/null || true
+    - |
+      if [ "$CI_JOB_STATUS" = "success" ]; then
+        EMOJI="[DOCKER]"; STATUS="Image Docker prete - cliquer Play sur deploy"; COLOR=3447003
+      else
+        EMOJI="[FAIL]"; STATUS="ECHEC build image Docker"; COLOR=15158332
+      fi
+      JOB_NAME="Package Docker"
+    - *discord_deploy_notify
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE == "web"
+
+#
+# STAGE 4 : DEPLOY
+# UNIQUEMENT sur main declenche manuellement
+# Cliquer le bouton Play dans GitLab pour declencher
+#
+deploy:
+  stage: deploy
+  image: alpine:3.19
+  needs: [package]
+  when: manual
+  allow_failure: false
+  before_script:
+    - apk add --no-cache openssh-client curl
+    - eval $(ssh-agent -s)
+    - tr -d '\r' < "$SSH_PRIVATE_KEY" > /tmp/id_rsa
+    - echo "" >> /tmp/id_rsa
+    - chmod 600 /tmp/id_rsa
+    - ssh-keygen -l -f /tmp/id_rsa 2>&1 || (echo "CLE INVALIDE - voir debug:"; head -1 /tmp/id_rsa; tail -1 /tmp/id_rsa | cat -A; wc -l /tmp/id_rsa; exit 1)
+    - ssh-add /tmp/id_rsa
+    - mkdir -p ~/.ssh && chmod 700 ~/.ssh
+    - echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+    # Notification Discord : deploiement en cours
+    - |
+      [ -z "${DISCORD_WEBHOOK:-}" ] && true || {
+        PAYLOAD=$(printf '{"embeds":[{"title":"[DEPLOY] Deploiement en cours...","description":"**Branche :** `%s`\\n**Commit :** [`%s`](%s)\\n**Par :** %s\\n\\n*Envoi fichiers -> restart -> check HTTP...*\\n\\n[Logs deploy ->](%s/-/jobs/%s)","color":16776960,"footer":{"text":"DocAvocat CI/CD"},"timestamp":"%s"}]}' \
+          "$CI_COMMIT_BRANCH" "$CI_COMMIT_SHORT_SHA" "$CI_PIPELINE_URL" \
+          "$GITLAB_USER_NAME" "$CI_PROJECT_URL" "$CI_JOB_ID" \
+          "$(date -u '+%Y-%m-%dT%H:%M:%SZ')")
+        RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${DISCORD_WEBHOOK}" \
+             -H "Content-Type: application/json" \
+             -d "$PAYLOAD")
+        echo "Discord deploy-start: HTTP $RESPONSE"
+      }
+  script:
+    # Envoi des fichiers de configuration
+    - scp docker/docker-compose.yml root@$SERVER_HOST:$REMOTE_DIR/docker-compose.yml
+
+    # On met a jour APP_IMAGE dans le .env existant (sans ecraser les autres variables)
+    - ssh root@$SERVER_HOST "sed -i '/^APP_IMAGE=/d' $REMOTE_DIR/.env && echo \"APP_IMAGE=$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA\" >> $REMOTE_DIR/.env"
+
+    # Envoi des configs Loki / Promtail / Grafana
+    - ssh root@$SERVER_HOST "mkdir -p $REMOTE_DIR/loki $REMOTE_DIR/promtail $REMOTE_DIR/grafana/provisioning/datasources $REMOTE_DIR/grafana/provisioning/dashboards"
+    - scp docker/loki/local-config.yaml root@$SERVER_HOST:$REMOTE_DIR/loki/local-config.yaml
+    - scp docker/promtail/config.yaml root@$SERVER_HOST:$REMOTE_DIR/promtail/config.yaml
+    - scp docker/grafana/provisioning/datasources/loki.yaml root@$SERVER_HOST:$REMOTE_DIR/grafana/provisioning/datasources/loki.yaml
+    - scp docker/grafana/provisioning/dashboards/dashboards.yaml root@$SERVER_HOST:$REMOTE_DIR/grafana/provisioning/dashboards/dashboards.yaml
+    - scp docker/grafana/provisioning/dashboards/docavocat.json root@$SERVER_HOST:$REMOTE_DIR/grafana/provisioning/dashboards/docavocat.json
+
+    # Deploiement
+    - |
+      ssh root@$SERVER_HOST "
+        set -e
+        cd $REMOTE_DIR
+        docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+        docker compose pull app
+        docker compose up -d --no-deps app
+        docker compose up -d loki promtail grafana 2>/dev/null || true
+        docker logout $CI_REGISTRY 2>/dev/null || true
+        echo '--- Conteneurs actifs ---'
+        docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
+      "
+
+    # Verification HTTP (~60s demarrage Spring Boot)
+    - sleep 60
+    - |
+      HTTP=$(ssh root@$SERVER_HOST "curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8080/" 2>/dev/null) || true
+      echo "HTTP: $HTTP"
+      [ "$HTTP" = "200" ] || [ "$HTTP" = "302" ] || {
+        echo "ERREUR: site ne repond pas (HTTP $HTTP)"
+        echo "--- Docker logs (50 dernieres lignes) ---"
+        ssh root@$SERVER_HOST "docker logs docavocat-app --tail=50 2>&1"
+        exit 1
+      }
+      echo "Deploiement OK -> https://docavocat.fr"
+
+  after_script:
+    - |
+      if [ "$CI_JOB_STATUS" = "success" ]; then
+        EMOJI="[PROD]"; STATUS="DEPLOYE EN PRODUCTION ! https://docavocat.fr"; COLOR=3066993
+      else
+        EMOJI="[FAIL]"; STATUS="ECHEC DU DEPLOIEMENT - voir logs"; COLOR=15158332
+      fi
+      JOB_NAME="Deploiement Production"
+    - *discord_deploy_notify
+
+  environment:
+    name: production
+    url: https://docavocat.fr
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE == "web"

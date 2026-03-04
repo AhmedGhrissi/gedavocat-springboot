@@ -32,9 +32,9 @@ LABEL maintainer="contact@docavocat.fr"
 # Utilisateur dédié non-root
 RUN groupadd -r docavocat && useradd -r -g docavocat docavocat
 
-# curl pour le healthcheck, gosu pour le drop de privilèges
+# curl pour le healthcheck
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends curl gosu \
+    && apt-get install -y --no-install-recommends curl \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
