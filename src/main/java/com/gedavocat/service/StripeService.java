@@ -17,6 +17,9 @@ import java.util.Map;
 
 /**
  * Service de gestion des paiements avec Stripe
+ * 
+ * Utilise des Price IDs pré-créés sur Stripe (mode test/prod)
+ * avec essai gratuit de 14 jours intégré.
  */
 @Service
 @Slf4j
@@ -34,13 +37,45 @@ public class StripeService {
     @Value("${app.base-url:http://localhost:8081}")
     private String baseUrl;
 
+    // ── Price IDs Stripe (configurables par env/properties) ──
+    @Value("${stripe.price.essentiel.monthly:price_1T7LmhCN6rHCwBaCGnryc3Aq}")
+    private String priceEssentielMonthly;
+
+    @Value("${stripe.price.essentiel.yearly:price_1T7Ln9CN6rHCwBaCjiiAh2Bg}")
+    private String priceEssentielYearly;
+
+    @Value("${stripe.price.professionnel.monthly:price_1T7LmoCN6rHCwBaC3PXpsddB}")
+    private String priceProMonthly;
+
+    @Value("${stripe.price.professionnel.yearly:price_1T7LnGCN6rHCwBaCeyQDFZ4I}")
+    private String priceProYearly;
+
+    @Value("${stripe.price.cabinet-plus.monthly:price_1T7LmwCN6rHCwBaCe1LmUDL0}")
+    private String priceCabinetMonthly;
+
+    @Value("${stripe.price.cabinet-plus.yearly:price_1T7LnNCN6rHCwBaC7wheamZ7}")
+    private String priceCabinetYearly;
+
+    /** Map interne plan+period → priceId, initialisée au démarrage */
+    private Map<String, String> priceMap;
+
     /**
-     * Initialisation de Stripe avec la clé API
+     * Initialisation de Stripe avec la clé API et le mapping des prix
      */
     @PostConstruct
     public void init() {
         Stripe.apiKey = stripeSecretKey;
-        log.info("Stripe initialisé avec succès");
+
+        // Construire le mapping plan+period → priceId
+        priceMap = new HashMap<>();
+        priceMap.put("ESSENTIEL_monthly", priceEssentielMonthly);
+        priceMap.put("ESSENTIEL_yearly", priceEssentielYearly);
+        priceMap.put("PROFESSIONNEL_monthly", priceProMonthly);
+        priceMap.put("PROFESSIONNEL_yearly", priceProYearly);
+        priceMap.put("CABINET_PLUS_monthly", priceCabinetMonthly);
+        priceMap.put("CABINET_PLUS_yearly", priceCabinetYearly);
+
+        log.info("Stripe initialisé — {} prix configurés", priceMap.size());
     }
 
     /**
@@ -57,15 +92,18 @@ public class StripeService {
 
     /**
      * Crée une session Stripe Checkout pour un abonnement
+     * Utilise les Price IDs pré-créés (essai 14j inclus dans le prix Stripe)
      */
     public String createCheckoutSession(User user, String plan, String period) throws StripeException {
         if (!isConfigured()) {
             throw new RuntimeException("Stripe n'est pas configuré. Ajoutez vos clés API dans application.properties");
         }
 
-        // Calculer le prix selon le plan et la période
-        long amount = calculateAmount(plan, period);
-        String planName = getPlanDisplayName(plan);
+        // Récupérer le Price ID correspondant
+        String priceId = getPriceId(plan, period);
+        if (priceId == null) {
+            throw new IllegalArgumentException("Plan ou période invalide: " + plan + " / " + period);
+        }
 
         // SEC-06 FIX : Utiliser app.base-url au lieu de localhost
         String successUrl = baseUrl + "/payment/success?session_id={CHECKOUT_SESSION_ID}";
@@ -78,7 +116,7 @@ public class StripeService {
         metadata.put("plan", plan);
         metadata.put("period", period);
 
-        // Construire la session Checkout
+        // Construire la session Checkout avec le Price ID pré-créé
         SessionCreateParams params = SessionCreateParams.builder()
             .setMode(SessionCreateParams.Mode.SUBSCRIPTION)
             .setSuccessUrl(successUrl)
@@ -87,25 +125,7 @@ public class StripeService {
             .putAllMetadata(metadata)
             .addLineItem(
                 SessionCreateParams.LineItem.builder()
-                    .setPriceData(
-                        SessionCreateParams.LineItem.PriceData.builder()
-                            .setCurrency("eur")
-                            .setUnitAmount(amount * 100) // Stripe utilise les centimes
-                            .setRecurring(
-                                SessionCreateParams.LineItem.PriceData.Recurring.builder()
-                                    .setInterval(period.equals("yearly") ?
-                                        SessionCreateParams.LineItem.PriceData.Recurring.Interval.YEAR :
-                                        SessionCreateParams.LineItem.PriceData.Recurring.Interval.MONTH)
-                                    .build()
-                            )
-                            .setProductData(
-                                SessionCreateParams.LineItem.PriceData.ProductData.builder()
-                                    .setName("GED Avocat - Plan " + planName)
-                                    .setDescription("Abonnement " + (period.equals("yearly") ? "annuel" : "mensuel"))
-                                    .build()
-                            )
-                            .build()
-                    )
+                    .setPrice(priceId)
                     .setQuantity(1L)
                     .build()
             )
@@ -114,7 +134,8 @@ public class StripeService {
         // Créer la session
         Session session = Session.create(params);
 
-        log.info("Session Stripe créée: {} pour l'utilisateur {}", session.getId(), user.getEmail());
+        log.info("Session Stripe créée: {} pour l'utilisateur {} (plan={}, période={})",
+                session.getId(), user.getEmail(), plan, period);
 
         return session.getUrl();
     }
@@ -187,47 +208,23 @@ public class StripeService {
     }
 
     /**
-     * Calcule le montant selon le plan et la période
+     * Résout le Price ID Stripe pour un plan et une période donnés
      */
-    private long calculateAmount(String plan, String period) {
-        long baseAmount;
-
-        switch (plan.toUpperCase()) {
-            case "ESSENTIEL":
-                baseAmount = 49;
-                break;
-            case "PROFESSIONNEL":
-                baseAmount = 99;
-                break;
-            case "CABINET_PLUS":
-                baseAmount = 199;
-                break;
-            default:
-                return 0;
-        }
-
-        // Réduction de 20% pour l'abonnement annuel
-        if ("yearly".equals(period)) {
-            return (long) (baseAmount * 0.8);
-        }
-
-        return baseAmount;
+    private String getPriceId(String plan, String period) {
+        String key = plan.toUpperCase() + "_" + period.toLowerCase();
+        return priceMap.get(key);
     }
 
     /**
      * Retourne le nom d'affichage du plan
      */
     private String getPlanDisplayName(String plan) {
-        switch (plan.toUpperCase()) {
-            case "ESSENTIEL":
-                return "Essentiel";
-            case "PROFESSIONNEL":
-                return "Professionnel";
-            case "CABINET_PLUS":
-                return "Cabinet+";
-            default:
-                return "Inconnu";
-        }
+        return switch (plan.toUpperCase()) {
+            case "ESSENTIEL" -> "Essentiel";
+            case "PROFESSIONNEL" -> "Professionnel";
+            case "CABINET_PLUS" -> "Cabinet+";
+            default -> "Inconnu";
+        };
     }
 
     /**
