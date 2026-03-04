@@ -124,7 +124,7 @@ services:
         tag: "docavocat-app"
     healthcheck:
       # SEC-HARDENED : actuator désactivé en prod, vérifier la page de login
-      test: ["CMD", "curl", "-f", "http://localhost:8080/auth/login"]
+      test: ["CMD", "curl", "-f", "http://localhost:8080/login"]
       interval: 30s
       timeout: 10s
       retries: 5
