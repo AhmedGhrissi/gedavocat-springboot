@@ -78,10 +78,17 @@ public class Case {
     @Enumerated(EnumType.STRING)
     @Column(name = "case_type", length = 50)
     private CaseType caseType;
-    
+
+    // Legacy sync: 'type' column (NOT NULL in BDD.sql)
+    @lombok.Getter(AccessLevel.NONE)
+    @lombok.Setter(AccessLevel.NONE)
+    @Enumerated(EnumType.STRING)
+    @Column(name = "type", nullable = false, length = 50)
+    private CaseType legacyType;
+
     @Column(columnDefinition = "TEXT")
     private String description;
-    
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private CaseStatus status = CaseStatus.OPEN;
@@ -91,6 +98,17 @@ public class Case {
     
     @Column(name = "closed_date")
     private LocalDateTime closedDate;
+
+    // Legacy sync: opened_at/closed_at columns (BDD.sql compatibility)
+    @lombok.Getter(AccessLevel.NONE)
+    @lombok.Setter(AccessLevel.NONE)
+    @Column(name = "opened_at")
+    private LocalDateTime openedAt;
+
+    @lombok.Getter(AccessLevel.NONE)
+    @lombok.Setter(AccessLevel.NONE)
+    @Column(name = "closed_at")
+    private LocalDateTime closedAt;
     
     @Column(name = "deadline")
     private LocalDateTime deadline;
@@ -216,6 +234,7 @@ public class Case {
         } else if (title != null) {
             this.name = this.title;
         }
+        syncLegacyColumns();
     }
 
     @PreUpdate
@@ -229,6 +248,34 @@ public class Case {
             this.name = this.title;
         } else if (name != null) {
             this.title = this.name;
+        }
+        syncLegacyColumns();
+    }
+
+    /**
+     * Sync legacy columns: type ↔ case_type, opened_at ↔ opened_date, closed_at ↔ closed_date
+     */
+    private void syncLegacyColumns() {
+        // type ↔ case_type
+        if (caseType != null) {
+            this.legacyType = this.caseType;
+        } else if (this.legacyType != null) {
+            this.caseType = this.legacyType;
+        } else {
+            this.caseType = CaseType.AUTRE;
+            this.legacyType = CaseType.AUTRE;
+        }
+        // opened_at ↔ opened_date
+        if (openedDate != null) {
+            this.openedAt = this.openedDate;
+        } else if (this.openedAt != null) {
+            this.openedDate = this.openedAt;
+        }
+        // closed_at ↔ closed_date
+        if (closedDate != null) {
+            this.closedAt = this.closedDate;
+        } else if (this.closedAt != null) {
+            this.closedDate = this.closedAt;
         }
     }
 }

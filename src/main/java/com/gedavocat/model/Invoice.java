@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;
@@ -71,7 +72,13 @@ public class Invoice {
     
     @Column(name = "invoice_date")
     private LocalDate invoiceDate = LocalDate.now();
-    
+
+    // Legacy sync: issue_date column (NOT NULL in BDD.sql)
+    @lombok.Getter(AccessLevel.NONE)
+    @lombok.Setter(AccessLevel.NONE)
+    @Column(name = "issue_date", nullable = false)
+    private LocalDate issueDate;
+
     @Column(name = "due_date")
     private LocalDate dueDate;
     
@@ -182,6 +189,7 @@ public class Invoice {
         }
         // Synchronize legacy amount columns with new columns
         syncAmountColumns();
+        syncDateColumns();
         
         if (status == InvoiceStatus.SENT && dueDate == null) {
             dueDate = invoiceDate.plusDays(30); // Échéance par défaut : 30 jours
@@ -192,6 +200,22 @@ public class Invoice {
     public void preUpdate() {
         // Synchronize legacy amount columns with new columns
         syncAmountColumns();
+        syncDateColumns();
+    }
+
+    /**
+     * Synchronize issue_date column with invoice_date
+     * BDD.sql requires both columns (both NOT NULL)
+     */
+    private void syncDateColumns() {
+        if (invoiceDate != null) {
+            this.issueDate = this.invoiceDate;
+        } else if (this.issueDate != null) {
+            this.invoiceDate = this.issueDate;
+        } else {
+            this.invoiceDate = LocalDate.now();
+            this.issueDate = this.invoiceDate;
+        }
     }
     
     /**

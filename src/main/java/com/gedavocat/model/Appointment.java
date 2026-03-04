@@ -3,6 +3,7 @@ package com.gedavocat.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -52,7 +53,18 @@ public class Appointment {
     @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
     @Column(name = "end_date")
     private LocalDateTime endDate;
-    
+
+    // Legacy sync: start_time / end_time columns (NOT NULL in BDD.sql)
+    @lombok.Getter(AccessLevel.NONE)
+    @lombok.Setter(AccessLevel.NONE)
+    @Column(name = "start_time", nullable = false)
+    private LocalDateTime startTime;
+
+    @lombok.Getter(AccessLevel.NONE)
+    @lombok.Setter(AccessLevel.NONE)
+    @Column(name = "end_time", nullable = false)
+    private LocalDateTime endTime;
+
     @Column(name = "is_all_day")
     private Boolean isAllDay = false;
 
@@ -214,6 +226,7 @@ public class Appointment {
         if (status == null) {
             status = AppointmentStatus.SCHEDULED;
         }
+        syncLegacyDateColumns();
     }
 
     @PreUpdate
@@ -221,6 +234,31 @@ public class Appointment {
         // Ensure type is never null
         if (type == null) {
             type = AppointmentType.CLIENT_MEETING;
+        }
+        syncLegacyDateColumns();
+    }
+
+    /**
+     * Synchronize start_time/end_time columns with appointmentDate/endDate
+     * BDD.sql requires both column sets to be populated (start_time NOT NULL)
+     */
+    private void syncLegacyDateColumns() {
+        if (appointmentDate != null) {
+            this.startTime = this.appointmentDate;
+        } else if (this.startTime != null) {
+            this.appointmentDate = this.startTime;
+        }
+        if (endDate != null) {
+            this.endTime = this.endDate;
+        } else if (this.endTime != null) {
+            this.endDate = this.endTime;
+        }
+        // Fallback: ensure start_time is never null
+        if (this.startTime == null) {
+            this.startTime = LocalDateTime.now();
+        }
+        if (this.endTime == null) {
+            this.endTime = this.startTime.plusHours(1);
         }
     }
 

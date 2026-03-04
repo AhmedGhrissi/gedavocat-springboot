@@ -1,0 +1,14 @@
+FROM eclipse-temurin:17-jre-jammy
+LABEL app="docavocat"
+RUN groupadd -r docavocat && useradd -r -g docavocat docavocat
+RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
+RUN mkdir -p /opt/gedavocat/uploads/documents /opt/gedavocat/uploads/signatures /opt/gedavocat/uploads/invoices /opt/gedavocat/logs /opt/gedavocat/temp /opt/gedavocat/backups && chown -R docavocat:docavocat /opt/gedavocat
+COPY app.jar /app/app.jar
+RUN chown docavocat:docavocat /app/app.jar
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+USER docavocat
+EXPOSE 8080
+HEALTHCHECK --interval=30s --timeout=10s --start-period=90s --retries=5 CMD curl -f http://localhost:8080/actuator/health || exit 1
+ENTRYPOINT ["/entrypoint.sh"]

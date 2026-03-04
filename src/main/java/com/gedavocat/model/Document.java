@@ -2,10 +2,13 @@ package com.gedavocat.model;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -64,7 +67,26 @@ public class Document {
     
     @Column(length = 100)
     private String mimetype;
-    
+
+    // ====== Sync fields for BDD.sql dual-column compatibility ======
+    // BDD.sql has both original_filename (NOT NULL) and original_name (NOT NULL)
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
+    @Column(name = "original_filename", nullable = false, length = 255)
+    private String originalFilename;
+
+    // BDD.sql has both file_path (NOT NULL) and path (NOT NULL)
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
+    @Column(name = "file_path", nullable = false, length = 500)
+    private String filePath;
+
+    // BDD.sql has both mime_type and mimetype
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
+    @Column(name = "mime_type", length = 100)
+    private String mimeType;
+
     @Column(name = "file_size")
     private Long fileSize;
     
@@ -132,5 +154,22 @@ public class Document {
         if (isLatest == null) {
             isLatest = true;
         }
+        syncLegacyColumns();
+    }
+
+    @PreUpdate
+    public void preUpdate() {
+        syncLegacyColumns();
+    }
+
+    /**
+     * Sync legacy columns (original_filename, file_path, mime_type)
+     * with primary columns (original_name, path, mimetype)
+     * BDD.sql has both sets of columns; the legacy ones are NOT NULL.
+     */
+    private void syncLegacyColumns() {
+        this.originalFilename = (this.originalName != null) ? this.originalName : this.filename;
+        this.filePath = (this.path != null) ? this.path : "";
+        this.mimeType = this.mimetype;
     }
 }
