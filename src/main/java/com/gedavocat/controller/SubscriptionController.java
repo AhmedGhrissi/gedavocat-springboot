@@ -1,6 +1,7 @@
 package com.gedavocat.controller;
 
 import com.gedavocat.model.User;
+import com.gedavocat.repository.ClientRepository;
 import com.gedavocat.repository.UserRepository;
 import com.gedavocat.service.StripeService;
 import com.stripe.exception.StripeException;
@@ -28,6 +29,7 @@ public class SubscriptionController {
 
     private final StripeService stripeService;
     private final UserRepository userRepository;
+    private final ClientRepository clientRepository;
 
     /**
      * Page de choix d'abonnement (pricing)
@@ -154,7 +156,7 @@ public class SubscriptionController {
     public String changePlanPage(Authentication authentication, Model model) {
         User user = getCurrentUser(authentication);
 
-        int currentClients = user.getClients() != null ? user.getClients().size() : 0;
+        int currentClients = (int) clientRepository.countByLawyerId(user.getId());
 
         model.addAttribute("user", user);
         model.addAttribute("currentPlan", user.getSubscriptionPlan());
@@ -190,7 +192,7 @@ public class SubscriptionController {
             }
 
             boolean isUpgrade = newPlan.getPrice() > currentPlan.getPrice();
-            int currentClients = user.getClients() != null ? user.getClients().size() : 0;
+            int currentClients = (int) clientRepository.countByLawyerId(user.getId());
 
             if (!isUpgrade) {
                 // Downgrade : vérifier les limites
