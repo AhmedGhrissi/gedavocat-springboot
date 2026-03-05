@@ -129,7 +129,7 @@ public class SecurityConfig {
 									"frame-src 'self' https://js.stripe.com https://hooks.stripe.com; " +
 									"object-src 'none'; " +
 									"base-uri 'self'; " +
-									"form-action 'self'; " +
+									"form-action 'self' https://checkout.stripe.com; " +
 									"frame-ancestors 'none'"));
 							h.crossOriginOpenerPolicy(coop -> coop.policy(
 									org.springframework.security.web.header.writers.CrossOriginOpenerPolicyHeaderWriter.CrossOriginOpenerPolicy.SAME_ORIGIN));
