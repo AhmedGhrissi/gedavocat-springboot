@@ -179,9 +179,7 @@ public class SecurityConfig {
 								if (roles.contains("ROLE_LAWYER")) {
 									var optUser = userRepository.findByEmail(authentication.getName());
 									if (optUser.isPresent() && !optUser.get().hasActiveSubscription()) {
-										String plan = optUser.get().getSubscriptionPlan() != null
-											? optUser.get().getSubscriptionPlan().name() : "ESSENTIEL";
-										response.sendRedirect("/subscription/checkout?plan=" + plan + "&period=monthly");
+										response.sendRedirect("/subscription/pricing");
 										return;
 									}
 								}
