@@ -100,6 +100,9 @@ services:
       SPRING_PROFILES_ACTIVE: prod
       MAINTENANCE_ENABLED: ${MAINTENANCE_ENABLED:-false}
 
+      # Ressources statiques externes (prioritaires sur celles du JAR)
+      SPRING_WEB_RESOURCES_STATIC_LOCATIONS: "file:/opt/gedavocat/static-override/,classpath:/static/"
+
       # Services externes (APIs)
       YOUSIGN_API_KEY: ${YOUSIGN_API_KEY}
       STRIPE_API_KEY: ${STRIPE_API_KEY:-}
@@ -114,6 +117,7 @@ services:
       - /opt/gedavocat/logs:/opt/gedavocat/logs
       - /opt/gedavocat/temp:/opt/gedavocat/temp
       - /opt/gedavocat/backups:/opt/gedavocat/backups
+      - /opt/gedavocat/static-override:/opt/gedavocat/static-override:ro
       # Docker socket removed for security — DO NOT mount docker.sock in app container
     networks:
       - docavocat-net
