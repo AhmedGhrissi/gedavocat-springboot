@@ -110,6 +110,12 @@ public class SubscriptionController {
                     // Activer l'abonnement
                     activateSubscription(user, plan, period, session.getSubscription());
                     
+                    // Sauvegarder l'ID client Stripe
+                    if (session.getCustomer() != null && (user.getStripeCustomerId() == null || user.getStripeCustomerId().isEmpty())) {
+                        user.setStripeCustomerId(session.getCustomer());
+                        userRepository.save(user);
+                    }
+                    
                     model.addAttribute("user", user);
                     model.addAttribute("plan", user.getSubscriptionPlan());
                     model.addAttribute("success", true);
@@ -230,7 +236,7 @@ public class SubscriptionController {
     }
 
     /**
-     * Annuler l'abonnement
+     * Annuler l'abonnement (utilise l'API Stripe pour annuler en fin de période)
      */
     @PostMapping("/cancel-subscription")
     public String cancelSubscription(
@@ -240,6 +246,23 @@ public class SubscriptionController {
         try {
             User user = getCurrentUser(authentication);
             
+            // 1. Annuler côté Stripe (cancel_at_period_end = true)
+            if (stripeService.isConfigured() && user.getStripeCustomerId() != null) {
+                try {
+                    var cancelled = stripeService.cancelSubscriptionAtPeriodEnd(user.getStripeCustomerId());
+                    if (cancelled != null) {
+                        log.info("Abonnement Stripe annulé en fin de période pour: {}", user.getEmail());
+                    } else {
+                        log.warn("Aucun abonnement Stripe actif trouvé pour: {}", user.getEmail());
+                    }
+                } catch (Exception stripeEx) {
+                    log.error("Erreur Stripe lors de l'annulation pour {}: {}", 
+                              user.getEmail(), stripeEx.getMessage());
+                    // On continue quand même pour mettre à jour le statut local
+                }
+            }
+            
+            // 2. Mettre à jour le statut local
             user.setSubscriptionStatus(User.SubscriptionStatus.CANCELLED);
             userRepository.save(user);
             

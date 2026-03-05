@@ -169,11 +169,53 @@ public class StripeService {
     }
 
     /**
-     * Annule un abonnement
+     * Annule un abonnement immédiatement
      */
     public Subscription cancelSubscription(String subscriptionId) throws StripeException {
         Subscription subscription = Subscription.retrieve(subscriptionId);
         return subscription.cancel();
+    }
+
+    /**
+     * Annule l'abonnement actif d'un client Stripe en fin de période
+     * (cancel_at_period_end = true)
+     * @return le Subscription modifié, ou null si aucun abonnement actif trouvé
+     */
+    public Subscription cancelSubscriptionAtPeriodEnd(String stripeCustomerId) throws StripeException {
+        if (stripeCustomerId == null || stripeCustomerId.isBlank()) {
+            log.warn("Pas de stripeCustomerId pour annuler l'abonnement");
+            return null;
+        }
+
+        // Lister les abonnements actifs du client
+        Map<String, Object> params = new HashMap<>();
+        params.put("customer", stripeCustomerId);
+        params.put("status", "active");
+        params.put("limit", 1);
+
+        SubscriptionCollection subscriptions = Subscription.list(params);
+
+        if (subscriptions.getData().isEmpty()) {
+            // Essayer aussi trialing
+            params.put("status", "trialing");
+            subscriptions = Subscription.list(params);
+        }
+
+        if (subscriptions.getData().isEmpty()) {
+            log.warn("Aucun abonnement actif trouvé pour le client Stripe: {}", stripeCustomerId);
+            return null;
+        }
+
+        Subscription subscription = subscriptions.getData().get(0);
+        
+        // Planifier l'annulation en fin de période
+        Map<String, Object> updateParams = new HashMap<>();
+        updateParams.put("cancel_at_period_end", true);
+        Subscription updated = subscription.update(updateParams);
+        
+        log.info("Abonnement {} marqué pour annulation en fin de période pour client {}", 
+                 subscription.getId(), stripeCustomerId);
+        return updated;
     }
 
     /**
