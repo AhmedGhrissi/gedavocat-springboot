@@ -7,6 +7,7 @@ import com.stripe.model.*;
 import com.stripe.model.checkout.Session;
 import com.stripe.net.Webhook;
 import com.stripe.param.checkout.SessionCreateParams;
+import com.stripe.param.SubscriptionUpdateParams;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -215,6 +216,37 @@ public class StripeService {
         
         log.info("Abonnement {} marqué pour annulation en fin de période pour client {}", 
                  subscription.getId(), stripeCustomerId);
+        return updated;
+    }
+
+    /**
+     * Met à jour le plan d'un abonnement Stripe existant (upgrade/downgrade)
+     * au lieu de créer un nouveau checkout. Proratisation automatique.
+     */
+    public Subscription updateSubscriptionPlan(String subscriptionId, String plan, String period) throws StripeException {
+        String newPriceId = getPriceId(plan, period);
+        if (newPriceId == null) {
+            throw new IllegalArgumentException("Plan ou période invalide: " + plan + " / " + period);
+        }
+
+        Subscription subscription = Subscription.retrieve(subscriptionId);
+        if (subscription.getItems() == null || subscription.getItems().getData().isEmpty()) {
+            throw new RuntimeException("Aucun item trouvé sur l'abonnement " + subscriptionId);
+        }
+
+        SubscriptionItem currentItem = subscription.getItems().getData().get(0);
+
+        SubscriptionUpdateParams params = SubscriptionUpdateParams.builder()
+            .addItem(SubscriptionUpdateParams.Item.builder()
+                .setId(currentItem.getId())
+                .setPrice(newPriceId)
+                .build())
+            .setProrationBehavior(SubscriptionUpdateParams.ProrationBehavior.CREATE_PRORATIONS)
+            .build();
+
+        Subscription updated = subscription.update(params);
+        log.info("Abonnement {} mis à jour vers plan={} period={} (priceId={})",
+                subscriptionId, plan, period, newPriceId);
         return updated;
     }
 

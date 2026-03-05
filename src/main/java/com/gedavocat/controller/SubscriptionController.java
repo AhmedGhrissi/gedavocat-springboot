@@ -212,16 +212,38 @@ public class SubscriptionController {
                 }
             }
 
-            // Rediriger vers le checkout Stripe pour le nouveau plan
             if (!stripeService.isConfigured()) {
                 redirectAttributes.addFlashAttribute("error",
                     "Le système de paiement n'est pas configuré.");
                 return "redirect:/subscription/change-plan";
             }
 
+            // Si l'utilisateur a déjà un abonnement Stripe, modifier le plan directement
+            String existingSubId = user.getStripeSubscriptionId();
+            if (existingSubId != null && !existingSubId.isBlank()) {
+                try {
+                    com.stripe.model.Subscription updatedSub = stripeService.updateSubscriptionPlan(
+                            existingSubId, plan, period);
+                    if (updatedSub != null) {
+                        // Mettre à jour le plan en base
+                        user.setSubscriptionPlan(newPlan);
+                        user.setMaxClients(newPlan.getMaxClients());
+                        userRepository.save(user);
+                        log.info("Plan modifié via Stripe {} → {} pour {}", currentPlan, newPlan, user.getEmail());
+                        redirectAttributes.addFlashAttribute("message",
+                            "Votre plan a été changé avec succès vers " + newPlan.getDisplayName() + " !");
+                        return "redirect:/subscription/change-plan";
+                    }
+                } catch (StripeException se) {
+                    log.warn("Impossible de mettre à jour l'abonnement Stripe {} : {}", existingSubId, se.getMessage());
+                    // L'abonnement est peut-être annulé/expiré — on crée un nouveau checkout
+                }
+            }
+
+            // Pas d'abonnement existant ou mise à jour échouée → nouveau checkout
             String checkoutUrl = stripeService.createCheckoutSession(user, plan, period);
             if (checkoutUrl != null) {
-                log.info("Changement de plan {} → {} pour {}", currentPlan, newPlan, user.getEmail());
+                log.info("Changement de plan {} → {} pour {} (nouveau checkout)", currentPlan, newPlan, user.getEmail());
                 return "redirect:" + checkoutUrl;
             } else {
                 redirectAttributes.addFlashAttribute("error", "Erreur lors de la création du paiement");
@@ -498,6 +520,11 @@ public class SubscriptionController {
         user.setMaxClients(subscriptionPlan.getMaxClients());
         user.setSubscriptionStartDate(LocalDateTime.now());
         
+        // Sauvegarder l'ID d'abonnement Stripe pour pouvoir le modifier plus tard
+        if (subscriptionId != null && !subscriptionId.isBlank()) {
+            user.setStripeSubscriptionId(subscriptionId);
+        }
+        
         // Calculer la date de fin selon la période
         if ("yearly".equals(period)) {
             user.setSubscriptionEndsAt(LocalDateTime.now().plusYears(1));
@@ -507,8 +534,8 @@ public class SubscriptionController {
         
         userRepository.save(user);
         
-        log.info("Abonnement {} activé pour {} jusqu'au {}", 
-            subscriptionPlan, user.getEmail(), user.getSubscriptionEndsAt());
+        log.info("Abonnement {} activé pour {} jusqu'au {} (stripeSubId={})", 
+            subscriptionPlan, user.getEmail(), user.getSubscriptionEndsAt(), subscriptionId);
     }
 
     /**

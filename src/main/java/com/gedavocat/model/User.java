@@ -132,6 +132,11 @@ public class User {
     @JsonIgnore
     private String stripeCustomerId;
 
+    // ✅ Identifiant abonnement Stripe (pour modifier/annuler l'abonnement existant)
+    @Column(name = "stripe_subscription_id", length = 100)
+    @JsonIgnore
+    private String stripeSubscriptionId;
+
     // ✅ ALIAS pour compatibilité avec templates
     @Transient
     public LocalDateTime getSubscriptionEndDate() {
