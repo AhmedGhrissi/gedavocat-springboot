@@ -5,6 +5,8 @@
 <head>
     <title>Tableau de bord</title>
     <link rel="stylesheet" th:href="@{/css/pages/dashboard-institutional.css}">
+    <!-- PERF-01 FIX : Chart.js chargé uniquement sur le dashboard -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
 <div layout:fragment="content">

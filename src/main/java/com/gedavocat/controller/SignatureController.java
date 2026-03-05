@@ -184,6 +184,26 @@ public class SignatureController {
             RedirectAttributes redirectAttributes
     ) {
         try {
+            // SEC-10 FIX : valider les paramètres de signature
+            if (signerEmail == null || !signerEmail.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$")) {
+                redirectAttributes.addFlashAttribute("error", "Email du signataire invalide.");
+                return "redirect:/signatures/new?caseId=" + caseId;
+            }
+            if (signerFirstName == null || signerFirstName.isBlank() || signerFirstName.length() > 100) {
+                redirectAttributes.addFlashAttribute("error", "Prénom du signataire invalide.");
+                return "redirect:/signatures/new?caseId=" + caseId;
+            }
+            if (signerLastName == null || signerLastName.isBlank() || signerLastName.length() > 100) {
+                redirectAttributes.addFlashAttribute("error", "Nom du signataire invalide.");
+                return "redirect:/signatures/new?caseId=" + caseId;
+            }
+            if (!java.util.Set.of("advanced", "qualified", "simple").contains(signatureLevel)) {
+                signatureLevel = "advanced";
+            }
+            if (expirationDays < 1 || expirationDays > 90) {
+                expirationDays = 7;
+            }
+
             User user = userRepository.findByEmail(userDetails.getUsername())
                     .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
 

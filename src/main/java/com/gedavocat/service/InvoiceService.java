@@ -176,7 +176,17 @@ public class InvoiceService {
             return convertToResponse(invoice);
         }
         
-        // Vérification ownership pour lawyers et clients
+        // SEC-05 FIX : Vérification ownership pour les clients
+        if (lawyerId.startsWith("CLIENT_")) {
+            String clientUserId = lawyerId.substring(7);
+            if (invoice.getClient() != null && invoice.getClient().getClientUser() != null
+                    && invoice.getClient().getClientUser().getId().equals(clientUserId)) {
+                return convertToResponse(invoice);
+            }
+            throw new SecurityException("Accès non autorisé à cette facture");
+        }
+        
+        // Vérification ownership pour lawyers
         if (invoice.getClient() != null && invoice.getClient().getLawyer() != null
                 && !invoice.getClient().getLawyer().getId().equals(lawyerId)) {
             throw new SecurityException("Accès non autorisé à cette facture");

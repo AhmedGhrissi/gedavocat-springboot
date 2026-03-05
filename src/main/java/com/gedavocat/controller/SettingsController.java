@@ -283,6 +283,7 @@ public class SettingsController {
     public ResponseEntity<Map<String, Object>> changePasswordAjax(
             @RequestParam("currentPassword") String currentPassword,
             @RequestParam("newPassword") String newPassword,
+            @RequestParam(value = "confirmPassword", required = false) String confirmPassword,
             Authentication authentication
     ) {
         try {
@@ -291,6 +292,13 @@ public class SettingsController {
                 return ResponseEntity.badRequest().body(Map.of(
                     "success", false,
                     "message", "Mot de passe actuel incorrect."
+                ));
+            }
+            // UX-02 FIX : vérifier la confirmation
+            if (confirmPassword != null && !newPassword.equals(confirmPassword)) {
+                return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", "Les nouveaux mots de passe ne correspondent pas."
                 ));
             }
             if (newPassword.length() < 8) {
@@ -336,25 +344,43 @@ public class SettingsController {
     }
 
     /**
-     * SEC-XSS FIX M-04 : Sanitisation robuste du HTML de la signature email.
-     * Approche whitelist : seules les balises autorisées sont conservées, tout le reste est échappé.
+     * SEC-03 FIX : Sanitisation robuste du HTML de la signature email.
+     * Approche whitelist stricte : seules les balises autorisées sont conservées.
      */
     private String sanitizeHtml(String html) {
         if (html == null) return null;
-        // Étape 1 : Supprimer les balises <script>...</script> (y compris multilignes)
+        // Whitelist de balises autorisées (pas de script, iframe, object, etc.)
+        java.util.Set<String> allowedTags = java.util.Set.of(
+            "p", "br", "b", "i", "u", "strong", "em", "a", "ul", "ol", "li",
+            "h1", "h2", "h3", "h4", "h5", "h6", "span", "div", "table", "tr", "td", "th",
+            "thead", "tbody", "img", "blockquote", "pre", "code", "hr", "font"
+        );
+        java.util.Set<String> allowedAttrs = java.util.Set.of(
+            "href", "src", "alt", "title", "style", "class", "width", "height",
+            "target", "rel", "color", "size", "face", "align", "valign",
+            "border", "cellpadding", "cellspacing", "colspan", "rowspan"
+        );
+
+        // Étape 1 : Supprimer entièrement les blocs <script>...</script>, <style>...</style>
         String sanitized = html.replaceAll("(?is)<script[^>]*>.*?</script>", "");
-        // Étape 2 : Supprimer les balises dangereuses (iframe, object, embed, form, input, button, textarea, select, meta, link, style, applet, base)
-        sanitized = sanitized.replaceAll("(?i)</?\\s*(script|iframe|object|embed|form|input|button|textarea|select|meta|link|style|applet|base|svg|math)\\b[^>]*>", "");
+        sanitized = sanitized.replaceAll("(?is)<style[^>]*>.*?</style>", "");
+
+        // Étape 2 : Supprimer les balises non autorisées
+        sanitized = sanitized.replaceAll("(?i)</?\\s*(?!" + String.join("|", allowedTags) + ")[a-zA-Z][^>]*>", "");
+
         // Étape 3 : Supprimer TOUS les event handlers (on*=...)
         sanitized = sanitized.replaceAll("(?i)\\s+on\\w+\\s*=\\s*\"[^\"]*\"", "");
         sanitized = sanitized.replaceAll("(?i)\\s+on\\w+\\s*=\\s*'[^']*'", "");
         sanitized = sanitized.replaceAll("(?i)\\s+on\\w+\\s*=\\s*[^\\s>]+", "");
-        // Étape 4 : Supprimer javascript:, vbscript:, data: dans les attributs href/src/action/formaction/xlink:href
+
+        // Étape 4 : Supprimer javascript:, vbscript:, data: dans href/src
         sanitized = sanitized.replaceAll("(?i)(href|src|action|formaction|xlink:href)\\s*=\\s*[\"']\\s*(javascript|vbscript|data)\\s*:", "$1=\"");
-        // Étape 5 : Supprimer les expressions CSS (expression(), url(javascript:))
+
+        // Étape 5 : Supprimer les expressions CSS dangereuses
         sanitized = sanitized.replaceAll("(?i)expression\\s*\\(", "");
         sanitized = sanitized.replaceAll("(?i)url\\s*\\(\\s*[\"']?\\s*javascript:", "url(");
-        // Étape 6 : Limiter la longueur de la signature
+
+        // Étape 6 : Limiter la longueur
         if (sanitized.length() > 5000) {
             sanitized = sanitized.substring(0, 5000);
         }

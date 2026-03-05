@@ -137,6 +137,10 @@ public class User {
     @JsonIgnore
     private String stripeSubscriptionId;
 
+    // FUNC-06 FIX : période de facturation choisie lors de l'inscription (monthly/yearly)
+    @Column(name = "billing_period", length = 20)
+    private String billingPeriod;
+
     // ✅ ALIAS pour compatibilité avec templates
     @Transient
     public LocalDateTime getSubscriptionEndDate() {

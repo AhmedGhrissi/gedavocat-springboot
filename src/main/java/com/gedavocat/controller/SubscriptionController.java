@@ -17,6 +17,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDateTime;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Contrôleur pour la gestion des abonnements avec Stripe
@@ -30,6 +32,11 @@ public class SubscriptionController {
     private final StripeService stripeService;
     private final UserRepository userRepository;
     private final ClientRepository clientRepository;
+
+    /** Idempotence : Stripe session_ids déjà traités (CRIT-01 FIX) */
+    private final Set<String> processedSessionIds = ConcurrentHashMap.newKeySet();
+    /** Idempotence webhook : event IDs déjà traités (CRIT-05 FIX) */
+    private final Set<String> processedEventIds = ConcurrentHashMap.newKeySet();
 
     /**
      * Page de choix d'abonnement (pricing)
@@ -47,15 +54,28 @@ public class SubscriptionController {
 
     /**
      * Créer une session de paiement Stripe Checkout
+     * FUNC-03 FIX : empêche la double souscription
      */
     @GetMapping("/checkout")
     public String createCheckout(
-            @RequestParam String plan,
+            @RequestParam(required = false) String plan,
             @RequestParam(required = false, defaultValue = "monthly") String period,
             Authentication authentication,
             RedirectAttributes redirectAttributes
     ) {
         try {
+            // FUNC-08 FIX : valider le plan
+            if (plan == null || plan.isBlank()) {
+                redirectAttributes.addFlashAttribute("error", "Veuillez sélectionner un plan.");
+                return "redirect:/subscription/pricing";
+            }
+            try {
+                User.SubscriptionPlan.valueOf(plan.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                redirectAttributes.addFlashAttribute("error", "Plan invalide. Veuillez en choisir un.");
+                return "redirect:/subscription/pricing";
+            }
+
             if (!stripeService.isConfigured()) {
                 redirectAttributes.addFlashAttribute("error", 
                     "Stripe n'est pas configuré. Veuillez configurer vos clés API.");
@@ -63,6 +83,12 @@ public class SubscriptionController {
             }
 
             User user = getCurrentUser(authentication);
+
+            // FUNC-03 FIX : empêcher la double souscription
+            if (user.hasActiveSubscription()) {
+                redirectAttributes.addFlashAttribute("error", "Vous avez déjà un abonnement actif. Utilisez la page de changement de plan.");
+                return "redirect:/subscription/manage";
+            }
 
             // Créer la session Stripe Checkout
             String checkoutUrl = stripeService.createCheckoutSession(user, plan, period);
@@ -98,10 +124,30 @@ public class SubscriptionController {
     ) {
         if (session_id != null && authentication != null) {
             try {
+                // CRIT-01 FIX : idempotence — ne pas retraiter une session déjà activée
+                if (processedSessionIds.contains(session_id)) {
+                    User user = getCurrentUser(authentication);
+                    model.addAttribute("user", user);
+                    model.addAttribute("plan", user.getSubscriptionPlan());
+                    model.addAttribute("success", true);
+                    model.addAttribute("message", "Votre abonnement est déjà actif !");
+                    return "payment/success";
+                }
+
                 Session session = stripeService.getSession(session_id);
                 
                 if ("complete".equals(session.getStatus())) {
                     User user = getCurrentUser(authentication);
+
+                    // CRIT-01 FIX : ne pas réactiver un abonnement déjà actif
+                    if (user.hasActiveSubscription() && user.getSubscriptionStatus() == User.SubscriptionStatus.ACTIVE) {
+                        model.addAttribute("user", user);
+                        model.addAttribute("plan", user.getSubscriptionPlan());
+                        model.addAttribute("success", true);
+                        model.addAttribute("message", "Votre abonnement est déjà actif !");
+                        processedSessionIds.add(session_id);
+                        return "payment/success";
+                    }
                     
                     // Récupérer les métadonnées
                     String plan = session.getMetadata().get("plan");
@@ -109,6 +155,7 @@ public class SubscriptionController {
                     
                     // Activer l'abonnement
                     activateSubscription(user, plan, period, session.getSubscription());
+                    processedSessionIds.add(session_id);
                     
                     // Sauvegarder l'ID client Stripe
                     if (session.getCustomer() != null && (user.getStripeCustomerId() == null || user.getStripeCustomerId().isEmpty())) {
@@ -189,7 +236,14 @@ public class SubscriptionController {
     ) {
         try {
             User user = getCurrentUser(authentication);
-            User.SubscriptionPlan newPlan = User.SubscriptionPlan.valueOf(plan.toUpperCase());
+            // FUNC-08 FIX : valider le plan avec message propre
+            User.SubscriptionPlan newPlan;
+            try {
+                newPlan = User.SubscriptionPlan.valueOf(plan.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                redirectAttributes.addFlashAttribute("error", "Plan invalide.");
+                return "redirect:/subscription/change-plan";
+            }
             User.SubscriptionPlan currentPlan = user.getSubscriptionPlan();
 
             if (newPlan == currentPlan) {
@@ -252,7 +306,7 @@ public class SubscriptionController {
 
         } catch (Exception e) {
             log.error("Erreur lors du changement de plan: {}", e.getMessage());
-            redirectAttributes.addFlashAttribute("error", "Une erreur est survenue : " + e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "Une erreur est survenue lors du changement de plan.");
             return "redirect:/subscription/change-plan";
         }
     }
@@ -349,6 +403,16 @@ public class SubscriptionController {
             // Vérifier la signature du webhook
             Event event = stripeService.constructWebhookEvent(payload, sigHeader);
             
+            // CRIT-05 FIX : idempotence — ne pas retraiter un événement déjà vu
+            if (!processedEventIds.add(event.getId())) {
+                log.info("Événement Stripe déjà traité (idempotence): {}", event.getId());
+                return ResponseEntity.ok("Déjà traité");
+            }
+            // Limiter la taille du set pour éviter une fuite mémoire
+            if (processedEventIds.size() > 10_000) {
+                processedEventIds.clear();
+            }
+            
             log.info("Événement Stripe: {}", event.getType());
             
             // Traiter l'événement selon son type
@@ -419,6 +483,7 @@ public class SubscriptionController {
 
     /**
      * Traite l'événement subscription.updated
+     * FUNC-02 FIX : synchronise aussi le plan depuis Stripe
      */
     private void handleSubscriptionUpdated(Event event) {
         try {
@@ -440,6 +505,28 @@ public class SubscriptionController {
                     } else if ("canceled".equals(status) || "unpaid".equals(status)) {
                         user.setSubscriptionStatus(User.SubscriptionStatus.INACTIVE);
                     }
+
+                    // FUNC-02 FIX : synchroniser le plan depuis le price_id Stripe
+                    try {
+                        if (subscription.getItems() != null && !subscription.getItems().getData().isEmpty()) {
+                            String priceId = subscription.getItems().getData().get(0).getPrice().getId();
+                            User.SubscriptionPlan syncedPlan = stripeService.getPlanFromPriceId(priceId);
+                            if (syncedPlan != null && syncedPlan != user.getSubscriptionPlan()) {
+                                log.info("Plan synchronisé depuis Stripe: {} → {} pour {}", 
+                                         user.getSubscriptionPlan(), syncedPlan, user.getEmail());
+                                user.setSubscriptionPlan(syncedPlan);
+                                user.setMaxClients(syncedPlan.getMaxClients());
+                            }
+                        }
+                    } catch (Exception planEx) {
+                        log.warn("Impossible de synchroniser le plan depuis Stripe: {}", planEx.getMessage());
+                    }
+
+                    // Sauvegarder le subscriptionId si manquant
+                    if (user.getStripeSubscriptionId() == null || user.getStripeSubscriptionId().isBlank()) {
+                        user.setStripeSubscriptionId(subscription.getId());
+                    }
+
                     userRepository.save(user);
                     log.info("✅ Statut d'abonnement mis à jour pour: {}", user.getEmail());
                 } else {
@@ -494,15 +581,44 @@ public class SubscriptionController {
                     .orElse(null);
                 
                 if (user != null) {
-                    // Prolonger la date de fin d'abonnement
-                    LocalDateTime newEndDate = user.getSubscriptionEndsAt() != null 
-                        ? user.getSubscriptionEndsAt().plusMonths(1) 
-                        : LocalDateTime.now().plusMonths(1);
+                    // CRIT-05 FIX : Déterminer la période depuis Stripe ou le billing_reason
+                    String billingReason = invoice.getBillingReason();
+                    boolean isRenewal = "subscription_cycle".equals(billingReason);
                     
-                    user.setSubscriptionEndsAt(newEndDate);
-                    user.setSubscriptionStatus(User.SubscriptionStatus.ACTIVE);
-                    userRepository.save(user);
-                    log.info("✅ Abonnement renouvelé pour: {} jusqu'au {}", user.getEmail(), newEndDate);
+                    if (!isRenewal) {
+                        // Première facture ou upgrade — ne pas prolonger, juste s'assurer ACTIVE
+                        user.setSubscriptionStatus(User.SubscriptionStatus.ACTIVE);
+                        userRepository.save(user);
+                        log.info("✅ Paiement initial/upgrade pour: {}", user.getEmail());
+                    } else {
+                        // Renouvellement — prolonger selon la période
+                        // Lire current_period_end depuis la subscription Stripe
+                        LocalDateTime newEndDate;
+                        try {
+                            String subId = invoice.getSubscription();
+                            if (subId != null) {
+                                com.stripe.model.Subscription sub = com.stripe.model.Subscription.retrieve(subId);
+                                newEndDate = LocalDateTime.ofInstant(
+                                    java.time.Instant.ofEpochSecond(sub.getCurrentPeriodEnd()),
+                                    java.time.ZoneId.systemDefault());
+                            } else {
+                                // Fallback : +1 mois
+                                newEndDate = user.getSubscriptionEndsAt() != null 
+                                    ? user.getSubscriptionEndsAt().plusMonths(1) 
+                                    : LocalDateTime.now().plusMonths(1);
+                            }
+                        } catch (Exception stripeEx) {
+                            log.warn("Impossible de lire current_period_end depuis Stripe: {}", stripeEx.getMessage());
+                            newEndDate = user.getSubscriptionEndsAt() != null 
+                                ? user.getSubscriptionEndsAt().plusMonths(1) 
+                                : LocalDateTime.now().plusMonths(1);
+                        }
+                        
+                        user.setSubscriptionEndsAt(newEndDate);
+                        user.setSubscriptionStatus(User.SubscriptionStatus.ACTIVE);
+                        userRepository.save(user);
+                        log.info("✅ Abonnement renouvelé pour: {} jusqu'au {}", user.getEmail(), newEndDate);
+                    }
                 } else {
                     log.warn("⚠️ Aucun utilisateur trouvé pour le Stripe customer: {}", customerId);
                 }

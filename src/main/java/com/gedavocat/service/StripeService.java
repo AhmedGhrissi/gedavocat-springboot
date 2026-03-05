@@ -307,6 +307,30 @@ public class StripeService {
     }
 
     /**
+     * FUNC-02 FIX : résout un SubscriptionPlan depuis un priceId Stripe (reverse lookup)
+     */
+    public com.gedavocat.model.User.SubscriptionPlan getPlanFromPriceId(String priceId) {
+        if (priceId == null || priceMap == null) return null;
+        for (Map.Entry<String, String> entry : priceMap.entrySet()) {
+            if (priceId.equals(entry.getValue())) {
+                // key format: "PLAN_period"
+                String planName = entry.getKey().split("_")[0];
+                // Handle CABINET_PLUS (two-word plan)
+                if (entry.getKey().startsWith("CABINET_PLUS")) {
+                    planName = "CABINET_PLUS";
+                }
+                try {
+                    return com.gedavocat.model.User.SubscriptionPlan.valueOf(planName);
+                } catch (IllegalArgumentException e) {
+                    log.warn("Plan inconnu dans le mapping : {}", planName);
+                    return null;
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
      * Retourne la clé publique Stripe (pour le frontend)
      */
     public String getPublishableKey() {

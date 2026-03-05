@@ -28,8 +28,8 @@
     <!-- Font Awesome -->
     <link th:href="@{/webjars/font-awesome/6.4.0/css/all.min.css}" rel="stylesheet">
     
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <!-- Chart.js — PERF-01 FIX: chargé uniquement quand nécessaire via extra-css/extra-js fragment -->
+    <!-- <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script> -->
 
     <!-- Layout structure styles (CRITICAL) -->
     <link th:href="@{/css/layout.css}" rel="stylesheet">
@@ -62,6 +62,9 @@
     <!-- Variables centralisées : déplacées vers /css/global-unified-theme.css -->
 </head>
 <body>
+    <!-- UX-04 FIX : lien d'accessibilité skip-to-content -->
+    <a href="#main-content" class="visually-hidden-focusable position-absolute top-0 start-0 p-2 bg-primary text-white" style="z-index:10000">Aller au contenu principal</a>
+
     <!-- Overlay pour mobile -->
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
     
@@ -242,7 +245,7 @@
         </div>
     </aside>
 
-    <div class="main-content">
+    <div class="main-content" id="main-content">
         <header class="topbar">
             <!-- Bouton menu mobile -->
             <button class="mobile-menu-btn" id="mobileMenuBtn">
@@ -257,10 +260,10 @@
 
             <div class="topbar-actions">
                 <!-- Dark mode toggle -->
-                <button class="icon-btn" id="darkModeToggle" title="Mode sombre" type="button">
+                <button class="icon-btn" id="darkModeToggle" title="Mode sombre" type="button" aria-label="Basculer le mode sombre">
                     <i class="fas fa-moon" id="darkModeIcon"></i>
                 </button>
-                <button class="icon-btn position-relative" sec:authorize="!hasRole('ADMIN')" type="button" id="notifBell" onclick="if(window.toggleNotifPanel)toggleNotifPanel()">
+                <button class="icon-btn position-relative" sec:authorize="!hasRole('ADMIN')" type="button" id="notifBell" onclick="if(window.toggleNotifPanel)toggleNotifPanel()" aria-label="Notifications">
                     <i class="fas fa-bell"></i>
                     <span id="notifBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size:10px;display:none">0</span>
                 </button>

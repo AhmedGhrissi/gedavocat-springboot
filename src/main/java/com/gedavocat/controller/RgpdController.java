@@ -8,6 +8,8 @@ import com.gedavocat.repository.UserRepository;
 import com.gedavocat.repository.CaseRepository;
 import com.gedavocat.repository.ClientRepository;
 import com.gedavocat.repository.AuditLogRepository;
+import com.gedavocat.repository.DocumentRepository;
+import com.gedavocat.service.StripeService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -43,6 +45,8 @@ public class RgpdController {
     private final CaseRepository caseRepository;
     private final ClientRepository clientRepository;
     private final AuditLogRepository auditLogRepository;
+    private final DocumentRepository documentRepository;
+    private final StripeService stripeService;
 
     /**
      * Art. 20 RGPD — Export de toutes les données personnelles au format JSON
@@ -168,7 +172,59 @@ public class RgpdController {
             return "redirect:/settings";
         }
 
-        // Anonymiser plutôt que supprimer (obligations légales de conservation)
+        // SEC-02 FIX : annuler l'abonnement Stripe avant anonymisation
+        try {
+            if (user.getStripeSubscriptionId() != null && !user.getStripeSubscriptionId().isBlank()) {
+                stripeService.cancelSubscription(user.getStripeSubscriptionId());
+                log.info("Abonnement Stripe annulé pour suppression RGPD de {}", user.getEmail());
+            } else if (user.getStripeCustomerId() != null && !user.getStripeCustomerId().isBlank()) {
+                stripeService.cancelSubscriptionAtPeriodEnd(user.getStripeCustomerId());
+            }
+        } catch (Exception stripeEx) {
+            log.warn("Impossible d'annuler l'abonnement Stripe lors de la suppression RGPD: {}", stripeEx.getMessage());
+        }
+
+        // SEC-02 FIX : anonymiser les logs d'audit
+        try {
+            List<AuditLog> logs = auditLogRepository.findByUserId(user.getId(), PageRequest.of(0, 10000)).getContent();
+            for (AuditLog auditLog : logs) {
+                auditLog.setIpAddress("0.0.0.0");
+                auditLog.setDetails("ANONYMIZED_RGPD");
+            }
+            auditLogRepository.saveAll(logs);
+        } catch (Exception e) {
+            log.warn("Erreur anonymisation audit logs RGPD: {}", e.getMessage());
+        }
+
+        // SEC-02 FIX : anonymiser les clients associés
+        try {
+            List<Client> clients = clientRepository.findByLawyerId(user.getId());
+            for (Client client : clients) {
+                client.setName("Client anonymisé");
+                client.setEmail("anonymized-" + client.getId() + "@deleted.local");
+                client.setPhone(null);
+                client.setAddress(null);
+            }
+            clientRepository.saveAll(clients);
+        } catch (Exception e) {
+            log.warn("Erreur anonymisation clients RGPD: {}", e.getMessage());
+        }
+
+        // SEC-02 FIX : anonymiser les documents (métadonnées)
+        try {
+            List<Case> cases = caseRepository.findByLawyerId(user.getId());
+            for (Case c : cases) {
+                var docs = documentRepository.findByCaseIdAndNotDeleted(c.getId());
+                for (var doc : docs) {
+                    doc.setOriginalName("deleted_document");
+                }
+                documentRepository.saveAll(docs);
+            }
+        } catch (Exception e) {
+            log.warn("Erreur anonymisation documents RGPD: {}", e.getMessage());
+        }
+
+        // Anonymiser l'utilisateur (obligations légales de conservation)
         user.setName("Utilisateur supprimé");
         user.setFirstName(null);
         user.setLastName(null);

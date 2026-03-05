@@ -12,12 +12,13 @@ public final class PasswordValidator {
 
     private PasswordValidator() {} // Utility class
 
+    // UX-01 FIX : harmonisé avec RegisterRequest — accepte tout caractère non-alphanumérique
     private static final Pattern PASSWORD_PATTERN = Pattern.compile(
-        "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&#+\\-_])[A-Za-z\\d@$!%*?&#+\\-_]{12,}$"
+        "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z0-9]).{12,}$"
     );
 
     public static final String PASSWORD_REQUIREMENTS_MESSAGE =
-        "Le mot de passe doit contenir au moins 12 caractères, dont 1 majuscule, 1 minuscule, 1 chiffre et 1 caractère spécial (@$!%*?&#+_-).";
+        "Le mot de passe doit contenir au moins 12 caractères, dont 1 majuscule, 1 minuscule, 1 chiffre et 1 caractère spécial.";
 
     /**
      * Vérifie si le mot de passe respecte les exigences de sécurité.

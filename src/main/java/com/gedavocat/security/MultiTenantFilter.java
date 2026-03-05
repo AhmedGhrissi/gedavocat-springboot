@@ -79,7 +79,9 @@ public class MultiTenantFilter extends OncePerRequestFilter {
                     log.debug("Multi-tenant filter skipped for ADMIN user: {}", email);
                 } else {
                     // Résoudre l'entité User pour obtenir le firmId
-                    userRepository.findByEmail(email).ifPresent(user -> {
+                    var optUser = userRepository.findByEmail(email);
+                    if (optUser.isPresent()) {
+                        var user = optUser.get();
                         if (user.getFirm() != null && user.getFirm().getId() != null) {
                             String firmId = user.getFirm().getId();
                             
@@ -91,12 +93,17 @@ public class MultiTenantFilter extends OncePerRequestFilter {
                             log.debug("Multi-tenant filter activated for firmId: {} (user: {})", 
                                      firmId, email);
                         } else {
-                            // Utilisateur sans cabinet — REFUSER l'accès par sécurité
-                            // (sauf ADMIN déjà filtré ci-dessus)
-                            log.warn("SEC-ALERT: User {} has no firm but is not ADMIN — tenant filter NOT applied. "
-                                   + "Data access may be unrestricted.", email);
+                            // CRIT-02 FIX : Utilisateur sans cabinet — BLOQUER la requête
+                            log.error("SEC-CRITICAL: User {} has no firm but is not ADMIN — ACCESS DENIED", email);
+                            response.sendError(HttpServletResponse.SC_FORBIDDEN, 
+                                "Accès refusé — aucun cabinet associé à votre compte.");
+                            return;
                         }
-                    });
+                    } else {
+                        log.warn("SEC-ALERT: Authenticated user {} not found in DB", email);
+                        response.sendError(HttpServletResponse.SC_FORBIDDEN, "Utilisateur introuvable.");
+                        return;
+                    }
                 }
             }
             

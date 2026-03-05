@@ -156,10 +156,16 @@ public class AppointmentController {
      */
     @PostMapping("/create")
     public String create(Authentication authentication,
-                        @ModelAttribute Appointment appointment,
+                        @jakarta.validation.Valid @ModelAttribute Appointment appointment,
+                        org.springframework.validation.BindingResult bindingResult,
                         @RequestParam(required = false) String clientId,
                         @RequestParam(required = false) String caseId,
                         RedirectAttributes redirectAttributes) {
+        // SEC-09 FIX : @Valid ajouté
+        if (bindingResult.hasErrors()) {
+            redirectAttributes.addFlashAttribute("error", "Données du rendez-vous invalides.");
+            return "redirect:/appointments/new";
+        }
         try {
             User user = getCurrentUser(authentication);
             

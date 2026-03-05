@@ -244,13 +244,24 @@ public class DocumentController {
             Path filePath = documentService.downloadDocument(id, user.getId());
             Document document = documentService.getDocumentById(id);
 
-            // SÉCURITÉ : vérifier ownership
+            // SEC-01 FIX : vérifier ownership selon le rôle
             boolean isAdmin = authentication.getAuthorities().stream()
                     .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
             boolean isClient = authentication.getAuthorities().stream()
                     .anyMatch(a -> a.getAuthority().equals("ROLE_CLIENT"));
-            if (!isAdmin && !isClient && !document.getCaseEntity().getLawyer().getId().equals(user.getId())) {
-                throw new org.springframework.security.access.AccessDeniedException("Accès non autorisé");
+            if (!isAdmin) {
+                if (isClient) {
+                    // SEC-01 FIX : vérifier que le client est bien associé au dossier
+                    Case caseEntity = document.getCaseEntity();
+                    boolean isClientOfCase = caseEntity.getClient() != null 
+                        && caseEntity.getClient().getClientUser() != null 
+                        && caseEntity.getClient().getClientUser().getId().equals(user.getId());
+                    if (!isClientOfCase) {
+                        throw new org.springframework.security.access.AccessDeniedException("Accès non autorisé");
+                    }
+                } else if (!document.getCaseEntity().getLawyer().getId().equals(user.getId())) {
+                    throw new org.springframework.security.access.AccessDeniedException("Accès non autorisé");
+                }
             }
 
             byte[] fileBytes = Files.readAllBytes(filePath);
@@ -281,13 +292,23 @@ public class DocumentController {
             Path filePath = documentService.downloadDocument(id, user.getId());
             Document document = documentService.getDocumentById(id);
 
-            // SÉCURITÉ : vérifier ownership
+            // SEC-01 FIX : vérifier ownership selon le rôle
             boolean isAdminPreview = authentication.getAuthorities().stream()
                     .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
             boolean isClientPreview = authentication.getAuthorities().stream()
                     .anyMatch(a -> a.getAuthority().equals("ROLE_CLIENT"));
-            if (!isAdminPreview && !isClientPreview && !document.getCaseEntity().getLawyer().getId().equals(user.getId())) {
-                throw new org.springframework.security.access.AccessDeniedException("Accès non autorisé");
+            if (!isAdminPreview) {
+                if (isClientPreview) {
+                    Case caseEntity = document.getCaseEntity();
+                    boolean isClientOfCase = caseEntity.getClient() != null 
+                        && caseEntity.getClient().getClientUser() != null 
+                        && caseEntity.getClient().getClientUser().getId().equals(user.getId());
+                    if (!isClientOfCase) {
+                        throw new org.springframework.security.access.AccessDeniedException("Accès non autorisé");
+                    }
+                } else if (!document.getCaseEntity().getLawyer().getId().equals(user.getId())) {
+                    throw new org.springframework.security.access.AccessDeniedException("Accès non autorisé");
+                }
             }
 
             byte[] fileBytes = Files.readAllBytes(filePath);

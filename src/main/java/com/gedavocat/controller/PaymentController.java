@@ -3,6 +3,7 @@ package com.gedavocat.controller;
 import com.gedavocat.model.User;
 import com.gedavocat.repository.UserRepository;
 import com.gedavocat.service.PayPlugService;
+import com.gedavocat.service.StripeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
@@ -28,65 +29,29 @@ public class PaymentController {
 
     private final PayPlugService payPlugService;
     private final UserRepository userRepository;
+    private final StripeService stripeService;
 
     /**
-     * Page de pricing (liste des plans)
+     * CRIT-03 FIX : /payment/pricing redirige vers /subscription/pricing (Stripe est le système principal)
      */
     @GetMapping("/pricing")
-    public String pricing(Model model, Authentication authentication) {
-        if (authentication != null) {
-            User user = getCurrentUser(authentication);
-            model.addAttribute("user", user);
-            model.addAttribute("currentPlan", user.getSubscriptionPlan());
-        }
-        return "payment/pricing";
+    public String pricing() {
+        return "redirect:/subscription/pricing";
     }
 
     /**
-     * Initier un paiement (redirection vers PayPlug)
+     * CRIT-03 FIX : /payment/checkout redirige vers /subscription/checkout
      */
     @GetMapping("/checkout")
     public String checkout(
-            @RequestParam String plan,
-            @RequestParam(required = false, defaultValue = "monthly") String period,
-            Authentication authentication,
-            RedirectAttributes redirectAttributes
+            @RequestParam(required = false) String plan,
+            @RequestParam(required = false, defaultValue = "monthly") String period
     ) {
-        try {
-            User user = getCurrentUser(authentication);
-
-            // Calculer le montant selon le plan et la période
-            double amount = calculateAmount(plan, period);
-
-            if (amount == 0) {
-                redirectAttributes.addFlashAttribute("error", "Plan invalide");
-                return "redirect:/payment/pricing";
-            }
-
-            // Créer le paiement PayPlug
-            String paymentUrl = payPlugService.createPayment(user, plan, amount);
-
-            // SEC FIX CTL-05 : validation de l'URL de redirection (open redirect)
-            if (paymentUrl != null && isAllowedPaymentRedirect(paymentUrl)) {
-                return "redirect:" + paymentUrl;
-            } else if (paymentUrl != null) {
-                log.warn("URL de paiement rejetée (domaine non autorisé) : {}", paymentUrl);
-                redirectAttributes.addFlashAttribute("error", "Erreur lors de la création du paiement");
-                return "redirect:/payment/pricing";
-            } else {
-                redirectAttributes.addFlashAttribute("error", "Erreur lors de la création du paiement");
-                return "redirect:/payment/pricing";
-            }
-
-        } catch (Exception e) {
-            log.error("Erreur lors du checkout paiement", e);
-            redirectAttributes.addFlashAttribute("error", "Une erreur est survenue");
-            return "redirect:/payment/pricing";
-        }
+        return "redirect:/subscription/checkout?plan=" + (plan != null ? plan : "") + "&period=" + period;
     }
 
     /**
-     * Page de succès après paiement
+     * FUNC-04 FIX : Page de succès — active réellement l'abonnement 
      */
     @GetMapping("/success")
     public String success(
@@ -99,6 +64,18 @@ public class PaymentController {
 
             if (isPaid) {
                 User user = getCurrentUser(authentication);
+                // FUNC-04 FIX : activer l'abonnement si pas encore fait
+                if (user.getSubscriptionStatus() != User.SubscriptionStatus.ACTIVE) {
+                    user.setSubscriptionStatus(User.SubscriptionStatus.ACTIVE);
+                    if (user.getSubscriptionStartDate() == null) {
+                        user.setSubscriptionStartDate(LocalDateTime.now());
+                    }
+                    if (user.getSubscriptionEndsAt() == null) {
+                        user.setSubscriptionEndsAt(LocalDateTime.now().plusMonths(1));
+                    }
+                    userRepository.save(user);
+                    log.info("✅ Abonnement activé via PayPlug pour {}", user.getEmail());
+                }
                 model.addAttribute("user", user);
                 model.addAttribute("plan", user.getSubscriptionPlan());
                 model.addAttribute("success", true);
@@ -188,7 +165,7 @@ public class PaymentController {
     }
 
     /**
-     * Annuler mon abonnement
+     * CRIT-04 FIX : Annuler l'abonnement — appelle aussi l'API Stripe
      */
     @PostMapping("/cancel-subscription")
     public String cancelSubscription(
@@ -197,6 +174,23 @@ public class PaymentController {
     ) {
         try {
             User user = getCurrentUser(authentication);
+
+            // CRIT-04 FIX : annuler côté Stripe si un subscriptionId existe
+            if (user.getStripeSubscriptionId() != null && !user.getStripeSubscriptionId().isBlank()) {
+                try {
+                    stripeService.cancelSubscriptionByIdAtPeriodEnd(user.getStripeSubscriptionId());
+                    log.info("✅ Abonnement Stripe annulé (fin de période) pour {}", user.getEmail());
+                } catch (Exception stripeEx) {
+                    log.error("Erreur annulation Stripe: {}", stripeEx.getMessage());
+                }
+            } else if (user.getStripeCustomerId() != null && !user.getStripeCustomerId().isBlank()) {
+                try {
+                    stripeService.cancelSubscriptionAtPeriodEnd(user.getStripeCustomerId());
+                    log.info("✅ Abonnement Stripe annulé par customerId pour {}", user.getEmail());
+                } catch (Exception stripeEx) {
+                    log.error("Erreur annulation Stripe par customer: {}", stripeEx.getMessage());
+                }
+            }
 
             user.setSubscriptionStatus(User.SubscriptionStatus.CANCELLED);
             userRepository.save(user);

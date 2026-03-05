@@ -119,8 +119,14 @@ public class AuthController {
             log.info("✅ Validation OK - Appel du service d'inscription");
             authService.register(request);
             
-            // Envoyer le code de vérification et rediriger
+            // FUNC-06 FIX : sauvegarder la période de facturation choisie
             String email = request.getEmail().trim().toLowerCase();
+            userRepository.findByEmail(email).ifPresent(u -> {
+                u.setBillingPeriod(billing != null ? billing : "monthly");
+                userRepository.save(u);
+            });
+            
+            // Envoyer le code de vérification et rediriger
             log.info("📧 Envoi du code de vérification à: {}", email);
             emailVerificationService.generateAndSend(email);
             
@@ -197,9 +203,11 @@ public class AuthController {
             }
             
             // Rediriger vers Stripe Checkout avec le plan choisi lors de l'inscription
+            // FUNC-06 FIX : conserver la période de facturation choisie lors de l'inscription
             String plan = user.getSubscriptionPlan() != null 
                 ? user.getSubscriptionPlan().name() : "ESSENTIEL";
-            return "redirect:/subscription/checkout?plan=" + plan + "&period=monthly";
+            String period = user.getBillingPeriod() != null ? user.getBillingPeriod() : "monthly";
+            return "redirect:/subscription/checkout?plan=" + plan + "&period=" + period;
         }
         ra.addFlashAttribute("message", "Email vérifié ! Connectez-vous pour commencer.");
         return "redirect:/login";

@@ -541,7 +541,7 @@ public class ClientPortalController {
         return "client-portal/profile";
     }
 
-    /** Sauvegarde les informations personnelles du client. */
+    /** SEC-11 FIX : Sauvegarde les informations personnelles du client avec validation. */
     @PostMapping("/profile")
     public String updateProfile(
             @RequestParam(value = "phone", required = false) String phone,
@@ -559,12 +559,31 @@ public class ClientPortalController {
             redirectAttributes.addFlashAttribute("error", "Profil client introuvable");
             return "redirect:/my-cases";
         }
+
+        // SEC-11 FIX : validation des champs
+        if (phone != null && !phone.isBlank() && !phone.matches("^[+]?[0-9\\s.-]{0,20}$")) {
+            redirectAttributes.addFlashAttribute("error", "Numéro de téléphone invalide.");
+            return "redirect:/my-cases/profile";
+        }
+        if (address != null && address.length() > 500) {
+            redirectAttributes.addFlashAttribute("error", "Adresse trop longue (max 500 caractères).");
+            return "redirect:/my-cases/profile";
+        }
+        if (siret != null && !siret.isBlank() && !siret.matches("^[0-9]{14}$")) {
+            redirectAttributes.addFlashAttribute("error", "SIRET invalide (14 chiffres attendus).");
+            return "redirect:/my-cases/profile";
+        }
+        if (companyName != null && companyName.length() > 200) {
+            redirectAttributes.addFlashAttribute("error", "Nom d'entreprise trop long.");
+            return "redirect:/my-cases/profile";
+        }
+
         Client client = clientOpt.get();
-        client.setPhone(phone);
-        client.setAddress(address);
+        client.setPhone(phone != null ? phone.trim() : null);
+        client.setAddress(address != null ? address.trim() : null);
         if (client.getClientType() == Client.ClientType.PROFESSIONAL) {
-            client.setCompanyName(companyName);
-            client.setSiret(siret);
+            client.setCompanyName(companyName != null ? companyName.trim() : null);
+            client.setSiret(siret != null ? siret.trim() : null);
         }
         clientRepository.save(client);
         redirectAttributes.addFlashAttribute("message", "Vos informations ont été mises à jour.");
@@ -572,17 +591,17 @@ public class ClientPortalController {
     }
 
     /**
-     * Debug endpoint for client to see link status and cases count.
-     * SECURITE: restreint aux environnements de développement uniquement.
-     * Désactivé en production via la condition sur le profil actif.
+     * SEC-06 FIX : Debug endpoint complètement désactivé en production.
+     * Uniquement disponible en profil dev/test.
      */
     @GetMapping("/api/debug-status")
     @ResponseBody
     @Transactional(readOnly = true)
+    @org.springframework.context.annotation.Profile({"dev", "test", "h2"})
     public ResponseEntity<Map<String, Object>> debugStatus(
             Authentication authentication,
             org.springframework.core.env.Environment env) {
-        // SECURITE: désactiver en production
+        // SEC-06 FIX : double vérification au cas où
         String[] activeProfiles = env.getActiveProfiles();
         boolean isProd = java.util.Arrays.stream(activeProfiles)
                 .anyMatch(p -> p.equalsIgnoreCase("prod") || p.equalsIgnoreCase("production"));

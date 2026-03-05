@@ -42,10 +42,16 @@ public class AuthService {
             User existing = existingUser.get();
             // Si le compte n'est pas vérifié, supprimer le zombie et permettre la réinscription
             if (!existing.isEmailVerified()) {
-                // Supprimer le compte zombie pour permettre la réinscription
-                userRepository.delete(existing);
-                userRepository.flush();
-                log.info("Compte non vérifié supprimé pour réinscription : {}", emailNormalized);
+                // SEC-07 FIX : ne supprimer que si le compte a été créé il y a plus de 10 minutes
+                // pour éviter qu'un tiers ne supprime instantanément un compte légitime
+                if (existing.getCreatedAt() != null 
+                    && existing.getCreatedAt().isBefore(LocalDateTime.now().minusMinutes(10))) {
+                    userRepository.delete(existing);
+                    userRepository.flush();
+                    log.info("Compte non vérifié (zombie) supprimé pour réinscription : {}", emailNormalized);
+                } else {
+                    throw new RuntimeException("Un code de vérification a déjà été envoyé. Veuillez vérifier votre email.");
+                }
             } else {
                 // SEC-08 FIX : Message générique pour éviter l'énumération d'utilisateurs
                 throw new RuntimeException("Erreur lors de l'inscription. Vérifiez vos informations.");

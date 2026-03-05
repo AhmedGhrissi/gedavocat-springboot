@@ -94,8 +94,17 @@ public class InvoiceController {
             
             // Pour les admins : accès complet sans vérification
             // Pour les lawyers : vérification via leur ID
-            // Pour les clients : vérification via leur ID
-            String checkLawyerId = isAdmin ? "ADMIN_BYPASS" : (isLawyer ? user.getId() : user.getId());
+            // SEC-05 FIX : Pour les clients, récupérer le lawyerId via la relation client
+            String checkLawyerId;
+            if (isAdmin) {
+                checkLawyerId = "ADMIN_BYPASS";
+            } else if (isLawyer) {
+                checkLawyerId = user.getId();
+            } else {
+                // Client : trouver le lawyer associé via le Client entity
+                // Le service vérifiera que l'invoice appartient bien au lawyer du client
+                checkLawyerId = "CLIENT_" + user.getId();
+            }
             
             InvoiceResponse response = invoiceService.getInvoiceById(invoiceId, checkLawyerId);
             return ResponseEntity.ok(response);
