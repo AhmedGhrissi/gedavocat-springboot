@@ -156,7 +156,8 @@ public class AuthController {
             @RequestParam String email,
             @RequestParam String code,
             Model model,
-            RedirectAttributes ra
+            RedirectAttributes ra,
+            jakarta.servlet.http.HttpServletRequest request
     ) {
         String emailLower = email.trim().toLowerCase();
         boolean ok = emailVerificationService.verifyCode(emailLower, code.trim());
@@ -166,11 +167,41 @@ public class AuthController {
             return "auth/verify-email";
         }
         // Marquer l'utilisateur comme vérifié
-        userRepository.findByEmail(emailLower).ifPresent(u -> {
-            u.setEmailVerified(true);
-            userRepository.save(u);
-        });
-        ra.addFlashAttribute("message", "Email vérifié avec succès ! Votre essai gratuit de 14 jours est actif. Connectez-vous pour commencer.");
+        var optUser = userRepository.findByEmail(emailLower);
+        if (optUser.isPresent()) {
+            var user = optUser.get();
+            user.setEmailVerified(true);
+            userRepository.save(user);
+            
+            // Auto-login pour permettre le checkout Stripe
+            try {
+                var userDetails = org.springframework.security.core.userdetails.User
+                    .withUsername(user.getEmail())
+                    .password(user.getPassword())
+                    .authorities("ROLE_" + user.getRole().name())
+                    .build();
+                var authToken = new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+                    userDetails, null, userDetails.getAuthorities());
+                org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(authToken);
+                // Sauvegarder dans la session HTTP
+                var session = request.getSession(true);
+                session.setAttribute(
+                    org.springframework.security.web.context.HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
+                    org.springframework.security.core.context.SecurityContextHolder.getContext());
+                
+                log.info("Auto-login réussi pour {} — redirection vers le paiement Stripe", emailLower);
+            } catch (Exception e) {
+                log.error("Erreur auto-login après vérification email: {}", e.getMessage());
+                ra.addFlashAttribute("message", "Email vérifié ! Connectez-vous pour procéder au paiement.");
+                return "redirect:/login";
+            }
+            
+            // Rediriger vers Stripe Checkout avec le plan choisi lors de l'inscription
+            String plan = user.getSubscriptionPlan() != null 
+                ? user.getSubscriptionPlan().name() : "ESSENTIEL";
+            return "redirect:/subscription/checkout?plan=" + plan + "&period=monthly";
+        }
+        ra.addFlashAttribute("message", "Email vérifié ! Connectez-vous pour commencer.");
         return "redirect:/login";
     }
 

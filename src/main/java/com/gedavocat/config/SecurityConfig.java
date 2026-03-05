@@ -4,6 +4,7 @@ import com.gedavocat.security.JwtAuthenticationFilter;
 import com.gedavocat.security.SubscriptionEnforcementFilter;
 import com.gedavocat.security.UserDetailsServiceImpl;
 import com.gedavocat.security.AccountLockoutService;
+import com.gedavocat.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -36,6 +37,7 @@ public class SecurityConfig {
 	private final JwtAuthenticationFilter jwtAuthFilter;
 	private final SubscriptionEnforcementFilter subscriptionFilter;
 	private final AccountLockoutService accountLockoutService;
+	private final UserRepository userRepository;
 
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -172,6 +174,16 @@ public class SecurityConfig {
 								if (roles.contains("ROLE_HUISSIER")) {
 									response.sendRedirect("/my-cases-huissier");
 									return;
+								}
+								// LAWYER : vérifier si l'abonnement est actif
+								if (roles.contains("ROLE_LAWYER")) {
+									var optUser = userRepository.findByEmail(authentication.getName());
+									if (optUser.isPresent() && !optUser.get().hasActiveSubscription()) {
+										String plan = optUser.get().getSubscriptionPlan() != null
+											? optUser.get().getSubscriptionPlan().name() : "ESSENTIEL";
+										response.sendRedirect("/subscription/checkout?plan=" + plan + "&period=monthly");
+										return;
+									}
 								}
 								// Par défaut, envoyer vers le dashboard (avocat / autre)
 								response.sendRedirect("/dashboard");

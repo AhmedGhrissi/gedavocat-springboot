@@ -100,11 +100,11 @@ public class AuthService {
             } else if (p.contains("CABINET_PLUS") || p.contains("CABINET+")) {
                 user.setSubscriptionPlan(User.SubscriptionPlan.CABINET_PLUS);
             } else {
-                user.setSubscriptionPlan(User.SubscriptionPlan.SOLO);
+                user.setSubscriptionPlan(User.SubscriptionPlan.ESSENTIEL);
             }
-            user.setSubscriptionStatus(User.SubscriptionStatus.TRIAL);
-            user.setSubscriptionStartDate(LocalDateTime.now());
-            user.setSubscriptionEndsAt(LocalDateTime.now().plusDays(14));
+            // INACTIVE : l'accès est bloqué tant que le paiement Stripe n'est pas validé
+            // Le trial de 14 jours est géré par Stripe (trial_period_days sur les Price)
+            user.setSubscriptionStatus(User.SubscriptionStatus.INACTIVE);
         } catch (Exception ignored) {
         }
         
