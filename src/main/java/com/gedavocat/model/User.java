@@ -324,13 +324,17 @@ public class User {
     }
 
     /**
-     * Vérifier si l'abonnement est actif (inclut ACTIVE et TRIAL non expiré)
+     * Vérifier si l'abonnement est actif.
+     * Inclut ACTIVE, TRIAL et CANCELLED tant que la date de fin n'est pas dépassée.
+     * Un utilisateur CANCELLED conserve l'accès complet jusqu'à subscriptionEndsAt.
      */
     public boolean hasActiveSubscription() {
-        return (subscriptionStatus == SubscriptionStatus.ACTIVE
-                || subscriptionStatus == SubscriptionStatus.TRIAL)
-            && subscriptionEndsAt != null
-            && subscriptionEndsAt.isAfter(LocalDateTime.now());
+        if (subscriptionEndsAt == null || subscriptionEndsAt.isBefore(LocalDateTime.now())) {
+            return false;
+        }
+        return subscriptionStatus == SubscriptionStatus.ACTIVE
+                || subscriptionStatus == SubscriptionStatus.TRIAL
+                || subscriptionStatus == SubscriptionStatus.CANCELLED;
     }
 
     /**
@@ -339,6 +343,25 @@ public class User {
     public boolean isSubscriptionExpired() {
         return subscriptionEndsAt != null
             && subscriptionEndsAt.isBefore(LocalDateTime.now());
+    }
+
+    /**
+     * Accès en lecture seule : abonnement expiré ou inactif,
+     * mais l'utilisateur a déjà eu un abonnement (subscriptionPlan != null).
+     * Permet de consulter ses données et télécharger ses documents.
+     */
+    public boolean hasReadOnlyAccess() {
+        // Si l'abonnement est encore actif, pas de mode lecture seule
+        if (hasActiveSubscription()) return false;
+        // Si l'utilisateur a un plan assigné, il a eu un abonnement → lecture seule
+        return subscriptionPlan != null;
+    }
+
+    /**
+     * Vérifie si l'utilisateur est en période d'essai
+     */
+    public boolean isTrial() {
+        return subscriptionStatus == SubscriptionStatus.TRIAL;
     }
 
     /**

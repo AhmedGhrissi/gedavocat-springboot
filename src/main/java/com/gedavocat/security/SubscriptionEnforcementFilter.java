@@ -20,9 +20,10 @@ import java.util.Set;
 /**
  * Filtre de vérification d'abonnement actif.
  * 
- * Bloque l'accès aux routes payantes (dossiers, clients, documents, 
- * signatures, factures, RPVA) si l'utilisateur LAWYER n'a pas 
- * d'abonnement actif. Redirige vers la page de tarification.
+ * - Abonnement actif (ACTIVE/TRIAL/CANCELLED non expiré) : accès complet
+ * - Abonnement expiré/inactif mais avec un plan : accès LECTURE SEULE
+ *   (GET autorisé sauf création, POST/PUT/DELETE bloqués)
+ * - Jamais eu d'abonnement : redirection vers pricing
  * 
  * Les ADMINs, CLIENTs, HUISSIERS et LAWYER_SECONDARY ne sont pas concernés
  * car ils accèdent via l'abonnement du LAWYER principal.
@@ -66,6 +67,15 @@ public class SubscriptionEnforcementFilter extends OncePerRequestFilter {
         "/settings",
         "/api/auth",
         "/logout"
+    );
+
+    /**
+     * Suffixes d'URL de création/modification bloqués en mode lecture seule.
+     * Les GET sur ces suffixes (formulaires) sont aussi bloqués.
+     */
+    private static final Set<String> WRITE_SUFFIXES = Set.of(
+        "/new", "/create", "/edit", "/delete", "/save",
+        "/upload", "/sign", "/send", "/generate"
     );
 
     @Override
@@ -145,13 +155,64 @@ public class SubscriptionEnforcementFilter extends OncePerRequestFilter {
             }
             
             if (user.hasActiveSubscription()) {
-                // Abonnement actif — accès autorisé
+                // Abonnement actif (ACTIVE/TRIAL/CANCELLED non expiré) — accès complet
                 filterChain.doFilter(request, response);
                 return;
             }
 
-            // Abonnement inactif ou expiré — redirection vers pricing
-            log.warn("Accès refusé pour {} - abonnement inactif/expiré. Redirection vers /subscription/pricing", email);
+            // ── Mode lecture seule pour les abonnements expirés ──
+            if (user.hasReadOnlyAccess()) {
+                String method = request.getMethod();
+                String path = request.getRequestURI();
+                
+                // Autoriser les téléchargements (GET /documents/.../download)
+                if ("GET".equals(method) && path.contains("/download")) {
+                    request.setAttribute("readOnlyMode", true);
+                    filterChain.doFilter(request, response);
+                    return;
+                }
+                
+                // Bloquer toutes les écritures (POST, PUT, DELETE, PATCH)
+                if (!"GET".equals(method)) {
+                    log.warn("Écriture bloquée en mode lecture seule pour {} : {} {}", email, method, path);
+                    if (path.startsWith("/api/")) {
+                        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                        response.setContentType("application/json");
+                        response.getWriter().write("{\"error\": \"Abonnement expiré — accès en lecture seule\"}");
+                        return;
+                    }
+                    response.sendRedirect("/subscription/pricing?expired=true");
+                    return;
+                }
+                
+                // Bloquer les pages de création/modification même en GET
+                boolean isWritePage = false;
+                for (String suffix : WRITE_SUFFIXES) {
+                    if (path.endsWith(suffix)) {
+                        isWritePage = true;
+                        break;
+                    }
+                }
+                if (isWritePage) {
+                    log.warn("Page de création bloquée en lecture seule pour {} : {}", email, path);
+                    if (path.startsWith("/api/")) {
+                        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                        response.setContentType("application/json");
+                        response.getWriter().write("{\"error\": \"Abonnement expiré — accès en lecture seule\"}");
+                        return;
+                    }
+                    response.sendRedirect("/subscription/pricing?expired=true");
+                    return;
+                }
+                
+                // GET en lecture seule autorisé (consultation, listes, etc.)
+                request.setAttribute("readOnlyMode", true);
+                filterChain.doFilter(request, response);
+                return;
+            }
+
+            // Jamais eu d'abonnement — redirection vers pricing
+            log.warn("Accès refusé pour {} - pas d'abonnement. Redirection vers /subscription/pricing", email);
             
             // Pour les requêtes API, retourner 403
             if (request.getRequestURI().startsWith("/api/")) {

@@ -258,7 +258,9 @@ public class SubscriptionController {
     }
 
     /**
-     * Annuler l'abonnement (utilise l'API Stripe pour annuler en fin de période)
+     * Annuler l'abonnement :
+     * - Essai (14 jours) → annulation immédiate, accès coupé
+     * - Payé → annulation en fin de période, accès maintenu jusque-là
      */
     @PostMapping("/cancel-subscription")
     public String cancelSubscription(
@@ -267,31 +269,62 @@ public class SubscriptionController {
     ) {
         try {
             User user = getCurrentUser(authentication);
+            boolean isTrial = user.isTrial();
             
-            // 1. Annuler côté Stripe (cancel_at_period_end = true)
-            if (stripeService.isConfigured() && user.getStripeCustomerId() != null) {
+            // 1. Annuler côté Stripe
+            if (stripeService.isConfigured()) {
                 try {
-                    var cancelled = stripeService.cancelSubscriptionAtPeriodEnd(user.getStripeCustomerId());
-                    if (cancelled != null) {
-                        log.info("Abonnement Stripe annulé en fin de période pour: {}", user.getEmail());
+                    com.stripe.model.Subscription cancelled = null;
+                    
+                    if (isTrial) {
+                        // Essai → annulation immédiate sur Stripe
+                        if (user.getStripeSubscriptionId() != null) {
+                            cancelled = stripeService.cancelSubscription(user.getStripeSubscriptionId());
+                        } else if (user.getStripeCustomerId() != null) {
+                            cancelled = stripeService.cancelSubscriptionAtPeriodEnd(user.getStripeCustomerId());
+                        }
+                        log.info("Abonnement d'essai Stripe annulé immédiatement pour: {}", user.getEmail());
                     } else {
-                        log.warn("Aucun abonnement Stripe actif trouvé pour: {}", user.getEmail());
+                        // Payé → annulation en fin de période
+                        if (user.getStripeSubscriptionId() != null) {
+                            cancelled = stripeService.cancelSubscriptionByIdAtPeriodEnd(user.getStripeSubscriptionId());
+                        } else if (user.getStripeCustomerId() != null) {
+                            cancelled = stripeService.cancelSubscriptionAtPeriodEnd(user.getStripeCustomerId());
+                        }
+                        if (cancelled != null) {
+                            log.info("Abonnement Stripe annulé en fin de période pour: {}", user.getEmail());
+                        } else {
+                            log.warn("Aucun abonnement Stripe trouvé pour: {} (subId={}, custId={})", 
+                                     user.getEmail(), user.getStripeSubscriptionId(), user.getStripeCustomerId());
+                        }
                     }
                 } catch (Exception stripeEx) {
                     log.error("Erreur Stripe lors de l'annulation pour {}: {}", 
                               user.getEmail(), stripeEx.getMessage());
-                    // On continue quand même pour mettre à jour le statut local
+                    // On continue pour mettre à jour le statut local
                 }
             }
             
             // 2. Mettre à jour le statut local
-            user.setSubscriptionStatus(User.SubscriptionStatus.CANCELLED);
+            if (isTrial) {
+                // Essai → accès coupé immédiatement
+                user.setSubscriptionStatus(User.SubscriptionStatus.INACTIVE);
+                user.setSubscriptionEndsAt(null);
+                user.setStripeSubscriptionId(null);
+                log.info("Abonnement d'essai annulé immédiatement pour: {}", user.getEmail());
+                redirectAttributes.addFlashAttribute("message", 
+                    "Votre période d'essai a été annulée.");
+            } else {
+                // Payé → CANCELLED, accès maintenu jusqu'à subscriptionEndsAt
+                user.setSubscriptionStatus(User.SubscriptionStatus.CANCELLED);
+                log.info("Abonnement annulé (fin de période) pour: {}", user.getEmail());
+                redirectAttributes.addFlashAttribute("message", 
+                    "Votre abonnement a été annulé. Vous conservez l'accès jusqu'au " 
+                    + (user.getSubscriptionEndsAt() != null 
+                       ? user.getSubscriptionEndsAt().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")) 
+                       : "fin de la période payée") + ".");
+            }
             userRepository.save(user);
-            
-            log.info("Abonnement annulé pour l'utilisateur: {}", user.getEmail());
-            
-            redirectAttributes.addFlashAttribute("message", 
-                "Votre abonnement a été annulé. Vous conservez l'accès jusqu'à la fin de la période payée.");
             
         } catch (Exception e) {
             log.error("Erreur lors de l'annulation de l'abonnement: {}", e.getMessage());

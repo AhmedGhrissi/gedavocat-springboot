@@ -178,8 +178,25 @@ public class StripeService {
     }
 
     /**
-     * Annule l'abonnement actif d'un client Stripe en fin de période
+     * Annule un abonnement Stripe en fin de période par subscriptionId direct.
      * (cancel_at_period_end = true)
+     */
+    public Subscription cancelSubscriptionByIdAtPeriodEnd(String subscriptionId) throws StripeException {
+        if (subscriptionId == null || subscriptionId.isBlank()) {
+            log.warn("Pas de subscriptionId pour annuler l'abonnement");
+            return null;
+        }
+        Subscription subscription = Subscription.retrieve(subscriptionId);
+        Map<String, Object> updateParams = new HashMap<>();
+        updateParams.put("cancel_at_period_end", true);
+        Subscription updated = subscription.update(updateParams);
+        log.info("Abonnement {} marqué pour annulation en fin de période", subscriptionId);
+        return updated;
+    }
+
+    /**
+     * Annule l'abonnement actif d'un client Stripe en fin de période
+     * (cancel_at_period_end = true) — recherche par customerId
      * @return le Subscription modifié, ou null si aucun abonnement actif trouvé
      */
     public Subscription cancelSubscriptionAtPeriodEnd(String stripeCustomerId) throws StripeException {
