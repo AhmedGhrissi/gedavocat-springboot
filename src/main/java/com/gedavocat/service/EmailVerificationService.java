@@ -11,6 +11,7 @@ import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import org.springframework.scheduling.annotation.Scheduled;
 
 /**
  * Service de vérification d'email par code à 6 chiffres.
@@ -126,4 +127,13 @@ public class EmailVerificationService {
     // =========================================================================
 
     private record VerificationEntry(String code, LocalDateTime expiry) {}
+
+    /** Mémoire: nettoyage périodique des codes expirés */
+    @Scheduled(fixedRate = 900000) // 15 minutes
+    public void cleanupExpiredCodes() {
+        LocalDateTime now = LocalDateTime.now();
+        pendingCodes.entrySet().removeIf(e -> now.isAfter(e.getValue().expiry()));
+        // Nettoyer les failedAttempts orphelins (pas de code en attente)
+        failedAttempts.entrySet().removeIf(e -> !pendingCodes.containsKey(e.getKey()));
+    }
 }

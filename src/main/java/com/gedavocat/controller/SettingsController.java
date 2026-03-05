@@ -368,10 +368,11 @@ public class SettingsController {
         // Étape 2 : Supprimer les balises non autorisées
         sanitized = sanitized.replaceAll("(?i)</?\\s*(?!" + String.join("|", allowedTags) + ")[a-zA-Z][^>]*>", "");
 
-        // Étape 3 : Supprimer TOUS les event handlers (on*=...)
-        sanitized = sanitized.replaceAll("(?i)\\s+on\\w+\\s*=\\s*\"[^\"]*\"", "");
-        sanitized = sanitized.replaceAll("(?i)\\s+on\\w+\\s*=\\s*'[^']*'", "");
-        sanitized = sanitized.replaceAll("(?i)\\s+on\\w+\\s*=\\s*[^\\s>]+", "");
+        // Étape 3 : Supprimer les attributs non autorisés (y compris event handlers on*=...)
+        String allowedAttrsPattern = String.join("|", allowedAttrs);
+        sanitized = sanitized.replaceAll("(?i)\\s+(?!" + allowedAttrsPattern + ")[a-zA-Z-]+\\s*=\\s*\"[^\"]*\"", "");
+        sanitized = sanitized.replaceAll("(?i)\\s+(?!" + allowedAttrsPattern + ")[a-zA-Z-]+\\s*=\\s*'[^']*'", "");
+        sanitized = sanitized.replaceAll("(?i)\\s+(?!" + allowedAttrsPattern + ")[a-zA-Z-]+\\s*=\\s*[^\\s>]+", "");
 
         // Étape 4 : Supprimer javascript:, vbscript:, data: dans href/src
         sanitized = sanitized.replaceAll("(?i)(href|src|action|formaction|xlink:href)\\s*=\\s*[\"']\\s*(javascript|vbscript|data)\\s*:", "$1=\"");

@@ -223,11 +223,16 @@ public class AppointmentController {
      */
     @PostMapping("/{id}/update")
     public String update(@PathVariable String id,
-                        @ModelAttribute Appointment appointment,
+                        @jakarta.validation.Valid @ModelAttribute Appointment appointment,
+                        org.springframework.validation.BindingResult bindingResult,
                         @RequestParam(required = false) String clientId,
                         @RequestParam(required = false) String caseId,
                         Authentication authentication,
                         RedirectAttributes redirectAttributes) {
+        if (bindingResult.hasErrors()) {
+            redirectAttributes.addFlashAttribute("error", "Données invalides");
+            return "redirect:/appointments/" + id + "/edit";
+        }
         try {
             User user = getCurrentUser(authentication);
             

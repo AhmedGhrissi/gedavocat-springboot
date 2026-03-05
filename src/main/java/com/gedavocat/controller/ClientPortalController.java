@@ -86,10 +86,17 @@ public class ClientPortalController {
             Client client;
             if (clientOpt.isEmpty()) {
                 // Fallback: parfois le client est lié uniquement par email (migration / oubli).
+                // SEC-NEW-06 FIX : Vérifier que le client trouvé par email est bien lié au même cabinet
                 java.util.Optional<Client> byEmail = clientRepository.findByEmail(user.getEmail());
                 if (byEmail.isPresent()) {
+                    Client candidate = byEmail.get();
+                    // Vérification : le client doit avoir un lawyer, et l'email doit matcher exactement
+                    if (candidate.getClientUser() != null && !candidate.getClientUser().getId().equals(user.getId())) {
+                        log.warn("Fallback email match pour {} mais clientUser mismatch — accès refusé", user.getEmail());
+                        return notLinked(model);
+                    }
                     log.warn("Utilisateur {} non lié via clientUserId mais trouvé par email -> displaying cases (consider linking)", user.getEmail());
-                    client = byEmail.get();
+                    client = candidate;
                     model.addAttribute("linkWarning", "Votre compte n'est pas encore lié techniquement. Affichage basé sur votre adresse email.");
                 } else {
                     return notLinked(model);

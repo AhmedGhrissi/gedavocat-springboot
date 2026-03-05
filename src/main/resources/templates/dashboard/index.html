@@ -19,10 +19,10 @@
                 <p>Vue synthétique de l'activité du cabinet</p>
             </div>
             <div class="dashboard-actions">
-                <a href="/cases/new" class="btn btn-primary">
+                <a th:href="@{/cases/new}" class="btn btn-primary">
                     <i class="fas fa-plus"></i> Nouveau dossier
                 </a>
-                <a href="/clients/new" class="btn btn-secondary">
+                <a th:href="@{/clients/new}" class="btn btn-secondary">
                     <i class="fas fa-user-plus"></i> Nouveau client
                 </a>
             </div>
@@ -63,57 +63,27 @@
         <div class="activity-section">
             <h2>Activité récente</h2>
             <div class="activity-timeline">
-                <div class="timeline-item">
-                    <div class="timeline-icon">
-                        <i class="fas fa-folder-check"></i>
-                    </div>
-                    <div class="timeline-content">
-                        <div class="timeline-text">
-                            <div class="timeline-title">Dossier clôturé</div>
-                            <div class="timeline-description">Affaire DUPONT vs MARTIN - Clôture réussie</div>
+                <!-- Activités dynamiques depuis recentActivities -->
+                <th:block th:if="${recentActivities != null and !recentActivities.isEmpty()}">
+                    <div th:each="activity : ${recentActivities}" class="timeline-item">
+                        <div class="timeline-icon">
+                            <i class="fas fa-circle-info"></i>
                         </div>
-                        <div class="timeline-date">26 février</div>
-                    </div>
-                </div>
-                
-                <div class="timeline-item">
-                    <div class="timeline-icon">
-                        <i class="fas fa-file-signature"></i>
-                    </div>
-                    <div class="timeline-content">
-                        <div class="timeline-text">
-                            <div class="timeline-title">Signature validée</div>
-                            <div class="timeline-description">Contrat signé par M. BERNARD</div>
+                        <div class="timeline-content">
+                            <div class="timeline-text">
+                                <div class="timeline-title" th:text="${activity.title}">Action</div>
+                                <div class="timeline-description" th:text="${activity.description}">Détails</div>
+                            </div>
+                            <div class="timeline-date" th:text="${activity.time}">Date</div>
                         </div>
-                        <div class="timeline-date">24 février</div>
                     </div>
-                </div>
-                
-                <div class="timeline-item">
-                    <div class="timeline-icon">
-                        <i class="fas fa-file-invoice"></i>
+                </th:block>
+                <th:block th:if="${recentActivities == null or recentActivities.isEmpty()}">
+                    <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                        <i class="fas fa-clock" style="font-size: 2rem; margin-bottom: 0.5rem;"></i>
+                        <p>Aucune activité récente</p>
                     </div>
-                    <div class="timeline-content">
-                        <div class="timeline-text">
-                            <div class="timeline-title">Facture émise</div>
-                            <div class="timeline-description">Facture #2024-156 envoyée au client</div>
-                        </div>
-                        <div class="timeline-date">22 février</div>
-                    </div>
-                </div>
-                
-                <div class="timeline-item">
-                    <div class="timeline-icon">
-                        <i class="fas fa-calendar-check"></i>
-                    </div>
-                    <div class="timeline-content">
-                        <div class="timeline-text">
-                            <div class="timeline-title">Rendez-vous confirmé</div>
-                            <div class="timeline-description">Consultation avec Mme LAURENT</div>
-                        </div>
-                        <div class="timeline-date">20 février</div>
-                    </div>
-                </div>
+                </th:block>
             </div>
         </div>
 
@@ -123,7 +93,7 @@
         <div class="quick-actions-section">
             <h2>Actions rapides</h2>
             <div class="quick-actions-grid">
-                <a href="/cases/new" class="action-card">
+                <a th:href="@{/cases/new}" class="action-card">
                     <div class="action-card-icon">
                         <i class="fas fa-folder-plus"></i>
                     </div>
@@ -131,7 +101,7 @@
                     <div class="action-card-description">Créer un nouveau dossier client avec documents associés</div>
                 </a>
                 
-                <a href="/invoices/new" class="action-card">
+                <a th:href="@{/invoices/new}" class="action-card">
                     <div class="action-card-icon">
                         <i class="fas fa-file-invoice-dollar"></i>
                     </div>
@@ -139,7 +109,7 @@
                     <div class="action-card-description">Émettre une facture pour un dossier existant</div>
                 </a>
                 
-                <a href="/signatures/new" class="action-card">
+                <a th:href="@{/signatures/new}" class="action-card">
                     <div class="action-card-icon">
                         <i class="fas fa-signature"></i>
                     </div>

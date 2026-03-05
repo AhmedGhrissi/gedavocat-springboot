@@ -533,12 +533,16 @@
                     const toggle = this;
                     toggle.disabled = true;
 
+                    var csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
+                    var csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content || 'X-CSRF-TOKEN';
+                    var hdrs = { 'Content-Type': 'application/x-www-form-urlencoded' };
+                    if (csrfToken && csrfHeader) hdrs[csrfHeader] = csrfToken;
                     fetch('/api/document-shares/toggle?documentId=' + encodeURIComponent(docId)
                         + '&caseId=' + encodeURIComponent(caseId)
                         + '&role=' + encodeURIComponent(role)
                         + '&shared=' + shared, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+                        headers: hdrs
                     })
                     .then(function(r) { return r.json(); })
                     .then(function(data) {
@@ -572,11 +576,15 @@
                         return;
                     }
 
+                    var csrfT = document.querySelector('meta[name="_csrf"]')?.content;
+                    var csrfH = document.querySelector('meta[name="_csrf_header"]')?.content || 'X-CSRF-TOKEN';
+                    var bhdrs = { 'Content-Type': 'application/x-www-form-urlencoded' };
+                    if (csrfT && csrfH) bhdrs[csrfH] = csrfT;
                     fetch('/api/document-shares/bulk-toggle?caseId=' + encodeURIComponent(caseId)
                         + '&role=' + encodeURIComponent(role)
                         + '&shared=' + shared, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+                        headers: bhdrs
                     })
                     .then(function(r) { return r.json(); })
                     .then(function(data) {

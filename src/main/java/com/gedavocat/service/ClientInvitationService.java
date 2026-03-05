@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import org.springframework.scheduling.annotation.Scheduled;
 
 /**
  * Service d'invitation des clients au portail GedAvocat.
@@ -190,4 +191,11 @@ public class ClientInvitationService {
     // =========================================================================
 
     public record InvitationEntry(String clientId, String email, LocalDateTime expiry) {}
+
+    /** Mémoire: nettoyage périodique des invitations expirées */
+    @Scheduled(fixedRate = 3600000) // 1 heure
+    public void cleanupExpiredInvitations() {
+        LocalDateTime now = LocalDateTime.now();
+        pendingInvitations.entrySet().removeIf(e -> now.isAfter(e.getValue().expiry()));
+    }
 }

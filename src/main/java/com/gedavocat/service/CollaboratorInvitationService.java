@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import org.springframework.scheduling.annotation.Scheduled;
 
 /**
  * Service léger pour gérer les invitations de collaborateurs (similaire à ClientInvitationService)
@@ -70,4 +71,11 @@ public class CollaboratorInvitationService {
     }
 
     public record InvitationEntry(String linkId, String email, LocalDateTime expiry) {}
+
+    /** Mémoire: nettoyage périodique des invitations expirées */
+    @Scheduled(fixedRate = 3600000) // 1 heure
+    public void cleanupExpiredInvitations() {
+        LocalDateTime now = LocalDateTime.now();
+        pending.entrySet().removeIf(e -> now.isAfter(e.getValue().expiry()));
+    }
 }

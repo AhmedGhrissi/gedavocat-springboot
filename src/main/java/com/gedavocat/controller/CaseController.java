@@ -3,7 +3,11 @@ package com.gedavocat.controller;
 import com.gedavocat.model.Case;
 import com.gedavocat.model.Case.CaseStatus;
 import com.gedavocat.model.Client;
+import com.gedavocat.model.DocumentShare;
+import com.gedavocat.model.Permission;
 import com.gedavocat.model.User;
+import com.gedavocat.repository.AppointmentRepository;
+import com.gedavocat.repository.DocumentShareRepository;
 import com.gedavocat.repository.PermissionRepository;
 import com.gedavocat.repository.UserRepository;
 import com.gedavocat.service.CaseService;
@@ -20,7 +24,11 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Controller for managing cases (dossiers). Simplified and cleaned for encoding issues.
@@ -36,6 +44,8 @@ public class CaseController {
     private final DocumentService documentService;
     private final PermissionRepository permissionRepository;
     private final UserRepository userRepository;
+    private final AppointmentRepository appointmentRepository;
+    private final DocumentShareRepository documentShareRepository;
 
     @GetMapping
     public String listCases(@RequestParam(required = false) String search,
@@ -111,6 +121,38 @@ public class CaseController {
         model.addAttribute("case", caseEntity);
         model.addAttribute("documents", documentService.getLatestVersions(id));
         model.addAttribute("documentCount", documentService.getDocumentsByCase(id).size());
+
+        // BIZ-09 FIX : ajouter les attributs manquants attendus par view.html
+        try {
+            var appointments = appointmentRepository.findByRelatedCaseIdOrderByAppointmentDateDesc(id);
+            model.addAttribute("appointments", appointments != null ? appointments : java.util.Collections.emptyList());
+        } catch (Exception e) {
+            model.addAttribute("appointments", java.util.Collections.emptyList());
+        }
+
+        try {
+            List<Permission> permissions = permissionRepository.findByCaseEntityId(id);
+            model.addAttribute("permissions", permissions != null ? permissions : java.util.Collections.emptyList());
+        } catch (Exception e) {
+            model.addAttribute("permissions", java.util.Collections.emptyList());
+        }
+
+        // Build shareMap: documentId -> Set<role>
+        try {
+            List<DocumentShare> shares = documentShareRepository.findByCaseId(id);
+            Map<String, Set<String>> shareMap = new HashMap<>();
+            if (shares != null) {
+                for (DocumentShare share : shares) {
+                    String docId = share.getDocument().getId();
+                    shareMap.computeIfAbsent(docId, k -> new java.util.HashSet<>())
+                            .add(share.getTargetRole().name());
+                }
+            }
+            model.addAttribute("shareMap", shareMap);
+        } catch (Exception e) {
+            model.addAttribute("shareMap", new HashMap<>());
+        }
+
         return "cases/view";
     }
 
