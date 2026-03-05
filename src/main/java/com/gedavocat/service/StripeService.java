@@ -216,18 +216,6 @@ public class StripeService {
     }
 
     /**
-     * Retourne le nom d'affichage du plan
-     */
-    private String getPlanDisplayName(String plan) {
-        return switch (plan.toUpperCase()) {
-            case "ESSENTIEL" -> "Essentiel";
-            case "PROFESSIONNEL" -> "Professionnel";
-            case "CABINET_PLUS" -> "Cabinet+";
-            default -> "Inconnu";
-        };
-    }
-
-    /**
      * Retourne la clé publique Stripe (pour le frontend)
      */
     public String getPublishableKey() {

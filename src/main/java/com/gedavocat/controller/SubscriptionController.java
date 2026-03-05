@@ -148,6 +148,86 @@ public class SubscriptionController {
     }
 
     /**
+     * Page de changement de plan (pour abonnés connectés)
+     */
+    @GetMapping("/change-plan")
+    public String changePlanPage(Authentication authentication, Model model) {
+        User user = getCurrentUser(authentication);
+
+        int currentClients = user.getClients() != null ? user.getClients().size() : 0;
+
+        model.addAttribute("user", user);
+        model.addAttribute("currentPlan", user.getSubscriptionPlan());
+        model.addAttribute("currentStatus", user.getSubscriptionStatus());
+        model.addAttribute("endDate", user.getSubscriptionEndsAt());
+        model.addAttribute("currentClients", currentClients);
+        model.addAttribute("plans", User.SubscriptionPlan.values());
+        model.addAttribute("stripePublishableKey", stripeService.getPublishableKey());
+
+        return "subscription/change-plan";
+    }
+
+    /**
+     * Valider un changement de plan (POST)
+     * - Upgrade : redirige vers Stripe Checkout immédiatement
+     * - Downgrade : vérifie les limites puis planifie à la fin de la période
+     */
+    @PostMapping("/change-plan")
+    public String changePlan(
+            @RequestParam String plan,
+            @RequestParam(required = false, defaultValue = "monthly") String period,
+            Authentication authentication,
+            RedirectAttributes redirectAttributes
+    ) {
+        try {
+            User user = getCurrentUser(authentication);
+            User.SubscriptionPlan newPlan = User.SubscriptionPlan.valueOf(plan.toUpperCase());
+            User.SubscriptionPlan currentPlan = user.getSubscriptionPlan();
+
+            if (newPlan == currentPlan) {
+                redirectAttributes.addFlashAttribute("error", "Vous êtes déjà sur ce plan.");
+                return "redirect:/subscription/change-plan";
+            }
+
+            boolean isUpgrade = newPlan.getPrice() > currentPlan.getPrice();
+            int currentClients = user.getClients() != null ? user.getClients().size() : 0;
+
+            if (!isUpgrade) {
+                // Downgrade : vérifier les limites
+                if (currentClients > newPlan.getMaxClients()) {
+                    redirectAttributes.addFlashAttribute("error",
+                        "Impossible de passer au plan " + newPlan.getDisplayName()
+                        + " : vous avez " + currentClients + " clients actifs, "
+                        + "mais ce plan est limité à " + newPlan.getMaxClients()
+                        + " clients. Veuillez d'abord archiver ou supprimer des clients.");
+                    return "redirect:/subscription/change-plan";
+                }
+            }
+
+            // Rediriger vers le checkout Stripe pour le nouveau plan
+            if (!stripeService.isConfigured()) {
+                redirectAttributes.addFlashAttribute("error",
+                    "Le système de paiement n'est pas configuré.");
+                return "redirect:/subscription/change-plan";
+            }
+
+            String checkoutUrl = stripeService.createCheckoutSession(user, plan, period);
+            if (checkoutUrl != null) {
+                log.info("Changement de plan {} → {} pour {}", currentPlan, newPlan, user.getEmail());
+                return "redirect:" + checkoutUrl;
+            } else {
+                redirectAttributes.addFlashAttribute("error", "Erreur lors de la création du paiement");
+                return "redirect:/subscription/change-plan";
+            }
+
+        } catch (Exception e) {
+            log.error("Erreur lors du changement de plan: {}", e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "Une erreur est survenue : " + e.getMessage());
+            return "redirect:/subscription/change-plan";
+        }
+    }
+
+    /**
      * Annuler l'abonnement
      */
     @PostMapping("/cancel-subscription")

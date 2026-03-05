@@ -1,6 +1,5 @@
 package com.gedavocat.security;
 
-import com.gedavocat.model.User;
 import com.gedavocat.repository.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
