@@ -106,8 +106,8 @@ public class StripeService {
         }
 
         // SEC-06 FIX : Utiliser app.base-url au lieu de localhost
-        String successUrl = baseUrl + "/payment/success?session_id={CHECKOUT_SESSION_ID}";
-        String cancelUrl = baseUrl + "/payment/cancel";
+        String successUrl = baseUrl + "/subscription/success?session_id={CHECKOUT_SESSION_ID}";
+        String cancelUrl = baseUrl + "/subscription/cancel";
 
         // Créer les métadonnées
         Map<String, String> metadata = new HashMap<>();
