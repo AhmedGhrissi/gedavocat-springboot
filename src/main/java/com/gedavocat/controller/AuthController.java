@@ -10,6 +10,7 @@ import com.gedavocat.security.JwtBlacklistService;
 import com.gedavocat.security.JwtService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 
 import java.net.URLEncoder;
@@ -25,6 +26,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 /**
  * Contrôleur pour l'authentification et l'inscription
  */
+@Slf4j
 @Controller
 @RequiredArgsConstructor
 public class AuthController {
@@ -81,21 +83,53 @@ public class AuthController {
             Model model,
             RedirectAttributes redirectAttributes
     ) {
+        log.info("🔵 POST /register - Tentative d'inscription pour email: {}", request.getEmail());
+        log.debug("📋 Données reçues: firstName={}, lastName={}, plan={}, billing={}", 
+            request.getFirstName(), request.getLastName(), request.getSubscriptionPlan(), billing);
+        
+        // Validation personnalisée : vérifier que les mots de passe correspondent
+        if (request.getPassword() != null && request.getConfirmPassword() != null 
+            && !request.getPassword().equals(request.getConfirmPassword())) {
+            log.warn("⚠️ Les mots de passe ne correspondent pas");
+            result.rejectValue("confirmPassword", "password.mismatch", 
+                "Les mots de passe ne correspondent pas");
+        }
+        
+        // Validation des checkboxes
+        if (!Boolean.TRUE.equals(request.getTermsAccepted())) {
+            log.warn("⚠️ CGU non acceptées");
+            result.rejectValue("termsAccepted", "terms.required", 
+                "Vous devez accepter les conditions d'utilisation");
+        }
+        
+        if (!Boolean.TRUE.equals(request.getGdprConsent())) {
+            log.warn("⚠️ Consentement RGPD non donné");
+            result.rejectValue("gdprConsent", "gdpr.required", 
+                "Vous devez accepter le traitement de vos données personnelles");
+        }
+        
         if (result.hasErrors()) {
+            log.error("❌ Erreurs de validation détectées: {}", result.getAllErrors());
             model.addAttribute("selectedPlan", request.getSubscriptionPlan());
             model.addAttribute("selectedBilling", billing != null ? billing : "monthly");
             return "auth/register";
         }
 
         try {
+            log.info("✅ Validation OK - Appel du service d'inscription");
             authService.register(request);
+            
             // Envoyer le code de vérification et rediriger
             String email = request.getEmail().trim().toLowerCase();
+            log.info("📧 Envoi du code de vérification à: {}", email);
             emailVerificationService.generateAndSend(email);
+            
             redirectAttributes.addFlashAttribute("info",
                 "Un code de vérification à 6 chiffres a été envoyé à " + email + ". Veuillez le saisir ci-dessous.");
+            log.info("🎉 Inscription réussie - Redirection vers /verify-email");
             return "redirect:/verify-email?email=" + URLEncoder.encode(email, StandardCharsets.UTF_8);
         } catch (Exception e) {
+            log.error("❌ Erreur lors de l'inscription: {}", e.getMessage(), e);
             model.addAttribute("error", e.getMessage());
             model.addAttribute("selectedPlan", request.getSubscriptionPlan());
             model.addAttribute("selectedBilling", billing != null ? billing : "monthly");

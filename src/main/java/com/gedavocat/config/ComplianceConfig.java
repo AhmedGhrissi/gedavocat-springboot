@@ -2,7 +2,6 @@ package com.gedavocat.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * Configuration pour la conformité réglementaire
@@ -17,7 +16,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @version 2.0 - Conformité renforcée 2026
  */
 @Configuration
-@ConfigurationProperties(prefix = "app")
 public class ComplianceConfig {
 
     // =============================================================================

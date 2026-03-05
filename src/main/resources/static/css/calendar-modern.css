@@ -97,6 +97,10 @@
     font-weight: 600;
     padding: 0.5rem;
     font-size: 0.9375rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
 }
 
 /* Jour actuel - Subtle Highlight */
@@ -115,6 +119,7 @@
     justify-content: center;
     font-weight: 700;
     box-shadow: 0 2px 8px rgba(30, 58, 95, 0.3);
+    margin: 4px auto;
 }
 
 /* Jours avec événements - Subtle Highlight */
@@ -132,6 +137,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    margin: 4px auto;
 }
 
 /* Événements du calendrier - Modern Cards */
@@ -575,6 +581,18 @@
     .fc .fc-daygrid-day-number {
         font-size: 0.8125rem !important;
         padding: 0.2rem !important;
+        margin: 2px auto !important;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .fc .fc-day-today .fc-daygrid-day-number {
+        margin: 2px auto !important;
+    }
+    
+    .fc .fc-daygrid-day:has(.fc-daygrid-event-harness) .fc-daygrid-day-number {
+        margin: 2px auto !important;
     }
     
     .fc .fc-col-header-cell {
@@ -624,6 +642,27 @@
     .fc .fc-button {
         padding: 0.35rem 0.6rem;
         font-size: 0.75rem;
+    }
+    
+    /* Dates centrées et taille adaptée sur très petit écran */
+    .fc .fc-daygrid-day-number {
+        font-size: 0.75rem !important;
+        padding: 0.25rem !important;
+        margin: 0 auto !important;
+    }
+    
+    .fc .fc-day-today .fc-daygrid-day-number {
+        width: 24px !important;
+        height: 24px !important;
+        font-size: 0.75rem !important;
+        margin: 2px auto !important;
+    }
+    
+    .fc .fc-daygrid-day:has(.fc-daygrid-event-harness) .fc-daygrid-day-number {
+        width: 22px !important;
+        height: 22px !important;
+        font-size: 0.7rem !important;
+        margin: 2px auto !important;
     }
     
     .stat-card-modern .card-body {

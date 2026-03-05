@@ -113,21 +113,36 @@
                 <div class="row g-3 mb-3">
                     <div class="col-md-6">
                         <div class="form-floating">
-                            <input type="text" id="firstName" th:field="*{firstName}" class="form-control" placeholder="Prénom" required autocomplete="given-name">
+                            <input type="text" id="firstName" th:field="*{firstName}" 
+                                   th:classappend="${#fields.hasErrors('firstName')} ? 'is-invalid' : ''"
+                                   class="form-control" placeholder="Prénom" required autocomplete="given-name">
                             <label for="firstName">Prénom *</label>
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('firstName')}" th:errors="*{firstName}">
+                                Erreur prénom
+                            </div>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="form-floating">
-                            <input type="text" id="lastName" th:field="*{lastName}" class="form-control" placeholder="Nom" required autocomplete="family-name">
+                            <input type="text" id="lastName" th:field="*{lastName}" 
+                                   th:classappend="${#fields.hasErrors('lastName')} ? 'is-invalid' : ''"
+                                   class="form-control" placeholder="Nom" required autocomplete="family-name">
                             <label for="lastName">Nom *</label>
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('lastName')}" th:errors="*{lastName}">
+                                Erreur nom
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <div class="form-floating">
-                    <input type="email" id="email" th:field="*{email}" class="form-control" placeholder="Email" required autocomplete="email">
+                    <input type="email" id="email" th:field="*{email}" 
+                           th:classappend="${#fields.hasErrors('email')} ? 'is-invalid' : ''"
+                           class="form-control" placeholder="Email" required autocomplete="email">
                     <label for="email">Adresse email *</label>
+                    <div class="invalid-feedback" th:if="${#fields.hasErrors('email')}" th:errors="*{email}">
+                        Erreur email
+                    </div>
                 </div>
 
                 <div class="form-floating">
@@ -160,16 +175,26 @@
                 </div>
 
                 <div class="form-floating pwd-row">
-                    <input type="password" id="password" th:field="*{password}" class="form-control" placeholder="Mot de passe" required minlength="12" autocomplete="new-password">
+                    <input type="password" id="password" th:field="*{password}" 
+                           th:classappend="${#fields.hasErrors('password')} ? 'is-invalid' : ''"
+                           class="form-control" placeholder="Mot de passe" required minlength="12" autocomplete="new-password">
                     <label for="password">Mot de passe *</label>
                     <button type="button" class="pwd-toggle" onclick="togglePwd('password','pwdIcon1')" tabindex="-1" aria-label="Afficher le mot de passe"><i class="fas fa-eye" id="pwdIcon1"></i></button>
+                    <div class="invalid-feedback" th:if="${#fields.hasErrors('password')}" th:errors="*{password}">
+                        Erreur mot de passe
+                    </div>
                 </div>
                 <div class="text-muted-sm">Minimum 12 caractères, avec majuscule, minuscule, chiffre et caractère spécial</div>
 
                 <div class="form-floating pwd-row">
-                    <input type="password" id="confirmPassword" th:field="*{confirmPassword}" class="form-control" placeholder="Confirmer" required autocomplete="new-password">
+                    <input type="password" id="confirmPassword" th:field="*{confirmPassword}" 
+                           th:classappend="${#fields.hasErrors('confirmPassword')} ? 'is-invalid' : ''"
+                           class="form-control" placeholder="Confirmer" required autocomplete="new-password">
                     <label for="confirmPassword">Confirmer le mot de passe *</label>
                     <button type="button" class="pwd-toggle" onclick="togglePwd('confirmPassword','pwdIcon2')" tabindex="-1" aria-label="Afficher le mot de passe"><i class="fas fa-eye" id="pwdIcon2"></i></button>
+                    <div class="invalid-feedback" th:if="${#fields.hasErrors('confirmPassword')}" th:errors="*{confirmPassword}">
+                        Erreur confirmation mot de passe
+                    </div>
                 </div>
 
                 <!-- Hidden plan + billing -->
@@ -177,18 +202,28 @@
                 <input type="hidden" name="billing" th:value="${selectedBilling}">
 
                 <div class="form-check">
-                    <input type="checkbox" id="termsAccepted" th:field="*{termsAccepted}" class="form-check-input" required>
+                    <input type="checkbox" id="termsAccepted" th:field="*{termsAccepted}" 
+                           th:classappend="${#fields.hasErrors('termsAccepted')} ? 'is-invalid' : ''"
+                           class="form-check-input" required>
                     <label for="termsAccepted" class="form-check-label">
                         J'accepte les <a th:href="@{/legal/terms}" target="_blank">conditions générales d'utilisation</a>
                         et la <a th:href="@{/legal/privacy}" target="_blank">politique de confidentialité</a> *
                     </label>
+                    <div class="invalid-feedback" th:if="${#fields.hasErrors('termsAccepted')}" th:errors="*{termsAccepted}">
+                        Vous devez accepter les conditions
+                    </div>
                 </div>
 
                 <div class="form-check" style="margin-bottom: 24px;">
-                    <input type="checkbox" id="gdprConsent" th:field="*{gdprConsent}" class="form-check-input" required>
+                    <input type="checkbox" id="gdprConsent" th:field="*{gdprConsent}" 
+                           th:classappend="${#fields.hasErrors('gdprConsent')} ? 'is-invalid' : ''"
+                           class="form-check-input" required>
                     <label for="gdprConsent" class="form-check-label">
                         J'accepte le traitement de mes données personnelles conformément au RGPD *
                     </label>
+                    <div class="invalid-feedback" th:if="${#fields.hasErrors('gdprConsent')}" th:errors="*{gdprConsent}">
+                        Vous devez accepter le traitement RGPD
+                    </div>
                 </div>
 
                 <button type="submit" class="btn-register">
@@ -211,6 +246,31 @@ function togglePwd(fieldId, iconId) {
     if (f.type === 'password') { f.type = 'text'; i.classList.replace('fa-eye','fa-eye-slash'); }
     else { f.type = 'password'; i.classList.replace('fa-eye-slash','fa-eye'); }
 }
+
+// Fix floating labels - force update on page load for fields with values
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.form-floating input, .form-floating textarea').forEach(function(input) {
+        // Add placeholder attribute to enable :placeholder-shown CSS
+        if (!input.hasAttribute('placeholder')) {
+            input.setAttribute('placeholder', ' ');
+        }
+        
+        // Force label position if field has value
+        function checkValue() {
+            var label = input.parentElement.querySelector('label');
+            if (input.value && input.value.length > 0) {
+                input.classList.add('has-value');
+            } else {
+                input.classList.remove('has-value');
+            }
+        }
+        
+        // Check on load and on input
+        checkValue();
+        input.addEventListener('input', checkValue);
+        input.addEventListener('change', checkValue);
+    });
+});
 
 // Dark mode: respect system preference or localStorage
 (function() {

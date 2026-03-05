@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <link rel="stylesheet" th:href="@{/css/pages/admin.css}">
+    <title>Administration - Monitoring Sécurité</title>
+    <style>
+        .status-ok { color: #10b981; font-weight: 600; }
+        .status-warning { color: #f59e0b; font-weight: 600; }
+        .status-critical { color: #ef4444; font-weight: 600; }
+        .metric-card {
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            transition: all 0.3s ease;
+        }
+        .metric-card:hover {
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 0;
+        }
+        .event-row {
+            border-left: 4px solid #e5e7eb;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            background: #f9fafb;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+        .event-row:hover {
+            background: #f3f4f6;
+        }
+        .event-row.CRITICAL { border-left-color: #ef4444; background: #fef2f2; }
+        .event-row.WARNING { border-left-color: #f59e0b; background: #fffbeb; }
+        .event-row.INFO { border-left-color: #3b82f6; background: #eff6ff; }
+        .ip-badge {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="container-fluid">
+        <!-- En-tête -->
+        <div class="hero-banner mb-4">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div style="position:relative;z-index:1">
+                    <h1 style="font-size:1.5rem;font-weight:800;letter-spacing:-0.025em;margin-bottom:4px;color:#fff">
+                        <i class="fas fa-shield-alt me-2"></i>Monitoring Sécurité
+                    </h1>
+                    <p style="font-size:0.875rem;margin:0;color:rgba(255,255,255,0.8)">
+                        Tableau de bord de surveillance de la sécurité en temps réel
+                    </p>
+                    <p style="font-size:0.75rem;margin:0;color:rgba(255,255,255,0.6)" th:text="'Dernière mise à jour: ' + ${timestamp}">
+                        Dernière mise à jour
+                    </p>
+                </div>
+                <div class="d-flex gap-2">
+                    <button onclick="refreshMetrics()" class="btn btn-light btn-sm">
+                        <i class="fas fa-sync-alt"></i> Actualiser
+                    </button>
+                    <a href="/admin/security-monitoring/export" class="btn btn-light btn-sm">
+                        <i class="fas fa-download"></i> Exporter JSON
+                    </a>
+                    <a href="/admin" style="background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.25);border-radius:14px;font-weight:600;backdrop-filter:blur(8px);padding:8px 18px;text-decoration:none">
+                        <i class="fas fa-arrow-left me-1"></i> Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Message d'erreur -->
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-triangle"></i> <span th:text="${error}">Erreur</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Navigation admin -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="btn-group" role="group">
+                    <a href="/admin" class="btn btn-outline-primary">
+                        <i class="fas fa-home"></i> Dashboard
+                    </a>
+                    <a href="/admin/system" class="btn btn-outline-primary">
+                        <i class="fas fa-server"></i> Système
+                    </a>
+                    <a href="/admin/database" class="btn btn-outline-primary">
+                        <i class="fas fa-database"></i> Base de données
+                    </a>
+                    <a href="/admin/logs" class="btn btn-outline-primary">
+                        <i class="fas fa-file-alt"></i> Logs
+                    </a>
+                    <a href="/admin/users" class="btn btn-outline-primary">
+                        <i class="fas fa-users"></i> Utilisateurs
+                    </a>
+                    <a href="/admin/security-monitoring" class="btn btn-primary">
+                        <i class="fas fa-shield-alt"></i> Sécurité
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statut global -->
+        <div class="alert mb-4" th:classappend="${report != null ? (report.overallStatus == 'OK' ? 'alert-success' : (report.overallStatus == 'WARNING' ? 'alert-warning' : 'alert-danger')) : 'alert-info'}">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-3x me-3" th:classappend="${report != null ? (report.overallStatus == 'OK' ? 'fa-check-circle' : (report.overallStatus == 'WARNING' ? 'fa-exclamation-triangle' : 'fa-times-circle')) : 'fa-info-circle'}"></i>
+                <div>
+                    <h5 class="mb-1">Statut global de la sécurité : <span th:text="${report != null ? report.overallStatus : 'N/A'}">N/A</span></h5>
+                    <p class="mb-0" th:text="${report != null ? (report.overallStatus == 'OK' ? 'Tous les indicateurs sont normaux' : (report.overallStatus == 'WARNING' ? 'Certains indicateurs nécessitent une attention' : 'Incidents critiques détectés')) : 'Chargement...'}">
+                        Chargement...
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Métriques clés -->
+        <div class="row mb-4">
+            <!-- Tentatives de connexion échouées -->
+            <div class="col-md-3 mb-3">
+                <div class="card metric-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <p class="text-muted mb-1">Échecs de connexion</p>
+                                <h2 class="metric-value" th:text="${report != null && report.metrics != null ? report.metrics.get('failedLogins') : '0'}">0</h2>
+                                <small class="text-muted">Dernières 24h</small>
+                            </div>
+                            <div class="text-danger">
+                                <i class="fas fa-user-times fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- IPs suspectes -->
+            <div class="col-md-3 mb-3">
+                <div class="card metric-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <p class="text-muted mb-1">IPs suspectes</p>
+                                <h2 class="metric-value" th:text="${report != null && report.metrics != null ? report.metrics.get('suspiciousIPs') : '0'}">0</h2>
+                                <small class="text-muted">Bloquées</small>
+                            </div>
+                            <div class="text-warning">
+                                <i class="fas fa-ban fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Attaques par force brute -->
+            <div class="col-md-3 mb-3">
+                <div class="card metric-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <p class="text-muted mb-1">Attaques détectées</p>
+                                <h2 class="metric-value" th:text="${report != null && report.metrics != null ? report.metrics.get('bruteForceAttempts') : '0'}">0</h2>
+                                <small class="text-muted">Force brute</small>
+                            </div>
+                            <div class="text-danger">
+                                <i class="fas fa-skull-crossbones fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sessions actives -->
+            <div class="col-md-3 mb-3">
+                <div class="card metric-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <p class="text-muted mb-1">Sessions actives</p>
+                                <h2 class="metric-value" th:text="${report != null && report.metrics != null ? report.metrics.get('activeSessions') : '0'}">0</h2>
+                                <small class="text-muted">Utilisateurs connectés</small>
+                            </div>
+                            <div class="text-success">
+                                <i class="fas fa-users fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- IPs suspectes -->
+        <div class="card mb-4" th:if="${report != null && report.topSuspiciousIPs != null && !report.topSuspiciousIPs.isEmpty()}">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Adresses IP suspectes</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex flex-wrap gap-2">
+                    <span th:each="ip : ${report.topSuspiciousIPs}" class="ip-badge" th:text="${ip}">192.168.1.1</span>
+                    <span th:if="${report.topSuspiciousIPs.isEmpty()}" class="text-muted">Aucune IP suspecte détectée</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Événements de sécurité récents -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-history me-2"></i>Événements de sécurité récents</h5>
+            </div>
+            <div class="card-body">
+                <div th:if="${report != null && report.recentEvents != null && !report.recentEvents.isEmpty()}">
+                    <div th:each="event : ${report.recentEvents}"
+                         class="event-row"
+                         th:classappend="${event.severity}">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <div class="d-flex align-items-center gap-2 mb-1">
+                                    <span class="badge"
+                                          th:classappend="${event.severity == 'CRITICAL' ? 'bg-danger' : (event.severity == 'WARNING' ? 'bg-warning' : 'bg-info')}"
+                                          th:text="${event.severity}">
+                                        INFO
+                                    </span>
+                                    <span class="fw-bold" th:text="${event.type}">Type d'événement</span>
+                                </div>
+                                <p class="mb-0 text-muted" th:text="${event.description}">Description de l'événement</p>
+                            </div>
+                            <small class="text-muted" th:text="${#temporals.format(event.timestamp, 'dd/MM/yyyy HH:mm:ss')}">
+                                Date
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                <div th:if="${report == null || report.recentEvents == null || report.recentEvents.isEmpty()}" class="text-center text-muted py-4">
+                    <i class="fas fa-check-circle fa-3x mb-3"></i>
+                    <p>Aucun événement de sécurité récent</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- JavaScript pour actualisation automatique -->
+<th:block layout:fragment="scripts">
+    <script>
+        function refreshMetrics() {
+            fetch('/admin/security-monitoring/api/metrics')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    }
+                })
+                .catch(error => {
+                    console.error('Erreur lors de l\'actualisation:', error);
+                    alert('Erreur lors de l\'actualisation des métriques');
+                });
+        }
+
+        // Auto-refresh toutes les 30 secondes
+        setInterval(refreshMetrics, 30000);
+    </script>
+</th:block>
+
+</body>
+</html>
