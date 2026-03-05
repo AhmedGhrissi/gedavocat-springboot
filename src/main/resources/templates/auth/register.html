@@ -104,104 +104,110 @@
             </div>
 
             <form th:action="@{/register}" method="post" th:object="${registerRequest}" id="registerForm">
-                <div th:if="${#fields.hasErrors('*')}" class="alert alert-danger">
-                    <i class="fas fa-exclamation-circle"></i>
-                    <ul class="mb-0 ps-3">
-                        <li th:each="err : ${#fields.errors('*')}" th:text="${err}"></li>
-                    </ul>
-                </div>
+                <!-- Messages d'erreur globaux masqués (gérés par champ) -->
+                
                 <div class="row g-3 mb-3">
                     <div class="col-md-6">
-                        <div class="form-floating">
-                            <input type="text" id="firstName" th:field="*{firstName}" 
-                                   th:classappend="${#fields.hasErrors('firstName')} ? 'is-invalid' : ''"
-                                   class="form-control" placeholder="Prénom" required autocomplete="given-name">
-                            <label for="firstName">Prénom *</label>
-                            <div class="invalid-feedback" th:if="${#fields.hasErrors('firstName')}" th:errors="*{firstName}">
-                                Erreur prénom
-                            </div>
+                        <label for="firstName" class="form-label">Prénom <span class="text-danger">*</span></label>
+                        <input type="text" id="firstName" th:field="*{firstName}" 
+                               th:classappend="${#fields.hasErrors('firstName')} ? 'is-invalid' : ''"
+                               class="form-control" placeholder="Votre prénom" required autocomplete="given-name">
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('firstName')}" th:errors="*{firstName}">
+                            Le prénom est requis
                         </div>
                     </div>
                     <div class="col-md-6">
-                        <div class="form-floating">
-                            <input type="text" id="lastName" th:field="*{lastName}" 
-                                   th:classappend="${#fields.hasErrors('lastName')} ? 'is-invalid' : ''"
-                                   class="form-control" placeholder="Nom" required autocomplete="family-name">
-                            <label for="lastName">Nom *</label>
-                            <div class="invalid-feedback" th:if="${#fields.hasErrors('lastName')}" th:errors="*{lastName}">
-                                Erreur nom
-                            </div>
+                        <label for="lastName" class="form-label">Nom <span class="text-danger">*</span></label>
+                        <input type="text" id="lastName" th:field="*{lastName}" 
+                               th:classappend="${#fields.hasErrors('lastName')} ? 'is-invalid' : ''"
+                               class="form-control" placeholder="Votre nom" required autocomplete="family-name">
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('lastName')}" th:errors="*{lastName}">
+                            Le nom est requis
                         </div>
                     </div>
                 </div>
 
-                <div class="form-floating">
+                <div class="mb-3">
+                    <label for="email" class="form-label">Adresse email <span class="text-danger">*</span></label>
                     <input type="email" id="email" th:field="*{email}" 
                            th:classappend="${#fields.hasErrors('email')} ? 'is-invalid' : ''"
-                           class="form-control" placeholder="Email" required autocomplete="email">
-                    <label for="email">Adresse email *</label>
+                           class="form-control" placeholder="votre@email.com" required autocomplete="email">
                     <div class="invalid-feedback" th:if="${#fields.hasErrors('email')}" th:errors="*{email}">
-                        Erreur email
+                        Email invalide ou déjà utilisé
                     </div>
                 </div>
 
-                <div class="form-floating">
-                    <input type="tel" id="phone" th:field="*{phone}" class="form-control" placeholder="Téléphone" autocomplete="tel">
-                    <label for="phone">Téléphone</label>
+                <div class="mb-3">
+                    <label for="phone" class="form-label">Téléphone</label>
+                    <input type="tel" id="phone" th:field="*{phone}" 
+                           class="form-control" placeholder="06 12 34 56 78" autocomplete="tel">
                 </div>
 
-                <div class="form-floating">
-                    <input type="text" id="barNumber" th:field="*{barNumber}" class="form-control" placeholder="Numéro au barreau">
-                    <label for="barNumber">Numéro d'inscription au barreau</label>
+                <div class="mb-3">
+                    <label for="barNumber" class="form-label">Numéro d'inscription au barreau</label>
+                    <input type="text" id="barNumber" th:field="*{barNumber}" 
+                           class="form-control" placeholder="Ex: P1234">
                 </div>
 
                 <!-- Cabinet creation (optional) -->
-                <div class="mt-3 mb-2"><strong>Informations du cabinet (optionnel)</strong></div>
-                <div class="form-floating">
-                    <input type="text" id="firmName" th:field="*{firmName}" class="form-control" placeholder="Nom du cabinet">
-                    <label for="firmName">Nom du cabinet</label>
+                <div class="mt-4 mb-3"><strong>Informations du cabinet (optionnel)</strong></div>
+                
+                <div class="mb-3">
+                    <label for="firmName" class="form-label">Nom du cabinet</label>
+                    <input type="text" id="firmName" th:field="*{firmName}" 
+                           class="form-control" placeholder="Cabinet Dupont & Associés">
                 </div>
-                <div class="form-floating">
-                    <input type="text" id="firmSiren" th:field="*{firmSiren}" class="form-control" placeholder="SIREN">
-                    <label for="firmSiren">SIREN</label>
+                
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label for="firmSiren" class="form-label">SIREN</label>
+                        <input type="text" id="firmSiren" th:field="*{firmSiren}" 
+                               class="form-control" placeholder="123 456 789">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="firmPhone" class="form-label">Téléphone du cabinet</label>
+                        <input type="tel" id="firmPhone" th:field="*{firmPhone}" 
+                               class="form-control" placeholder="01 23 45 67 89">
+                    </div>
                 </div>
-                <div class="form-floating">
-                    <input type="tel" id="firmPhone" th:field="*{firmPhone}" class="form-control" placeholder="Téléphone du cabinet">
-                    <label for="firmPhone">Téléphone du cabinet</label>
-                </div>
-                <div class="form-floating">
-                    <input type="text" id="firmAddress" th:field="*{firmAddress}" class="form-control" placeholder="Adresse du cabinet">
-                    <label for="firmAddress">Adresse du cabinet</label>
+                
+                <div class="mb-3">
+                    <label for="firmAddress" class="form-label">Adresse du cabinet</label>
+                    <input type="text" id="firmAddress" th:field="*{firmAddress}" 
+                           class="form-control" placeholder="123 Rue de la République, 75001 Paris">
                 </div>
 
-                <div class="form-floating pwd-row">
+                <div class="mb-3 position-relative">
+                    <label for="password" class="form-label">Mot de passe <span class="text-danger">*</span></label>
                     <input type="password" id="password" th:field="*{password}" 
                            th:classappend="${#fields.hasErrors('password')} ? 'is-invalid' : ''"
-                           class="form-control" placeholder="Mot de passe" required minlength="12" autocomplete="new-password">
-                    <label for="password">Mot de passe *</label>
-                    <button type="button" class="pwd-toggle" onclick="togglePwd('password','pwdIcon1')" tabindex="-1" aria-label="Afficher le mot de passe"><i class="fas fa-eye" id="pwdIcon1"></i></button>
+                           class="form-control" placeholder="••••••••••••" required minlength="12" autocomplete="new-password">
+                    <button type="button" class="pwd-toggle" onclick="togglePwd('password','pwdIcon1')" tabindex="-1" aria-label="Afficher le mot de passe">
+                        <i class="fas fa-eye" id="pwdIcon1"></i>
+                    </button>
+                    <div class="form-text">Minimum 12 caractères, avec majuscule, minuscule, chiffre et caractère spécial</div>
                     <div class="invalid-feedback" th:if="${#fields.hasErrors('password')}" th:errors="*{password}">
-                        Erreur mot de passe
+                        Le mot de passe ne respecte pas les critères requis
                     </div>
                 </div>
-                <div class="text-muted-sm">Minimum 12 caractères, avec majuscule, minuscule, chiffre et caractère spécial</div>
 
-                <div class="form-floating pwd-row">
+                <div class="mb-3 position-relative">
+                    <label for="confirmPassword" class="form-label">Confirmer le mot de passe <span class="text-danger">*</span></label>
                     <input type="password" id="confirmPassword" th:field="*{confirmPassword}" 
                            th:classappend="${#fields.hasErrors('confirmPassword')} ? 'is-invalid' : ''"
-                           class="form-control" placeholder="Confirmer" required autocomplete="new-password">
-                    <label for="confirmPassword">Confirmer le mot de passe *</label>
-                    <button type="button" class="pwd-toggle" onclick="togglePwd('confirmPassword','pwdIcon2')" tabindex="-1" aria-label="Afficher le mot de passe"><i class="fas fa-eye" id="pwdIcon2"></i></button>
+                           class="form-control" placeholder="••••••••••••" required autocomplete="new-password">
+                    <button type="button" class="pwd-toggle" onclick="togglePwd('confirmPassword','pwdIcon2')" tabindex="-1" aria-label="Afficher le mot de passe">
+                        <i class="fas fa-eye" id="pwdIcon2"></i>
+                    </button>
                     <div class="invalid-feedback" th:if="${#fields.hasErrors('confirmPassword')}" th:errors="*{confirmPassword}">
-                        Erreur confirmation mot de passe
+                        Les mots de passe ne correspondent pas
                     </div>
                 </div>
-
                 <!-- Hidden plan + billing -->
                 <input type="hidden" th:field="*{subscriptionPlan}">
                 <input type="hidden" name="billing" th:value="${selectedBilling}">
 
-                <div class="form-check">
+                <div class="form-check mb-3">
                     <input type="checkbox" id="termsAccepted" th:field="*{termsAccepted}" 
                            th:classappend="${#fields.hasErrors('termsAccepted')} ? 'is-invalid' : ''"
                            class="form-check-input" required>
@@ -210,11 +216,11 @@
                         et la <a th:href="@{/legal/privacy}" target="_blank">politique de confidentialité</a> *
                     </label>
                     <div class="invalid-feedback" th:if="${#fields.hasErrors('termsAccepted')}" th:errors="*{termsAccepted}">
-                        Vous devez accepter les conditions
+                        Vous devez accepter les conditions générales
                     </div>
                 </div>
 
-                <div class="form-check" style="margin-bottom: 24px;">
+                <div class="form-check mb-4">
                     <input type="checkbox" id="gdprConsent" th:field="*{gdprConsent}" 
                            th:classappend="${#fields.hasErrors('gdprConsent')} ? 'is-invalid' : ''"
                            class="form-check-input" required>
@@ -222,7 +228,7 @@
                         J'accepte le traitement de mes données personnelles conformément au RGPD *
                     </label>
                     <div class="invalid-feedback" th:if="${#fields.hasErrors('gdprConsent')}" th:errors="*{gdprConsent}">
-                        Vous devez accepter le traitement RGPD
+                        Vous devez accepter le traitement des données RGPD
                     </div>
                 </div>
 
@@ -243,34 +249,14 @@
 function togglePwd(fieldId, iconId) {
     var f = document.getElementById(fieldId);
     var i = document.getElementById(iconId);
-    if (f.type === 'password') { f.type = 'text'; i.classList.replace('fa-eye','fa-eye-slash'); }
-    else { f.type = 'password'; i.classList.replace('fa-eye-slash','fa-eye'); }
+    if (f.type === 'password') { 
+        f.type = 'text'; 
+        i.classList.replace('fa-eye','fa-eye-slash'); 
+    } else { 
+        f.type = 'password'; 
+        i.classList.replace('fa-eye-slash','fa-eye'); 
+    }
 }
-
-// Fix floating labels - force update on page load for fields with values
-document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('.form-floating input, .form-floating textarea').forEach(function(input) {
-        // Add placeholder attribute to enable :placeholder-shown CSS
-        if (!input.hasAttribute('placeholder')) {
-            input.setAttribute('placeholder', ' ');
-        }
-        
-        // Force label position if field has value
-        function checkValue() {
-            var label = input.parentElement.querySelector('label');
-            if (input.value && input.value.length > 0) {
-                input.classList.add('has-value');
-            } else {
-                input.classList.remove('has-value');
-            }
-        }
-        
-        // Check on load and on input
-        checkValue();
-        input.addEventListener('input', checkValue);
-        input.addEventListener('change', checkValue);
-    });
-});
 
 // Dark mode: respect system preference or localStorage
 (function() {
