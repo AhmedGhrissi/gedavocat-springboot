@@ -269,13 +269,12 @@ package:
       echo ""
       echo "✓ Image buildee avec succes"
       docker images | grep -E "(REPOSITORY|$CI_REGISTRY_IMAGE)" || true
-      
     - echo ""
     - echo "========================================="
     - echo "ETAPE 2: Push des images vers le registry"
     - echo "========================================="
-    # Retry logic pour docker push
     - |
+      # Retry logic pour docker push
       MAX_RETRIES=3
       for TAG in "$CI_COMMIT_SHORT_SHA" "latest"; do
         echo ""
