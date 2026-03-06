@@ -508,7 +508,8 @@ body:has(.auth-left) {
     color: #DC2626 !important;
 }
 
-.form-control {
+.form-control,
+.form-select {
     width: 100%;
     border: 1.5px solid var(--border-default) !important;
     border-radius: var(--radius-md) !important;
@@ -525,15 +526,31 @@ body:has(.auth-left) {
     opacity: 0.7;
 }
 
-.form-control:hover {
+.form-control:hover,
+.form-select:hover {
     border-color: #94a3b8 !important;
 }
 
-.form-control:focus {
+.form-control:focus,
+.form-select:focus {
     background: var(--surface) !important;
     box-shadow: 0 0 0 3px rgba(198, 167, 94, 0.1) !important;
     border-color: var(--gold) !important;
     outline: none;
+}
+
+/* Fix dropdown options visibility - ensure white background with dark text */
+.form-select option {
+    background: #FFFFFF !important;
+    color: #0F172A !important;
+    padding: 8px 12px !important;
+}
+
+.form-select option:hover,
+.form-select option:focus,
+.form-select option:checked {
+    background: #F1F5F9 !important;
+    color: #0F172A !important;
 }
 
 .form-text {
@@ -864,6 +881,19 @@ label { color: var(--text-secondary) !important; }
 .dark .code-inputs .digit:not(:placeholder-shown) {
     border-color: var(--navy-light);
     background: rgba(30,58,95,0.15);
+}
+
+/* Fix dropdown options in dark mode */
+.dark .form-select option {
+    background: #1E293B !important;
+    color: #F1F5F9 !important;
+}
+
+.dark .form-select option:hover,
+.dark .form-select option:focus,
+.dark .form-select option:checked {
+    background: #334155 !important;
+    color: #F1F5F9 !important;
 }
 
 /* ── Utilitaires ── */
