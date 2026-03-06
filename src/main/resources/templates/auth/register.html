@@ -140,18 +140,28 @@
                 <div class="mb-3">
                     <label for="phone" class="form-label">Téléphone</label>
                     <input type="tel" id="phone" th:field="*{phone}" 
+                           th:classappend="${#fields.hasErrors('phone')} ? 'is-invalid' : ''"
                            class="form-control" placeholder="06 12 34 56 78" autocomplete="tel">
+                    <div class="invalid-feedback" th:if="${#fields.hasErrors('phone')}" th:errors="*{phone}">
+                        Le numéro de téléphone n'est pas valide
+                    </div>
                 </div>
 
                 <div class="mb-3">
                     <label for="barNumber" class="form-label">Numéro d'inscription au barreau</label>
                     <input type="text" id="barNumber" th:field="*{barNumber}" 
+                           th:classappend="${#fields.hasErrors('barNumber')} ? 'is-invalid' : ''"
                            class="form-control" placeholder="Ex: P1234">
+                    <div class="invalid-feedback" th:if="${#fields.hasErrors('barNumber')}" th:errors="*{barNumber}">
+                        Le numéro d'inscription au barreau n'est pas valide
+                    </div>
                 </div>
 
                 <div class="mb-3">
                     <label for="barreauId" class="form-label">Barreau d'inscription</label>
-                    <select id="barreauId" th:field="*{barreauId}" class="form-select">
+                    <select id="barreauId" th:field="*{barreauId}" 
+                            th:classappend="${#fields.hasErrors('barreauId')} ? 'is-invalid' : ''"
+                            class="form-select">
                         <option value="">-- Sélectionner un barreau (optionnel) --</option>
                         <option th:each="barreau : ${barreaux}" 
                                 th:value="${barreau.id}" 
@@ -160,6 +170,9 @@
                         </option>
                     </select>
                     <small class="form-text text-muted">Sélectionnez le barreau auquel vous êtes inscrit</small>
+                    <div class="invalid-feedback" th:if="${#fields.hasErrors('barreauId')}" th:errors="*{barreauId}">
+                        Veuillez sélectionner un barreau valide
+                    </div>
                 </div>
 
                 <!-- Cabinet creation (optional) -->
@@ -168,26 +181,42 @@
                 <div class="mb-3">
                     <label for="firmName" class="form-label">Nom du cabinet</label>
                     <input type="text" id="firmName" th:field="*{firmName}" 
+                           th:classappend="${#fields.hasErrors('firmName')} ? 'is-invalid' : ''"
                            class="form-control" placeholder="Cabinet Dupont & Associés">
+                    <div class="invalid-feedback" th:if="${#fields.hasErrors('firmName')}" th:errors="*{firmName}">
+                        Le nom du cabinet n'est pas valide
+                    </div>
                 </div>
                 
                 <div class="row g-3 mb-3">
                     <div class="col-md-6">
                         <label for="firmSiren" class="form-label">SIREN</label>
                         <input type="text" id="firmSiren" th:field="*{firmSiren}" 
+                               th:classappend="${#fields.hasErrors('firmSiren')} ? 'is-invalid' : ''"
                                class="form-control" placeholder="123 456 789">
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('firmSiren')}" th:errors="*{firmSiren}">
+                            Le numéro SIREN n'est pas valide (9 chiffres requis)
+                        </div>
                     </div>
                     <div class="col-md-6">
                         <label for="firmPhone" class="form-label">Téléphone du cabinet</label>
                         <input type="tel" id="firmPhone" th:field="*{firmPhone}" 
+                               th:classappend="${#fields.hasErrors('firmPhone')} ? 'is-invalid' : ''"
                                class="form-control" placeholder="01 23 45 67 89">
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('firmPhone')}" th:errors="*{firmPhone}">
+                            Le numéro de téléphone du cabinet n'est pas valide
+                        </div>
                     </div>
                 </div>
                 
                 <div class="mb-3">
                     <label for="firmAddress" class="form-label">Adresse du cabinet</label>
                     <input type="text" id="firmAddress" th:field="*{firmAddress}" 
+                           th:classappend="${#fields.hasErrors('firmAddress')} ? 'is-invalid' : ''"
                            class="form-control" placeholder="123 Rue de la République, 75001 Paris">
+                    <div class="invalid-feedback" th:if="${#fields.hasErrors('firmAddress')}" th:errors="*{firmAddress}">
+                        L'adresse du cabinet n'est pas valide
+                    </div>
                 </div>
 
                 <div class="mb-3 position-relative">
@@ -219,6 +248,10 @@
                 <!-- Hidden plan + billing -->
                 <input type="hidden" th:field="*{subscriptionPlan}">
                 <input type="hidden" name="billing" th:value="${selectedBilling}">
+                <div th:if="${#fields.hasErrors('subscriptionPlan')}" class="alert alert-danger mb-3">
+                    <i class="fas fa-exclamation-circle"></i> 
+                    <span th:errors="*{subscriptionPlan}">Le plan de souscription est requis</span>
+                </div>
 
                 <div class="form-check mb-3">
                     <input type="checkbox" id="termsAccepted" th:field="*{termsAccepted}" 

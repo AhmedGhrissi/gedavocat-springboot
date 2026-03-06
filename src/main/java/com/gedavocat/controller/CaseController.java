@@ -77,8 +77,16 @@ public class CaseController {
             if (c.getDocuments() != null) c.getDocuments().size();
         }
 
+        // BIZ-08 FIX : ajouter les compteurs de statut pour les KPI dans le template
+        long openCount = cases.stream().filter(c -> c.getStatus() == CaseStatus.OPEN).count();
+        long closedCount = cases.stream().filter(c -> c.getStatus() == CaseStatus.CLOSED).count();
+        long archivedCount = cases.stream().filter(c -> c.getStatus() == CaseStatus.ARCHIVED).count();
+
         model.addAttribute("cases", cases);
         model.addAttribute("statuses", CaseStatus.values());
+        model.addAttribute("openCount", openCount);
+        model.addAttribute("closedCount", closedCount);
+        model.addAttribute("archivedCount", archivedCount);
         return "cases/list";
     }
 
@@ -273,6 +281,9 @@ public class CaseController {
     private boolean isAdmin(Authentication authentication) {
         return authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
     }
+
+
+
 }
 
 

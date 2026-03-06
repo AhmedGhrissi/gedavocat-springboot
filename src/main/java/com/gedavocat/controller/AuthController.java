@@ -118,6 +118,7 @@ public class AuthController {
             log.error("❌ Erreurs de validation détectées: {}", result.getAllErrors());
             model.addAttribute("selectedPlan", request.getSubscriptionPlan());
             model.addAttribute("selectedBilling", billing != null ? billing : "monthly");
+            model.addAttribute("barreaux", barreauService.getAllBarreauxActifs());
             return "auth/register";
         }
 
@@ -134,11 +135,60 @@ public class AuthController {
                 "Un code de vérification à 6 chiffres a été envoyé à " + email + ". Veuillez le saisir ci-dessous.");
             log.info("🎉 Inscription réussie - Redirection vers /verify-email");
             return "redirect:/verify-email?email=" + URLEncoder.encode(email, StandardCharsets.UTF_8);
-        } catch (Exception e) {
-            log.error("❌ Erreur lors de l'inscription: {}", e.getMessage(), e);
-            model.addAttribute("error", "Erreur lors de l'inscription. Vérifiez vos données et réessayez.");
+        } catch (IllegalArgumentException e) {
+            // Erreur de validation métier - analyser le message pour identifier le champ
+            String message = e.getMessage();
+            log.warn("⚠️ Erreur de validation métier: {}", message);
+            
+            if (message != null) {
+                if (message.contains("email") || message.contains("Email")) {
+                    result.rejectValue("email", "email.error", message);
+                } else if (message.contains("mot de passe") || message.contains("password")) {
+                    result.rejectValue("password", "password.error", message);
+                } else if (message.contains("SIREN")) {
+                    result.rejectValue("firmSiren", "siren.error", message);
+                } else if (message.contains("téléphone") || message.contains("phone")) {
+                    result.rejectValue("phone", "phone.error", message);
+                } else if (message.contains("conditions") || message.contains("CGU")) {
+                    result.rejectValue("termsAccepted", "terms.error", message);
+                } else if (message.contains("RGPD") || message.contains("données")) {
+                    result.rejectValue("gdprConsent", "gdpr.error", message);
+                } else {
+                    // Erreur générique si on ne peut pas identifier le champ
+                    model.addAttribute("error", message);
+                }
+            } else {
+                model.addAttribute("error", "Erreur lors de l'inscription. Vérifiez vos données.");
+            }
+            
             model.addAttribute("selectedPlan", request.getSubscriptionPlan());
             model.addAttribute("selectedBilling", billing != null ? billing : "monthly");
+            model.addAttribute("barreaux", barreauService.getAllBarreauxActifs());
+            return "auth/register";
+        } catch (RuntimeException e) {
+            // Autres erreurs runtime (ex: email déjà utilisé)
+            String message = e.getMessage();
+            log.error("❌ Erreur runtime lors de l'inscription: {}", message, e);
+            
+            if (message != null && (message.contains("email") || message.contains("Email") || message.contains("Erreur lors de l'inscription"))) {
+                result.rejectValue("email", "email.exists", "Cette adresse email est déjà utilisée");
+            } else if (message != null) {
+                model.addAttribute("error", message);
+            } else {
+                model.addAttribute("error", "Erreur lors de l'inscription. Vérifiez vos données et réessayez.");
+            }
+            
+            model.addAttribute("selectedPlan", request.getSubscriptionPlan());
+            model.addAttribute("selectedBilling", billing != null ? billing : "monthly");
+            model.addAttribute("barreaux", barreauService.getAllBarreauxActifs());
+            return "auth/register";
+        } catch (Exception e) {
+            // Erreur inattendue
+            log.error("❌ Erreur inattendue lors de l'inscription: {}", e.getMessage(), e);
+            model.addAttribute("error", "Une erreur technique s'est produite. Veuillez réessayer plus tard.");
+            model.addAttribute("selectedPlan", request.getSubscriptionPlan());
+            model.addAttribute("selectedBilling", billing != null ? billing : "monthly");
+            model.addAttribute("barreaux", barreauService.getAllBarreauxActifs());
             return "auth/register";
         }
     }

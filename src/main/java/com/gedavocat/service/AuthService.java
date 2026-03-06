@@ -48,23 +48,23 @@ public class AuthService {
                 userRepository.flush();
                 log.info("Compte non vérifié supprimé pour réinscription : {}", emailNormalized);
             } else {
-                // SEC-08 FIX : Message générique pour éviter l'énumération d'utilisateurs
-                throw new RuntimeException("Erreur lors de l'inscription. Vérifiez vos informations.");
+                // SEC-08 FIX : Message spécifique mais sans révéler trop d'informations
+                throw new IllegalArgumentException("Cette adresse email est déjà utilisée");
             }
         }
 
         // Vérifier la confirmation du mot de passe
         if (!request.getPassword().equals(request.getConfirmPassword())) {
-            throw new RuntimeException("Les mots de passe ne correspondent pas");
+            throw new IllegalArgumentException("Les mots de passe ne correspondent pas");
         }
 
         // Vérifier les conditions d'utilisation
         if (!Boolean.TRUE.equals(request.getTermsAccepted())) {
-            throw new RuntimeException("Vous devez accepter les conditions d'utilisation");
+            throw new IllegalArgumentException("Vous devez accepter les conditions d'utilisation");
         }
 
         if (!Boolean.TRUE.equals(request.getGdprConsent())) {
-            throw new RuntimeException("Vous devez accepter le traitement de vos données personnelles");
+            throw new IllegalArgumentException("Vous devez accepter le traitement de vos données personnelles");
         }
 
         // Créer le nouvel utilisateur

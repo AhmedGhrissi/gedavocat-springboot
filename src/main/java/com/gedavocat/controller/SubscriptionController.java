@@ -131,70 +131,96 @@ public class SubscriptionController {
             Model model,
             Authentication authentication
     ) {
-        if (session_id != null) {
-            try {
-                // CRIT-01 FIX : idempotence — ne pas retraiter une session déjà activée
-                if (processedSessionIds.contains(session_id)) {
-                    User user = resolveUser(authentication, session_id);
-                    if (user != null) {
-                        model.addAttribute("user", user);
-                        model.addAttribute("plan", user.getSubscriptionPlan());
-                    }
-                    model.addAttribute("success", true);
-                    model.addAttribute("message", "Votre abonnement est déjà actif !");
+        log.info("🎯 Accès à /subscription/success - session_id={}, authenticated={}", 
+                session_id, authentication != null);
+        
+        if (session_id == null || session_id.isBlank()) {
+            log.warn("⚠️ Aucun session_id fourni");
+            model.addAttribute("error", "Session de paiement invalide");
+            return "payment/success";
+        }
+        
+        try {
+            // CRIT-01 FIX : idempotence — ne pas retraiter une session déjà activée
+            if (processedSessionIds.contains(session_id)) {
+                log.info("♻️ Session déjà traitée (idempotence): {}", session_id);
+                User user = resolveUser(authentication, session_id);
+                if (user != null) {
+                    model.addAttribute("user", user);
+                    model.addAttribute("plan", user.getSubscriptionPlan());
+                }
+                model.addAttribute("success", true);
+                model.addAttribute("message", "Votre abonnement est déjà actif !");
+                return "payment/success";
+            }
+
+            log.info("📡 Récupération de la session Stripe: {}", session_id);
+            Session session = stripeService.getSession(session_id);
+            log.info("✅ Session récupérée - status={}, metadata={}", 
+                    session.getStatus(), session.getMetadata());
+            
+            if ("complete".equals(session.getStatus()) || "paid".equals(session.getPaymentStatus())) {
+                // Résoudre l'utilisateur : via auth si connecté, sinon via metadata Stripe
+                User user = resolveUser(authentication, session, session_id);
+                
+                if (user == null) {
+                    log.error("❌ Impossible de résoudre l'utilisateur pour session_id: {}", session_id);
+                    log.error("   - Metadata: {}", session.getMetadata());
+                    log.error("   - Customer: {}", session.getCustomer());
+                    log.error("   - Customer email: {}", session.getCustomerEmail());
+                    model.addAttribute("error", "Utilisateur non trouvé. Veuillez vous connecter et vérifier votre espace abonné.");
                     return "payment/success";
                 }
 
-                Session session = stripeService.getSession(session_id);
-                
-                if ("complete".equals(session.getStatus())) {
-                    // Résoudre l'utilisateur : via auth si connecté, sinon via metadata Stripe
-                    User user = resolveUser(authentication, session, session_id);
-                    
-                    if (user == null) {
-                        log.error("Impossible de résoudre l'utilisateur pour session_id: {}", session_id);
-                        model.addAttribute("error", "Utilisateur non trouvé. Veuillez vous connecter.");
-                        return "payment/success";
-                    }
+                log.info("👤 Utilisateur résolu: {} (id={})", user.getEmail(), user.getId());
 
-                    // CRIT-01 FIX : ne pas réactiver un abonnement déjà actif
-                    if (user.hasActiveSubscription() && user.getSubscriptionStatus() == User.SubscriptionStatus.ACTIVE) {
-                        model.addAttribute("user", user);
-                        model.addAttribute("plan", user.getSubscriptionPlan());
-                        model.addAttribute("success", true);
-                        model.addAttribute("message", "Votre abonnement est déjà actif !");
-                        processedSessionIds.add(session_id);
-                        return "payment/success";
-                    }
-                    
-                    // Récupérer les métadonnées
-                    String plan = session.getMetadata().get("plan");
-                    String period = session.getMetadata().get("period");
-                    
-                    // Activer l'abonnement
-                    activateSubscription(user, plan, period, session.getSubscription());
-                    processedSessionIds.add(session_id);
-                    
-                    // Sauvegarder l'ID client Stripe
-                    if (session.getCustomer() != null && (user.getStripeCustomerId() == null || user.getStripeCustomerId().isEmpty())) {
-                        user.setStripeCustomerId(session.getCustomer());
-                        userRepository.save(user);
-                    }
-                    
+                // CRIT-01 FIX : ne pas réactiver un abonnement déjà actif
+                if (user.hasActiveSubscription() && user.getSubscriptionStatus() == User.SubscriptionStatus.ACTIVE) {
+                    log.info("ℹ️ Abonnement déjà actif pour: {}", user.getEmail());
                     model.addAttribute("user", user);
                     model.addAttribute("plan", user.getSubscriptionPlan());
                     model.addAttribute("success", true);
-                    model.addAttribute("message", "Votre abonnement a été activé avec succès !");
-                    log.info("✅ Abonnement activé via success page pour: {} (auth={})", 
-                        user.getEmail(), authentication != null);
-                } else {
-                    model.addAttribute("error", "Le paiement est en cours de traitement");
+                    model.addAttribute("message", "Votre abonnement est déjà actif !");
+                    processedSessionIds.add(session_id);
+                    return "payment/success";
                 }
-            } catch (StripeException e) {
-                log.error("Erreur lors de la récupération de la session: {}", e.getMessage());
-                model.addAttribute("error", "Erreur lors de la vérification du paiement");
+                
+                // Récupérer les métadonnées
+                String plan = session.getMetadata() != null ? session.getMetadata().get("plan") : null;
+                String period = session.getMetadata() != null ? session.getMetadata().get("period") : null;
+                
+                log.info("💳 Activation de l'abonnement - plan={}, period={}", plan, period);
+                
+                // Activer l'abonnement
+                activateSubscription(user, plan, period, session.getSubscription());
+                processedSessionIds.add(session_id);
+                
+                // Sauvegarder l'ID client Stripe
+                if (session.getCustomer() != null && (user.getStripeCustomerId() == null || user.getStripeCustomerId().isEmpty())) {
+                    user.setStripeCustomerId(session.getCustomer());
+                    userRepository.save(user);
+                    log.info("💾 Stripe Customer ID sauvegardé: {}", session.getCustomer());
+                }
+                
+                model.addAttribute("user", user);
+                model.addAttribute("plan", user.getSubscriptionPlan());
+                model.addAttribute("success", true);
+                model.addAttribute("message", "Votre abonnement a été activé avec succès !");
+                log.info("✅ Abonnement activé via success page pour: {} (auth={})", 
+                    user.getEmail(), authentication != null);
+            } else {
+                log.warn("⚠️ Statut de session non complete: {} (payment_status={})", 
+                        session.getStatus(), session.getPaymentStatus());
+                model.addAttribute("error", "Le paiement est en cours de traitement. Veuillez patienter quelques instants.");
             }
+        } catch (StripeException e) {
+            log.error("❌ Erreur Stripe lors de la récupération de la session: {}", e.getMessage(), e);
+            model.addAttribute("error", "Erreur lors de la vérification du paiement. Veuillez contacter le support.");
+        } catch (Exception e) {
+            log.error("❌ Erreur inattendue lors du traitement du succès de paiement: {}", e.getMessage(), e);
+            model.addAttribute("error", "Une erreur technique est survenue. Votre paiement a peut-être été traité. Veuillez vérifier votre espace abonné.");
         }
+        
         return "payment/success";
     }
 
@@ -240,17 +266,50 @@ public class SubscriptionController {
      */
     private User resolveUserFromStripeSession(Session session) {
         try {
-            String userId = session.getMetadata().get("user_id");
-            if (userId != null) {
-                return userRepository.findById(userId).orElse(null);
+            log.debug("🔍 Résolution utilisateur depuis session Stripe...");
+            
+            // Vérifier si les métadonnées existent
+            if (session.getMetadata() != null && !session.getMetadata().isEmpty()) {
+                // 1. Essayer avec user_id
+                String userId = session.getMetadata().get("user_id");
+                if (userId != null && !userId.isBlank()) {
+                    log.debug("   Tentative avec user_id: {}", userId);
+                    var user = userRepository.findById(userId);
+                    if (user.isPresent()) {
+                        log.info("✅ Utilisateur trouvé via user_id: {}", user.get().getEmail());
+                        return user.get();
+                    }
+                }
+                
+                // 2. Fallback : utiliser l'email des métadonnées
+                String userEmail = session.getMetadata().get("user_email");
+                if (userEmail != null && !userEmail.isBlank()) {
+                    log.debug("   Tentative avec user_email: {}", userEmail);
+                    var user = userRepository.findByEmail(userEmail);
+                    if (user.isPresent()) {
+                        log.info("✅ Utilisateur trouvé via user_email: {}", userEmail);
+                        return user.get();
+                    }
+                }
+            } else {
+                log.warn("⚠️ Aucune métadonnée dans la session Stripe");
             }
-            // Fallback : utiliser l'email
-            String userEmail = session.getMetadata().get("user_email");
-            if (userEmail != null) {
-                return userRepository.findByEmail(userEmail).orElse(null);
+            
+            // 3. Dernier fallback : utiliser le customer_email de la session Stripe
+            String customerEmail = session.getCustomerEmail();
+            if (customerEmail != null && !customerEmail.isBlank()) {
+                log.debug("   Tentative avec customer_email: {}", customerEmail);
+                var user = userRepository.findByEmail(customerEmail);
+                if (user.isPresent()) {
+                    log.info("✅ Utilisateur trouvé via customer_email: {}", customerEmail);
+                    return user.get();
+                }
             }
+            
+            log.error("❌ Impossible de résoudre l'utilisateur - aucune donnée disponible");
+            
         } catch (Exception e) {
-            log.warn("Impossible de résoudre l'utilisateur depuis les métadonnées Stripe: {}", e.getMessage());
+            log.error("❌ Erreur lors de la résolution utilisateur depuis Stripe: {}", e.getMessage(), e);
         }
         return null;
     }
