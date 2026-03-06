@@ -193,8 +193,29 @@ package:
   needs: [test]
   variables:
     DOCKER_BUILDKIT: "1"
+    # Force IPv4 pour eviter les problemes de connectivite IPv6
+    DOCKER_CLI_EXPERIMENTAL: "enabled"
   before_script:
-    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
+    # Retry logic pour docker login (max 3 tentatives)
+    - |
+      MAX_RETRIES=3
+      RETRY_COUNT=0
+      until [ $RETRY_COUNT -ge $MAX_RETRIES ]; do
+        echo "Tentative de connexion au registry ($((RETRY_COUNT+1))/$MAX_RETRIES)..."
+        if docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY" 2>&1; then
+          echo "Connexion reussie au registry"
+          break
+        else
+          RETRY_COUNT=$((RETRY_COUNT+1))
+          if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+            echo "Echec de connexion, nouvelle tentative dans 10s..."
+            sleep 10
+          else
+            echo "ERREUR: Impossible de se connecter au registry apres $MAX_RETRIES tentatives"
+            exit 1
+          fi
+        fi
+      done
   script:
     - |
       docker build \
@@ -202,9 +223,29 @@ package:
         --tag "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA" \
         --tag "$CI_REGISTRY_IMAGE:latest" \
         .
-    - docker push "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA"
-    - docker push "$CI_REGISTRY_IMAGE:latest"
-    - echo "Image poussee -> $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA"
+    # Retry logic pour docker push
+    - |
+      MAX_RETRIES=3
+      for TAG in "$CI_COMMIT_SHORT_SHA" "latest"; do
+        RETRY_COUNT=0
+        until [ $RETRY_COUNT -ge $MAX_RETRIES ]; do
+          echo "Push de l'image :$TAG ($((RETRY_COUNT+1))/$MAX_RETRIES)..."
+          if docker push "$CI_REGISTRY_IMAGE:$TAG" 2>&1; then
+            echo "Image $TAG poussee avec succes"
+            break
+          else
+            RETRY_COUNT=$((RETRY_COUNT+1))
+            if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+              echo "Echec du push, nouvelle tentative dans 15s..."
+              sleep 15
+            else
+              echo "ERREUR: Impossible de pousser l'image :$TAG apres $MAX_RETRIES tentatives"
+              exit 1
+            fi
+          fi
+        done
+      done
+    - echo "Toutes les images poussees -> $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA"
   after_script:
     - apk add --no-cache curl --quiet 2>/dev/null || true
     - |
@@ -300,7 +341,27 @@ deploy:
       ssh root@$SERVER_HOST "
         set -e
         cd $REMOTE_DIR
-        docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+        
+        # Retry logic pour docker login sur le serveur
+        MAX_RETRIES=3
+        RETRY_COUNT=0
+        until [ \$RETRY_COUNT -ge \$MAX_RETRIES ]; do
+          echo \"Tentative de connexion au registry (\$((RETRY_COUNT+1))/\$MAX_RETRIES)...\"
+          if docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY 2>&1; then
+            echo \"Connexion reussie au registry\"
+            break
+          else
+            RETRY_COUNT=\$((RETRY_COUNT+1))
+            if [ \$RETRY_COUNT -lt \$MAX_RETRIES ]; then
+              echo \"Echec de connexion, nouvelle tentative dans 10s...\"
+              sleep 10
+            else
+              echo \"ERREUR: Impossible de se connecter au registry apres \$MAX_RETRIES tentatives\"
+              exit 1
+            fi
+          fi
+        done
+        
         docker compose pull app
         docker compose up -d --no-deps app
         docker compose up -d loki promtail grafana 2>/dev/null || true
