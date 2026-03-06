@@ -13,6 +13,8 @@ import com.gedavocat.repository.UserRepository;
 
 import java.util.Map;
 import java.util.HashMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Contrôleur REST pour Monitoring et Administration Sécurité
@@ -29,6 +31,8 @@ import java.util.HashMap;
 @RequestMapping("/api/security/admin")
 @PreAuthorize("hasRole('ADMIN') or hasRole('DPO')")
 public class SecurityAdminController {
+
+    private static final Logger log = LoggerFactory.getLogger(SecurityAdminController.class);
 
     @Autowired
     private SecurityMonitoringService monitoringService;
@@ -72,9 +76,8 @@ public class SecurityAdminController {
             return ResponseEntity.ok(dashboard);
             
         } catch (Exception e) {
-            return ResponseEntity.internalServerError()
-                .header("X-Error", "Erreur dashboard sécurité: " + e.getMessage())
-                .build();
+            log.error("Erreur dashboard sécurité", e);
+            return ResponseEntity.internalServerError().build();
         }
     }
 
@@ -96,9 +99,7 @@ public class SecurityAdminController {
                 .orElseThrow(() -> new IllegalArgumentException("Utilisateur non trouvé"));
 
             if (!mfaService.requiresMFA(user)) {
-                return ResponseEntity.badRequest()
-                    .header("X-Error", "MFA non requis pour cet utilisateur")
-                    .build();
+                return ResponseEntity.badRequest().build();
             }
 
             MultiFactorAuthenticationService.MFASetupResult setup = mfaService.generateMFASecret(user);
@@ -112,9 +113,8 @@ public class SecurityAdminController {
             return ResponseEntity.ok(response);
             
         } catch (Exception e) {
-            return ResponseEntity.internalServerError()
-                .header("X-Error", "Erreur configuration MFA: " + e.getMessage())
-                .build();
+            log.error("Erreur configuration MFA", e);
+            return ResponseEntity.internalServerError().build();
         }
     }
 
@@ -149,9 +149,8 @@ public class SecurityAdminController {
             return ResponseEntity.ok(response);
             
         } catch (Exception e) {
-            return ResponseEntity.internalServerError()
-                .header("X-Error", "Erreur validation MFA: " + e.getMessage())
-                .build();
+            log.error("Erreur validation MFA", e);
+            return ResponseEntity.internalServerError().build();
         }
     }
 
@@ -181,9 +180,8 @@ public class SecurityAdminController {
             return ResponseEntity.ok(response);
             
         } catch (Exception e) {
-            return ResponseEntity.internalServerError()
-                .header("X-Error", "Erreur désactivation MFA: " + e.getMessage())
-                .build();
+            log.error("Erreur désactivation MFA", e);
+            return ResponseEntity.internalServerError().build();
         }
     }
 
@@ -217,9 +215,8 @@ public class SecurityAdminController {
             return ResponseEntity.ok(mfaStatusMap);
             
         } catch (Exception e) {
-            return ResponseEntity.internalServerError()
-                .header("X-Error", "Erreur status MFA: " + e.getMessage())
-                .build();
+            log.error("Erreur status MFA", e);
+            return ResponseEntity.internalServerError().build();
         }
     }
 
@@ -241,9 +238,8 @@ public class SecurityAdminController {
             return ResponseEntity.ok(stats);
             
         } catch (Exception e) {
-            return ResponseEntity.internalServerError()
-                .header("X-Error", "Erreur statistiques crypto: " + e.getMessage())
-                .build();
+            log.error("Erreur statistiques crypto", e);
+            return ResponseEntity.internalServerError().build();
         }
     }
 
@@ -269,9 +265,8 @@ public class SecurityAdminController {
             return ResponseEntity.ok(response);
             
         } catch (Exception e) {
-            return ResponseEntity.internalServerError()
-                .header("X-Error", "Erreur rotation clés: " + e.getMessage())
-                .build();
+            log.error("Erreur rotation clés", e);
+            return ResponseEntity.internalServerError().build();
         }
     }
 
@@ -303,9 +298,8 @@ public class SecurityAdminController {
             return ResponseEntity.ok(response);
             
         } catch (Exception e) {
-            return ResponseEntity.internalServerError()
-                .header("X-Error", "Erreur vérification intégrité: " + e.getMessage())
-                .build();
+            log.error("Erreur vérification intégrité", e);
+            return ResponseEntity.internalServerError().build();
         }
     }
 
@@ -347,9 +341,8 @@ public class SecurityAdminController {
                 .body(report);
             
         } catch (Exception e) {
-            return ResponseEntity.internalServerError()
-                .header("X-Error", "Erreur export rapport: " + e.getMessage())
-                .build();
+            log.error("Erreur export rapport", e);
+            return ResponseEntity.internalServerError().build();
         }
     }
 
@@ -497,9 +490,8 @@ public class SecurityAdminController {
             return ResponseEntity.ok(response);
             
         } catch (Exception e) {
-            return ResponseEntity.internalServerError()
-                .header("X-Error", "Erreur récupération alertes ML: " + e.getMessage())
-                .build();
+            log.error("Erreur récupération alertes ML", e);
+            return ResponseEntity.internalServerError().build();
         }
     }
 
@@ -533,9 +525,8 @@ public class SecurityAdminController {
             return ResponseEntity.ok(stats);
             
         } catch (Exception e) {
-            return ResponseEntity.internalServerError()
-                .header("X-Error", "Erreur statistiques ML: " + e.getMessage())
-                .build();
+            log.error("Erreur statistiques ML", e);
+            return ResponseEntity.internalServerError().build();
         }
     }
 

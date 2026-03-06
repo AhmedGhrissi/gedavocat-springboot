@@ -14,7 +14,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -157,6 +156,19 @@ public class InvoiceWebController {
             // Sauvegarder le fichier si fourni
             String docUrl = null;
             if (file != null && !file.isEmpty()) {
+                // SEC-NEW-04 FIX : validation extension et taille du fichier
+                String origName = file.getOriginalFilename();
+                if (origName != null) {
+                    String ext = origName.contains(".") ? origName.substring(origName.lastIndexOf(".")).toLowerCase() : "";
+                    if (!java.util.Set.of(".pdf", ".jpg", ".jpeg", ".png", ".doc", ".docx").contains(ext)) {
+                        redirectAttributes.addFlashAttribute("importError", "Type de fichier non autorisé. Formats acceptés : PDF, JPG, PNG, DOC, DOCX.");
+                        return "redirect:/invoices";
+                    }
+                }
+                if (file.getSize() > 20 * 1024 * 1024) { // 20 MB max
+                    redirectAttributes.addFlashAttribute("importError", "Fichier trop volumineux (max 20 Mo).");
+                    return "redirect:/invoices";
+                }
                 String filename = UUID.randomUUID() + "_" + file.getOriginalFilename()
                     .replaceAll("[^a-zA-Z0-9._-]", "_");
                 Path invoicesDir = Paths.get(uploadDir).getParent().resolve("invoices");
@@ -199,10 +211,10 @@ public class InvoiceWebController {
             redirectAttributes.addFlashAttribute("message", "Facture " + invoiceNumber + " importée avec succès.");
         } catch (IOException e) {
             log.error("Erreur lors de la sauvegarde du fichier", e);
-            redirectAttributes.addFlashAttribute("importError", "Erreur lors de l'upload du fichier : " + e.getMessage());
+            redirectAttributes.addFlashAttribute("importError", "Erreur lors de l'upload du fichier");
         } catch (Exception e) {
             log.error("Erreur lors de l'import de la facture", e);
-            redirectAttributes.addFlashAttribute("importError", "Erreur : " + e.getMessage());
+            redirectAttributes.addFlashAttribute("importError", "Erreur lors de l'import de la facture");
         }
         return "redirect:/invoices";
     }
@@ -215,29 +227,8 @@ public class InvoiceWebController {
     public String show(@PathVariable String id, Model model, Authentication authentication) {
         try {
             User user = getCurrentUser(authentication);
-            var invoice = invoiceService.getInvoiceById(id, null); // null=no filter, ownership checked below
-
-            // Ownership check: lawyer must own the invoice, client must be the invoice's client
-            boolean isAdmin = authentication.getAuthorities().stream()
-                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
-            boolean isClient = authentication.getAuthorities().stream()
-                    .anyMatch(a -> a.getAuthority().equals("ROLE_CLIENT"));
-
-            if (!isAdmin) {
-                if (isClient) {
-                    var clientOpt = clientService.findByClientUser(user.getId());
-                    if (clientOpt.isEmpty() || !clientOpt.get().getId().equals(invoice.getClientId())) {
-                        model.addAttribute("error", "Accès non autorisé");
-                        return "redirect:/invoices";
-                    }
-                } else {
-                    // Lawyer: verify ownership via lawyerId
-                    if (invoice.getLawyerId() == null || !invoice.getLawyerId().equals(user.getId())) {
-                        model.addAttribute("error", "Accès non autorisé");
-                        return "redirect:/invoices";
-                    }
-                }
-            }
+            // SEC-BYPASS FIX : passer l'ID utilisateur, le service vérifie le rôle via DB
+            var invoice = invoiceService.getInvoiceById(id, user.getId());
 
             model.addAttribute("invoice", invoice);
             return "invoices/show";
@@ -254,18 +245,11 @@ public class InvoiceWebController {
     @PreAuthorize("hasAnyRole('LAWYER', 'ADMIN')")
     public String edit(@PathVariable String id, Model model, Authentication authentication) {
         try {
-            String lawyerId = getCurrentUser(authentication).getId();
-            var invoice = invoiceService.getInvoiceById(id, null); // null=no filter, ownership checked below
+            User user = getCurrentUser(authentication);
+            // SEC-BYPASS FIX : passer l'ID utilisateur, le service vérifie le rôle via DB
+            var invoice = invoiceService.getInvoiceById(id, user.getId());
 
-            // Ownership check: only the owning lawyer (or admin) can edit
-            boolean isAdmin = authentication.getAuthorities().stream()
-                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
-            if (!isAdmin && (invoice.getLawyerId() == null || !invoice.getLawyerId().equals(lawyerId))) {
-                model.addAttribute("error", "Accès non autorisé");
-                return "redirect:/invoices";
-            }
-
-            var clients = getClientsForUser(authentication, lawyerId);
+            var clients = getClientsForUser(authentication, user.getId());
             model.addAttribute("invoice", invoice);
             model.addAttribute("clients", clients);
             return "invoices/edit";
@@ -304,28 +288,15 @@ public class InvoiceWebController {
                                                Authentication authentication) {
         try {
             User user = getCurrentUser(authentication);
-            var invoice = invoiceService.getInvoiceById(id, null); // null=no filter, ownership checked below
-
-            boolean isAdmin = authentication.getAuthorities().stream()
-                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
-            boolean isClient = authentication.getAuthorities().stream()
-                    .anyMatch(a -> a.getAuthority().equals("ROLE_CLIENT"));
-
-            if (!isAdmin) {
-                if (isClient) {
-                    var clientOpt = clientService.findByClientUser(user.getId());
-                    if (clientOpt.isEmpty() || !clientOpt.get().getId().equals(invoice.getClientId())) {
-                        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-                    }
-                } else {
-                    if (invoice.getLawyerId() == null || !invoice.getLawyerId().equals(user.getId())) {
-                        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-                    }
-                }
-            }
+            // SEC-BYPASS FIX : passer l'ID utilisateur, le service vérifie le rôle via DB
+            var invoice = invoiceService.getInvoiceById(id, user.getId());
 
             byte[] pdfBytes = invoiceService.generatePdf(id, user.getId());
-            String filename = "facture-" + invoice.getInvoiceNumber() + ".pdf";
+
+            // SEC-NEW-12 FIX : sanitize invoiceNumber for Content-Disposition header
+            String safeInvoiceNumber = invoice.getInvoiceNumber()
+                    .replaceAll("[^a-zA-Z0-9_.-]", "_");
+            String filename = "facture-" + safeInvoiceNumber + ".pdf";
 
             return ResponseEntity.ok()
                     .header(HttpHeaders.CONTENT_DISPOSITION,

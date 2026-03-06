@@ -38,6 +38,13 @@ public class SubscriptionController {
     /** Idempotence webhook : event IDs déjà traités (CRIT-05 FIX) */
     private final Set<String> processedEventIds = ConcurrentHashMap.newKeySet();
 
+    /** Mémoire: nettoyage périodique des sets d'idempotence */
+    @org.springframework.scheduling.annotation.Scheduled(fixedRate = 3600000) // 1 heure
+    public void cleanupIdempotencySets() {
+        if (processedSessionIds.size() > 1000) processedSessionIds.clear();
+        if (processedEventIds.size() > 1000) processedEventIds.clear();
+    }
+
     /**
      * Page de choix d'abonnement (pricing)
      */
@@ -446,7 +453,7 @@ public class SubscriptionController {
             
         } catch (Exception e) {
             log.error("Erreur lors du traitement du webhook: {}", e.getMessage(), e);
-            return ResponseEntity.badRequest().body("Erreur: " + e.getMessage());
+            return ResponseEntity.ok("Webhook reçu");
         }
     }
 

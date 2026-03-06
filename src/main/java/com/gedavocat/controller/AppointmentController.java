@@ -182,7 +182,7 @@ public class AppointmentController {
         } catch (Exception e) {
             log.error("Erreur lors de la création du rendez-vous", e);
             redirectAttributes.addFlashAttribute("error", 
-                "Erreur: " + e.getMessage());
+                "Une erreur est survenue lors de la création du rendez-vous.");
             return "redirect:/appointments/new";
         }
     }
@@ -223,11 +223,16 @@ public class AppointmentController {
      */
     @PostMapping("/{id}/update")
     public String update(@PathVariable String id,
-                        @ModelAttribute Appointment appointment,
+                        @jakarta.validation.Valid @ModelAttribute Appointment appointment,
+                        org.springframework.validation.BindingResult bindingResult,
                         @RequestParam(required = false) String clientId,
                         @RequestParam(required = false) String caseId,
                         Authentication authentication,
                         RedirectAttributes redirectAttributes) {
+        if (bindingResult.hasErrors()) {
+            redirectAttributes.addFlashAttribute("error", "Données invalides");
+            return "redirect:/appointments/" + id + "/edit";
+        }
         try {
             User user = getCurrentUser(authentication);
             
@@ -269,7 +274,7 @@ public class AppointmentController {
             
         } catch (Exception e) {
             log.error("Erreur lors de la mise à jour du rendez-vous", e);
-            redirectAttributes.addFlashAttribute("error", "Erreur: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "Une erreur est survenue lors de la mise à jour du rendez-vous.");
             return "redirect:/appointments/" + id + "/edit";
         }
     }
@@ -297,7 +302,7 @@ public class AppointmentController {
             
         } catch (Exception e) {
             log.error("Erreur lors de la suppression du rendez-vous", e);
-            redirectAttributes.addFlashAttribute("error", "Erreur: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "Une erreur est survenue lors de la suppression du rendez-vous.");
         }
         
         return "redirect:/appointments";
@@ -325,7 +330,7 @@ public class AppointmentController {
             
         } catch (Exception e) {
             log.error("Erreur lors de l'annulation du rendez-vous", e);
-            redirectAttributes.addFlashAttribute("error", "Erreur: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "Une erreur est survenue lors de l'annulation du rendez-vous.");
         }
         
         return "redirect:/appointments";
@@ -389,7 +394,7 @@ public class AppointmentController {
 
         } catch (Exception e) {
             log.error("Erreur lors de la confirmation du rendez-vous", e);
-            redirectAttributes.addFlashAttribute("error", "Erreur: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "Une erreur est survenue lors de la confirmation du rendez-vous.");
         }
 
         return "redirect:/appointments";
@@ -452,7 +457,7 @@ public class AppointmentController {
             redirectAttributes.addFlashAttribute("success", "Report accepté et rendez-vous confirmé.");
         } catch (Exception e) {
             log.error("Erreur acceptation report", e);
-            redirectAttributes.addFlashAttribute("error", "Erreur: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "Une erreur est survenue lors de l'acceptation du report.");
         }
         return "redirect:/appointments";
     }
@@ -510,7 +515,7 @@ public class AppointmentController {
             redirectAttributes.addFlashAttribute("success", "Demande de report refusée. Rendez-vous maintenu.");
         } catch (Exception e) {
             log.error("Erreur refus report", e);
-            redirectAttributes.addFlashAttribute("error", "Erreur: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "Une erreur est survenue lors du refus du report.");
         }
         return "redirect:/appointments";
     }
@@ -577,7 +582,7 @@ public class AppointmentController {
             redirectAttributes.addFlashAttribute("success", "Nouvelle date proposée au client.");
         } catch (Exception e) {
             log.error("Erreur proposition de date", e);
-            redirectAttributes.addFlashAttribute("error", "Erreur: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "Une erreur est survenue lors de la proposition de date.");
         }
         return "redirect:/appointments";
     }

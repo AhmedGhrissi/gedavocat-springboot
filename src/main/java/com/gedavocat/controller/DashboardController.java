@@ -12,7 +12,10 @@ import com.gedavocat.repository.SignatureRepository;
 import com.gedavocat.repository.UserRepository;
 import com.gedavocat.model.Signature;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
@@ -25,6 +28,8 @@ import java.util.List;
 
 @Controller
 @RequiredArgsConstructor
+@PreAuthorize("hasAnyRole('LAWYER', 'ADMIN', 'CLIENT', 'LAWYER_SECONDARY', 'HUISSIER')")
+@Slf4j
 public class DashboardController {
 
     private final UserRepository     userRepository;
@@ -49,7 +54,7 @@ public class DashboardController {
     public String dashboard(@AuthenticationPrincipal UserDetails userDetails, Model model) {
 
         User user = userRepository.findByEmail(userDetails.getUsername())
-                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+                .orElseThrow(() -> new AccessDeniedException("Utilisateur non trouvé"));
 
         model.addAttribute("user", user);
 

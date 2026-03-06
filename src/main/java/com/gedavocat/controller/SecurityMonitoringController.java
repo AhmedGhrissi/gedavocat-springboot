@@ -51,7 +51,7 @@ public class SecurityMonitoringController {
 
         } catch (Exception e) {
             log.error("Erreur lors de la génération du tableau de bord de sécurité", e);
-            model.addAttribute("error", "Erreur lors du chargement du rapport: " + e.getMessage());
+            model.addAttribute("error", "Erreur lors du chargement du rapport de sécurité");
             return "admin/security-monitoring";
         }
     }
@@ -78,7 +78,7 @@ public class SecurityMonitoringController {
             log.error("Erreur lors de la récupération des métriques", e);
             Map<String, Object> error = new HashMap<>();
             error.put("success", false);
-            error.put("error", e.getMessage());
+            error.put("error", "Erreur interne du serveur");
             return ResponseEntity.status(500).body(error);
         }
     }
@@ -103,7 +103,7 @@ public class SecurityMonitoringController {
             log.error("Erreur lors de la récupération des événements", e);
             Map<String, Object> error = new HashMap<>();
             error.put("success", false);
-            error.put("error", e.getMessage());
+            error.put("error", "Erreur interne du serveur");
             return ResponseEntity.status(500).body(error);
         }
     }

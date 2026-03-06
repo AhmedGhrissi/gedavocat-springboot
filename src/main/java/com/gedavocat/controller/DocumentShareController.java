@@ -79,7 +79,7 @@ public class DocumentShareController {
         } catch (Exception e) {
             log.error("[DocShare] Erreur toggle: {}", e.getMessage());
             result.put("success", false);
-            result.put("error", e.getMessage());
+            result.put("error", "Erreur lors du partage du document");
             return ResponseEntity.badRequest().body(result);
         }
     }
@@ -121,7 +121,7 @@ public class DocumentShareController {
         } catch (Exception e) {
             log.error("[DocShare] Erreur bulk toggle: {}", e.getMessage());
             result.put("success", false);
-            result.put("error", e.getMessage());
+            result.put("error", "Erreur lors du partage en masse");
             return ResponseEntity.badRequest().body(result);
         }
     }

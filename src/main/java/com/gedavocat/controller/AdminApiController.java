@@ -161,7 +161,7 @@ public class AdminApiController {
             log.error("Erreur lors de la sauvegarde JDBC", e);
             return ResponseEntity.internalServerError().body(Map.of(
                 "success", false,
-                "message", "Erreur : " + e.getMessage()
+                "message", "Erreur lors de la sauvegarde"
             ));
         }
     }
@@ -184,7 +184,7 @@ public class AdminApiController {
             log.error("Erreur lors du nettoyage des audit logs", e);
             return ResponseEntity.internalServerError().body(Map.of(
                 "success", false,
-                "message", "Erreur : " + e.getMessage()
+                "message", "Erreur lors du nettoyage des audit logs"
             ));
         }
     }

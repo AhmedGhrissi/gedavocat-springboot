@@ -42,8 +42,11 @@ public class SecurityConfig {
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 		http
-				// CSRF désactivé uniquement pour les endpoints API auth (JWT stateless) et webhooks externes
-				.csrf(csrf -> csrf.ignoringRequestMatchers("/api/auth/**", "/subscription/webhook", "/payment/webhook", "/api/webhooks/**"))
+				// SEC-CSRF-HARDEN : CSRF désactivé uniquement pour endpoints JWT stateless et webhooks externes
+				// Restreint /api/auth à des endpoints spécifiques (pas wildcard) pour éviter les oublis
+				.csrf(csrf -> csrf.ignoringRequestMatchers(
+						"/api/auth/login", "/api/auth/register", "/api/auth/refresh", "/api/auth/logout",
+						"/subscription/webhook", "/payment/webhook", "/api/webhooks/**"))
 				.authorizeHttpRequests(auth -> auth
 						// SEC FIX H-12 : bloquer /h2-console en prod
 						.requestMatchers("/h2-console/**").denyAll()

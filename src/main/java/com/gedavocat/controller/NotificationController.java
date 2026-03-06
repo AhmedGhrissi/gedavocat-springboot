@@ -6,6 +6,7 @@ import com.gedavocat.repository.UserRepository;
 import com.gedavocat.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
@@ -20,10 +21,12 @@ import java.util.Map;
 
 /**
  * API REST pour les notifications (dropdown cloche dans la topbar).
+ * SEC-AUTHZ FIX : ajout @PreAuthorize au niveau de la classe
  */
 @Controller
 @RequestMapping("/api/notifications")
 @RequiredArgsConstructor
+@PreAuthorize("isAuthenticated()")
 public class NotificationController {
 
     private final NotificationService notificationService;

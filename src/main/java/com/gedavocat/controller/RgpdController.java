@@ -156,6 +156,7 @@ public class RgpdController {
      */
     @PostMapping("/delete-account")
     @PreAuthorize("isAuthenticated()")
+    @org.springframework.transaction.annotation.Transactional
     public String deleteMyAccount(
             Authentication authentication,
             @RequestParam(required = false) String confirmEmail,

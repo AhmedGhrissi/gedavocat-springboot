@@ -3,7 +3,11 @@ package com.gedavocat.controller;
 import com.gedavocat.model.Case;
 import com.gedavocat.model.Case.CaseStatus;
 import com.gedavocat.model.Client;
+import com.gedavocat.model.DocumentShare;
+import com.gedavocat.model.Permission;
 import com.gedavocat.model.User;
+import com.gedavocat.repository.AppointmentRepository;
+import com.gedavocat.repository.DocumentShareRepository;
 import com.gedavocat.repository.PermissionRepository;
 import com.gedavocat.repository.UserRepository;
 import com.gedavocat.service.CaseService;
@@ -11,16 +15,22 @@ import com.gedavocat.service.ClientService;
 import com.gedavocat.service.DocumentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Controller for managing cases (dossiers). Simplified and cleaned for encoding issues.
@@ -29,13 +39,27 @@ import java.util.List;
 @RequestMapping("/cases")
 @RequiredArgsConstructor
 @PreAuthorize("hasAnyRole('LAWYER', 'ADMIN', 'LAWYER_SECONDARY')")
+@Slf4j
 public class CaseController {
+
+    /**
+     * SEC-MASS-ASSIGN FIX : restreindre les champs bindables sur Case.
+     * Empêche la manipulation de lawyer, client, createdAt, etc.
+     */
+    @InitBinder
+    public void initBinder(WebDataBinder binder) {
+        binder.setAllowedFields("title", "description", "reference", "status",
+                "type", "jurisdiction", "opposingParty", "opposingLawyer",
+                "notes", "priority", "dueDate");
+    }
 
     private final CaseService caseService;
     private final ClientService clientService;
     private final DocumentService documentService;
     private final PermissionRepository permissionRepository;
     private final UserRepository userRepository;
+    private final AppointmentRepository appointmentRepository;
+    private final DocumentShareRepository documentShareRepository;
 
     @GetMapping
     public String listCases(@RequestParam(required = false) String search,
@@ -103,7 +127,7 @@ public class CaseController {
         User user = getCurrentUser(authentication);
         Case caseEntity = caseService.getCaseById(id);
         if (!isAdmin(authentication) && !caseEntity.getLawyer().getId().equals(user.getId())) {
-            throw new RuntimeException("Acces non autorise");
+            throw new AccessDeniedException("Accès non autorisé à ce dossier");
         }
         if (caseEntity.getClient() != null) caseEntity.getClient().getName();
         if (caseEntity.getDocuments() != null) caseEntity.getDocuments().size();
@@ -111,6 +135,38 @@ public class CaseController {
         model.addAttribute("case", caseEntity);
         model.addAttribute("documents", documentService.getLatestVersions(id));
         model.addAttribute("documentCount", documentService.getDocumentsByCase(id).size());
+
+        // BIZ-09 FIX : ajouter les attributs manquants attendus par view.html
+        try {
+            var appointments = appointmentRepository.findByRelatedCaseIdOrderByAppointmentDateDesc(id);
+            model.addAttribute("appointments", appointments != null ? appointments : java.util.Collections.emptyList());
+        } catch (Exception e) {
+            model.addAttribute("appointments", java.util.Collections.emptyList());
+        }
+
+        try {
+            List<Permission> permissions = permissionRepository.findByCaseEntityId(id);
+            model.addAttribute("permissions", permissions != null ? permissions : java.util.Collections.emptyList());
+        } catch (Exception e) {
+            model.addAttribute("permissions", java.util.Collections.emptyList());
+        }
+
+        // Build shareMap: documentId -> Set<role>
+        try {
+            List<DocumentShare> shares = documentShareRepository.findByCaseId(id);
+            Map<String, Set<String>> shareMap = new HashMap<>();
+            if (shares != null) {
+                for (DocumentShare share : shares) {
+                    String docId = share.getDocument().getId();
+                    shareMap.computeIfAbsent(docId, k -> new java.util.HashSet<>())
+                            .add(share.getTargetRole().name());
+                }
+            }
+            model.addAttribute("shareMap", shareMap);
+        } catch (Exception e) {
+            model.addAttribute("shareMap", new HashMap<>());
+        }
+
         return "cases/view";
     }
 
@@ -120,7 +176,7 @@ public class CaseController {
         User user = getCurrentUser(authentication);
         Case caseEntity = caseService.getCaseById(id);
         if (!isAdmin(authentication) && !caseEntity.getLawyer().getId().equals(user.getId())) {
-            throw new RuntimeException("Acces non autorise");
+            throw new AccessDeniedException("Accès non autorisé à ce dossier");
         }
         String lawyerId = caseEntity.getLawyer().getId();
         List<Client> clients = isAdmin(authentication) ? clientService.getAllClients() : clientService.getClientsByLawyer(lawyerId);
@@ -195,10 +251,13 @@ public class CaseController {
         User user = getCurrentUser(authentication);
         Case caseEntity = caseService.getCaseById(caseId);
         if (!isAdmin(authentication) && !caseEntity.getLawyer().getId().equals(user.getId())) {
-            throw new RuntimeException("Acces non autorise");
+            throw new AccessDeniedException("Accès non autorisé à ce dossier");
         }
-        var permission = permissionRepository.findById(permissionId).orElseThrow(() -> new RuntimeException("Permission introuvable"));
-        if (!permission.getCaseEntity().getId().equals(caseId)) throw new RuntimeException("Permission incoherente avec le dossier");
+        var permission = permissionRepository.findById(permissionId)
+                .orElseThrow(() -> new AccessDeniedException("Permission introuvable"));
+        if (!permission.getCaseEntity().getId().equals(caseId)) {
+            throw new AccessDeniedException("Permission incohérente avec le dossier");
+        }
         permission.revoke();
         permissionRepository.save(permission);
         redirectAttributes.addFlashAttribute("message", "Acces collaborateur revoque avec succes");
@@ -207,7 +266,8 @@ public class CaseController {
 
     private User getCurrentUser(Authentication authentication) {
         String email = authentication.getName();
-        return userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("Utilisateur non trouve"));
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new AccessDeniedException("Utilisateur non trouvé"));
     }
 
     private boolean isAdmin(Authentication authentication) {

@@ -14,6 +14,7 @@ import com.gedavocat.service.UserService;
 import com.gedavocat.security.monitoring.SecurityMonitoringService;
 import com.gedavocat.security.monitoring.SecurityMonitoringService.SecurityMonitoringReport;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
@@ -36,6 +37,7 @@ import java.util.Map;
 @RequestMapping("/admin")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('ADMIN')")
+@Slf4j
 public class AdminController {
 
     private final AdminMetricsService metricsService;
@@ -62,7 +64,8 @@ public class AdminController {
             
             return "admin/dashboard";
         } catch (Exception e) {
-            model.addAttribute("error", "Erreur lors du chargement des métriques: " + e.getMessage());
+            log.error("Erreur chargement métriques dashboard", e);
+            model.addAttribute("error", "Erreur lors du chargement des métriques");
             return "admin/dashboard";
         }
     }
@@ -106,7 +109,8 @@ public class AdminController {
             
             return "admin/logs";
         } catch (Exception e) {
-            model.addAttribute("error", "Erreur lors de la lecture des logs: " + e.getMessage());
+            log.error("Erreur lecture des logs", e);
+            model.addAttribute("error", "Erreur lors de la lecture des logs");
             return "admin/logs";
         }
     }
@@ -136,7 +140,8 @@ public class AdminController {
             model.addAttribute("filterStatus", status != null ? status : "");
             return "admin/users";
         } catch (Exception e) {
-            model.addAttribute("error", "Erreur lors du chargement des utilisateurs : " + e.getMessage());
+            log.error("Erreur chargement utilisateurs", e);
+            model.addAttribute("error", "Erreur lors du chargement des utilisateurs");
             return "admin/users";
         }
     }
@@ -185,7 +190,8 @@ public class AdminController {
             redirectAttributes.addFlashAttribute("success",
                 "Utilisateur " + updated.getFirstName() + " " + updated.getLastName() + " mis à jour");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Erreur modification : " + e.getMessage());
+            log.error("Erreur modification utilisateur {}", id, e);
+            redirectAttributes.addFlashAttribute("error", "Erreur lors de la modification de l'utilisateur");
         }
         return "redirect:/admin/users";
     }
@@ -202,7 +208,8 @@ public class AdminController {
                 redirectAttributes.addFlashAttribute("success", "Utilisateur " + name + " supprimé");
             }, () -> redirectAttributes.addFlashAttribute("error", "Utilisateur introuvable"));
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Erreur suppression : " + e.getMessage());
+            log.error("Erreur suppression utilisateur {}", id, e);
+            redirectAttributes.addFlashAttribute("error", "Erreur lors de la suppression de l'utilisateur");
         }
         return "redirect:/admin/users";
     }
@@ -220,7 +227,8 @@ public class AdminController {
             redirectAttributes.addFlashAttribute("success",
                 "Utilisateur " + u.getFirstName() + " " + u.getLastName() + " " + action + " avec succès");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Erreur : " + e.getMessage());
+            log.error("Erreur toggle block utilisateur {}", id, e);
+            redirectAttributes.addFlashAttribute("error", "Une erreur est survenue lors de l'opération");
         }
         return "redirect:/admin/users";
     }
@@ -283,7 +291,8 @@ public class AdminController {
             }
             return "admin/security";
         } catch (Exception e) {
-            model.addAttribute("error", "Erreur lors du chargement du monitoring de sécurité: " + e.getMessage());
+            log.error("Erreur chargement monitoring sécurité", e);
+            model.addAttribute("error", "Erreur lors du chargement du monitoring de sécurité");
             return "admin/security";
         }
     }
@@ -317,8 +326,9 @@ public class AdminController {
             redirectAttributes.addFlashAttribute("success",
                     roleLabel + " " + firstName + " " + lastName + " créé avec succès");
         } catch (Exception e) {
+            log.error("Erreur création utilisateur", e);
             redirectAttributes.addFlashAttribute("error",
-                    "Erreur lors de la création : " + e.getMessage());
+                    "Erreur lors de la création de l'utilisateur");
         }
         return "redirect:/admin/users";
     }
@@ -335,8 +345,9 @@ public class AdminController {
             redirectAttributes.addFlashAttribute("success",
                     "Invitation envoyée à " + client.getName() + " (" + client.getEmail() + ")");
         } catch (Exception e) {
+            log.error("Erreur envoi invitation client {}", clientId, e);
             redirectAttributes.addFlashAttribute("error",
-                    "Erreur lors de l'envoi de l'invitation : " + e.getMessage());
+                    "Erreur lors de l'envoi de l'invitation");
         }
         return "redirect:/admin/users";
     }

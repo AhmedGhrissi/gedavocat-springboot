@@ -1,5 +1,6 @@
 package com.gedavocat.security;
 
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
@@ -72,5 +73,15 @@ public class AccountLockoutService {
     private static class LockoutEntry {
         volatile int failedAttempts = 0;
         volatile long lockedUntil = 0;
+    }
+
+    /** Mémoire: nettoyage périodique des lockouts expirés */
+    @Scheduled(fixedRate = 900000) // 15 minutes
+    public void cleanupExpiredLockouts() {
+        long now = System.currentTimeMillis();
+        lockoutMap.entrySet().removeIf(e -> {
+            LockoutEntry entry = e.getValue();
+            return entry.lockedUntil > 0 && now >= entry.lockedUntil;
+        });
     }
 }

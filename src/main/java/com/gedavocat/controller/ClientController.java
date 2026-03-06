@@ -115,7 +115,7 @@ public class ClientController {
             return "redirect:/clients";
         } catch (Exception e) {
             model.addAttribute("client", client);
-            model.addAttribute("error", e.getMessage());
+            model.addAttribute("error", "Erreur lors de la création du client");
             return "clients/form";
         }
     }
@@ -178,7 +178,7 @@ public class ClientController {
             return "redirect:/clients/" + id;
         } catch (Exception e) {
             model.addAttribute("client", client);
-            model.addAttribute("error", e.getMessage());
+            model.addAttribute("error", "Erreur lors de la mise à jour du client");
             return "clients/form";
         }
     }
@@ -197,7 +197,7 @@ public class ClientController {
             clientService.deleteClient(id, user.getId());
             redirectAttributes.addFlashAttribute("message", "Client supprimé avec succès");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "Erreur lors de la suppression du client");
         }
         return "redirect:/clients";
     }
@@ -265,7 +265,7 @@ public class ClientController {
             return "redirect:/login";
         } catch (Exception e) {
             model.addAttribute("token", token);
-            model.addAttribute("error", "Erreur : " + e.getMessage());
+            model.addAttribute("error", "Erreur lors de l'activation du compte");
             return "clients/accept-invitation";
         }
     }

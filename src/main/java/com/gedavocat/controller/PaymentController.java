@@ -101,6 +101,7 @@ public class PaymentController {
      */
     @PostMapping("/webhook")
     @ResponseBody
+    @org.springframework.transaction.annotation.Transactional
     public ResponseEntity<String> webhook(
             @RequestBody String rawPayload,
             @RequestHeader(value = "PayPlug-Signature", required = false) String signature
@@ -205,43 +206,6 @@ public class PaymentController {
             log.error("Erreur lors de l'annulation de l'abonnement", e);
             redirectAttributes.addFlashAttribute("error", "Erreur lors de l'annulation");
             return "redirect:/payment/manage";
-        }
-    }
-
-    /**
-     * Calculer le montant selon le plan et la période
-     */
-    private double calculateAmount(String planStr, String period) {
-        try {
-            User.SubscriptionPlan plan = User.SubscriptionPlan.valueOf(planStr);
-            double monthlyAmount = plan.getPrice();
-
-            // Si annuel, appliquer -20%
-            if ("yearly".equals(period)) {
-                return monthlyAmount * 12 * 0.8;
-            }
-
-            return monthlyAmount;
-        } catch (IllegalArgumentException e) {
-            return 0.0;
-        }
-    }
-
-    /**
-     * SEC FIX CTL-05/06 : Vérifie que l'URL de redirection de paiement
-     * pointe vers un domaine autorisé (PayPlug ou Stripe uniquement).
-     */
-    private boolean isAllowedPaymentRedirect(String url) {
-        if (url == null || url.isBlank()) return false;
-        try {
-            java.net.URI uri = new java.net.URI(url);
-            String host = uri.getHost();
-            if (host == null) return false;
-            host = host.toLowerCase();
-            return host.endsWith(".payplug.com") || host.equals("payplug.com")
-                || host.endsWith(".stripe.com") || host.equals("stripe.com");
-        } catch (Exception e) {
-            return false;
         }
     }
 

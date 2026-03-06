@@ -78,7 +78,7 @@ public class ComplianceController {
         } catch (Exception e) {
             Map<String, Object> error = new HashMap<>();
             error.put("success", false);
-            error.put("error", "Erreur calcul score conformité: " + e.getMessage());
+            error.put("error", "Erreur calcul score conformité");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }
@@ -89,7 +89,7 @@ public class ComplianceController {
      * GET /internal/compliance-score
      */
     @GetMapping("/internal/compliance-score")
-    @PreAuthorize("permitAll()")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, Object>> getInternalComplianceScore() {
         
         try {
@@ -108,7 +108,6 @@ public class ComplianceController {
             error.put("score", 0);
             error.put("riskLevel", "UNKNOWN");
             error.put("status", "ERROR");
-            error.put("error", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }
@@ -273,7 +272,7 @@ public class ComplianceController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
                 "success", false,
-                "error", "Erreur simulation contrôle ACPR: " + e.getMessage()
+                "error", "Erreur lors de la simulation du contrôle ACPR"
             ));
         }
     }
@@ -345,7 +344,7 @@ public class ComplianceController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
                 "success", false,
-                "error", "Erreur génération dashboard: " + e.getMessage()
+                "error", "Erreur lors de la génération du dashboard de conformité"
             ));
         }
     }

@@ -136,7 +136,7 @@ public class AuthController {
             return "redirect:/verify-email?email=" + URLEncoder.encode(email, StandardCharsets.UTF_8);
         } catch (Exception e) {
             log.error("❌ Erreur lors de l'inscription: {}", e.getMessage(), e);
-            model.addAttribute("error", e.getMessage());
+            model.addAttribute("error", "Erreur lors de l'inscription. Vérifiez vos données et réessayez.");
             model.addAttribute("selectedPlan", request.getSubscriptionPlan());
             model.addAttribute("selectedBilling", billing != null ? billing : "monthly");
             return "auth/register";
@@ -268,9 +268,10 @@ public class AuthController {
                 "requiresVerification", true
             ));
         } catch (Exception e) {
+            log.warn("Erreur lors de l'inscription API: {}", e.getMessage());
             return ResponseEntity.badRequest().body(Map.of(
                 "error", true,
-                "message", e.getMessage() != null ? e.getMessage() : "Erreur lors de l'inscription"
+                "message", "Erreur lors de l'inscription. Vérifiez vos données et réessayez."
             ));
         }
     }

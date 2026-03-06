@@ -823,6 +823,25 @@ public class SecurityMonitoringService {
         requestCountByIP.clear();
     }
 
+    /** Mémoire: nettoyage des maps non bornées toutes les 6 heures */
+    @Scheduled(fixedRate = 21600000) // 6 heures
+    public void cleanupUnboundedMaps() {
+        LocalDateTime cutoff = LocalDateTime.now().minusHours(24);
+        // Nettoyer lastActivityByUser
+        lastActivityByUser.entrySet().removeIf(e -> e.getValue().isBefore(cutoff));
+        // Nettoyer recentAlerts (taille max)
+        if (recentAlerts.size() > 5000) {
+            recentAlerts.clear();
+        }
+        // Nettoyer behavior profiles (taille max)
+        if (userBehaviorProfiles.size() > 10000) {
+            userBehaviorProfiles.clear();
+        }
+        if (ipBehaviorProfiles.size() > 10000) {
+            ipBehaviorProfiles.clear();
+        }
+    }
+
     // =================================================================
     // Classes de Données
     // =================================================================
