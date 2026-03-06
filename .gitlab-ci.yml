@@ -247,13 +247,12 @@ package:
       done
   script:
     - echo "========================================="
-    - echo "ETAPE 1: Build de l'image Docker"
+    - echo "ETAPE 1 - Build de l'image Docker"
     - echo "========================================="
     - |
       echo "Repository: $CI_REGISTRY_IMAGE"
       echo "SHA: $CI_COMMIT_SHORT_SHA"
       echo ""
-      
       if ! docker build \
         --file docker/Dockerfile \
         --tag "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA" \
@@ -265,16 +264,14 @@ package:
         echo "Verifiez le Dockerfile et les dependances"
         exit 1
       fi
-      
       echo ""
       echo "✓ Image buildee avec succes"
       docker images | grep -E "(REPOSITORY|$CI_REGISTRY_IMAGE)" || true
     - echo ""
     - echo "========================================="
-    - echo "ETAPE 2: Push des images vers le registry"
+    - echo "ETAPE 2 - Push des images vers le registry"
     - echo "========================================="
     - |
-      # Retry logic pour docker push
       MAX_RETRIES=3
       for TAG in "$CI_COMMIT_SHORT_SHA" "latest"; do
         echo ""
@@ -299,7 +296,6 @@ package:
           fi
         done
       done
-      
       echo ""
       echo "✓✓✓ Toutes les images poussees avec succes ✓✓✓"
       echo "Image principale: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA"
