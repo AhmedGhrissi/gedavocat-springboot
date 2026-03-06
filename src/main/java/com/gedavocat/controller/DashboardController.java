@@ -40,11 +40,13 @@ public class DashboardController {
     private final AuditLogRepository  auditLogRepository;
 
     @GetMapping("/")
+    @PreAuthorize("permitAll()")
     public String home() {
         return "landing";
     }
 
     @GetMapping("/welcome")
+    @PreAuthorize("permitAll()")
     public String welcome() {
         return "landing";
     }
