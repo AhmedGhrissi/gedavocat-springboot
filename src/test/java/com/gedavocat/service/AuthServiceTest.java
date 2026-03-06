@@ -172,10 +172,10 @@ class AuthServiceTest {
         verifiedUser.setEmailVerified(true);
         when(userRepository.findByEmail("jean.dupont@gedavocat.com")).thenReturn(Optional.of(verifiedUser));
 
-        // When / Then — SEC-08 FIX : message générique pour éviter l'énumération
+        // When / Then — Message spécifique pour améliorer l'UX
         assertThatThrownBy(() -> authService.register(request))
-            .isInstanceOf(RuntimeException.class)
-            .hasMessageContaining("Erreur lors de l'inscription");
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("Cette adresse email est déjà utilisée");
     }
 
     @Test
@@ -191,7 +191,7 @@ class AuthServiceTest {
 
         // When / Then
         assertThatThrownBy(() -> authService.register(request))
-            .isInstanceOf(RuntimeException.class)
+            .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("correspondent pas");
     }
 }
