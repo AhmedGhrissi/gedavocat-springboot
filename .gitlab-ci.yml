@@ -134,7 +134,20 @@ build:
         echo "Discord pipeline-start: HTTP $RESPONSE"
       }
   script:
-    - mvn $MAVEN_CLI_OPTS compile
+    - echo "========================================="
+    - echo "COMPILATION MAVEN"
+    - echo "========================================="
+    - |
+      if ! mvn $MAVEN_CLI_OPTS compile; then
+        echo ""
+        echo "ERREUR: La compilation Maven a echoue!"
+        echo ""
+        echo "--- Derniers messages d'erreur ---"
+        tail -100 target/*.log 2>/dev/null || echo "Pas de fichier log trouve"
+        exit 1
+      fi
+      echo ""
+      echo "✓ Compilation reussie"
   after_script:
     - |
       if [ "$CI_JOB_STATUS" = "success" ]; then
@@ -159,7 +172,23 @@ test:
   before_script:
     - apt-get update -qq && apt-get install -yqq curl > /dev/null 2>&1 || true
   script:
-    - mvn $MAVEN_CLI_OPTS test
+    - echo "========================================="
+    - echo "EXECUTION DES TESTS UNITAIRES"
+    - echo "========================================="
+    - |
+      if ! mvn $MAVEN_CLI_OPTS test; then
+        echo ""
+        echo "ERREUR: Les tests unitaires ont echoue!"
+        echo ""
+        echo "--- Rapport des tests echoues ---"
+        find target/surefire-reports -name "*.txt" -exec echo "=== {} ===" \; -exec cat {} \; 2>/dev/null || echo "Pas de rapport de test trouve"
+        echo ""
+        echo "--- Derniers logs Maven ---"
+        tail -200 target/*.log 2>/dev/null || echo "Pas de fichier log trouve"
+        exit 1
+      fi
+      echo ""
+      echo "✓ Tous les tests sont passes"
   after_script:
     - |
       if [ "$CI_JOB_STATUS" = "success" ]; then
@@ -217,35 +246,64 @@ package:
         fi
       done
   script:
+    - echo "========================================="
+    - echo "ETAPE 1: Build de l'image Docker"
+    - echo "========================================="
     - |
-      docker build \
+      echo "Repository: $CI_REGISTRY_IMAGE"
+      echo "SHA: $CI_COMMIT_SHORT_SHA"
+      echo ""
+      
+      if ! docker build \
         --file docker/Dockerfile \
         --tag "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA" \
         --tag "$CI_REGISTRY_IMAGE:latest" \
-        .
+        --progress=plain \
+        .; then
+        echo ""
+        echo "ERREUR: Le build Docker a echoue!"
+        echo "Verifiez le Dockerfile et les dependances"
+        exit 1
+      fi
+      
+      echo ""
+      echo "✓ Image buildee avec succes"
+      docker images | grep -E "(REPOSITORY|$CI_REGISTRY_IMAGE)" || true
+      
+    - echo ""
+    - echo "========================================="
+    - echo "ETAPE 2: Push des images vers le registry"
+    - echo "========================================="
     # Retry logic pour docker push
     - |
       MAX_RETRIES=3
       for TAG in "$CI_COMMIT_SHORT_SHA" "latest"; do
+        echo ""
+        echo "--- Push de l'image :$TAG ---"
         RETRY_COUNT=0
         until [ $RETRY_COUNT -ge $MAX_RETRIES ]; do
-          echo "Push de l'image :$TAG ($((RETRY_COUNT+1))/$MAX_RETRIES)..."
+          echo "Tentative ($((RETRY_COUNT+1))/$MAX_RETRIES)..."
           if docker push "$CI_REGISTRY_IMAGE:$TAG" 2>&1; then
-            echo "Image $TAG poussee avec succes"
+            echo "✓ Image :$TAG poussee avec succes"
             break
           else
             RETRY_COUNT=$((RETRY_COUNT+1))
             if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
-              echo "Echec du push, nouvelle tentative dans 15s..."
+              echo "! Echec du push, nouvelle tentative dans 15s..."
               sleep 15
             else
+              echo ""
               echo "ERREUR: Impossible de pousser l'image :$TAG apres $MAX_RETRIES tentatives"
+              echo "Verifiez la connectivite reseau et les permissions du registry"
               exit 1
             fi
           fi
         done
       done
-    - echo "Toutes les images poussees -> $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA"
+      
+      echo ""
+      echo "✓✓✓ Toutes les images poussees avec succes ✓✓✓"
+      echo "Image principale: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA"
   after_script:
     - apk add --no-cache curl --quiet 2>/dev/null || true
     - |
@@ -362,33 +420,230 @@ deploy:
           fi
         done
         
-        docker compose pull app
-        docker compose up -d --no-deps app
+        echo '=== Pull de la nouvelle image ==='
+        if ! docker compose pull app; then
+          echo 'ERREUR: Echec du pull de l image Docker'
+          docker images | grep docavocat || true
+          exit 1
+        fi
+        
+        echo ''
+        echo '=== Arret de l ancien conteneur ==='
+        docker compose stop app 2>/dev/null || true
+        docker compose rm -f app 2>/dev/null || true
+        
+        echo ''
+        echo '=== Demarrage du nouveau conteneur ==='
+        if ! docker compose up -d --no-deps app; then
+          echo 'ERREUR: Echec du demarrage du conteneur'
+          docker compose logs app 2>&1 || true
+          exit 1
+        fi
+        
+        echo ''
+        echo '=== Demarrage des services de monitoring ==='
         docker compose up -d loki promtail grafana 2>/dev/null || true
+        
         docker logout $CI_REGISTRY 2>/dev/null || true
-        echo '--- Conteneurs actifs ---'
+        
+        echo ''
+        echo '=== Conteneurs actifs ==='
         docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
+        
+        echo ''
+        echo '=== Premiers logs du conteneur (10s) ==='
+        sleep 10
+        docker logs docavocat-app --tail=50 2>&1 || echo 'Impossible de lire les logs'
       "
 
-    # Verification HTTP (~60s demarrage Spring Boot)
-    - sleep 60
+    # Verification du demarrage du conteneur et de l'application
     - |
-      HTTP=$(ssh root@$SERVER_HOST "curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8080/" 2>/dev/null) || true
-      echo "HTTP: $HTTP"
-      [ "$HTTP" = "200" ] || [ "$HTTP" = "302" ] || {
-        echo "ERREUR: site ne repond pas (HTTP $HTTP)"
-        echo "--- Docker logs (200 dernieres lignes) ---"
-        ssh root@$SERVER_HOST "docker logs docavocat-app --tail=200 2>&1"
+      echo "========================================="
+      echo "ETAPE 1: Verification etat du conteneur"
+      echo "========================================="
+      ssh root@$SERVER_HOST "
+        echo '--- Conteneurs actifs ---'
+        docker ps --filter name=docavocat-app --format 'table {{.Names}}\t{{.Status}}\t{{.State}}'
+        
+        echo ''
+        echo '--- Inspection du conteneur ---'
+        CONTAINER_STATUS=\$(docker inspect docavocat-app --format='{{.State.Status}}' 2>/dev/null || echo 'not found')
+        CONTAINER_HEALTH=\$(docker inspect docavocat-app --format='{{.State.Health.Status}}' 2>/dev/null || echo 'no health check')
+        CONTAINER_EXIT_CODE=\$(docker inspect docavocat-app --format='{{.State.ExitCode}}' 2>/dev/null || echo 'N/A')
+        CONTAINER_RUNNING=\$(docker inspect docavocat-app --format='{{.State.Running}}' 2>/dev/null || echo 'false')
+        
+        echo \"Status: \$CONTAINER_STATUS\"
+        echo \"Health: \$CONTAINER_HEALTH\"
+        echo \"Exit Code: \$CONTAINER_EXIT_CODE\"
+        echo \"Running: \$CONTAINER_RUNNING\"
+        
+        if [ \"\$CONTAINER_STATUS\" != 'running' ]; then
+          echo ''
+          echo '!!! ERREUR: Le conteneur n est pas en cours d execution !!!'
+          echo ''
+          echo '--- Logs complets du conteneur ---'
+          docker logs docavocat-app 2>&1 || true
+          exit 1
+        fi
+        
+        if [ \"\$CONTAINER_EXIT_CODE\" != '0' ] && [ \"\$CONTAINER_EXIT_CODE\" != 'N/A' ]; then
+          echo ''
+          echo \"!!! AVERTISSEMENT: Exit code non nul: \$CONTAINER_EXIT_CODE !!!\"
+        fi
+      "
+      
+      echo ""
+      echo "========================================="
+      echo "ETAPE 2: Attente demarrage Spring Boot"
+      echo "========================================="
+      echo "Patience, Spring Boot demarre (environ 60s)..."
+      
+      # Attente progressive avec verification des logs
+      for i in 1 2 3 4 5 6; do
+        sleep 10
+        echo "[$((i*10))s] Verification en cours..."
+        
+        # Verifier si le conteneur est toujours en cours d'execution
+        ssh root@$SERVER_HOST "
+          if ! docker ps --filter name=docavocat-app --filter status=running -q | grep -q .; then
+            echo '!!! ERREUR: Le conteneur s est arrete pendant le demarrage !!!'
+            echo ''
+            echo '--- Derniers logs du conteneur ---'
+            docker logs docavocat-app --tail=100 2>&1
+            exit 1
+          fi
+        " || exit 1
+        
+        # Chercher des indicateurs de demarrage reussi dans les logs
+        STARTED=$(ssh root@$SERVER_HOST "docker logs docavocat-app 2>&1 | grep -i 'Started GedAvocatApplication' | wc -l" 2>/dev/null || echo "0")
+        if [ "$STARTED" -gt "0" ]; then
+          echo "✓ Spring Boot a demarre avec succes!"
+          break
+        fi
+      done
+      
+      echo ""
+      echo "========================================="
+      echo "ETAPE 3: Verification HTTP de l'application"
+      echo "========================================="
+      
+      # Tentatives multiples de verification HTTP
+      MAX_HTTP_RETRIES=5
+      HTTP_SUCCESS=false
+      
+      for attempt in $(seq 1 $MAX_HTTP_RETRIES); do
+        echo "Tentative HTTP $attempt/$MAX_HTTP_RETRIES..."
+        
+        HTTP_CODE=$(ssh root@$SERVER_HOST "curl -s -o /dev/null -w '%{http_code}' --max-time 10 http://127.0.0.1:8080/" 2>/dev/null || echo "000")
+        echo "  Code HTTP recu: $HTTP_CODE"
+        
+        if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "302" ]; then
+          echo "✓ Application repond correctement (HTTP $HTTP_CODE)"
+          HTTP_SUCCESS=true
+          break
+        else
+          if [ $attempt -lt $MAX_HTTP_RETRIES ]; then
+            echo "  En attente... (10s)"
+            sleep 10
+          fi
+        fi
+      done
+      
+      if [ "$HTTP_SUCCESS" = "false" ]; then
+        echo ""
+        echo "!!! ERREUR: L'application ne repond pas correctement !!!"
+        echo ""
+        echo "========================================="
+        echo "DIAGNOSTICS D'ERREUR"
+        echo "========================================="
+        
+        ssh root@$SERVER_HOST "
+          echo '--- Etat final du conteneur ---'
+          docker inspect docavocat-app --format='Status: {{.State.Status}} | Running: {{.State.Running}} | ExitCode: {{.State.ExitCode}}' 2>/dev/null || echo 'Impossible d inspecter le conteneur'
+          
+          echo ''
+          echo '--- Processus Java dans le conteneur ---'
+          docker exec docavocat-app ps aux 2>/dev/null || echo 'Impossible d executer ps dans le conteneur'
+          
+          echo ''
+          echo '--- Ports ouverts sur le serveur ---'
+          ss -tlnp | grep :8080 || echo 'Port 8080 non ouvert'
+          
+          echo ''
+          echo '--- Test connexion interne depuis le conteneur ---'
+          docker exec docavocat-app wget -q -O- --timeout=5 http://localhost:8080 2>&1 | head -20 || echo 'Connexion interne echouee'
+          
+          echo ''
+          echo '--- 300 dernieres lignes des logs ---'
+          docker logs docavocat-app --tail=300 2>&1
+          
+          echo ''
+          echo '--- Erreurs dans les logs ---'
+          docker logs docavocat-app 2>&1 | grep -i -E '(error|exception|failed|fatal|caused by)' | tail -50 || echo 'Aucune erreur trouvee dans les logs'
+          
+          echo ''
+          echo '--- Variables d environnement du conteneur ---'
+          docker exec docavocat-app env | sort || echo 'Impossible de lire les variables d environnement'
+        "
+        
         exit 1
-      }
-      echo "Deploiement OK -> https://docavocat.fr"
+      fi
+      
+      echo ""
+      echo "========================================="
+      echo "ETAPE 4: Verification finale"
+      echo "========================================="
+      ssh root@$SERVER_HOST "
+        echo '--- Statistiques conteneur ---'
+        docker stats docavocat-app --no-stream --format 'table {{.Container}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.MemPerc}}' || true
+        
+        echo ''
+        echo '--- Logs recents (50 dernieres lignes) ---'
+        docker logs docavocat-app --tail=50 2>&1
+      "
+      
+      echo ""
+      echo "✓✓✓ Deploiement reussi -> https://docavocat.fr ✓✓✓"
 
   after_script:
+    - apk add --no-cache openssh-client curl 2>/dev/null || true
+    - |
+      # En cas d'echec, capturer l'etat final pour diagnostic
+      if [ "$CI_JOB_STATUS" != "success" ]; then
+        echo ""
+        echo "========================================="
+        echo "RAPPORT D'ERREUR FINAL"
+        echo "========================================="
+        
+        # Reconnecter SSH pour le diagnostic final
+        eval $(ssh-agent -s) 2>/dev/null || true
+        if [ -f "$SSH_PRIVATE_KEY" ]; then
+          tr -d '\r' < "$SSH_PRIVATE_KEY" > /tmp/id_rsa 2>/dev/null || true
+          chmod 600 /tmp/id_rsa 2>/dev/null || true
+          ssh-add /tmp/id_rsa 2>/dev/null || true
+        fi
+        
+        if [ ! -z "$SERVER_HOST" ]; then
+          ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 root@$SERVER_HOST "
+            echo '--- Conteneurs Docker ---'
+            docker ps -a --filter name=docavocat --format 'table {{.Names}}\t{{.Status}}\t{{.State}}\t{{.ExitCode}}' 2>&1 || echo 'Impossible de lister les conteneurs'
+            
+            echo ''
+            echo '--- Logs finaux du conteneur app ---'
+            docker logs docavocat-app --tail=100 2>&1 || echo 'Aucun log disponible'
+            
+            echo ''
+            echo '--- Espace disque ---'
+            df -h / | tail -1
+          " 2>&1 || echo "Impossible de se connecter au serveur pour le diagnostic final"
+        fi
+      fi
+      
     - |
       if [ "$CI_JOB_STATUS" = "success" ]; then
         EMOJI="[PROD]"; STATUS="DEPLOYE EN PRODUCTION ! https://docavocat.fr"; COLOR=3066993
       else
-        EMOJI="[FAIL]"; STATUS="ECHEC DU DEPLOIEMENT - voir logs"; COLOR=15158332
+        EMOJI="[FAIL]"; STATUS="ECHEC DU DEPLOIEMENT - voir logs detailles"; COLOR=15158332
       fi
       JOB_NAME="Deploiement Production"
     - *discord_deploy_notify
