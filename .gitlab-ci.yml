@@ -66,43 +66,51 @@ stages:
 .discord_commit_notify: &discord_commit_notify
   - |
     WEBHOOK="${DISCORD_WEBHOOK:-${DISCORD_COMMIT_WEBHOOK:-}}"
-    [ -z "$WEBHOOK" ] && exit 0
-    apt-get update -qq && apt-get install -yqq curl > /dev/null 2>&1 || apk add --no-cache curl --quiet 2>/dev/null || true
-    BRANCH="${CI_COMMIT_BRANCH:-MR}"
-    AUTHOR="${GITLAB_USER_NAME:-CI}"
-    SHA="${CI_COMMIT_SHORT_SHA:-????}"
-    TITLE="${CI_COMMIT_TITLE:-}"
-    COMMIT_MSG=$(printf '%s' "$TITLE" | head -c 80 | sed 's/\\/\\\\/g; s/"/\\"/g; s/	/ /g')
-    PAYLOAD=$(printf '{"embeds":[{"title":"%s %s","description":"**Branche :** `%s`\\n**Commit :** [`%s`](%s)\\n**Par :** %s\\n**Message :** %s\\n\\n[Logs job ->](%s/-/jobs/%s)","color":%s,"footer":{"text":"DocAvocat CI/CD"},"timestamp":"%s"}]}' \
-      "$EMOJI" "$STATUS" \
-      "$BRANCH" "$SHA" "$CI_PIPELINE_URL" "$AUTHOR" "$COMMIT_MSG" \
-      "$CI_PROJECT_URL" "$CI_JOB_ID" \
-      "$COLOR" \
-      "$(date -u '+%Y-%m-%dT%H:%M:%SZ')")
-    RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$WEBHOOK" \
-         -H "Content-Type: application/json" \
-         -d "$PAYLOAD")
-    echo "Discord commit notify: HTTP $RESPONSE"
+    if [ -z "$WEBHOOK" ]; then
+      echo "Discord webhook non configure, notification ignoree"
+    else
+      apt-get update -qq && apt-get install -yqq curl > /dev/null 2>&1 || apk add --no-cache curl --quiet 2>/dev/null || true
+      BRANCH="${CI_COMMIT_BRANCH:-MR}"
+      AUTHOR="${GITLAB_USER_NAME:-CI}"
+      SHA="${CI_COMMIT_SHORT_SHA:-????}"
+      TITLE="${CI_COMMIT_TITLE:-}"
+      COMMIT_MSG=$(printf '%s' "$TITLE" | head -c 80 | sed 's/\\/\\\\/g; s/"/\\"/g; s/	/ /g')
+      PAYLOAD=$(printf '{"embeds":[{"title":"%s %s","description":"**Branche :** `%s`\\n**Commit :** [`%s`](%s)\\n**Par :** %s\\n**Message :** %s\\n\\n[Logs job ->](%s/-/jobs/%s)","color":%s,"footer":{"text":"DocAvocat CI/CD"},"timestamp":"%s"}]}' \
+        "$EMOJI" "$STATUS" \
+        "$BRANCH" "$SHA" "$CI_PIPELINE_URL" "$AUTHOR" "$COMMIT_MSG" \
+        "$CI_PROJECT_URL" "$CI_JOB_ID" \
+        "$COLOR" \
+        "$(date -u '+%Y-%m-%dT%H:%M:%SZ')")
+      RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$WEBHOOK" \
+           -H "Content-Type: application/json" \
+           -d "$PAYLOAD" 2>/dev/null || echo "000")
+      echo "Discord commit notify: HTTP $RESPONSE"
+    fi
+    true
 
 # Notification Discord — main uniquement (deploy)
 .discord_deploy_notify: &discord_deploy_notify
   - |
-    [ -z "${DISCORD_WEBHOOK:-}" ] && exit 0
-    BRANCH="${CI_COMMIT_BRANCH:-MR}"
-    AUTHOR="${GITLAB_USER_NAME:-CI}"
-    SHA="${CI_COMMIT_SHORT_SHA:-????}"
-    TITLE="${CI_COMMIT_TITLE:-}"
-    COMMIT_MSG=$(printf '%s' "$TITLE" | head -c 80 | sed 's/\\/\\\\/g; s/"/\\"/g; s/	/ /g')
-    PAYLOAD=$(printf '{"embeds":[{"title":"%s %s","description":"**Branche :** `%s`\\n**Commit :** [`%s`](%s)\\n**Par :** %s\\n**Message :** %s\\n\\n[Logs job ->](%s/-/jobs/%s)","color":%s,"footer":{"text":"DocAvocat CI/CD"},"timestamp":"%s"}]}' \
-      "$EMOJI" "$STATUS" \
-      "$BRANCH" "$SHA" "$CI_PIPELINE_URL" "$AUTHOR" "$COMMIT_MSG" \
-      "$CI_PROJECT_URL" "$CI_JOB_ID" \
-      "$COLOR" \
-      "$(date -u '+%Y-%m-%dT%H:%M:%SZ')")
-    RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${DISCORD_WEBHOOK}" \
-         -H "Content-Type: application/json" \
-         -d "$PAYLOAD")
-    echo "Discord deploy notify: HTTP $RESPONSE"
+    if [ -z "${DISCORD_WEBHOOK:-}" ]; then
+      echo "Discord webhook non configure, notification ignoree"
+    else
+      BRANCH="${CI_COMMIT_BRANCH:-MR}"
+      AUTHOR="${GITLAB_USER_NAME:-CI}"
+      SHA="${CI_COMMIT_SHORT_SHA:-????}"
+      TITLE="${CI_COMMIT_TITLE:-}"
+      COMMIT_MSG=$(printf '%s' "$TITLE" | head -c 80 | sed 's/\\/\\\\/g; s/"/\\"/g; s/	/ /g')
+      PAYLOAD=$(printf '{"embeds":[{"title":"%s %s","description":"**Branche :** `%s`\\n**Commit :** [`%s`](%s)\\n**Par :** %s\\n**Message :** %s\\n\\n[Logs job ->](%s/-/jobs/%s)","color":%s,"footer":{"text":"DocAvocat CI/CD"},"timestamp":"%s"}]}' \
+        "$EMOJI" "$STATUS" \
+        "$BRANCH" "$SHA" "$CI_PIPELINE_URL" "$AUTHOR" "$COMMIT_MSG" \
+        "$CI_PROJECT_URL" "$CI_JOB_ID" \
+        "$COLOR" \
+        "$(date -u '+%Y-%m-%dT%H:%M:%SZ')")
+      RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${DISCORD_WEBHOOK}" \
+           -H "Content-Type: application/json" \
+           -d "$PAYLOAD" 2>/dev/null || echo "000")
+      echo "Discord deploy notify: HTTP $RESPONSE"
+    fi
+    true
 
 #
 # STAGE 1 : BUILD
@@ -601,46 +609,27 @@ deploy:
       echo "✓✓✓ Deploiement reussi -> https://docavocat.fr ✓✓✓"
 
   after_script:
-    - apk add --no-cache openssh-client curl 2>/dev/null || true
+    - apk add --no-cache curl 2>/dev/null || true
     - |
-      # En cas d'echec, capturer l'etat final pour diagnostic
+      set +e
       if [ "$CI_JOB_STATUS" != "success" ]; then
         echo ""
         echo "========================================="
         echo "RAPPORT D'ERREUR FINAL"
         echo "========================================="
-        
-        # Reconnecter SSH pour le diagnostic final
-        eval $(ssh-agent -s) 2>/dev/null || true
-        if [ -f "$SSH_PRIVATE_KEY" ]; then
-          tr -d '\r' < "$SSH_PRIVATE_KEY" > /tmp/id_rsa 2>/dev/null || true
-          chmod 600 /tmp/id_rsa 2>/dev/null || true
-          ssh-add /tmp/id_rsa 2>/dev/null || true
-        fi
-        
-        if [ ! -z "$SERVER_HOST" ]; then
-          ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 root@$SERVER_HOST "
-            echo '--- Conteneurs Docker ---'
-            docker ps -a --filter name=docavocat --format 'table {{.Names}}\t{{.Status}}\t{{.State}}\t{{.ExitCode}}' 2>&1 || echo 'Impossible de lister les conteneurs'
-            
-            echo ''
-            echo '--- Logs finaux du conteneur app ---'
-            docker logs docavocat-app --tail=100 2>&1 || echo 'Aucun log disponible'
-            
-            echo ''
-            echo '--- Espace disque ---'
-            df -h / | tail -1
-          " 2>&1 || echo "Impossible de se connecter au serveur pour le diagnostic final"
-        fi
+        echo "Le deploiement a echoue. Consultez les logs ci-dessus pour plus de details."
+        echo "Les diagnostics complets sont affiches dans la section 'script' du job."
       fi
-      
+      true
     - |
+      set +e
       if [ "$CI_JOB_STATUS" = "success" ]; then
         EMOJI="[PROD]"; STATUS="DEPLOYE EN PRODUCTION ! https://docavocat.fr"; COLOR=3066993
       else
         EMOJI="[FAIL]"; STATUS="ECHEC DU DEPLOIEMENT - voir logs detailles"; COLOR=15158332
       fi
       JOB_NAME="Deploiement Production"
+      true
     - *discord_deploy_notify
 
   environment:
