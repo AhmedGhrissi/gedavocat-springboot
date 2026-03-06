@@ -122,6 +122,8 @@ public class SubscriptionController {
 
     /**
      * Page de succès après paiement
+     * Fonctionne avec ou sans authentification (session HTTP peut expirer pendant le paiement Stripe)
+     * Si non authentifié, utilise les métadonnées Stripe (user_id) pour retrouver l'utilisateur
      */
     @GetMapping("/success")
     public String paymentSuccess(
@@ -129,13 +131,15 @@ public class SubscriptionController {
             Model model,
             Authentication authentication
     ) {
-        if (session_id != null && authentication != null) {
+        if (session_id != null) {
             try {
                 // CRIT-01 FIX : idempotence — ne pas retraiter une session déjà activée
                 if (processedSessionIds.contains(session_id)) {
-                    User user = getCurrentUser(authentication);
-                    model.addAttribute("user", user);
-                    model.addAttribute("plan", user.getSubscriptionPlan());
+                    User user = resolveUser(authentication, session_id);
+                    if (user != null) {
+                        model.addAttribute("user", user);
+                        model.addAttribute("plan", user.getSubscriptionPlan());
+                    }
                     model.addAttribute("success", true);
                     model.addAttribute("message", "Votre abonnement est déjà actif !");
                     return "payment/success";
@@ -144,7 +148,14 @@ public class SubscriptionController {
                 Session session = stripeService.getSession(session_id);
                 
                 if ("complete".equals(session.getStatus())) {
-                    User user = getCurrentUser(authentication);
+                    // Résoudre l'utilisateur : via auth si connecté, sinon via metadata Stripe
+                    User user = resolveUser(authentication, session, session_id);
+                    
+                    if (user == null) {
+                        log.error("Impossible de résoudre l'utilisateur pour session_id: {}", session_id);
+                        model.addAttribute("error", "Utilisateur non trouvé. Veuillez vous connecter.");
+                        return "payment/success";
+                    }
 
                     // CRIT-01 FIX : ne pas réactiver un abonnement déjà actif
                     if (user.hasActiveSubscription() && user.getSubscriptionStatus() == User.SubscriptionStatus.ACTIVE) {
@@ -174,6 +185,8 @@ public class SubscriptionController {
                     model.addAttribute("plan", user.getSubscriptionPlan());
                     model.addAttribute("success", true);
                     model.addAttribute("message", "Votre abonnement a été activé avec succès !");
+                    log.info("✅ Abonnement activé via success page pour: {} (auth={})", 
+                        user.getEmail(), authentication != null);
                 } else {
                     model.addAttribute("error", "Le paiement est en cours de traitement");
                 }
@@ -183,6 +196,63 @@ public class SubscriptionController {
             }
         }
         return "payment/success";
+    }
+
+    /**
+     * Résout l'utilisateur à partir de l'authentification ou des métadonnées Stripe
+     */
+    private User resolveUser(Authentication authentication, Session session, String sessionId) {
+        // 1. Si authentifié, utiliser l'auth
+        if (authentication != null) {
+            try {
+                return getCurrentUser(authentication);
+            } catch (Exception e) {
+                log.warn("Impossible de résoudre l'utilisateur via l'authentification: {}", e.getMessage());
+            }
+        }
+        // 2. Sinon, utiliser les métadonnées Stripe (user_id)
+        return resolveUserFromStripeSession(session);
+    }
+
+    /**
+     * Résout l'utilisateur à partir d'un session_id déjà traité (idempotence)
+     */
+    private User resolveUser(Authentication authentication, String sessionId) {
+        if (authentication != null) {
+            try {
+                return getCurrentUser(authentication);
+            } catch (Exception e) {
+                log.warn("Impossible de résoudre l'utilisateur via l'authentification: {}", e.getMessage());
+            }
+        }
+        // Pour les sessions déjà traitées, essayer de récupérer depuis Stripe
+        try {
+            Session session = stripeService.getSession(sessionId);
+            return resolveUserFromStripeSession(session);
+        } catch (Exception e) {
+            log.warn("Impossible de récupérer la session Stripe pour idempotence: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Résout l'utilisateur à partir des métadonnées d'une session Stripe
+     */
+    private User resolveUserFromStripeSession(Session session) {
+        try {
+            String userId = session.getMetadata().get("user_id");
+            if (userId != null) {
+                return userRepository.findById(userId).orElse(null);
+            }
+            // Fallback : utiliser l'email
+            String userEmail = session.getMetadata().get("user_email");
+            if (userEmail != null) {
+                return userRepository.findByEmail(userEmail).orElse(null);
+            }
+        } catch (Exception e) {
+            log.warn("Impossible de résoudre l'utilisateur depuis les métadonnées Stripe: {}", e.getMessage());
+        }
+        return null;
     }
 
     /**

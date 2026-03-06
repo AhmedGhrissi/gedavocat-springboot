@@ -120,7 +120,11 @@ public class AuthService {
         if (request.getFirmName() != null && !request.getFirmName().trim().isEmpty()) {
             Firm firm = new Firm();
             firm.setName(request.getFirmName().trim());
-            firm.setSiren(request.getFirmSiren());
+            String siren = request.getFirmSiren();
+            if (siren != null) {
+                siren = siren.replaceAll("[\\s\\-\\.]", "").trim();
+            }
+            firm.setSiren(siren);
             firm.setPhone(request.getFirmPhone());
             firm.setAddress(request.getFirmAddress());
 

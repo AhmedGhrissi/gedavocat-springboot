@@ -61,7 +61,7 @@ public class Firm {
     @Column(length = 255)
     private String email;
 
-    @Column(name = "siren", length = 14)
+    @Column(name = "siren", length = 50)
     private String siren;
 
     @Column(name = "tva_number", length = 20)

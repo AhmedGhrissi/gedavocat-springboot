@@ -56,6 +56,7 @@ public class SecurityConfig {
 						.requestMatchers("/api/debug-status").denyAll()
 						// Pages publiques
 						.requestMatchers("/", "/login", "/register", "/maintenance", "/subscription/pricing",
+						"/subscription/success", "/subscription/cancel",
 						"/api/auth/**", "/css/**", "/js/**", "/images/**", "/img/**", "/favicon.ico", "/favicon.svg",
 						"/robots.txt", "/sitemap.xml", "/webjars/**", "/.well-known/**",
 							"/forgot-password", "/reset-password", "/verify-email", "/verify-email/resend",
@@ -182,6 +183,14 @@ public class SecurityConfig {
 								if (roles.contains("ROLE_LAWYER")) {
 									var optUser = userRepository.findByEmail(authentication.getName());
 									if (optUser.isPresent() && !optUser.get().hasActiveSubscription()) {
+										// Vérifier s'il y a une URL sauvegardée (ex: retour Stripe)
+										var savedRequest = new org.springframework.security.web.savedrequest.HttpSessionRequestCache()
+											.getRequest(request, response);
+										if (savedRequest != null && savedRequest.getRedirectUrl() != null
+												&& savedRequest.getRedirectUrl().contains("/subscription/success")) {
+											response.sendRedirect(savedRequest.getRedirectUrl());
+											return;
+										}
 										response.sendRedirect("/subscription/pricing");
 										return;
 									}
