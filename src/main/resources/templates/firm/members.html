@@ -1,0 +1,28 @@
+<!DOCTYPE html> 
+<html lang="fr" xmlns:th="http://www.thymeleaf.org"> 
+<head> 
+    <meta charset="UTF-8"> 
+    <title>Gestion des Membres - DocAvocat</title> 
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"> 
+</head> 
+<body> 
+<div class="container mt-5"> 
+    <h1>Gestion des Membres du Cabinet</h1> 
+    <div th:if="${success}" class="alert alert-success">[[${success}]]</div> 
+    <div th:if="${error}" class="alert alert-danger">[[${error}]]</div> 
+    <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addMemberModal">Ajouter un Membre</button> 
+    <table class="table"> 
+        <thead><tr><th>Nom</th><th>Email</th><th>Role</th><th>Statut</th><th>Actions</th></tr></thead> 
+        <tbody> 
+            <tr th:each="member : ${members}"> 
+                <td>[[${member.userFirstName}]] [[${member.userLastName}]]</td> 
+                <td>[[${member.userEmail}]]</td> 
+                <td>[[${member.role}]]</td> 
+                <td><span th:text="${member.isActive ? 'Actif' : 'Inactif'}"></span></td> 
+                <td><form th:action="@{/firm/members/remove/{id}(id=${member.id})}" method="post" style="display:inline"><button class="btn btn-sm btn-danger">Retirer</button></form></td> 
+            </tr> 
+        </tbody> 
+    </table> 
+</div> 
+</body> 
+</html>

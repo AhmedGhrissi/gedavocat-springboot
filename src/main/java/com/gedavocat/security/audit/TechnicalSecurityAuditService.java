@@ -559,21 +559,20 @@ public class TechnicalSecurityAuditService {
         
         try {
             
-            // Analyse configuration base de données
-            Connection conn = dataSource.getConnection();
-            DatabaseMetaData metaData = conn.getMetaData();
-            
-            findings.add(new SecurityFinding(
-                "INFRA-001",
-                "Version Base de Données",
-                "MySQL " + metaData.getDatabaseProductVersion() + " détecté",
-                VulnerabilityLevel.INFO,
-                SecurityDomain.INFRASTRUCTURE,
-                "Vérifier derniers patches sécurité MySQL",
-                Arrays.asList("MySQL Security Updates")
-            ));
-            
-            conn.close();
+            // Analyse configuration base de données - FIX: Use try-with-resources to prevent connection leak
+            try (Connection conn = dataSource.getConnection()) {
+                DatabaseMetaData metaData = conn.getMetaData();
+                
+                findings.add(new SecurityFinding(
+                    "INFRA-001",
+                    "Version Base de Données",
+                    "MySQL " + metaData.getDatabaseProductVersion() + " détecté",
+                    VulnerabilityLevel.INFO,
+                    SecurityDomain.INFRASTRUCTURE,
+                    "Vérifier derniers patches sécurité MySQL",
+                    Arrays.asList("MySQL Security Updates")
+                ));
+            } // Connection automatically closed here
             
         } catch (Exception e) {
             findings.add(new SecurityFinding(
