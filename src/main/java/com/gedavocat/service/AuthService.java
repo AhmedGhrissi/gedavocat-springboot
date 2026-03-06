@@ -23,58 +23,53 @@ import com.gedavocat.model.Firm;
 @RequiredArgsConstructor
 @Slf4j
 public class AuthService {
-    
+
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final UserDetailsService userDetailsService;
     private final FirmService firmService;
-    
+    private final BarreauService barreauService;
+
     @Transactional
     public AuthResponse register(RegisterRequest request) {
         String emailNormalized = request.getEmail().trim().toLowerCase();
         request.setEmail(emailNormalized);
-        
+
         // Vérifier si l'email existe déjà
         var existingUser = userRepository.findByEmail(emailNormalized);
         if (existingUser.isPresent()) {
             User existing = existingUser.get();
             // Si le compte n'est pas vérifié, supprimer le zombie et permettre la réinscription
             if (!existing.isEmailVerified()) {
-                // SEC-07 FIX : ne supprimer que si le compte a été créé il y a plus de 10 minutes
-                // pour éviter qu'un tiers ne supprime instantanément un compte légitime
-                if (existing.getCreatedAt() != null 
-                    && existing.getCreatedAt().isBefore(LocalDateTime.now().minusMinutes(10))) {
-                    userRepository.delete(existing);
-                    userRepository.flush();
-                    log.info("Compte non vérifié (zombie) supprimé pour réinscription : {}", emailNormalized);
-                } else {
-                    throw new RuntimeException("Un code de vérification a déjà été envoyé. Veuillez vérifier votre email.");
-                }
+                // Supprimer le compte zombie pour permettre la réinscription
+                userRepository.delete(existing);
+                userRepository.flush();
+                log.info("Compte non vérifié supprimé pour réinscription : {}", emailNormalized);
             } else {
                 // SEC-08 FIX : Message générique pour éviter l'énumération d'utilisateurs
                 throw new RuntimeException("Erreur lors de l'inscription. Vérifiez vos informations.");
             }
         }
-        
+
         // Vérifier la confirmation du mot de passe
         if (!request.getPassword().equals(request.getConfirmPassword())) {
             throw new RuntimeException("Les mots de passe ne correspondent pas");
         }
-        
+
         // Vérifier les conditions d'utilisation
         if (!Boolean.TRUE.equals(request.getTermsAccepted())) {
             throw new RuntimeException("Vous devez accepter les conditions d'utilisation");
         }
-        
+
         if (!Boolean.TRUE.equals(request.getGdprConsent())) {
             throw new RuntimeException("Vous devez accepter le traitement de vos données personnelles");
         }
-        
+
         // Créer le nouvel utilisateur
         User user = new User();
-        
+
         // Construire le nom complet à partir de firstName et lastName
         String fullName = request.getName();
         if (fullName == null || fullName.trim().isEmpty()) {
@@ -84,18 +79,18 @@ public class AuthService {
         // Remplir firstName / lastName pour la table users (schéma exigeant)
         user.setFirstName(request.getFirstName());
         user.setLastName(request.getLastName());
-        
+
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
-        
+
         // SÉCURITÉ : forcer le rôle LAWYER — interdire l'escalade de privilèges
         user.setRole(User.UserRole.LAWYER);
-        
+
         user.setTermsAcceptedAt(LocalDateTime.now());
         user.setGdprConsentAt(LocalDateTime.now());
         user.setEmailVerified(false);  // doit être vérifié par email avant connexion
         user.setAccountEnabled(true);  // compte activé, mais connexion bloquée jusqu'à vérification email
-        
+
         // Synchroniser le plan d'abonnement sur l'utilisateur (TOUJOURS, même sans cabinet)
         try {
             String p = request.getSubscriptionPlan() == null ? "" : request.getSubscriptionPlan().trim().toUpperCase();
@@ -113,9 +108,14 @@ public class AuthService {
             user.setSubscriptionStatus(User.SubscriptionStatus.INACTIVE);
         } catch (Exception ignored) {
         }
-        
+
+        // Associer le barreau si fourni
+        if (request.getBarreauId() != null) {
+            barreauService.getBarreauById(request.getBarreauId()).ifPresent(user::setBarreau);
+        }
+
         user = userRepository.save(user);
-        
+
         // Si des informations de cabinet ont été fournies, créer le cabinet et l'associer
         if (request.getFirmName() != null && !request.getFirmName().trim().isEmpty()) {
             Firm firm = new Firm();
@@ -147,7 +147,7 @@ public class AuthService {
             // Sauvegarder l'utilisateur avec la référence au cabinet
             user = userRepository.save(user);
         }
-        
+
         // SÉCURITÉ : ne PAS générer de JWT avant la vérification email
         // L'utilisateur doit d'abord vérifier son email via /verify-email
         return AuthResponse.builder()
@@ -159,7 +159,7 @@ public class AuthService {
                 .message("Veuillez vérifier votre email avant de vous connecter")
                 .build();
     }
-    
+
     public AuthResponse authenticate(AuthRequest request) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
@@ -167,10 +167,10 @@ public class AuthService {
                         request.getPassword()
                 )
         );
-        
+
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
-        
+
         // SEC FIX SVC-05 : vérification explicite emailVerified et accountEnabled
         if (!user.isEmailVerified()) {
             throw new RuntimeException("Veuillez vérifier votre email avant de vous connecter");
@@ -178,10 +178,10 @@ public class AuthService {
         if (!user.isAccountEnabled()) {
             throw new RuntimeException("Compte désactivé");
         }
-        
+
         UserDetails userDetails = userDetailsService.loadUserByUsername(user.getEmail());
         String token = jwtService.generateToken(userDetails);
-        
+
         return AuthResponse.builder()
                 .token(token)
                 .userId(user.getId())
@@ -190,21 +190,21 @@ public class AuthService {
                 .role(user.getRole().name())
                 .build();
     }
-    
+
     public AuthResponse refreshToken(String oldToken) {
         String userEmail = jwtService.extractUsername(oldToken);
         UserDetails userDetails = userDetailsService.loadUserByUsername(userEmail);
-        
+
         // SEC FIX : vérifier que le compte est toujours actif avant de renouveler le token
         if (!userDetails.isEnabled()) {
             throw new RuntimeException("Compte désactivé");
         }
-        
+
         if (jwtService.isTokenValid(oldToken, userDetails)) {
             String newToken = jwtService.generateToken(userDetails);
             User user = userRepository.findByEmail(userEmail)
                     .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
-            
+
             return AuthResponse.builder()
                     .token(newToken)
                     .userId(user.getId())
@@ -213,7 +213,7 @@ public class AuthService {
                     .role(user.getRole().name())
                     .build();
         }
-        
+
         throw new RuntimeException("Token invalide");
     }
 }

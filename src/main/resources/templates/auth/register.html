@@ -149,6 +149,19 @@
                            class="form-control" placeholder="Ex: P1234">
                 </div>
 
+                <div class="mb-3">
+                    <label for="barreauId" class="form-label">Barreau d'inscription</label>
+                    <select id="barreauId" th:field="*{barreauId}" class="form-select">
+                        <option value="">-- Sélectionner un barreau (optionnel) --</option>
+                        <option th:each="barreau : ${barreaux}" 
+                                th:value="${barreau.id}" 
+                                th:text="${barreau.barreau + ' (' + barreau.region + ')'}">
+                            Barreau
+                        </option>
+                    </select>
+                    <small class="form-text text-muted">Sélectionnez le barreau auquel vous êtes inscrit</small>
+                </div>
+
                 <!-- Cabinet creation (optional) -->
                 <div class="mt-4 mb-3"><strong>Informations du cabinet (optionnel)</strong></div>
                 

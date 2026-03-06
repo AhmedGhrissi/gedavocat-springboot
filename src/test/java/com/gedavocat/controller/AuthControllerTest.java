@@ -51,6 +51,8 @@ class AuthControllerTest {
         admin.setPassword(passwordEncoder.encode("password"));
         admin.setRole(User.UserRole.ADMIN);
         admin.setSubscriptionStatus(User.SubscriptionStatus.ACTIVE);
+        admin.setEmailVerified(true);
+        admin.setAccountEnabled(true);
         userRepository.saveAndFlush(admin);
         
         // Créer un utilisateur avocat pour les tests
@@ -64,6 +66,8 @@ class AuthControllerTest {
         lawyer.setRole(User.UserRole.LAWYER);
         lawyer.setSubscriptionStatus(User.SubscriptionStatus.ACTIVE);
         lawyer.setSubscriptionEndsAt(java.time.LocalDateTime.now().plusDays(30));
+        lawyer.setEmailVerified(true);
+        lawyer.setAccountEnabled(true);
         userRepository.saveAndFlush(lawyer);
     }
 

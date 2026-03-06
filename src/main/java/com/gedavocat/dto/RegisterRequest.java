@@ -41,6 +41,11 @@ public class RegisterRequest {
     
     private String barNumber;
     
+    /**
+     * ID du barreau auquel l'avocat est inscrit (optionnel)
+     */
+    private Long barreauId;
+    
     private String role = "LAWYER"; // Par défaut: avocat
     
     // Nouveau champ pour le plan d'abonnement

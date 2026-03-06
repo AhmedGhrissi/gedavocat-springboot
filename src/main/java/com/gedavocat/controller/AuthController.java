@@ -5,6 +5,7 @@ import com.gedavocat.dto.AuthResponse;
 import com.gedavocat.dto.RegisterRequest;
 import com.gedavocat.repository.UserRepository;
 import com.gedavocat.service.AuthService;
+import com.gedavocat.service.BarreauService;
 import com.gedavocat.service.EmailVerificationService;
 import com.gedavocat.security.JwtBlacklistService;
 import com.gedavocat.security.JwtService;
@@ -32,6 +33,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 public class AuthController {
 
     private final AuthService authService;
+    private final BarreauService barreauService;
     private final EmailVerificationService emailVerificationService;
     private final UserRepository userRepository;
     private final JwtBlacklistService jwtBlacklistService;
@@ -69,6 +71,10 @@ public class AuthController {
         model.addAttribute("registerRequest", request);
         model.addAttribute("selectedPlan", plan);
         model.addAttribute("selectedBilling", billing != null ? billing : "monthly");
+
+        // Ajouter la liste des barreaux pour le select
+        model.addAttribute("barreaux", barreauService.getAllBarreauxActifs());
+
         return "auth/register";
     }
 
@@ -84,30 +90,30 @@ public class AuthController {
             RedirectAttributes redirectAttributes
     ) {
         log.info("🔵 POST /register - Tentative d'inscription pour email: {}", request.getEmail());
-        log.debug("📋 Données reçues: firstName={}, lastName={}, plan={}, billing={}", 
+        log.debug("📋 Données reçues: firstName={}, lastName={}, plan={}, billing={}",
             request.getFirstName(), request.getLastName(), request.getSubscriptionPlan(), billing);
-        
+
         // Validation personnalisée : vérifier que les mots de passe correspondent
-        if (request.getPassword() != null && request.getConfirmPassword() != null 
+        if (request.getPassword() != null && request.getConfirmPassword() != null
             && !request.getPassword().equals(request.getConfirmPassword())) {
             log.warn("⚠️ Les mots de passe ne correspondent pas");
-            result.rejectValue("confirmPassword", "password.mismatch", 
+            result.rejectValue("confirmPassword", "password.mismatch",
                 "Les mots de passe ne correspondent pas");
         }
-        
+
         // Validation des checkboxes
         if (!Boolean.TRUE.equals(request.getTermsAccepted())) {
             log.warn("⚠️ CGU non acceptées");
-            result.rejectValue("termsAccepted", "terms.required", 
+            result.rejectValue("termsAccepted", "terms.required",
                 "Vous devez accepter les conditions d'utilisation");
         }
-        
+
         if (!Boolean.TRUE.equals(request.getGdprConsent())) {
             log.warn("⚠️ Consentement RGPD non donné");
-            result.rejectValue("gdprConsent", "gdpr.required", 
+            result.rejectValue("gdprConsent", "gdpr.required",
                 "Vous devez accepter le traitement de vos données personnelles");
         }
-        
+
         if (result.hasErrors()) {
             log.error("❌ Erreurs de validation détectées: {}", result.getAllErrors());
             model.addAttribute("selectedPlan", request.getSubscriptionPlan());
@@ -118,18 +124,12 @@ public class AuthController {
         try {
             log.info("✅ Validation OK - Appel du service d'inscription");
             authService.register(request);
-            
-            // FUNC-06 FIX : sauvegarder la période de facturation choisie
-            String email = request.getEmail().trim().toLowerCase();
-            userRepository.findByEmail(email).ifPresent(u -> {
-                u.setBillingPeriod(billing != null ? billing : "monthly");
-                userRepository.save(u);
-            });
-            
+
             // Envoyer le code de vérification et rediriger
+            String email = request.getEmail().trim().toLowerCase();
             log.info("📧 Envoi du code de vérification à: {}", email);
             emailVerificationService.generateAndSend(email);
-            
+
             redirectAttributes.addFlashAttribute("info",
                 "Un code de vérification à 6 chiffres a été envoyé à " + email + ". Veuillez le saisir ci-dessous.");
             log.info("🎉 Inscription réussie - Redirection vers /verify-email");
@@ -178,7 +178,7 @@ public class AuthController {
             var user = optUser.get();
             user.setEmailVerified(true);
             userRepository.save(user);
-            
+
             // Auto-login pour permettre le checkout Stripe
             try {
                 var userDetails = org.springframework.security.core.userdetails.User
@@ -194,14 +194,14 @@ public class AuthController {
                 session.setAttribute(
                     org.springframework.security.web.context.HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
                     org.springframework.security.core.context.SecurityContextHolder.getContext());
-                
+
                 log.info("Auto-login réussi pour {} — redirection vers le paiement Stripe", emailLower);
             } catch (Exception e) {
                 log.error("Erreur auto-login après vérification email: {}", e.getMessage());
                 ra.addFlashAttribute("message", "Email vérifié ! Connectez-vous pour procéder au paiement.");
                 return "redirect:/login";
             }
-            
+
             // Rediriger vers Stripe Checkout avec le plan choisi lors de l'inscription
             // FUNC-06 FIX : conserver la période de facturation choisie lors de l'inscription
             String plan = user.getSubscriptionPlan() != null 

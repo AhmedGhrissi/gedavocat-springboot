@@ -1,10 +1,12 @@
 package com.gedavocat.controller;
 
 import com.gedavocat.dto.SystemMetricsDTO;
+import com.gedavocat.model.Barreau;
 import com.gedavocat.model.Client;
 import com.gedavocat.model.User;
 import com.gedavocat.repository.ClientRepository;
 import com.gedavocat.service.AdminMetricsService;
+import com.gedavocat.service.BarreauService;
 import com.gedavocat.service.ClientInvitationService;
 import com.gedavocat.service.LogService;
 import com.gedavocat.service.MaintenanceService;
@@ -43,6 +45,7 @@ public class AdminController {
     private final ClientRepository clientRepository;
     private final ClientInvitationService invitationService;
     private final SecurityMonitoringService securityMonitoringService;
+    private final BarreauService barreauService;
 
     /**
      * Dashboard principal de l'admin
@@ -337,4 +340,135 @@ public class AdminController {
         }
         return "redirect:/admin/users";
     }
+
+    /**
+     * Page de gestion des barreaux
+     */
+    @GetMapping("/barreaux")
+    public String barreaux(Model model,
+                          @RequestParam(required = false) String search,
+                          @RequestParam(required = false) String region) {
+        try {
+            if (search != null && !search.isBlank()) {
+                model.addAttribute("barreaux", barreauService.searchBarreaux(search));
+                model.addAttribute("filterSearch", search);
+            } else if (region != null && !region.isBlank()) {
+                model.addAttribute("barreaux", barreauService.getBarreauxByRegion(region));
+                model.addAttribute("filterRegion", region);
+            } else {
+                model.addAttribute("barreaux", barreauService.getAllBarreaux());
+            }
+            
+            model.addAttribute("regions", barreauService.getAllRegions());
+            model.addAttribute("stats", barreauService.getStatistiques());
+            
+            return "admin/barreaux";
+        } catch (Exception e) {
+            model.addAttribute("error", "Erreur lors du chargement des barreaux : " + e.getMessage());
+            return "admin/barreaux";
+        }
+    }
+
+    /**
+     * Crée un nouveau barreau
+     */
+    @PostMapping("/barreaux/create")
+    public String createBarreau(
+            @RequestParam String barreau,
+            @RequestParam String region,
+            @RequestParam String villeSiege,
+            @RequestParam String courAppel,
+            @RequestParam(required = false) String tribunalJudiciaire,
+            RedirectAttributes redirectAttributes) {
+        try {
+            Barreau newBarreau = new Barreau();
+            newBarreau.setBarreau(barreau);
+            newBarreau.setRegion(region);
+            newBarreau.setVilleSiege(villeSiege);
+            newBarreau.setCourAppel(courAppel);
+            newBarreau.setTribunalJudiciaire(tribunalJudiciaire);
+            newBarreau.setActif(true);
+            
+            barreauService.createBarreau(newBarreau);
+            redirectAttributes.addFlashAttribute("success",
+                    "Barreau " + barreau + " créé avec succès");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error",
+                    "Erreur lors de la création : " + e.getMessage());
+        }
+        return "redirect:/admin/barreaux";
+    }
+
+    /**
+     * Met à jour un barreau existant
+     */
+    @PostMapping("/barreaux/{id}/edit")
+    public String editBarreau(
+            @PathVariable Long id,
+            @RequestParam String barreau,
+            @RequestParam String region,
+            @RequestParam String villeSiege,
+            @RequestParam String courAppel,
+            @RequestParam(required = false) String tribunalJudiciaire,
+            @RequestParam(defaultValue = "true") boolean actif,
+            RedirectAttributes redirectAttributes) {
+        try {
+            Barreau updatedBarreau = new Barreau();
+            updatedBarreau.setBarreau(barreau);
+            updatedBarreau.setRegion(region);
+            updatedBarreau.setVilleSiege(villeSiege);
+            updatedBarreau.setCourAppel(courAppel);
+            updatedBarreau.setTribunalJudiciaire(tribunalJudiciaire);
+            updatedBarreau.setActif(actif);
+            
+            barreauService.updateBarreau(id, updatedBarreau);
+            redirectAttributes.addFlashAttribute("success",
+                    "Barreau " + barreau + " mis à jour avec succès");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error",
+                    "Erreur lors de la mise à jour : " + e.getMessage());
+        }
+        return "redirect:/admin/barreaux";
+    }
+
+    /**
+     * Supprime un barreau
+     */
+    @PostMapping("/barreaux/{id}/delete")
+    public String deleteBarreau(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        try {
+            barreauService.getBarreauById(id).ifPresentOrElse(b -> {
+                String name = b.getBarreau();
+                barreauService.deleteBarreau(id);
+                redirectAttributes.addFlashAttribute("success", "Barreau " + name + " supprimé");
+            }, () -> redirectAttributes.addFlashAttribute("error", "Barreau introuvable"));
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Erreur suppression : " + e.getMessage());
+        }
+        return "redirect:/admin/barreaux";
+    }
+
+    /**
+     * Active ou désactive un barreau
+     */
+    @PostMapping("/barreaux/{id}/toggle-active")
+    public String toggleBarreauActive(
+            @PathVariable Long id,
+            @RequestParam boolean actif,
+            RedirectAttributes redirectAttributes) {
+        try {
+            barreauService.getBarreauById(id).ifPresentOrElse(b -> {
+                Barreau updated = new Barreau();
+                updated.setActif(actif);
+                barreauService.updateBarreau(id, updated);
+                String action = actif ? "activé" : "désactivé";
+                redirectAttributes.addFlashAttribute("success",
+                        "Barreau " + b.getBarreau() + " " + action + " avec succès");
+            }, () -> redirectAttributes.addFlashAttribute("error", "Barreau introuvable"));
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Erreur : " + e.getMessage());
+        }
+        return "redirect:/admin/barreaux";
+    }
 }
+

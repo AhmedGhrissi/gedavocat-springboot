@@ -71,6 +71,14 @@ public class User {
     @Column(name = "bar_number", length = 50)
     private String barNumber;
 
+    /**
+     * Barreau auquel l'avocat est inscrit
+     * Référence vers la table barreaux_france
+     */
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "barreau_id")
+    private Barreau barreau;
+
     @Column(name = "email_signature", columnDefinition = "TEXT")
     private String emailSignature;
 
@@ -96,7 +104,7 @@ public class User {
      * Identifiant du cabinet auquel appartient cet utilisateur
      * NULL pour les ADMIN (super-administrateurs système)
      * OBLIGATOIRE pour LAWYER, LAWYER_SECONDARY, CLIENT
-     * 
+     *
      * Isolation des données : chaque utilisateur ne voit que les données de son cabinet
      * Référence: docs/RAPPORT_AUDIT_SECURITE_Phase1.md §6.1 VULN-01
      */
@@ -132,7 +140,7 @@ public class User {
     @JsonIgnore
     private String stripeCustomerId;
 
-    // ✅ Identifiant abonnement Stripe (pour modifier/annuler l'abonnement existant)
+    // ✅ Identifiant abonnement Stripe (pour gérer les abonnements actifs)
     @Column(name = "stripe_subscription_id", length = 100)
     @JsonIgnore
     private String stripeSubscriptionId;
@@ -180,6 +188,21 @@ public class User {
 
     @Column(name = "email_verified", nullable = false)
     private boolean emailVerified = false; // SEC FIX MDL-02 : false par défaut — doit être vérifié par email
+
+    @Column(name = "enabled")
+    private boolean enabled = false;
+
+    @Column(name = "account_non_locked")
+    private boolean accountNonLocked = true;
+
+    @Column(name = "failed_login_attempts")
+    private int failedLoginAttempts = 0;
+
+    @Column(name = "last_login")
+    private LocalDateTime lastLogin;
+
+    @Column(name = "password_changed_at")
+    private LocalDateTime passwordChangedAt;
 
     @Column(name = "account_enabled", nullable = false)
     private boolean accountEnabled = true;
@@ -328,9 +351,7 @@ public class User {
     }
 
     /**
-     * Vérifier si l'abonnement est actif.
-     * Inclut ACTIVE, TRIAL et CANCELLED tant que la date de fin n'est pas dépassée.
-     * Un utilisateur CANCELLED conserve l'accès complet jusqu'à subscriptionEndsAt.
+     * Vérifier si l'abonnement est actif (inclut ACTIVE et TRIAL non expiré)
      */
     public boolean hasActiveSubscription() {
         if (subscriptionEndsAt == null || subscriptionEndsAt.isBefore(LocalDateTime.now())) {
@@ -396,21 +417,21 @@ public class User {
     }
 
     // ===== CHAMPS MFA (MULTI-FACTOR AUTHENTICATION) =====
-    
+
     // SEC-HARDENED : chiffrement AES-256-GCM transparent via JPA Converter
     @Convert(converter = com.gedavocat.security.crypto.MfaSecretAttributeConverter.class)
     @Column(name = "mfa_secret", length = 512)
     private String mfaSecret;
-    
+
     @Column(name = "mfa_enabled")
     private Boolean mfaEnabled = Boolean.FALSE;
-    
+
     @Column(name = "mfa_backup_codes", length = 1000)
     private String mfaBackupCodes;
-    
+
     @Column(name = "mfa_temp_setup")
     private LocalDateTime mfaTempSetup;
-    
+
     @Column(name = "mfa_last_used")
     private LocalDateTime mfaLastUsed;
 
@@ -427,14 +448,14 @@ public class User {
     public String getFirstName() {
         return firstName != null ? firstName : "";
     }
-    
+
     /**
      * Safe getter for lastName that never returns null
      */
     public String getLastName() {
         return lastName != null ? lastName : "";
     }
-    
+
     /**
      * Returns full name (firstName + lastName) with safe null handling.
      * Falls back to 'name' field or email if firstName/lastName are null.

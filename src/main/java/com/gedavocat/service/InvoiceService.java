@@ -29,6 +29,7 @@ import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.LineSeparator;
 import com.itextpdf.layout.properties.TextAlignment;
 import com.itextpdf.layout.properties.UnitValue;
+import com.itextpdf.layout.properties.VerticalAlignment;
 import com.itextpdf.layout.borders.SolidBorder;
 import com.itextpdf.kernel.pdf.canvas.draw.SolidLine;
 import com.itextpdf.kernel.colors.Color;
@@ -176,17 +177,7 @@ public class InvoiceService {
             return convertToResponse(invoice);
         }
         
-        // SEC-05 FIX : Vérification ownership pour les clients
-        if (lawyerId.startsWith("CLIENT_")) {
-            String clientUserId = lawyerId.substring(7);
-            if (invoice.getClient() != null && invoice.getClient().getClientUser() != null
-                    && invoice.getClient().getClientUser().getId().equals(clientUserId)) {
-                return convertToResponse(invoice);
-            }
-            throw new SecurityException("Accès non autorisé à cette facture");
-        }
-        
-        // Vérification ownership pour lawyers
+        // Vérification ownership pour lawyers et clients
         if (invoice.getClient() != null && invoice.getClient().getLawyer() != null
                 && !invoice.getClient().getLawyer().getId().equals(lawyerId)) {
             throw new SecurityException("Accès non autorisé à cette facture");
