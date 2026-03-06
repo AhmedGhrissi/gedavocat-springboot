@@ -453,7 +453,7 @@ public class SubscriptionController {
             
         } catch (Exception e) {
             log.error("Erreur lors du traitement du webhook: {}", e.getMessage(), e);
-            return ResponseEntity.badRequest().body("Erreur: " + e.getMessage());
+            return ResponseEntity.ok("Webhook reçu");
         }
     }
 

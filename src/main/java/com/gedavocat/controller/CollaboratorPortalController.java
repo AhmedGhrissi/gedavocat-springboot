@@ -12,6 +12,7 @@ import com.gedavocat.service.DocumentService;
 import com.gedavocat.service.DocumentShareService;
 import com.gedavocat.service.WatermarkService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import com.gedavocat.util.ByteArrayMultipartFile;
@@ -35,6 +36,7 @@ import java.util.List;
  * Contrôleur pour le portail Collaborateur
  * Similaire au portail client mais pour les collaborateurs (rôle COLLABORATOR)
  */
+@Slf4j
 @Controller
 @RequestMapping("/my-cases-collab")
 @RequiredArgsConstructor
@@ -152,7 +154,8 @@ public class CollaboratorPortalController {
             documentService.uploadDocument(caseId, fileToStore, user.getId(), "COLLABORATOR");
             redirectAttributes.addFlashAttribute("message", "Document uploadé avec succès.");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Erreur lors de l'upload : " + e.getMessage());
+            log.error("Erreur upload document collaborateur dossier {}", caseId, e);
+            redirectAttributes.addFlashAttribute("error", "Erreur lors de l'upload du document");
         }
         return "redirect:/my-cases-collab/" + caseId;
     }

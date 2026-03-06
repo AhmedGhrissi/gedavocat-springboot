@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Controller pour exécuter les migrations de base de données
@@ -17,6 +19,8 @@ import java.util.Map;
 @RequestMapping("/api/admin/migration")
 @PreAuthorize("hasRole('ADMIN')")
 public class DatabaseMigrationController {
+
+    private static final Logger log = LoggerFactory.getLogger(DatabaseMigrationController.class);
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
@@ -34,7 +38,8 @@ public class DatabaseMigrationController {
                 );
                 result.put("step1_unit_price_ht", "added");
             } catch (Exception e) {
-                result.put("step1_unit_price_ht", "already exists or error: " + e.getMessage());
+                log.error("Migration step1 unit_price_ht", e);
+                result.put("step1_unit_price_ht", "already exists or error");
             }
             
             try {
@@ -44,7 +49,8 @@ public class DatabaseMigrationController {
                 );
                 result.put("step1_tva_rate", "added");
             } catch (Exception e) {
-                result.put("step1_tva_rate", "already exists or error: " + e.getMessage());
+                log.error("Migration step1 tva_rate", e);
+                result.put("step1_tva_rate", "already exists or error");
             }
             
             try {
@@ -54,7 +60,8 @@ public class DatabaseMigrationController {
                 );
                 result.put("step1_total_ht", "added");
             } catch (Exception e) {
-                result.put("step1_total_ht", "already exists or error: " + e.getMessage());
+                log.error("Migration step1 total_ht", e);
+                result.put("step1_total_ht", "already exists or error");
             }
             
             try {
@@ -64,7 +71,8 @@ public class DatabaseMigrationController {
                 );
                 result.put("step1_total_tva", "added");
             } catch (Exception e) {
-                result.put("step1_total_tva", "already exists or error: " + e.getMessage());
+                log.error("Migration step1 total_tva", e);
+                result.put("step1_total_tva", "already exists or error");
             }
             
             try {
@@ -74,7 +82,8 @@ public class DatabaseMigrationController {
                 );
                 result.put("step1_total_ttc", "added");
             } catch (Exception e) {
-                result.put("step1_total_ttc", "already exists or error: " + e.getMessage());
+                log.error("Migration step1 total_ttc", e);
+                result.put("step1_total_ttc", "already exists or error");
             }
             
             try {
@@ -84,7 +93,8 @@ public class DatabaseMigrationController {
                 );
                 result.put("step1_display_order", "added");
             } catch (Exception e) {
-                result.put("step1_display_order", "already exists or error: " + e.getMessage());
+                log.error("Migration step1 display_order", e);
+                result.put("step1_display_order", "already exists or error");
             }
 
             // Step 2: Migrate existing data if old columns exist
@@ -105,7 +115,8 @@ public class DatabaseMigrationController {
                 );
                 result.put("step2_data_migration", "migrated " + rowsUpdated + " rows");
             } catch (Exception e) {
-                result.put("step2_data_migration", "error or no old data: " + e.getMessage());
+                log.error("Migration step2 data_migration", e);
+                result.put("step2_data_migration", "error or no old data");
             }
 
             // Step 3: Make new columns NOT NULL
@@ -116,7 +127,8 @@ public class DatabaseMigrationController {
                 );
                 result.put("step3_unit_price_ht_not_null", "modified");
             } catch (Exception e) {
-                result.put("step3_unit_price_ht_not_null", "error: " + e.getMessage());
+                log.error("Migration step3 unit_price_ht_not_null", e);
+                result.put("step3_unit_price_ht_not_null", "error");
             }
             
             try {
@@ -126,15 +138,17 @@ public class DatabaseMigrationController {
                 );
                 result.put("step3_tva_rate_not_null", "modified");
             } catch (Exception e) {
-                result.put("step3_tva_rate_not_null", "error: " + e.getMessage());
+                log.error("Migration step3 tva_rate_not_null", e);
+                result.put("step3_tva_rate_not_null", "error");
             }
 
             result.put("status", "success");
             result.put("message", "Migration completed. Check individual steps for details.");
             
         } catch (Exception e) {
+            log.error("Erreur migration invoice items", e);
             result.put("status", "error");
-            result.put("message", e.getMessage());
+            result.put("message", "Erreur lors de la migration");
             return ResponseEntity.internalServerError().body(result);
         }
         
@@ -161,8 +175,9 @@ public class DatabaseMigrationController {
             
             result.put("status", "success");
         } catch (Exception e) {
+            log.error("Erreur vérification schema invoice items", e);
             result.put("status", "error");
-            result.put("message", e.getMessage());
+            result.put("message", "Erreur lors de la vérification");
             return ResponseEntity.internalServerError().body(result);
         }
         

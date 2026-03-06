@@ -281,7 +281,7 @@ public class ClientFeaturesController {
             result.put("message", "Votre mot de passe a été modifié avec succès.");
         } catch (Exception e) {
             result.put("success", false);
-            result.put("message", "Erreur : " + e.getMessage());
+            result.put("message", "Erreur lors du changement de mot de passe");
         }
         return result;
     }

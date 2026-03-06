@@ -285,8 +285,9 @@ public class SignatureController {
             return "redirect:/signatures/" + signature.getId();
 
         } catch (Exception e) {
+            log.error("Erreur création signature", e);
             redirectAttributes.addFlashAttribute("error",
-                "Erreur lors de la création de la signature: " + e.getMessage());
+                "Erreur lors de la création de la demande de signature");
             return "redirect:/signatures/new";
         }
     }
@@ -325,7 +326,8 @@ public class SignatureController {
             return "signatures/view";
 
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Signature introuvable : " + e.getMessage());
+            log.error("Erreur récupération signature {}", signatureId, e);
+            redirectAttributes.addFlashAttribute("error", "Signature introuvable");
             return "redirect:/signatures";
         }
     }
@@ -397,8 +399,9 @@ public class SignatureController {
             return "redirect:/signatures";
 
         } catch (Exception e) {
+            log.error("Erreur annulation signature {}", signatureId, e);
             redirectAttributes.addFlashAttribute("error",
-                "Erreur lors de l'annulation: " + e.getMessage());
+                "Erreur lors de l'annulation de la signature");
             return "redirect:/signatures/" + signatureId;
         }
     }
@@ -426,7 +429,8 @@ public class SignatureController {
             yousignService.remindSigner(signatureId, "");
             redirectAttributes.addFlashAttribute("message", "Relance envoyée au signataire");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Erreur lors de la relance: " + e.getMessage());
+            log.error("Erreur relance signataire signature {}", signatureId, e);
+            redirectAttributes.addFlashAttribute("error", "Erreur lors de la relance");
         }
         return "redirect:/signatures";
     }
@@ -519,8 +523,9 @@ public class SignatureController {
             return "redirect:/signatures/" + signatureId;
 
         } catch (Exception e) {
+            log.error("Erreur relance signataire {} signature {}", signerId, signatureId, e);
             redirectAttributes.addFlashAttribute("error",
-                "Erreur lors de la relance: " + e.getMessage());
+                "Erreur lors de la relance");
             return "redirect:/signatures/" + signatureId;
         }
     }

@@ -7,6 +7,7 @@ import com.gedavocat.repository.UserRepository;
 import com.gedavocat.service.DocumentService;
 import com.gedavocat.service.WatermarkService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -33,6 +34,7 @@ import java.util.stream.Collectors;
  * Contrôleur de gestion des documents
  * RÉSERVÉ AUX AVOCATS - Les clients utilisent ClientPortalController
  */
+@Slf4j
 @Controller
 @RequestMapping("/documents")
 @RequiredArgsConstructor
@@ -154,7 +156,8 @@ public class DocumentController {
             documentService.uploadDocument(caseId, fileToStore, user.getId(), user.getRole().name());
             redirectAttributes.addFlashAttribute("message", "Document uploadé avec succès");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Erreur lors de l'upload: " + e.getMessage());
+            log.error("Erreur upload document dossier {}", caseId, e);
+            redirectAttributes.addFlashAttribute("error", "Erreur lors de l'upload du document");
         }
 
         return "redirect:/cases/" + caseId;
@@ -191,8 +194,9 @@ public class DocumentController {
             return ResponseEntity.ok()
                 .body(Map.of("success", true, "message", "Document uploadé avec succès", "documentId", document.getId()));
         } catch (Exception e) {
+            log.error("Erreur upload AJAX dossier {}", caseId, e);
             return ResponseEntity.badRequest()
-                .body(Map.of("success", false, "message", "Erreur lors de l'upload: " + e.getMessage()));
+                .body(Map.of("success", false, "message", "Erreur lors de l'upload du document"));
         }
     }
 
@@ -225,7 +229,8 @@ public class DocumentController {
             redirectAttributes.addFlashAttribute("message", "Nouvelle version uploadée (v" + document.getVersion() + ")");
             return "redirect:/cases/" + document.getCaseEntity().getId();
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Erreur lors de l'upload: " + e.getMessage());
+            log.error("Erreur upload nouvelle version document {}", documentId, e);
+            redirectAttributes.addFlashAttribute("error", "Erreur lors de l'upload de la nouvelle version");
             return "redirect:/documents/" + documentId;
         }
     }
@@ -274,7 +279,8 @@ public class DocumentController {
                             "attachment; filename=\"" + document.getOriginalName().replaceAll("[\\r\\n\"\\\\]", "_") + "\"")
                     .body(resource);
         } catch (Exception e) {
-            throw new RuntimeException("Erreur lors du téléchargement: " + e.getMessage());
+            log.error("Erreur téléchargement document {}", id, e);
+            throw new RuntimeException("Erreur lors du téléchargement du document");
         }
     }
 
@@ -321,7 +327,8 @@ public class DocumentController {
                             "inline; filename=\"" + document.getOriginalName().replaceAll("[\\r\\n\"\\\\]", "_") + "\"")
                     .body(resource);
         } catch (Exception e) {
-            throw new RuntimeException("Erreur lors de la prévisualisation: " + e.getMessage());
+            log.error("Erreur prévisualisation document {}", id, e);
+            throw new RuntimeException("Erreur lors de la prévisualisation du document");
         }
     }
 
@@ -350,7 +357,8 @@ public class DocumentController {
             redirectAttributes.addFlashAttribute("message", "Document supprimé (déplacé vers la corbeille)");
             return "redirect:/cases/" + caseId;
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            log.error("Erreur suppression document {}", id, e);
+            redirectAttributes.addFlashAttribute("error", "Erreur lors de la suppression du document");
             return "redirect:/documents/" + id;
         }
     }
@@ -380,7 +388,8 @@ public class DocumentController {
             redirectAttributes.addFlashAttribute("message", "Document restauré avec succès");
             return "redirect:/cases/" + caseId;
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            log.error("Erreur restauration document {}", id, e);
+            redirectAttributes.addFlashAttribute("error", "Erreur lors de la restauration du document");
             return "redirect:/documents";
         }
     }
@@ -410,7 +419,8 @@ public class DocumentController {
             redirectAttributes.addFlashAttribute("message", "Document supprimé définitivement");
             return "redirect:/documents/case/" + caseId + "/trash";
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            log.error("Erreur suppression définitive document {}", id, e);
+            redirectAttributes.addFlashAttribute("error", "Erreur lors de la suppression définitive");
             return "redirect:/documents/" + id;
         }
     }

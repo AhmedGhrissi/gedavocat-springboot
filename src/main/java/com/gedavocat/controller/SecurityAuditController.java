@@ -8,6 +8,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import com.gedavocat.security.audit.TechnicalSecurityAuditService;
 import com.gedavocat.security.audit.TechnicalSecurityAuditService.TechnicalAuditResult;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Contrôleur REST pour l'Audit Technique de Sécurité
@@ -24,6 +26,8 @@ import com.gedavocat.security.audit.TechnicalSecurityAuditService.TechnicalAudit
 @RequestMapping("/api/security")
 @PreAuthorize("hasRole('ADMIN') or hasRole('DPO')")
 public class SecurityAuditController {
+
+    private static final Logger log = LoggerFactory.getLogger(SecurityAuditController.class);
 
     @Autowired
     private TechnicalSecurityAuditService auditService;
@@ -47,9 +51,8 @@ public class SecurityAuditController {
                 .body(result);
                 
         } catch (Exception e) {
-            return ResponseEntity.internalServerError()
-                .header("X-Error", "Audit technique échoué: " + e.getMessage())
-                .build();
+            log.error("Audit technique échoué", e);
+            return ResponseEntity.internalServerError().build();
         }
     }
     
@@ -74,8 +77,9 @@ public class SecurityAuditController {
                 .body(report);
                 
         } catch (Exception e) {
+            log.error("Erreur génération rapport", e);
             return ResponseEntity.internalServerError()
-                .body("Erreur génération rapport: " + e.getMessage());
+                .body("Erreur lors de la génération du rapport");
         }
     }
     
@@ -145,9 +149,7 @@ public class SecurityAuditController {
             return ResponseEntity.ok(domainResult);
             
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest()
-                .header("X-Error", "Domaine invalide: " + domainName)
-                .build();
+            return ResponseEntity.badRequest().build();
         } catch (Exception e) {
             return ResponseEntity.internalServerError().build();
         }
@@ -187,9 +189,7 @@ public class SecurityAuditController {
                     severity = "HIGH";
                     break;
                 default:
-                    return ResponseEntity.badRequest()
-                        .header("X-Error", "Type de test non supporté")
-                        .build();
+                    return ResponseEntity.badRequest().build();
             }
             
             PentestResult pentestResult = new PentestResult(

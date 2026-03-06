@@ -212,7 +212,7 @@ public class InvoiceWebController {
             redirectAttributes.addFlashAttribute("message", "Facture " + invoiceNumber + " importée avec succès.");
         } catch (IOException e) {
             log.error("Erreur lors de la sauvegarde du fichier", e);
-            redirectAttributes.addFlashAttribute("importError", "Erreur lors de l'upload du fichier : " + e.getMessage());
+            redirectAttributes.addFlashAttribute("importError", "Erreur lors de l'upload du fichier");
         } catch (Exception e) {
             log.error("Erreur lors de l'import de la facture", e);
             redirectAttributes.addFlashAttribute("importError", "Erreur lors de l'import de la facture");
@@ -228,21 +228,8 @@ public class InvoiceWebController {
     public String show(@PathVariable String id, Model model, Authentication authentication) {
         try {
             User user = getCurrentUser(authentication);
-            // SEC-NEW-05 FIX : passer le bon lawyerId au service pour ownership check
-            boolean isAdmin = authentication.getAuthorities().stream()
-                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
-            boolean isClient = authentication.getAuthorities().stream()
-                    .anyMatch(a -> a.getAuthority().equals("ROLE_CLIENT"));
-
-            String ownershipId;
-            if (isAdmin) {
-                ownershipId = "ADMIN_BYPASS";
-            } else if (isClient) {
-                ownershipId = "CLIENT_" + user.getId();
-            } else {
-                ownershipId = user.getId();
-            }
-            var invoice = invoiceService.getInvoiceById(id, ownershipId);
+            // SEC-BYPASS FIX : passer l'ID utilisateur, le service vérifie le rôle via DB
+            var invoice = invoiceService.getInvoiceById(id, user.getId());
 
             model.addAttribute("invoice", invoice);
             return "invoices/show";
@@ -259,14 +246,11 @@ public class InvoiceWebController {
     @PreAuthorize("hasAnyRole('LAWYER', 'ADMIN')")
     public String edit(@PathVariable String id, Model model, Authentication authentication) {
         try {
-            String lawyerId = getCurrentUser(authentication).getId();
-            // SEC-NEW-05 FIX : passer le bon lawyerId au service pour ownership check
-            boolean isAdmin = authentication.getAuthorities().stream()
-                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
-            String ownershipId = isAdmin ? "ADMIN_BYPASS" : lawyerId;
-            var invoice = invoiceService.getInvoiceById(id, ownershipId);
+            User user = getCurrentUser(authentication);
+            // SEC-BYPASS FIX : passer l'ID utilisateur, le service vérifie le rôle via DB
+            var invoice = invoiceService.getInvoiceById(id, user.getId());
 
-            var clients = getClientsForUser(authentication, lawyerId);
+            var clients = getClientsForUser(authentication, user.getId());
             model.addAttribute("invoice", invoice);
             model.addAttribute("clients", clients);
             return "invoices/edit";
@@ -305,21 +289,8 @@ public class InvoiceWebController {
                                                Authentication authentication) {
         try {
             User user = getCurrentUser(authentication);
-            // SEC-NEW-05 FIX : passer le bon lawyerId au service pour ownership check
-            boolean isAdmin = authentication.getAuthorities().stream()
-                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
-            boolean isClient = authentication.getAuthorities().stream()
-                    .anyMatch(a -> a.getAuthority().equals("ROLE_CLIENT"));
-
-            String ownershipId;
-            if (isAdmin) {
-                ownershipId = "ADMIN_BYPASS";
-            } else if (isClient) {
-                ownershipId = "CLIENT_" + user.getId();
-            } else {
-                ownershipId = user.getId();
-            }
-            var invoice = invoiceService.getInvoiceById(id, ownershipId);
+            // SEC-BYPASS FIX : passer l'ID utilisateur, le service vérifie le rôle via DB
+            var invoice = invoiceService.getInvoiceById(id, user.getId());
 
             byte[] pdfBytes = invoiceService.generatePdf(id, user.getId());
 

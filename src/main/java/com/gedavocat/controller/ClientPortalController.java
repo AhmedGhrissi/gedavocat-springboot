@@ -320,7 +320,8 @@ public class ClientPortalController {
             documentService.uploadDocument(caseId, fileToStore, user.getId(), "CLIENT");
             redirectAttributes.addFlashAttribute("message", "Document uploadé avec succès.");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Erreur lors de l'upload : " + e.getMessage());
+            log.error("Erreur upload document client dossier {}", caseId, e);
+            redirectAttributes.addFlashAttribute("error", "Erreur lors de l'upload du document");
         }
         return "redirect:/my-cases/" + caseId;
     }
@@ -356,7 +357,7 @@ public class ClientPortalController {
             return ResponseEntity.ok(Map.of("success", true, "message", "Document scanné et enregistré."));
 
         } catch (Exception e) {
-            return ResponseEntity.ok(Map.of("success", false, "message", e.getMessage()));
+            return ResponseEntity.ok(Map.of("success", false, "message", "Erreur lors de l'upload du document"));
         }
     }
 
@@ -382,7 +383,7 @@ public class ClientPortalController {
             // SÉCURITÉ : vérifier que le document appartient bien au dossier du client
             if (document.getCaseEntity().getClient() == null ||
                     !document.getCaseEntity().getClient().getId().equals(client.getId())) {
-                throw new RuntimeException("Accès non autorisé à ce document");
+                throw new org.springframework.security.access.AccessDeniedException("Accès non autorisé");
             }
 
             Path filePath = documentService.downloadDocument(documentId, user.getId());
@@ -395,7 +396,8 @@ public class ClientPortalController {
                     .body(new ByteArrayResource(fileBytes));
 
         } catch (Exception e) {
-            throw new RuntimeException("Erreur lors du téléchargement : " + e.getMessage());
+            log.error("Erreur téléchargement document client {}", documentId, e);
+            throw new RuntimeException("Erreur lors du téléchargement du document");
         }
     }
 
@@ -433,7 +435,8 @@ public class ClientPortalController {
                     .body(new ByteArrayResource(fileBytes));
 
         } catch (Exception e) {
-            throw new RuntimeException("Erreur lors de la prévisualisation : " + e.getMessage());
+            log.error("Erreur prévisualisation document client {}", documentId, e);
+            throw new RuntimeException("Erreur lors de la prévisualisation du document");
         }
     }
 
@@ -529,7 +532,8 @@ public class ClientPortalController {
                     .body(new ByteArrayResource(baos.toByteArray()));
 
         } catch (Exception e) {
-            throw new RuntimeException("Erreur lors de l'export ZIP : " + e.getMessage());
+            log.error("Erreur export ZIP dossier", e);
+            throw new RuntimeException("Erreur lors de l'export ZIP");
         }
     }
 
@@ -632,7 +636,7 @@ public class ClientPortalController {
             return ResponseEntity.ok(payload);
         } catch (Exception e) {
             log.error("Error in debugStatus: {}", e.getMessage(), e);
-            return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
+            return ResponseEntity.status(500).body(Map.of("error", "Erreur interne"));
         }
     }
 }

@@ -5,6 +5,7 @@ import com.gedavocat.repository.UserRepository;
 import com.gedavocat.service.SettingsService;
 import com.gedavocat.util.PasswordValidator;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -25,6 +26,7 @@ import java.util.regex.Pattern;
 @RequestMapping("/settings")
 @RequiredArgsConstructor
 @PreAuthorize("hasAnyRole('LAWYER', 'ADMIN')")
+@Slf4j
 public class SettingsController {
 
     private final UserRepository userRepository;
@@ -71,7 +73,8 @@ public class SettingsController {
             settingsService.saveYousignSettings(user.getId(), apiKey, sandbox);
             redirectAttributes.addFlashAttribute("message", "Configuration Yousign sauvegardée avec succès");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Erreur lors de la sauvegarde : " + e.getMessage());
+            log.error("Erreur sauvegarde Yousign", e);
+            redirectAttributes.addFlashAttribute("error", "Erreur lors de la sauvegarde de la configuration");
         }
         return "redirect:/settings";
     }
@@ -92,9 +95,10 @@ public class SettingsController {
                 "message", "Configuration Yousign sauvegardée avec succès"
             ));
         } catch (Exception e) {
+            log.error("Erreur sauvegarde Yousign AJAX", e);
             return ResponseEntity.badRequest().body(Map.of(
                 "success", false, 
-                "message", "Erreur lors de la sauvegarde: " + e.getMessage()
+                "message", "Erreur lors de la sauvegarde de la configuration"
             ));
         }
     }
@@ -121,9 +125,10 @@ public class SettingsController {
                 ));
             }
         } catch (Exception e) {
+            log.error("Erreur test Yousign", e);
             return ResponseEntity.badRequest().body(Map.of(
                 "success", false, 
-                "message", "Erreur lors du test: " + e.getMessage()
+                "message", "Erreur lors du test de la connexion"
             ));
         }
     }
@@ -157,12 +162,12 @@ public class SettingsController {
             userRepository.save(user);
             redirectAttributes.addFlashAttribute("message", "Profil mis à jour avec succès");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Erreur lors de la mise à jour : " + e.getMessage());
+            log.error("Erreur mise à jour profil", e);
+            redirectAttributes.addFlashAttribute("error", "Erreur lors de la mise à jour du profil");
         }
         return "redirect:/settings";
     }
 
-    /** Mise à jour profil via AJAX */
     @PostMapping(value = "/profile", headers = "Accept=application/json")
     @ResponseBody
     public ResponseEntity<?> updateProfileAjax(
@@ -192,9 +197,10 @@ public class SettingsController {
                 "message", "Profil mis à jour avec succès"
             ));
         } catch (Exception e) {
+            log.error("Erreur mise à jour profil AJAX", e);
             return ResponseEntity.badRequest().body(Map.of(
                 "success", false, 
-                "message", "Erreur lors de la mise à jour: " + e.getMessage()
+                "message", "Erreur lors de la mise à jour du profil"
             ));
         }
     }
@@ -235,13 +241,14 @@ public class SettingsController {
             userRepository.save(user);
             redirectAttributes.addFlashAttribute("message", "Mot de passe modifié avec succès.");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Erreur : " + e.getMessage());
+            log.error("Erreur changement mot de passe", e);
+            redirectAttributes.addFlashAttribute("error", "Erreur lors du changement de mot de passe");
         }
         return "redirect:/settings";
     }
 
     /**
-     * Récupérer les données utilisateur pour le modal
+     * Données utilisateur (AJAX)
      */
     @GetMapping("/user-data")
     @ResponseBody
@@ -268,8 +275,9 @@ public class SettingsController {
             userData.put("yousignApiKey", maskedKey);
             return ResponseEntity.ok(userData);
         } catch (Exception e) {
+            log.error("Erreur récupération données utilisateur", e);
             Map<String, Object> errMap = new java.util.LinkedHashMap<>();
-            errMap.put("error", e.getMessage() != null ? e.getMessage() : "Erreur inconnue");
+            errMap.put("error", "Erreur lors de la récupération des données");
             return ResponseEntity.badRequest().body(errMap);
         }
     }
@@ -321,9 +329,10 @@ public class SettingsController {
                 "message", "Mot de passe modifié avec succès !"
             ));
         } catch (Exception e) {
+            log.error("Erreur changement mot de passe AJAX", e);
             return ResponseEntity.badRequest().body(Map.of(
                 "success", false,
-                "message", "Erreur : " + e.getMessage()
+                "message", "Erreur lors du changement de mot de passe"
             ));
         }
     }

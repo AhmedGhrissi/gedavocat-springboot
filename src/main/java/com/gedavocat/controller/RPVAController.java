@@ -9,6 +9,7 @@ import com.gedavocat.repository.UserRepository;
 import com.gedavocat.service.RPVAService;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -28,6 +29,7 @@ import java.util.Map;
 /**
  * Contrôleur pour les communications RPVA (e-Barreau)
  */
+@Slf4j
 @Controller
 @RequestMapping("/rpva")
 @RequiredArgsConstructor
@@ -99,7 +101,8 @@ public class RPVAController {
             return "rpva/received";
 
         } catch (Exception e) {
-            model.addAttribute("error", "Erreur lors de la récupération: " + e.getMessage());
+            log.error("Erreur récupération communications RPVA", e);
+            model.addAttribute("error", "Erreur lors de la récupération des communications");
             return "rpva/index";
         }
     }
@@ -183,7 +186,7 @@ public class RPVAController {
 
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error",
-                "Erreur lors de l'envoi: " + e.getMessage());
+                "Erreur lors de l'envoi de la communication");
             return "redirect:/rpva/send";
         }
     }
@@ -218,7 +221,8 @@ public class RPVAController {
             return "rpva/view";
 
         } catch (Exception e) {
-            model.addAttribute("error", "Erreur: " + e.getMessage());
+            log.error("Erreur affichage communication {}", communicationId, e);
+            model.addAttribute("error", "Erreur lors de la récupération de la communication");
             return "redirect:/rpva";
         }
     }
@@ -273,7 +277,8 @@ public class RPVAController {
             return "rpva/search-results";
 
         } catch (Exception e) {
-            model.addAttribute("error", "Erreur lors de la recherche: " + e.getMessage());
+            log.error("Erreur recherche juridiction", e);
+            model.addAttribute("error", "Erreur lors de la recherche de juridiction");
             return "rpva/index";
         }
     }
@@ -327,7 +332,7 @@ public class RPVAController {
 
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error",
-                "Erreur lors de l'enregistrement: " + e.getMessage());
+                "Erreur lors de l'enregistrement du dossier RPVA");
             return "redirect:/rpva";
         }
     }

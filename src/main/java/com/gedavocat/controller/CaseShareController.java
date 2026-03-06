@@ -120,7 +120,8 @@ public class CaseShareController {
             redirectAttributes.addFlashAttribute("shareFullUrl", fullPublicUrl);
             redirectAttributes.addFlashAttribute("message", "Lien de partage créé avec succès !");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Erreur : " + e.getMessage());
+            log.error("Erreur création lien partage dossier {}", id, e);
+            redirectAttributes.addFlashAttribute("error", "Erreur lors de la création du lien de partage");
         }
         return "redirect:/cases/" + id + "/share";
     }
@@ -141,7 +142,8 @@ public class CaseShareController {
             shareService.revokeLink(linkId, user);
             redirectAttributes.addFlashAttribute("message", "Lien révoqué.");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Erreur : " + e.getMessage());
+            log.error("Erreur révocation lien partage {} dossier {}", linkId, id, e);
+            redirectAttributes.addFlashAttribute("error", "Erreur lors de la révocation du lien");
         }
         return "redirect:/cases/" + id + "/share";
     }
@@ -180,7 +182,7 @@ public class CaseShareController {
             model.addAttribute("token", token);
             return "cases/shared-view";
         } catch (Exception e) {
-            model.addAttribute("error", e.getMessage());
+            model.addAttribute("error", "Ce lien de partage est invalide ou a expiré");
             return "cases/shared-expired";
         }
     }

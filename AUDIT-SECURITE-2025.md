@@ -1,62 +1,66 @@
 # 🔒 AUDIT DE SÉCURITÉ — DocAvocat / GED Avocat
 ## Résultats NOUVEAUX (hors CRIT-01→SEC-11 déjà corrigés)
-**Date :** Juin 2025  
-**Périmètre :** Code source complet (contrôleurs, services, filtres, repositories, templates, configuration)  
-**Méthodologie :** Revue statique OWASP Top-10 2021, ANSSI, RGPD
+**Date :** Juin 2025 — **Re-audit : Juillet 2025**  
+**Périmètre :** Code source complet (37 contrôleurs, 39 services, 5 filtres, 18 modèles, 18 repositories, templates, configuration Docker/Nginx, pom.xml)  
+**Méthodologie :** Revue statique OWASP Top-10 2021, ANSSI, RGPD, analyse de dépendances, audit infrastructure Docker
 
 ---
 
-## Synthèse rapide
+## Re-audit Juillet 2025 — Synthèse
+
+| Sévérité | Juin 2025 | Statut Juillet 2025 |
+|----------|-----------|---------------------|
+| 🔴 CRITIQUE | 3 | 2 ouverts / **1 corrigé** (SEC-NEW-01 ✅) |
+| 🟠 HAUTE | 4 | 4 ouverts |
+| 🟡 MOYENNE | 6 | 6 ouverts + **4 nouveaux** |
+| 🔵 BASSE | 3 | 3 ouverts + **3 nouveaux** |
+| **TOTAL** | **16** | **22 (15 existants + 7 nouveaux)** |
+
+### Correctifs vérifiés depuis Juin 2025
+
+| ID | Titre | Statut |
+|----|-------|--------|
+| SEC-NEW-01 | ComplianceController `permitAll()` bypass | ✅ **CORRIGÉ** — Annotation remplacée par `@PreAuthorize("hasRole('ADMIN')")` |
+| SEC-NEW-02 | JWT secret vide par défaut | ⚠️ **PARTIELLEMENT ATTÉNUÉ** — `@PostConstruct` dans `JwtService` empêche le démarrage avec un secret vide/court/dummy. La propriété garde `${JWT_SECRET:}` (défaut vide) mais l'app ne démarre plus. |
+
+---
+
+## Synthèse rapide (consolidée Juillet 2025)
 
 | Sévérité | Nombre |
 |----------|--------|
-| 🔴 CRITIQUE | 3 |
+| 🔴 CRITIQUE | 2 |
 | 🟠 HAUTE | 4 |
-| 🟡 MOYENNE | 6 |
-| 🔵 BASSE | 3 |
-| **TOTAL** | **16** |
+| 🟡 MOYENNE | 10 |
+| 🔵 BASSE | 6 |
+| **TOTAL** | **22** |
 
 ---
 
 ## 🔴 CRITIQUES
 
-### SEC-NEW-01 — Information Disclosure : endpoint compliance public (Contournement d'autorisation)
+### SEC-NEW-01 — ~~Information Disclosure : endpoint compliance public~~ ✅ CORRIGÉ
 
-**Sévérité :** 🔴 CRITIQUE  
+**Sévérité :** ~~🔴 CRITIQUE~~ → ✅ CORRIGÉ (Juillet 2025)  
 **Catégorie :** 5 — Contrôle d'accès  
-**Fichier :** `src/main/java/com/gedavocat/controller/ComplianceController.java` ligne 92  
+**Fichier :** `src/main/java/com/gedavocat/controller/ComplianceController.java` ligne 93  
 
-**Description :**  
-Le contrôleur `ComplianceController` est protégé au niveau classe par `@PreAuthorize("hasRole('ADMIN') or hasRole('COMPLIANCE_OFFICER')")`.  
-Cependant, la méthode `getInternalComplianceScore()` porte `@PreAuthorize("permitAll()")` qui **écrase** la restriction de classe. N'importe quel utilisateur anonyme peut accéder aux scores de conformité, niveaux de risque et horodatages internes.
+**Vérification Juillet 2025 :**  
+L'annotation `@PreAuthorize("permitAll()")` a été remplacée par `@PreAuthorize("hasRole('ADMIN')")`.
 
 ```java
 @GetMapping("/internal/compliance-score")
-@PreAuthorize("permitAll()")                // ← BYPASS total de la sécurité classe
+@PreAuthorize("hasRole('ADMIN')")           // ← CORRIGÉ — était permitAll()
 public ResponseEntity<Map<String, Object>> getInternalComplianceScore() {
 ```
 
-**PoC :**
-```bash
-curl -s https://docavocat.fr/api/compliance/internal/compliance-score
-# → {"score":87,"riskLevel":"LOW","status":"COMPLIANT","timestamp":"..."}
-```
-
-**Risque :** Exposition d'informations internes de conformité (score, niveau de risque, statut). Un attaquant sait exactement où le système est faible.
-
-**Correctif :**
-```java
-@GetMapping("/internal/compliance-score")
-@PreAuthorize("hasRole('ADMIN') or hasRole('COMPLIANCE_OFFICER')")
-// ou supprimer la ligne @PreAuthorize pour hériter de la classe
-public ResponseEntity<Map<String, Object>> getInternalComplianceScore() {
-```
+**Statut : CORRIGÉ** — Plus de contournement d'autorisation possible.
 
 ---
 
 ### SEC-NEW-02 — Secret JWT vide par défaut (Signature prévisible)
 
-**Sévérité :** 🔴 CRITIQUE  
+**Sévérité :** 🔴 CRITIQUE (⚠️ partiellement atténué — voir note)  
 **Catégorie :** 8 — Données sensibles  
 **Fichier :** `src/main/resources/application.properties` ligne 76  
 
@@ -67,29 +71,15 @@ Le secret JWT utilise une valeur par défaut **vide** si la variable d'environne
 jwt.secret=${JWT_SECRET:}
 ```
 
-Si le déploiement oublie de définir `JWT_SECRET`, tous les JWT sont signés avec une chaîne vide, rendant la forge de tokens triviale.
+**Atténuation existante (Juillet 2025) :**  
+`JwtService.java` contient un `@PostConstruct` qui **empêche le démarrage** si le secret est vide, contient "CHANGE_ME"/"dummy", ou fait moins de 32 caractères. L'application ne peut donc pas démarrer avec un secret vide. Cependant, la propriété garde un défaut vide, ce qui est un anti-pattern (l'erreur survient au démarrage, pas à la compilation/configuration).
 
-**PoC :**
-```python
-import jwt
-# Si JWT_SECRET n'est pas défini → secret = ""
-token = jwt.encode({"sub": "admin@docavocat.fr", "role": "ADMIN"}, "", algorithm="HS256")
-# Ce token sera accepté par le serveur
-```
+**Risque résiduel :** Faible en pratique grâce au `@PostConstruct`, mais la propriété devrait utiliser `${JWT_SECRET}` (sans défaut) pour échouer dès le chargement des propriétés Spring.
 
-**Correctif :**  
-Faire échouer le démarrage si le secret est vide :
+**Correctif recommandé :**  
+Supprimer le défaut vide pour échouer au plus tôt :
 ```properties
 jwt.secret=${JWT_SECRET}
-```
-Ou ajouter une validation `@PostConstruct` :
-```java
-@PostConstruct
-void validateJwtSecret() {
-    if (jwtSecret == null || jwtSecret.isBlank() || jwtSecret.length() < 32) {
-        throw new IllegalStateException("JWT_SECRET doit être défini (≥ 32 caractères)");
-    }
-}
 ```
 
 ---
@@ -109,7 +99,8 @@ stripe.publishable.key=${STRIPE_PUBLISHABLE_KEY:pk_test_dummy}
 stripe.webhook.secret=${STRIPE_WEBHOOK_SECRET:whsec_dummy}
 ```
 
-Si `STRIPE_WEBHOOK_SECRET` n'est pas défini, le secret webhook est `whsec_dummy`. Un attaquant qui le devine peut **forger des événements webhook** pour activer des abonnements gratuitement.
+**Atténuation partielle (Juillet 2025) :**  
+`StripeService.isConfigured()` vérifie que les clés ne commencent pas par "sk_test_dummy" ou "pk_test_dummy", et bloque `createCheckoutSession()` si les clés sont factices. **Cependant**, `constructWebhookEvent()` utilise `webhookSecret` directement sans vérifier `isConfigured()`. Si `STRIPE_WEBHOOK_SECRET` n'est pas défini, le secret webhook est `whsec_dummy` et un attaquant qui le devine peut **forger des événements webhook** pour activer des abonnements.
 
 **PoC :**
 ```python
@@ -127,6 +118,15 @@ Supprimer les défauts et exiger les variables d'environnement :
 ```properties
 stripe.api.key=${STRIPE_API_KEY}
 stripe.webhook.secret=${STRIPE_WEBHOOK_SECRET}
+```
+Et ajouter un guard dans `constructWebhookEvent()` :
+```java
+public Event constructWebhookEvent(String payload, String sigHeader) throws StripeException {
+    if (webhookSecret == null || webhookSecret.isBlank() || webhookSecret.startsWith("whsec_dummy")) {
+        throw new SecurityException("Webhook secret non configuré");
+    }
+    return Webhook.constructEvent(payload, sigHeader, webhookSecret);
+}
 ```
 
 ---
@@ -489,6 +489,230 @@ Ajouter une protection par défaut au niveau classe :
 
 ---
 
+## 🆕 NOUVELLES VULNÉRABILITÉS (Re-audit Juillet 2025)
+
+### SEC-NEW-17 — Yousign sandbox URL en profil PRODUCTION
+
+**Sévérité :** 🟡 MOYENNE  
+**Catégorie :** 3 — Configuration  
+**Fichiers :**  
+- `src/main/resources/application-prod.properties` ligne 31  
+- `src/main/resources/application.properties` ligne 112  
+- `src/main/java/com/gedavocat/service/YousignService.java` ligne 39  
+
+**Description :**  
+Tous les profils (y compris **production**) pointent vers l'API sandbox Yousign :
+
+```properties
+# application-prod.properties ligne 31
+yousign.api.url=https://api-sandbox.yousign.app
+```
+
+```java
+// YousignService.java ligne 39
+@Value("${yousign.api.url:https://api-sandbox.yousign.app}")
+```
+
+L'URL de production Yousign est `https://api.yousign.app`. En sandbox, les signatures électroniques ne sont **pas juridiquement valides** (eIDAS). Tout document "signé" en production via ce endpoint est juridiquement nul.
+
+**Risque :** Signatures invalides juridiquement ; données de signature envoyées vers un environnement non-production chez Yousign.
+
+**Correctif :**
+```properties
+# application-prod.properties
+yousign.api.url=https://api.yousign.app
+```
+
+---
+
+### SEC-NEW-18 — `allowPublicKeyRetrieval=true` sur connexion MySQL (amplification MITM)
+
+**Sévérité :** 🟡 MOYENNE  
+**Catégorie :** 8 — Données sensibles / Transit  
+**Fichier :** `src/main/resources/application.properties` ligne 24  
+
+**Description :**  
+Combiné avec `verifyServerCertificate=false` (SEC-NEW-07), le paramètre `allowPublicKeyRetrieval=true` dans l'URL JDBC amplifie le risque MITM :
+
+```properties
+spring.datasource.url=jdbc:mysql://...?useSSL=true&requireSSL=true&verifyServerCertificate=false&allowPublicKeyRetrieval=true
+```
+
+Avec `allowPublicKeyRetrieval=true`, le client MySQL récupère la clé publique RSA du serveur **sans vérification**. Un attaquant MITM peut servir sa propre clé publique, intercepter le mot de passe MySQL chiffré avec sa clé, et le déchiffrer.
+
+**Risque :** Interception des credentials MySQL en cas de MITM.
+
+**Correctif :**  
+Supprimer `allowPublicKeyRetrieval=true` et configurer le truststore :
+```properties
+spring.datasource.url=jdbc:mysql://...?useSSL=true&requireSSL=true&verifyServerCertificate=true&trustCertificateKeyStoreUrl=file:/path/to/truststore.jks&allowPublicKeyRetrieval=false
+```
+
+---
+
+### SEC-NEW-19 — cAdvisor en mode `privileged: true` dans docker-compose
+
+**Sévérité :** 🟡 MOYENNE  
+**Catégorie :** 14 — Infrastructure / Conteneur  
+**Fichier :** `docker/docker-compose.yml` ligne 232  
+
+**Description :**  
+Le conteneur cAdvisor est configuré en mode privilégié :
+
+```yaml
+cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    privileged: true   # ← ligne 232
+```
+
+Un conteneur privilégié a un accès **complet** au kernel de l'hôte. Si cAdvisor est compromis (CVE dans l'image, supply chain attack), l'attaquant obtient un accès root à l'hôte Docker.
+
+**Risque :** Évasion de conteneur → compromission de l'hôte.
+
+**Correctif :**  
+Utiliser des capabilities spécifiques au lieu de `privileged` :
+```yaml
+cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.49.1  # pinned version
+    # privileged: true  ← SUPPRIMER
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    devices:
+      - /dev/kmsg:/dev/kmsg
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker:/var/lib/docker:ro
+```
+
+---
+
+### SEC-NEW-20 — SecurityMonitoringController : `e.getMessage()` exposé dans le template
+
+**Sévérité :** 🟡 MOYENNE  
+**Catégorie :** 8 — Données sensibles  
+**Fichier :** `src/main/java/com/gedavocat/controller/SecurityMonitoringController.java` ligne 56  
+
+**Description :**  
+```java
+} catch (Exception e) {
+    log.error("Erreur lors de la génération du tableau de bord de sécurité", e);
+    model.addAttribute("error", "Erreur lors du chargement du rapport: " + e.getMessage());
+    return "admin/security-monitoring";
+}
+```
+
+Le message d'exception (potentiellement contenant des noms de classes, des stack traces partiels) est injecté dans le template Thymeleaf via le model attribute `error`. Même si Thymeleaf escape le HTML par défaut, le contenu affiché peut révéler des détails d'infrastructure internes à un administrateur compromis ou via un screen capture.
+
+**Correctif :**
+```java
+log.error("Erreur rapport sécurité [ref={}]", UUID.randomUUID(), e);
+model.addAttribute("error", "Une erreur interne est survenue. Consultez les logs.");
+```
+
+---
+
+### SEC-NEW-21 — `spring-boot-devtools` dans les dépendances Maven
+
+**Sévérité :** 🔵 BASSE  
+**Catégorie :** 3 — Configuration  
+**Fichier :** `pom.xml` ligne 159  
+
+**Description :**  
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-devtools</artifactId>
+    <scope>runtime</scope>
+    <optional>true</optional>
+</dependency>
+```
+
+Bien que marqué `<optional>true</optional>` (exclut du fat JAR par défaut), la présence de `spring-boot-devtools` dans le POM peut activer des fonctionnalités de debug en développement local qui persistent si le profil n'est pas correctement configuré : live reload, cache désactivé, actuator exposé, H2 console auto-activée.
+
+**Risque :** Surface d'attaque élargie en cas de mauvaise configuration de profil.
+
+**Correctif :**  
+Limiter explicitement au profil dev avec un profile Maven :
+```xml
+<profiles>
+    <profile>
+        <id>dev</id>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-devtools</artifactId>
+                <scope>runtime</scope>
+                <optional>true</optional>
+            </dependency>
+        </dependencies>
+    </profile>
+</profiles>
+```
+
+---
+
+### SEC-NEW-22 — Scripts inline dans les templates (cause racine de CSP unsafe-inline)
+
+**Sévérité :** 🔵 BASSE  
+**Catégorie :** 12 — Sécurité des en-têtes / XSS  
+**Fichiers :**  
+- `src/main/resources/templates/subscription/pricing.html` (lignes 347-349, 526-561) — `onclick`, `<script>` inline  
+- `src/main/resources/templates/signatures/new.html` (ligne 319) — `<script th:inline="javascript">`  
+- `src/main/resources/templates/signatures/index.html` (lignes 65, 69, 186) — `onclick`, `<script>`  
+- `src/main/resources/templates/settings/index.html` (lignes 37-46, 145, 271, 279) — `onclick`, `<script>`  
+- `src/main/resources/templates/payment/pricing.html` (lignes 20, 23) — `onclick`  
+
+**Description :**  
+Au moins **5 templates** utilisent des handlers `onclick` inline et/ou des blocs `<script>` inline. Ce modèle est la **cause racine** de la nécessité de `'unsafe-inline'` dans la CSP (SEC-NEW-15), désactivant la protection XSS la plus efficace du navigateur.
+
+L'utilisation de `th:inline="javascript"` dans `signatures/new.html` est particulièrement risquée car elle permet l'injection de variables côté serveur directement dans le JavaScript.
+
+**Correctif :**  
+Phase 1 : Externaliser tous les blocs `<script>` dans des fichiers `.js` dédiés sous `static/js/`.  
+Phase 2 : Remplacer les `onclick="..."` par `addEventListener()` dans les fichiers JS externes.  
+Phase 3 : Implémenter CSP nonce-based :
+```java
+// SecurityConfig.java — génération dynamique de nonce
+.contentSecurityPolicy(csp -> csp.policyDirectives(
+    "script-src 'self' 'nonce-" + cspNonce + "' https://js.stripe.com; ..."))
+```
+
+---
+
+### SEC-NEW-23 — NotificationController sans contrôle d'accès au niveau classe
+
+**Sévérité :** 🔵 BASSE  
+**Catégorie :** 5 — Contrôle d'accès (Défense en profondeur)  
+**Fichier :** `src/main/java/com/gedavocat/controller/NotificationController.java`  
+
+**Description :**  
+`NotificationController` ne porte **aucune** annotation `@PreAuthorize` au niveau classe. Il utilise `@AuthenticationPrincipal UserDetails` pour récupérer l'utilisateur courant et `userRepository.findByEmail()`, mais ne vérifie jamais le rôle. Si un utilisateur est authentifié (n'importe quel rôle), il peut accéder à l'API notifications.
+
+Le contrôle IDOR sur `markAsRead()` est présent (passe `user.getId()` au service), mais l'absence de `@PreAuthorize` au niveau classe signifie qu'un compte avec un rôle inattendu (ex: compte désactivé mais session active) peut interagir avec l'API.
+
+```java
+@Controller
+@RequestMapping("/api/notifications")
+@RequiredArgsConstructor
+// ← MANQUE : @PreAuthorize("isAuthenticated()") minimum
+public class NotificationController {
+```
+
+**Correctif :**
+```java
+@Controller
+@RequestMapping("/api/notifications")
+@RequiredArgsConstructor
+@PreAuthorize("isAuthenticated()")
+public class NotificationController {
+```
+
+---
+
 ## Points positifs observés
 
 | Aspect | Évaluation |
@@ -496,24 +720,79 @@ Ajouter une protection par défaut au niveau classe :
 | ✅ Pas de `th:utext` dans les templates | XSS output encoding OK |
 | ✅ Toutes les `@Query` utilisent des paramètres nommés JPQL | Pas de SQL injection |
 | ✅ Redirections internes hardcodées (sauf 2 exceptions) | Pas d'open redirect majeur |
-| ✅ CSRF activé sur tous les formulaires web | Protection CSRF correcte |
+| ✅ CSRF activé sur tous les formulaires web | Protection CSRF correcte (tokens `_csrf` vérifiés) |
 | ✅ Session cookie : HttpOnly, Secure, SameSite=Strict | Cookie sécurisé |
 | ✅ BCrypt(12) pour les mots de passe | Hashage fort |
-| ✅ Rate limiting sur les endpoints d'auth | Anti brute-force |
-| ✅ DocumentService upload avec triple validation | Upload sécurisé (hors invoices) |
-| ✅ Multi-tenant via Hibernate filter | Isolation firm correcte |
+| ✅ Rate limiting sur les endpoints d'auth | Anti brute-force (Bucket4j) |
+| ✅ DocumentService upload avec triple validation | Upload sécurisé (ext + MIME + magic bytes) |
+| ✅ Multi-tenant via Hibernate filter | Isolation firm correcte + fail-closed |
 | ✅ `server.error.include-stacktrace=never` | Pas de stacktrace en prod |
 | ✅ `spring.jpa.hibernate.ddl-auto=validate` | Pas d'altération automatique du schéma |
-| ✅ H2 console désactivée | Surface d'attaque réduite |
+| ✅ H2 console désactivée (+ denyAll dans SecurityConfig) | Double protection |
 | ✅ Actuator complètement désactivé (profil principal) | Pas de fuite de métriques |
+| ✅ JwtService `@PostConstruct` validation | Secret JWT vide/court/dummy bloque le démarrage |
+| ✅ StripeService `isConfigured()` guard | Checkout bloqué si clés dummy |
+| ✅ Stripe webhook signature vérification (`Webhook.constructEvent`) | Webhooks authentifiés |
+| ✅ StrictHttpFirewall sans relaxation | Path traversal encodé bloqué |
+| ✅ HSTS 2 ans avec preload + includeSubDomains | Transport sécurisé |
+| ✅ `frame-ancestors 'none'` dans CSP | Anti-clickjacking |
+| ✅ Permissions-Policy restrictive | Caméra, micro, géoloc désactivés |
+| ✅ MFA secrets chiffrés AES-256-GCM (AttributeConverter) | Protection données MFA at-rest |
+| ✅ User.password annoté `@JsonIgnore` | Pas de sérialisation du hash |
+| ✅ User.stripeCustomerId/stripeSubscriptionId `@JsonIgnore` | Pas de fuite Stripe |
+| ✅ EmailService utilise `escapeHtml()` systématiquement | Anti-XSS dans les emails |
+| ✅ Dockerfile non-root (uid 1001) + JRE-only | Surface conteneur minimale |
+| ✅ Docker ports liés à 127.0.0.1 | Pas d'exposition réseau externe |
+| ✅ Grafana hardened (read_only, no-new-privileges, resource limits) | Monitoring sécurisé |
+| ✅ User entity avec validation Bean (`@NotBlank`, `@Size`, `@Email`, `@Pattern`) | Validation modèle complète |
+| ✅ Account lockout avec `resetAttempts()` après succès | Anti brute-force résilient |
+| ✅ Session fixation protection (`newSession()`) | Pas de fixation de session |
+| ✅ Max 1 session concurrente | Pas de session hijack parallèle |
+| ✅ `@InitBinder` pour mass assignment (ClientController) | Binding restreint |
+| ✅ Notifications : IDOR check via `user.getId()` | Ownership vérifié |
+| ✅ OWASP dependency-check plugin (CVSS 7.0 fail threshold) | Scan de dépendances automatisé |
 
 ---
 
-## Priorité de remédiation
+## Priorité de remédiation (mise à jour Juillet 2025)
 
 | Priorité | IDs | Effort estimé |
 |----------|-----|---------------|
-| 🔴 Immédiat (< 1 jour) | SEC-NEW-01, SEC-NEW-02, SEC-NEW-03 | 1h chacun |
-| 🟠 Court terme (< 1 semaine) | SEC-NEW-04, SEC-NEW-05, SEC-NEW-06, SEC-NEW-07 | 2-4h chacun |
-| 🟡 Moyen terme (< 1 mois) | SEC-NEW-08 à SEC-NEW-13 | 1-2h chacun |
-| 🔵 Planifié (backlog) | SEC-NEW-14 à SEC-NEW-16 | Variable |
+| ✅ Corrigé | SEC-NEW-01 | — |
+| 🔴 Immédiat (< 1 jour) | SEC-NEW-02, SEC-NEW-03 | 1h chacun |
+| 🟠 Court terme (< 1 semaine) | SEC-NEW-04, SEC-NEW-05, SEC-NEW-06, SEC-NEW-07, SEC-NEW-17 | 2-4h chacun |
+| 🟡 Moyen terme (< 1 mois) | SEC-NEW-08 à SEC-NEW-13, SEC-NEW-18, SEC-NEW-19, SEC-NEW-20 | 1-2h chacun |
+| 🔵 Planifié (backlog) | SEC-NEW-14 à SEC-NEW-16, SEC-NEW-21, SEC-NEW-22, SEC-NEW-23 | Variable |
+
+---
+
+## Annexe : Fichiers audités (Juillet 2025)
+
+### Contrôleurs (37 fichiers)
+- AuthController, AdminController, AdminApiController, DocumentController, TestDataController
+- ClientController, CaseController, PaymentController, DatabaseMigrationController
+- PasswordResetController, SecurityAdminController, SecurityAuditController
+- InvoiceController, SettingsController, CaseShareController, SubscriptionController
+- SignatureController, RPVAController, ClientPortalController, CollaboratorPortalController
+- HuissierPortalController, RgpdController, ComplianceController, DocumentShareController
+- DashboardController, NotificationController, SecurityMonitoringController, SitemapController
+- AppointmentController, InvoiceWebController, MaintenanceController, LegalController
+- FaviconController, ClientFeaturesController, AppointmentClientController
+- CollaboratorInvitationController, HuissierInvitationController
+
+### Services (clés audités)
+- JwtService, AuthService, DocumentService, StripeService, EmailService, UserService
+- YousignService, AdminMetricsService, PRAService, RefreshTokenService
+
+### Configuration
+- SecurityConfig, JwtAuthenticationFilter, MultiTenantFilter, RateLimitingFilter
+- application.properties, application-prod.properties, application-h2.properties
+- application-secure.properties, pom.xml, Dockerfile, docker-compose.yml, entrypoint.sh
+- logback-spring.xml, .env.example
+
+### Modèles
+- User.java (465 lignes — complet)
+
+### Templates (vérification patterns)
+- Recherche exhaustive : `th:utext` (0 occurrences), `<script>` inline (5+ templates), `onclick` (8+ templates), `_csrf` tokens (présents dans formulaires)
+

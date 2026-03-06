@@ -47,11 +47,11 @@ public class InvoiceController {
             InvoiceResponse response = invoiceService.createInvoice(request, user.getId());
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (Exception e) {
-            // Log error for monitoring
+            // SEC-INFO-LEAK FIX : ne pas exposer e.getMessage() au client
             log.error("Erreur lors de la création de la facture", e);
             Map<String, Object> body = Map.of(
                     "error", true,
-                    "message", e.getMessage() != null ? e.getMessage() : "Erreur interne"
+                    "message", "Erreur lors de la création de la facture. Veuillez réessayer."
             );
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
         }
@@ -85,31 +85,14 @@ public class InvoiceController {
                                                            Authentication authentication) {
         try {
             User user = getCurrentUser(authentication);
-            
-            // Vérifier le rôle de l'utilisateur
-            boolean isAdmin = authentication.getAuthorities().stream()
-                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
-            boolean isLawyer = authentication.getAuthorities().stream()
-                    .anyMatch(a -> a.getAuthority().equals("ROLE_LAWYER"));
-            
-            // Pour les admins : accès complet sans vérification
-            // Pour les lawyers : vérification via leur ID
-            // SEC-05 FIX : Pour les clients, récupérer le lawyerId via la relation client
-            String checkLawyerId;
-            if (isAdmin) {
-                checkLawyerId = "ADMIN_BYPASS";
-            } else if (isLawyer) {
-                checkLawyerId = user.getId();
-            } else {
-                // Client : trouver le lawyer associé via le Client entity
-                // Le service vérifiera que l'invoice appartient bien au lawyer du client
-                checkLawyerId = "CLIENT_" + user.getId();
-            }
-            
-            InvoiceResponse response = invoiceService.getInvoiceById(invoiceId, checkLawyerId);
+            // SEC-BYPASS FIX : passer l'ID utilisateur directement, le service vérifie le rôle via DB
+            InvoiceResponse response = invoiceService.getInvoiceById(invoiceId, user.getId());
             return ResponseEntity.ok(response);
+        } catch (SecurityException e) {
+            log.warn("Accès refusé à la facture {} pour l'utilisateur {}", invoiceId, authentication.getName());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         } catch (Exception e) {
-            log.error("Erreur lors de la récupération de la facture {}: {}", invoiceId, e.getMessage());
+            log.error("Erreur lors de la récupération de la facture {}", invoiceId, e);
             return ResponseEntity.notFound().build();
         }
     }

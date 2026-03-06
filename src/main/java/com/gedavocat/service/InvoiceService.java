@@ -5,8 +5,10 @@ import com.gedavocat.model.Client;
 import com.gedavocat.model.Invoice;
 import com.gedavocat.model.InvoiceItem;
 import com.gedavocat.model.Invoice.InvoiceStatus;
+import com.gedavocat.model.User;
 import com.gedavocat.repository.ClientRepository;
 import com.gedavocat.repository.InvoiceRepository;
+import com.gedavocat.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -47,6 +49,7 @@ public class InvoiceService {
 
     private final InvoiceRepository invoiceRepository;
     private final ClientRepository clientRepository;
+    private final UserRepository userRepository;
 
     /**
      * Crée une nouvelle facture
@@ -159,36 +162,39 @@ public class InvoiceService {
 
     /**
      * Récupère une facture par son ID
-     * SEC-IDOR FIX : vérification ownership
+     * SEC-IDOR FIX : vérification ownership via rôle SecurityContext
+     * @param invoiceId ID de la facture
+     * @param requesterId ID de l'utilisateur demandeur (utilisé pour vérifier ownership)
      */
     @Transactional(readOnly = true)
-    public InvoiceResponse getInvoiceById(String invoiceId, String lawyerId) {
+    public InvoiceResponse getInvoiceById(String invoiceId, String requesterId) {
         Invoice invoice = invoiceRepository.findById(invoiceId)
             .orElseThrow(() -> new RuntimeException("Facture non trouvée"));
         
-        // SÉCURITÉ SVC-01 FIX : vérification ownership stricte
-        if (lawyerId == null) {
-            throw new SecurityException("Identifiant avocat requis pour accéder à une facture");
+        // SÉCURITÉ : vérification ownership stricte
+        if (requesterId == null) {
+            throw new SecurityException("Identifiant utilisateur requis pour accéder à une facture");
         }
         
-        // Bypass pour les admins
-        if ("ADMIN_BYPASS".equals(lawyerId)) {
+        // Vérifier le rôle via la base de données (pas de magic string)
+        User requester = userRepository.findById(requesterId).orElse(null);
+        if (requester != null && requester.isAdmin()) {
+            // Admin : accès complet
             return convertToResponse(invoice);
         }
         
-        // SEC-05 FIX : Vérification ownership pour les clients
-        if (lawyerId.startsWith("CLIENT_")) {
-            String clientUserId = lawyerId.substring(7);
+        // Client : vérifier que la facture lui appartient
+        if (requester != null && requester.isClient()) {
             if (invoice.getClient() != null && invoice.getClient().getClientUser() != null
-                    && invoice.getClient().getClientUser().getId().equals(clientUserId)) {
+                    && invoice.getClient().getClientUser().getId().equals(requesterId)) {
                 return convertToResponse(invoice);
             }
             throw new SecurityException("Accès non autorisé à cette facture");
         }
         
-        // Vérification ownership pour lawyers
+        // Lawyer : vérifier que la facture appartient à un de ses clients
         if (invoice.getClient() != null && invoice.getClient().getLawyer() != null
-                && !invoice.getClient().getLawyer().getId().equals(lawyerId)) {
+                && !invoice.getClient().getLawyer().getId().equals(requesterId)) {
             throw new SecurityException("Accès non autorisé à cette facture");
         }
         

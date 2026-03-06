@@ -98,7 +98,7 @@ public class AppointmentClientController {
             redirectAttributes.addFlashAttribute("success", "Rendez-vous confirmé");
         } catch (Exception e) {
             log.error("Erreur confirmation client", e);
-            redirectAttributes.addFlashAttribute("error", "Erreur: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "Une erreur est survenue lors de la confirmation du rendez-vous.");
         }
         return "redirect:/client/appointments";
     }
@@ -147,7 +147,7 @@ public class AppointmentClientController {
             redirectAttributes.addFlashAttribute("success", "Refus envoyé à l'avocat");
         } catch (Exception e) {
             log.error("Erreur refus client", e);
-            redirectAttributes.addFlashAttribute("error", "Erreur: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "Une erreur est survenue lors du refus du rendez-vous.");
         }
         return "redirect:/client/appointments";
     }
@@ -200,7 +200,7 @@ public class AppointmentClientController {
             redirectAttributes.addFlashAttribute("success", "Proposition envoyée à l'avocat");
         } catch (Exception e) {
             log.error("Erreur proposition date client", e);
-            redirectAttributes.addFlashAttribute("error", "Erreur: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "Une erreur est survenue lors de la proposition de date.");
         }
         return "redirect:/client/appointments";
     }

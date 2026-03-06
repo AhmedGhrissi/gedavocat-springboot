@@ -196,7 +196,7 @@ public class HuissierInvitationController {
             return "redirect:/login";
         } catch (Exception e) {
             model.addAttribute("token", token);
-            model.addAttribute("error", "Erreur : " + e.getMessage());
+            model.addAttribute("error", "Erreur lors de la création du compte huissier");
             return "huissier-portal/accept-invitation";
         }
     }
