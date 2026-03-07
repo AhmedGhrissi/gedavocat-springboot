@@ -1,0 +1,44 @@
+# .gitlab-ci.yml — Stage sécurité à ajouter dans ton pipeline DocAvocat
+
+stages:
+  - security-audit
+  - build
+  - test
+  - deploy
+
+# ── Audit sécurité — bloque si échec ────────────────────────────────────────
+security-audit:
+  stage: security-audit
+  image: maven:3.9-eclipse-temurin-17
+  before_script:
+    - apt-get update -qq && apt-get install -y -qq nodejs npm
+  script:
+    - chmod +x ./audit-security.sh
+    - ./audit-security.sh
+  artifacts:
+    when: always
+    paths:
+      - security-reports/
+    expire_in: 90 days
+    reports:
+      junit: security-reports/audit-*.log
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "develop"'
+      when: always
+    - when: manual
+
+# ── OWASP Dependency Check dédié ────────────────────────────────────────────
+owasp-dependency-check:
+  stage: security-audit
+  image: maven:3.9-eclipse-temurin-17
+  script:
+    - mvn org.owasp:dependency-check-maven:check
+        -DfailBuildOnCVSS=7
+        -Dformat=HTML
+        -DoutputDirectory=security-reports/
+  artifacts:
+    when: always
+    paths:
+      - security-reports/dependency-check-report.html
+    expire_in: 90 days
+  allow_failure: false
