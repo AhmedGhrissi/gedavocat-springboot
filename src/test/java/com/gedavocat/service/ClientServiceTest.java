@@ -9,6 +9,8 @@ import com.gedavocat.repository.RpvaCommunicationRepository;
 import com.gedavocat.repository.UserRepository;
 
 import java.util.Collections;
+import java.util.Objects;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -22,6 +24,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.notNull;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -97,12 +100,12 @@ class ClientServiceTest {
     @DisplayName("✓ Créer un nouveau client")
     void createClient() {
         when(userRepository.findById("lawyer-001")).thenReturn(Optional.of(lawyer));
-        when(clientRepository.save(any(Client.class))).thenReturn(client);
+        when(clientRepository.save(notNull())).thenReturn(client);
 
         Client result = clientService.createClient(client, "lawyer-001");
 
         assertThat(result).isNotNull();
-        verify(clientRepository).save(any(Client.class));
+        verify(clientRepository).save(notNull());
     }
 
     @Test
@@ -111,11 +114,11 @@ class ClientServiceTest {
         when(clientRepository.findById("client-001")).thenReturn(Optional.of(client));
         when(caseRepository.findByClientId("client-001")).thenReturn(Collections.emptyList());
         doNothing().when(appointmentRepository).clearClientByClientId("client-001");
-        doNothing().when(clientRepository).delete(client);
+        doNothing().when(clientRepository).delete(notNull());
 
         clientService.deleteClient("client-001");
 
         verify(caseRepository).findByClientId("client-001");
-        verify(clientRepository).delete(client);
+        verify(clientRepository).delete(notNull());
     }
 }

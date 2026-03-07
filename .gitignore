@@ -84,7 +84,23 @@ __pycache__/
 # Environment files (credentials)
 .env
 .env.*
+*.env
 !docker/.env.example
+
+# Configuration files de production (secrets)
+application-prod.properties
+application-prod*.properties
+application-prod*.yml
+application-prod*.yaml
+
+# Certificats et keystores (secrets)
+*.jks
+*.p12
+*.pfx
+*.pem
+*.key
+*.crt
+!src/test/resources/**/*.pem
 
 # Docker production/deploy artifacts
 Dockerfile.prod

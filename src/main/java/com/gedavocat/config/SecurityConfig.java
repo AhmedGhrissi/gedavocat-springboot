@@ -94,9 +94,13 @@ public class SecurityConfig {
 
 					.anyRequest().authenticated())
 				// En-têtes de sécurité ANSSI/OWASP/RGPD — niveau bancaire
+				// Headers HTTP configurés : X-Frame-Options, Strict-Transport-Security (HSTS),
+				// Content-Security-Policy (CSP), X-Content-Type-Options, Referrer-Policy,
+				// Permissions-Policy, Cross-Origin-Opener-Policy, Cross-Origin-Resource-Policy
 				.headers(h -> {
 							h.frameOptions(f -> f.deny());
 							h.contentTypeOptions(Customizer.withDefaults());
+							// Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
 							h.httpStrictTransportSecurity(hsts -> hsts
 									.includeSubDomains(true)
 									.preload(true)
@@ -122,6 +126,7 @@ public class SecurityConfig {
 							final String styleSrc = "'self' 'unsafe-inline'" + extraStyleOrigins;
 							final String fontSrc  = "'self'" + extraFontOrigins;
 
+							// Content-Security-Policy header configuration
 							h.contentSecurityPolicy(csp -> csp.policyDirectives(
 									"default-src 'self'; " +
 									"script-src " + scriptSrc + "; " +

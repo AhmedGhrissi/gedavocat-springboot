@@ -3,11 +3,13 @@ package com.gedavocat.security;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.lang.NonNull;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Collections;
+import java.util.Objects;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -27,8 +29,8 @@ class JwtServiceTest {
     void setUp() {
         JwtBlacklistService blacklistService = new JwtBlacklistService();
         jwtService = new JwtService(blacklistService);
-        ReflectionTestUtils.setField(jwtService, "secretKey", SECRET);
-        ReflectionTestUtils.setField(jwtService, "jwtExpiration", EXPIRATION);
+        ReflectionTestUtils.setField(Objects.requireNonNull(jwtService), "secretKey", SECRET);
+        ReflectionTestUtils.setField(Objects.requireNonNull(jwtService), "jwtExpiration", EXPIRATION);
 
         testUser = User.builder()
             .username("jean.dupont@gedavocat.com")

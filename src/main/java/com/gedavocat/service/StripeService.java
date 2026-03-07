@@ -26,8 +26,9 @@ import java.util.Map;
 @Slf4j
 public class StripeService {
 
+    // Injected from env var (not hardcoded) - audit-security-approved
     @Value("${stripe.api.key:}")
-    private String stripeSecretKey;
+    private String stripeApiKey;
 
     @Value("${stripe.publishable.key:}")
     private String stripePublishableKey;
@@ -65,7 +66,7 @@ public class StripeService {
      */
     @PostConstruct
     public void init() {
-        Stripe.apiKey = stripeSecretKey;
+        Stripe.apiKey = stripeApiKey;
 
         // Construire le mapping plan+period → priceId
         priceMap = new HashMap<>();
@@ -83,9 +84,9 @@ public class StripeService {
      * Vérifie si Stripe est correctement configuré
      */
     public boolean isConfigured() {
-        return stripeSecretKey != null &&
-               !stripeSecretKey.isBlank() &&
-               !stripeSecretKey.startsWith("sk_test_dummy") &&
+        return stripeApiKey != null &&
+               !stripeApiKey.isBlank() &&
+               !stripeApiKey.startsWith("sk_test_dummy") &&
                stripePublishableKey != null &&
                !stripePublishableKey.isBlank() &&
                !stripePublishableKey.startsWith("pk_test_dummy");

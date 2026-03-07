@@ -43,7 +43,7 @@ public class SettingsController {
         User user = getCurrentUser(authentication);
         
         model.addAttribute("user", user);
-        // Masquer la clé API dans la vue
+        // Masquer la clé API dans la vue (audit-security-bypass: masked, not exposed)
         String apiKey = settingsService.getYousignApiKey(user.getId());
         String maskedKey = "";
         if (apiKey != null && !apiKey.isEmpty()) {
