@@ -44,14 +44,14 @@ public class SettingsController {
         
         model.addAttribute("user", user);
         // Masquer la clé API dans la vue (audit-security-bypass: masked, not exposed)
-        String apiKey = settingsService.getYousignApiKey(user.getId());
+        String apiKey = settingsService.getYousignApiKey(user.getId()); // gitleaks:allow
         String maskedKey = "";
         if (apiKey != null && !apiKey.isEmpty()) {
             maskedKey = apiKey.length() > 4
                 ? "••••" + apiKey.substring(apiKey.length() - 4)
                 : "••••";
         }
-        model.addAttribute("yousignApiKey", maskedKey);
+        model.addAttribute("yousignApiKey", maskedKey); // gitleaks:allow
         model.addAttribute("yousignConfigured", settingsService.isYousignConfigured(user.getId()));
         
         return "settings/index";
@@ -264,7 +264,7 @@ public class SettingsController {
             userData.put("subscriptionPlan", user.getSubscriptionPlan() != null ? user.getSubscriptionPlan().getDisplayName() : "FREE");
             userData.put("maxClients", user.getMaxClients());
             userData.put("yousignConfigured", settingsService.isYousignConfigured(user.getId()));
-            String apiKey = settingsService.getYousignApiKey(user.getId());
+            String apiKey = settingsService.getYousignApiKey(user.getId()); // gitleaks:allow
             // Masquer la clé API — n'envoyer que les 4 derniers caractères
             String maskedKey = "";
             if (apiKey != null && !apiKey.isEmpty()) {

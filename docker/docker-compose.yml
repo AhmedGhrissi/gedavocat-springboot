@@ -104,8 +104,8 @@ services:
       SPRING_WEB_RESOURCES_STATIC_LOCATIONS: "file:/opt/gedavocat/static-override/,classpath:/static/"
 
       # Services externes (APIs)
-      YOUSIGN_API_KEY: ${YOUSIGN_API_KEY}
-      STRIPE_API_KEY: ${STRIPE_API_KEY:-}
+      YOUSIGN_API_KEY: ${YOUSIGN_API_KEY} # gitleaks:allow - env var reference
+      STRIPE_API_KEY: ${STRIPE_API_KEY:-} # gitleaks:allow - env var reference
       STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY:-}
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
 

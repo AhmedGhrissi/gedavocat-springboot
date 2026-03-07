@@ -1,0 +1,32 @@
+# Configuration Gitleaks pour GedAvocat
+# Ignore les faux positifs liés aux références de variables d'environnement
+
+title = "GedAvocat Gitleaks Configuration"
+
+[allowlist]
+description = "Allowlist pour faux positifs"
+regexes = [
+    # Ignore les références à des variables d'environnement (pattern ${VAR})
+    '''\$\{[A-Z_]+\}''',
+]
+
+paths = [
+    # Ignore les noms de variables/méthodes dans le code Java
+    '''.*SettingsController\.java''',
+]
+
+# Allowlist spécifique par ligne
+[[rules]]
+    description = "Yousign API Key - Environment Variables Only"
+    id = "yousign-api-key-envvar"
+    regex = '''yousign[_-]?api[_-]?key'''
+    [rules.allowlist]
+        description = "Références à des variables d'environnement, pas des secrets"
+        regexes = [
+            # Variable d'environnement dans docker-compose
+            '''YOUSIGN_API_KEY:\s*\$\{YOUSIGN_API_KEY\}''',
+            # Variable d'environnement dans properties
+            '''yousign\.api\.key=\$\{YOUSIGN_API_KEY\}''',
+            # Noms de variables/méthodes dans le code Java
+            '''(String\s+apiKey|getYousignApiKey|yousignApiKey)''',
+        ]

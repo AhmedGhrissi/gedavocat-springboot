@@ -59,7 +59,8 @@ for pattern in "${SECRETS_PATTERNS[@]}"; do
     --include="*.properties" --include="*.xml" \
     --exclude-dir=".git" --exclude-dir="node_modules" --exclude-dir="target" \
     "$PROJECT_ROOT" 2>/dev/null | \
-    grep -v "test\|spec\|example\|sample\|TODO\|FIXME" || true)
+    grep -v "test\|spec\|example\|sample\|TODO\|FIXME\|gitleaks:allow" | \
+    grep -v '\${[A-Z_]\+}' || true)
   if [ -n "$matches" ]; then
     fail "Secret potentiel détecté — pattern: $pattern"
     echo "$matches" | head -5 | tee -a "$REPORT_FILE"

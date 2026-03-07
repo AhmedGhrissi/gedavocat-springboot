@@ -1,0 +1,15 @@
+# Trivy - Ignore false positives for environment variable references
+# https://aquasecurity.github.io/trivy/latest/docs/configuration/filtering/
+
+# Docker Compose - Environment variable references
+docker/docker-compose.yml:107
+docker/docker-compose.yml:108
+
+# Application Properties - Environment variable references  
+src/main/resources/application.properties:148
+
+# SettingsController - Variable names and method calls
+src/main/java/com/gedavocat/controller/SettingsController.java:47
+src/main/java/com/gedavocat/controller/SettingsController.java:54
+src/main/java/com/gedavocat/controller/SettingsController.java:267
+src/main/java/com/gedavocat/controller/SettingsController.java:275
