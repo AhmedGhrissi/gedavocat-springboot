@@ -199,6 +199,36 @@ L'application a passé **4 phases d'audit de sécurité indépendant**:
 
 **Score de sécurité final: A+ (niveau bancaire)**
 
+#### Scan de Vulnérabilités CVE (OWASP Dependency Check)
+
+**Test rapide en local** (2-3 minutes avec clé API) :
+
+```bash
+# Windows PowerShell
+.\test-owasp-scan.ps1
+
+# Linux/macOS
+./test-owasp-scan.sh
+```
+
+La clé API NVD est déjà configurée dans `.env.local` ! 🎉
+
+**Configuration manuelle** : Voir [NVD-API-KEY-SETUP.md](NVD-API-KEY-SETUP.md) pour GitLab CI/CD.
+
+**Scan manuel** :
+```bash
+# Charger la clé depuis .env.local
+export NVD_API_KEY="90d8d09b-ee85-41fa-8672-37d9b6811d7e"  # Linux/macOS
+$env:NVD_API_KEY="90d8d09b-ee85-41fa-8672-37d9b6811d7e"   # Windows
+
+# Lancer le scan
+mvn dependency-check:check
+```
+
+**Résultat** : Rapport généré dans `target/dependency-check-report.html`
+
+---
+
 ### Mesures de Sécurité Principales
 
 1. **Authentification**
