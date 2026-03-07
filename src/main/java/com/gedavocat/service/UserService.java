@@ -197,8 +197,13 @@ public class UserService {
             user.setMaxClients(10);
             user.setSubscriptionStartDate(LocalDateTime.now());
         }
+        
+        // ADMIN n'a pas de cabinet (firm_id reste NULL)
+        // Les autres rôles (LAWYER, CLIENT, etc.) devront avoir un firm_id assigné ailleurs si nécessaire
+        user.setFirm(null); // Explicitement NULL pour tous les utilisateurs créés par l'admin
 
-        log.info("Création utilisateur par admin: {} {} ({}), rôle: {}", firstName, lastName, email, role);
+        log.info("Création utilisateur par admin: {} {} ({}), rôle: {}, firm_id: {}", 
+                 firstName, lastName, email, role, user.getFirm() != null ? user.getFirm().getId() : "NULL");
         return userRepository.save(user);
     }
 }

@@ -458,7 +458,13 @@
                         <!-- Type d'utilisateur -->
                         <div class="mb-3">
                             <label class="form-label fw-bold">Type d'utilisateur <span class="text-danger">*</span></label>
-                            <div class="d-flex gap-3">
+                            <div class="d-flex gap-3 flex-wrap">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="role" id="roleAdmin" value="ADMIN" onchange="toggleSubscriptionFields()">
+                                    <label class="form-check-label" for="roleAdmin">
+                                        <i class="fas fa-user-shield text-danger"></i> Administrateur
+                                    </label>
+                                </div>
                                 <div class="form-check">
                                     <input class="form-check-input" type="radio" name="role" id="roleLawyer" value="LAWYER" checked onchange="toggleSubscriptionFields()">
                                     <label class="form-check-label" for="roleLawyer">
@@ -472,6 +478,9 @@
                                     </label>
                                 </div>
                             </div>
+                            <small class="form-text text-muted mt-1 d-block">
+                                <strong>Note :</strong> Les administrateurs n'ont pas de cabinet (firm_id sera NULL)
+                            </small>
                         </div>
                         <hr>
                         <!-- Prénom -->
@@ -523,8 +532,23 @@
     <script>
         /* ===================== Fonctions globales (appelées via onclick) ===================== */
         function toggleSubscriptionFields() {
-            var isLawyer = document.getElementById('roleLawyer').checked;
-            document.getElementById('subscriptionInfo').style.display = isLawyer ? 'block' : 'none';
+            var isAdmin = document.getElementById('roleAdmin') && document.getElementById('roleAdmin').checked;
+            var isLawyer = document.getElementById('roleLawyer') && document.getElementById('roleLawyer').checked;
+            var subscriptionInfo = document.getElementById('subscriptionInfo');
+            
+            if (subscriptionInfo) {
+                if (isAdmin) {
+                    subscriptionInfo.style.display = 'none';
+                } else if (isLawyer) {
+                    subscriptionInfo.style.display = 'block';
+                    subscriptionInfo.className = 'alert alert-info mb-0';
+                    subscriptionInfo.innerHTML = '<i class="fas fa-info-circle"></i> L\'avocat sera créé avec un abonnement <strong>Essentiel</strong> actif (10 clients max).';
+                } else {
+                    subscriptionInfo.style.display = 'block';
+                    subscriptionInfo.className = 'alert alert-warning mb-0';
+                    subscriptionInfo.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Le client sera créé sans abonnement (firm_id sera NULL jusqu\'à affectation).';
+                }
+            }
         }
         function togglePasswordVisibility() {
             var pwdInput = document.getElementById('newPassword');
@@ -616,56 +640,101 @@
             /* ===================== Fetch utilisateur ===================== */
             function adminLoadUser(userId, mode) {
                 currentUserId = userId;
+                
+                // Fonction helper pour accéder aux éléments de manière sûre
+                function safeGetElement(id) {
+                    try {
+                        return document.getElementById(id);
+                    } catch (e) {
+                        console.warn('Element not found:', id);
+                        return null;
+                    }
+                }
+                
+                // Fonction helper pour changer le style de manière sûre
+                function safeSetDisplay(elementId, displayValue) {
+                    var el = safeGetElement(elementId);
+                    if (el && el.style) {
+                        el.style.display = displayValue;
+                        return true;
+                    }
+                    return false;
+                }
+                
                 try {
                     if (mode === 'view') {
-                        document.getElementById('viewUserContent').style.display = 'none';
-                        document.getElementById('viewUserSpinner').style.display = 'block';
+                        safeSetDisplay('viewUserContent', 'none');
+                        safeSetDisplay('viewUserSpinner', 'block');
                     } else {
-                        document.getElementById('editUserContent').style.display = 'none';
-                        document.getElementById('editUserSpinner').style.display = 'block';
+                        safeSetDisplay('editUserContent', 'none');
+                        safeSetDisplay('editUserSpinner', 'block');
                     }
-                } catch (err) { console.error('adminLoadUser DOM error:', err); }
+                } catch (err) { 
+                    console.error('adminLoadUser DOM initialization error:', err); 
+                }
 
                 fetch('/admin/users/' + userId, { credentials: 'same-origin', headers: { 'Accept': 'application/json' } })
                     .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
                     .then(function (u) {
                         if (mode === 'view') {
-                            document.getElementById('vu-firstName').textContent        = u.firstName || '-';
-                            document.getElementById('vu-lastName').textContent         = u.lastName  || '-';
-                            document.getElementById('vu-email').textContent            = u.email     || '-';
-                            document.getElementById('vu-roleLabel').textContent        = u.roleLabel || '-';
-                            document.getElementById('vu-phone').textContent            = u.phone     || '-';
-                            document.getElementById('vu-barNumber').textContent        = u.barNumber || '-';
-                            document.getElementById('vu-subscriptionPlan').textContent = u.subscriptionPlan || '-';
-                            document.getElementById('vu-subscriptionStatus').textContent = u.subscriptionStatus || '-';
-                            document.getElementById('vu-maxClients').textContent       = u.maxClients != null ? u.maxClients : '-';
-                            document.getElementById('vu-accountEnabled').innerHTML     = u.accountEnabled
-                                ? '<span class="badge bg-success">Actif</span>'
-                                : '<span class="badge bg-danger">Bloqué</span>';
-                            document.getElementById('vu-createdAt').textContent        = u.createdAt  || '-';
-                            document.getElementById('vu-updatedAt').textContent        = u.updatedAt  || '-';
-                            document.getElementById('viewUserSpinner').style.display  = 'none';
-                            document.getElementById('viewUserContent').style.display  = 'block';
+                            var el;
+                            if (el = safeGetElement('vu-firstName')) el.textContent = u.firstName || '-';
+                            if (el = safeGetElement('vu-lastName')) el.textContent = u.lastName || '-';
+                            if (el = safeGetElement('vu-email')) el.textContent = u.email || '-';
+                            if (el = safeGetElement('vu-roleLabel')) el.textContent = u.roleLabel || '-';
+                            if (el = safeGetElement('vu-phone')) el.textContent = u.phone || '-';
+                            if (el = safeGetElement('vu-barNumber')) el.textContent = u.barNumber || '-';
+                            if (el = safeGetElement('vu-subscriptionPlan')) el.textContent = u.subscriptionPlan || '-';
+                            if (el = safeGetElement('vu-subscriptionStatus')) el.textContent = u.subscriptionStatus || '-';
+                            if (el = safeGetElement('vu-maxClients')) el.textContent = u.maxClients != null ? u.maxClients : '-';
+                            if (el = safeGetElement('vu-accountEnabled')) {
+                                el.innerHTML = u.accountEnabled
+                                    ? '<span class="badge bg-success">Actif</span>'
+                                    : '<span class="badge bg-danger">Bloqué</span>';
+                            }
+                            if (el = safeGetElement('vu-createdAt')) el.textContent = u.createdAt || '-';
+                            if (el = safeGetElement('vu-updatedAt')) el.textContent = u.updatedAt || '-';
+                            
+                            safeSetDisplay('viewUserSpinner', 'none');
+                            safeSetDisplay('viewUserContent', 'block');
                         } else {
-                            document.getElementById('edit-firstName').value = u.firstName || '';
-                            document.getElementById('edit-lastName').value  = u.lastName  || '';
-                            document.getElementById('edit-email').value     = u.email     || '';
-                            document.getElementById('edit-role').value      = u.role      || 'LAWYER';
-                            var enabledCb = document.getElementById('edit-accountEnabled');
-                            enabledCb.checked = u.accountEnabled;
-                            document.getElementById('editBlockWarning').style.display = u.accountEnabled ? 'none' : 'block';
-                            document.getElementById('editUserForm').action = '/admin/users/' + userId + '/edit';
-                            document.getElementById('editDeleteBtn').setAttribute('data-user-id', userId);
-                            document.getElementById('editDeleteBtn').setAttribute('data-user-name', u.firstName + ' ' + u.lastName);
-                            document.getElementById('editUserSpinner').style.display  = 'none';
-                            document.getElementById('editUserContent').style.display  = 'block';
+                            var el;
+                            if (el = safeGetElement('edit-firstName')) el.value = u.firstName || '';
+                            if (el = safeGetElement('edit-lastName')) el.value = u.lastName || '';
+                            if (el = safeGetElement('edit-email')) el.value = u.email || '';
+                            if (el = safeGetElement('edit-role')) el.value = u.role || 'LAWYER';
+                            
+                            var enabledCb = safeGetElement('edit-accountEnabled');
+                            if (enabledCb) enabledCb.checked = u.accountEnabled;
+                            
+                            var editWarn = safeGetElement('editBlockWarning');
+                            if (editWarn && editWarn.style) {
+                                editWarn.style.display = u.accountEnabled ? 'none' : 'block';
+                            }
+                            
+                            var editForm = safeGetElement('editUserForm');
+                            if (editForm) editForm.action = '/admin/users/' + userId + '/edit';
+                            
+                            var deleteBtn = safeGetElement('editDeleteBtn');
+                            if (deleteBtn) {
+                                deleteBtn.setAttribute('data-user-id', userId);
+                                deleteBtn.setAttribute('data-user-name', u.firstName + ' ' + u.lastName);
+                            }
+                            
+                            safeSetDisplay('editUserSpinner', 'none');
+                            safeSetDisplay('editUserContent', 'block');
                         }
                     })
                     .catch(function (err) {
                         console.error('adminLoadUser fetch error:', err);
-                        appAlert('Erreur lors du chargement : ' + err.message, 'danger');
+                        if (typeof appAlert === 'function') {
+                            appAlert('Erreur lors du chargement : ' + err.message, 'danger');
+                        } else {
+                            alert('Erreur lors du chargement : ' + err.message);
+                        }
                         var target = mode === 'view' ? 'viewUserSpinner' : 'editUserSpinner';
-                        document.getElementById(target).innerHTML = '<div class="alert alert-danger">Erreur de chargement</div>';
+                        var targetEl = safeGetElement(target);
+                        if (targetEl) targetEl.innerHTML = '<div class="alert alert-danger">Erreur de chargement</div>';
                     });
             }
 

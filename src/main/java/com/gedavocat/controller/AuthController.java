@@ -245,19 +245,14 @@ public class AuthController {
                     org.springframework.security.web.context.HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
                     org.springframework.security.core.context.SecurityContextHolder.getContext());
 
-                log.info("Auto-login réussi pour {} — redirection vers le paiement Stripe", emailLower);
+                log.info("Auto-login réussi pour {} — redirection vers /login", emailLower);
+                ra.addFlashAttribute("success", "Votre compte a été créé avec succès ! Vous pouvez maintenant vous connecter.");
+                return "redirect:/login";
             } catch (Exception e) {
                 log.error("Erreur auto-login après vérification email: {}", e.getMessage());
-                ra.addFlashAttribute("message", "Email vérifié ! Connectez-vous pour procéder au paiement.");
+                ra.addFlashAttribute("success", "Email vérifié ! Connectez-vous pour accéder à votre compte.");
                 return "redirect:/login";
             }
-
-            // Rediriger vers Stripe Checkout avec le plan choisi lors de l'inscription
-            // FUNC-06 FIX : conserver la période de facturation choisie lors de l'inscription
-            String plan = user.getSubscriptionPlan() != null 
-                ? user.getSubscriptionPlan().name() : "ESSENTIEL";
-            String period = user.getBillingPeriod() != null ? user.getBillingPeriod() : "monthly";
-            return "redirect:/subscription/checkout?plan=" + plan + "&period=" + period;
         }
         ra.addFlashAttribute("message", "Email vérifié ! Connectez-vous pour commencer.");
         return "redirect:/login";

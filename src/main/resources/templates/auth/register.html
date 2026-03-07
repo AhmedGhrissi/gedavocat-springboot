@@ -161,11 +161,12 @@
                     <label for="barreauId" class="form-label">Barreau d'inscription</label>
                     <select id="barreauId" th:field="*{barreauId}" 
                             th:classappend="${#fields.hasErrors('barreauId')} ? 'is-invalid' : ''"
-                            class="form-select">
-                        <option value="">-- Sélectionner un barreau (optionnel) --</option>
+                            class="form-select" style="color: #000 !important;">
+                        <option value="" style="color: #6c757d;">-- Sélectionner un barreau (optionnel) --</option>
                         <option th:each="barreau : ${barreaux}" 
                                 th:value="${barreau.id}" 
-                                th:text="${barreau.barreau + ' (' + barreau.region + ')'}">
+                                th:text="${barreau.barreau + ' (' + barreau.region + ')'}"
+                                style="color: #000 !important;">
                             Barreau
                         </option>
                     </select>
