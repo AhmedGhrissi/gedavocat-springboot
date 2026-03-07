@@ -218,6 +218,20 @@
 		<dependency>
 			<groupId>org.webjars</groupId>
 			<artifactId>webjars-locator-core</artifactId>
+			<exclusions>
+				<!-- Exclure jackson-core 2.19.4 vulnérable (CVE SNYK-JAVA-COMFASTERXMLJACKSONCORE-15365924) -->
+				<exclusion>
+					<groupId>com.fasterxml.jackson.core</groupId>
+					<artifactId>jackson-core</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+
+		<!-- Jackson Core 2.18.6 — SEC-HARDENED : corrige CVE Resource Allocation -->
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-core</artifactId>
+			<version>2.18.6</version>
 		</dependency>
 
 		<!-- jQuery — SEC-HARDENED : 3.7.1 (prototype pollution fix) -->
@@ -246,6 +260,20 @@
 			<groupId>dev.samstevens.totp</groupId>
 			<artifactId>totp</artifactId>
 			<version>1.7.1</version>
+			<exclusions>
+				<!-- Exclure jcommander 1.72 vulnérable (CVE SNYK-JAVA-COMBEUST-174815) -->
+				<exclusion>
+					<groupId>com.beust</groupId>
+					<artifactId>jcommander</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+
+		<!-- JCommander 1.82 — SEC-HARDENED : corrige CVE Unsafe Dependency Resolution -->
+		<dependency>
+			<groupId>com.beust</groupId>
+			<artifactId>jcommander</artifactId>
+			<version>1.82</version>
 		</dependency>
 
 		<!-- Jackson YAML (Configuration compliance) -->
