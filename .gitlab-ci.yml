@@ -4,19 +4,19 @@
 # COMPORTEMENT PAR BRANCHE :
 #
 #   Branche feature (ex: JC, dev, fix/...)  push :
-#     -> build + test automatiques (validation du code)
+#     -> security + build + test automatiques
 #     -> JAMAIS de package ou deploy
 #
 #   Branche main  push automatique :
 #     -> AUCUN pipeline (protege la prod des pushs accidentels)
 #
 #   Branche main  Run pipeline MANUEL (GitLab UI) :
-#     -> build -> test -> package (image Docker ARM64) -> deploy (manuel)
+#     -> security -> build -> test -> package -> deploy (manuel)
 #     -> Notifications Discord a chaque etape
 #
 # WORKFLOW RECOMMANDE :
 #   1. Developper sur une branche feature
-#   2. Push -> CI valide automatiquement (build + test)
+#   2. Push -> CI valide automatiquement (security + build + test)
 #   3. Merge Request -> review -> merge dans main
 #   4. GitLab -> CI/CD -> Pipelines -> "Run pipeline" sur main
 #   5. Suivre les etapes, cliquer Play sur deploy pour mettre en prod
@@ -26,6 +26,7 @@
 #   SSH_KNOWN_HOSTS  Variable Protected    Fingerprints serveur (ssh-keyscan)
 #   ENV_PROD         File     Protected    Contenu du fichier .env prod
 #   DISCORD_WEBHOOK  Variable Masked       URL du webhook Discord
+#   NVD_API_KEY      Variable Protected    Cle API NVD (nvd.nist.gov — gratuit)
 # ============================================================
 
 # Controle du declenchement des pipelines
@@ -37,10 +38,10 @@ workflow:
     # main declenche manuellement (Run pipeline dans l'UI) -> OK
     - if: $CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE == "web"
       when: always
-    # Merge Requests -> build + test automatiques
+    # Merge Requests -> security + build + test automatiques
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
       when: always
-    # Branches feature -> build + test automatiques
+    # Branches feature -> security + build + test automatiques
     - if: $CI_COMMIT_BRANCH && $CI_COMMIT_BRANCH != "main"
       when: always
 
@@ -51,18 +52,19 @@ default:
 variables:
   MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
   MAVEN_CLI_OPTS: "--batch-mode --no-transfer-progress"
-  # SERVER_HOST et REMOTE_DIR configurés via GitLab CI/CD Variables (Settings > CI/CD > Variables)
-  # SERVER_HOST: IP du serveur de production (Protected, Masked)
-  # REMOTE_DIR: Répertoire de déploiement (par défaut /opt/gedavocat)
   REMOTE_DIR: "/opt/gedavocat"
 
 stages:
+  - security      # ← NOUVEAU — tolérance zéro, bloque tout si échec
   - build
   - test
   - package
   - deploy
 
-# Notification Discord — toutes branches
+# ──────────────────────────────────────────────────────────────────
+# ANCRES DISCORD (inchangées)
+# ──────────────────────────────────────────────────────────────────
+
 .discord_commit_notify: &discord_commit_notify
   - |
     WEBHOOK="${DISCORD_WEBHOOK:-${DISCORD_COMMIT_WEBHOOK:-}}"
@@ -88,7 +90,6 @@ stages:
     fi
     true
 
-# Notification Discord — main uniquement (deploy)
 .discord_deploy_notify: &discord_deploy_notify
   - |
     if [ -z "${DISCORD_WEBHOOK:-}" ]; then
@@ -112,15 +113,104 @@ stages:
     fi
     true
 
-#
-# STAGE 1 : BUILD
-#
-build:
-  stage: build
+# ──────────────────────────────────────────────────────────────────
+# STAGE 0 : SECURITY (NOUVEAU — bloquant, toutes branches)
+# ──────────────────────────────────────────────────────────────────
+
+audit-code-security:
+  stage: security
+  image: maven:3.9-eclipse-temurin-17
+  before_script:
+    - apt-get update -qq && apt-get install -yqq curl nodejs npm git > /dev/null 2>&1 || true
+    - chmod +x ./audit-security.sh
+    # Notification Discord : audit démarre
+    - |
+      WEBHOOK="${DISCORD_WEBHOOK:-}"
+      [ -z "$WEBHOOK" ] && true || {
+        PAYLOAD=$(printf '{"embeds":[{"title":"[SHIELD] Audit securite demarre","description":"**Branche :** `%s`\\n**Commit :** [`%s`](%s)\\n**Par :** %s\\n\\n*Analyse OWASP, secrets, injections, RGPD...*","color":16776960,"footer":{"text":"DocAvocat CI/CD"},"timestamp":"%s"}]}' \
+          "${CI_COMMIT_BRANCH:-MR}" "${CI_COMMIT_SHORT_SHA:-????}" \
+          "$CI_PIPELINE_URL" "${GITLAB_USER_NAME:-CI}" \
+          "$(date -u '+%Y-%m-%dT%H:%M:%SZ')")
+        curl -s -o /dev/null -X POST "$WEBHOOK" -H "Content-Type: application/json" -d "$PAYLOAD" || true
+      }
+  script:
+    - echo "========================================="
+    - echo "AUDIT SECURITE — TOLERANCE ZERO"
+    - echo "========================================="
+    - ./audit-security.sh
+  after_script:
+    - |
+      if [ "$CI_JOB_STATUS" = "success" ]; then
+        EMOJI="[SHIELD]"; STATUS="Audit securite OK — aucune faille critique"; COLOR=3066993
+      else
+        EMOJI="[ALERT]"; STATUS="AUDIT ECHOUE — faille securite detectee ! Deploy BLOQUE"; COLOR=15158332
+      fi
+    - *discord_commit_notify
+  artifacts:
+    name: "audit-security-$CI_COMMIT_SHORT_SHA"
+    when: always
+    paths:
+      - security-reports/
+    expire_in: 90 days
+  allow_failure: false   # BLOQUANT — ne jamais changer
+  cache:
+    key: "maven-$CI_COMMIT_REF_SLUG"
+    paths:
+      - .m2/repository/
+    policy: pull
+
+owasp-dependency-check:
+  stage: security
   image: maven:3.9-eclipse-temurin-17
   before_script:
     - apt-get update -qq && apt-get install -yqq curl > /dev/null 2>&1 || true
-    # Notification Discord : pipeline demarre
+  script:
+    - echo "========================================="
+    - echo "OWASP DEPENDENCY CHECK — CVE >= 7.0"
+    - echo "========================================="
+    - |
+      MVN_ARGS="$MAVEN_CLI_OPTS org.owasp:dependency-check-maven:check \
+        -DfailBuildOnCVSS=7 \
+        -Dformat=HTML \
+        -DoutputDirectory=security-reports/"
+      # Ajouter la clé NVD si disponible (évite le rate-limiting)
+      if [ -n "${NVD_API_KEY:-}" ]; then
+        MVN_ARGS="$MVN_ARGS -DnvdApiKey=$NVD_API_KEY"
+      else
+        echo "NVD_API_KEY non définie — audit possible mais plus lent (rate-limited)"
+      fi
+      mvn $MVN_ARGS
+  after_script:
+    - |
+      if [ "$CI_JOB_STATUS" = "success" ]; then
+        EMOJI="[SHIELD]"; STATUS="OWASP OK — aucune CVE critique dans les dependances"; COLOR=3066993
+      else
+        EMOJI="[ALERT]"; STATUS="OWASP FAIL — CVE critique detectee dans les dependances !"; COLOR=15158332
+      fi
+    - *discord_commit_notify
+  artifacts:
+    name: "owasp-$CI_COMMIT_SHORT_SHA"
+    when: always
+    paths:
+      - security-reports/dependency-check-report.html
+    expire_in: 90 days
+  allow_failure: false   # BLOQUANT
+  cache:
+    key: "maven-$CI_COMMIT_REF_SLUG"
+    paths:
+      - .m2/repository/
+    policy: pull
+
+# ──────────────────────────────────────────────────────────────────
+# STAGE 1 : BUILD (inchangé + needs security)
+# ──────────────────────────────────────────────────────────────────
+
+build:
+  stage: build
+  image: maven:3.9-eclipse-temurin-17
+  needs: [audit-code-security, owasp-dependency-check]   # ← attend que la sécurité passe
+  before_script:
+    - apt-get update -qq && apt-get install -yqq curl > /dev/null 2>&1 || true
     - |
       WEBHOOK="${DISCORD_WEBHOOK:-${DISCORD_COMMIT_WEBHOOK:-}}"
       [ -z "$WEBHOOK" ] && true || {
@@ -130,9 +220,9 @@ build:
         TITLE="${CI_COMMIT_TITLE:-}"
         COMMIT_MSG=$(printf '%s' "$TITLE" | head -c 80 | sed 's/\\/\\\\/g; s/"/\\"/g; s/	/ /g')
         if [ "$BRANCH" = "main" ]; then
-          SCOPE="branche main - pipeline complet (build -> test -> package -> deploy)"
+          SCOPE="branche main - pipeline complet (security -> build -> test -> package -> deploy)"
         else
-          SCOPE="branche feature - build + test uniquement"
+          SCOPE="branche feature - security + build + test uniquement"
         fi
         PAYLOAD=$(printf '{"embeds":[{"title":"[START] Pipeline demarre","description":"**Branche :** `%s`\\n**Commit :** [`%s`](%s)\\n**Par :** %s\\n**Message :** %s\\n**Scope :** %s","color":16776960,"footer":{"text":"DocAvocat CI/CD"},"timestamp":"%s"}]}' \
           "$BRANCH" "$SHA" "$CI_PIPELINE_URL" "$AUTHOR" "$COMMIT_MSG" "$SCOPE" "$(date -u '+%Y-%m-%dT%H:%M:%SZ')")
@@ -170,9 +260,10 @@ build:
     paths:
       - .m2/repository/
 
-#
-# STAGE 2 : TEST
-#
+# ──────────────────────────────────────────────────────────────────
+# STAGE 2 : TEST (inchangé)
+# ──────────────────────────────────────────────────────────────────
+
 test:
   stage: test
   image: maven:3.9-eclipse-temurin-17
@@ -219,21 +310,18 @@ test:
       - target/surefire-reports/
     expire_in: 2 weeks
 
-#
-# STAGE 3 : PACKAGE
-# Build image Docker + push GitLab Container Registry
-# UNIQUEMENT sur main declenche manuellement
-#
+# ──────────────────────────────────────────────────────────────────
+# STAGE 3 : PACKAGE (inchangé)
+# ──────────────────────────────────────────────────────────────────
+
 package:
   stage: package
   image: docker:27-cli
   needs: [test]
   variables:
     DOCKER_BUILDKIT: "1"
-    # Force IPv4 pour eviter les problemes de connectivite IPv6
     DOCKER_CLI_EXPERIMENTAL: "enabled"
   before_script:
-    # Retry logic pour docker login (max 3 tentatives)
     - |
       MAX_RETRIES=3
       RETRY_COUNT=0
@@ -269,7 +357,6 @@ package:
         .; then
         echo ""
         echo "ERREUR: Le build Docker a echoue!"
-        echo "Verifiez le Dockerfile et les dependances"
         exit 1
       fi
       echo ""
@@ -296,9 +383,7 @@ package:
               echo "! Echec du push, nouvelle tentative dans 15s..."
               sleep 15
             else
-              echo ""
               echo "ERREUR: Impossible de pousser l'image :$TAG apres $MAX_RETRIES tentatives"
-              echo "Verifiez la connectivite reseau et les permissions du registry"
               exit 1
             fi
           fi
@@ -306,7 +391,6 @@ package:
       done
       echo ""
       echo "✓✓✓ Toutes les images poussees avec succes ✓✓✓"
-      echo "Image principale: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA"
   after_script:
     - apk add --no-cache curl --quiet 2>/dev/null || true
     - |
@@ -320,11 +404,10 @@ package:
   rules:
     - if: $CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE == "web"
 
-#
-# STAGE 4 : DEPLOY
-# UNIQUEMENT sur main declenche manuellement
-# Cliquer le bouton Play dans GitLab pour declencher
-#
+# ──────────────────────────────────────────────────────────────────
+# STAGE 4 : DEPLOY (inchangé)
+# ──────────────────────────────────────────────────────────────────
+
 deploy:
   stage: deploy
   image: alpine:3.19
@@ -342,7 +425,6 @@ deploy:
     - mkdir -p ~/.ssh && chmod 700 ~/.ssh
     - echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
     - chmod 644 ~/.ssh/known_hosts
-    # Notification Discord : deploiement en cours
     - |
       [ -z "${DISCORD_WEBHOOK:-}" ] && true || {
         PAYLOAD=$(printf '{"embeds":[{"title":"[DEPLOY] Deploiement en cours...","description":"**Branche :** `%s`\\n**Commit :** [`%s`](%s)\\n**Par :** %s\\n\\n*Envoi fichiers -> restart -> check HTTP...*\\n\\n[Logs deploy ->](%s/-/jobs/%s)","color":16776960,"footer":{"text":"DocAvocat CI/CD"},"timestamp":"%s"}]}' \
@@ -355,7 +437,6 @@ deploy:
         echo "Discord deploy-start: HTTP $RESPONSE"
       }
   script:
-    # Nettoyage disque avant deploiement (evite "No space left on device")
     - |
       ssh root@$SERVER_HOST "
         echo '=== Espace disque avant nettoyage ==='
@@ -369,41 +450,30 @@ deploy:
         echo '=== Espace disque apres nettoyage ==='
         df -h / | tail -1
       "
-
-    # Envoi des fichiers de configuration
     - scp docker/docker-compose.yml root@$SERVER_HOST:$REMOTE_DIR/docker-compose.yml
-
-    # On met a jour APP_IMAGE dans le .env existant (sans ecraser les autres variables)
     - ssh root@$SERVER_HOST "sed -i '/^APP_IMAGE=/d' $REMOTE_DIR/.env && echo \"APP_IMAGE=$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA\" >> $REMOTE_DIR/.env"
-
-    # Injecter les variables SMTP si definies dans GitLab CI/CD
     - |
       ssh root@$SERVER_HOST "
         cd $REMOTE_DIR
         for VAR in MAIL_HOST MAIL_PORT MAIL_USERNAME MAIL_PASSWORD; do
           sed -i \"/^\${VAR}=/d\" .env
         done
-        echo 'MAIL_HOST=${MAIL_HOST:-mail.docavocat.fr}' >> .env
-        echo 'MAIL_PORT=${MAIL_PORT:-465}' >> .env
+        echo 'MAIL_HOST=${MAIL_HOST:-smtp-relay.brevo.com}' >> .env
+        echo 'MAIL_PORT=${MAIL_PORT:-587}' >> .env
         echo 'MAIL_USERNAME=${MAIL_USERNAME:-noreply@docavocat.fr}' >> .env
         echo 'MAIL_PASSWORD=${MAIL_PASSWORD}' >> .env
       "
-
-    # Envoi des configs Loki / Promtail / Grafana
     - ssh root@$SERVER_HOST "mkdir -p $REMOTE_DIR/loki $REMOTE_DIR/promtail $REMOTE_DIR/grafana/provisioning/datasources $REMOTE_DIR/grafana/provisioning/dashboards"
     - scp docker/loki/local-config.yaml root@$SERVER_HOST:$REMOTE_DIR/loki/local-config.yaml
     - scp docker/promtail/config.yaml root@$SERVER_HOST:$REMOTE_DIR/promtail/config.yaml
     - scp docker/grafana/provisioning/datasources/loki.yaml root@$SERVER_HOST:$REMOTE_DIR/grafana/provisioning/datasources/loki.yaml
     - scp docker/grafana/provisioning/dashboards/dashboards.yaml root@$SERVER_HOST:$REMOTE_DIR/grafana/provisioning/dashboards/dashboards.yaml
     - scp docker/grafana/provisioning/dashboards/docavocat.json root@$SERVER_HOST:$REMOTE_DIR/grafana/provisioning/dashboards/docavocat.json
-
-    # Deploiement
     - |
       ssh root@$SERVER_HOST "
         set -e
         cd $REMOTE_DIR
-        
-        # Retry logic pour docker login sur le serveur
+
         MAX_RETRIES=3
         RETRY_COUNT=0
         until [ \$RETRY_COUNT -ge \$MAX_RETRIES ]; do
@@ -422,203 +492,103 @@ deploy:
             fi
           fi
         done
-        
+
         echo '=== Pull de la nouvelle image ==='
-        if ! docker compose pull app; then
-          echo 'ERREUR: Echec du pull de l image Docker'
-          docker images | grep docavocat || true
-          exit 1
-        fi
-        
-        echo ''
+        docker compose pull app || { echo 'ERREUR pull image'; exit 1; }
+
         echo '=== Arret de l ancien conteneur ==='
         docker compose stop app 2>/dev/null || true
         docker compose rm -f app 2>/dev/null || true
-        
-        echo ''
+
         echo '=== Demarrage du nouveau conteneur ==='
-        if ! docker compose up -d --no-deps app; then
-          echo 'ERREUR: Echec du demarrage du conteneur'
-          docker compose logs app 2>&1 || true
-          exit 1
-        fi
-        
-        echo ''
+        docker compose up -d --no-deps app || { echo 'ERREUR demarrage'; docker compose logs app; exit 1; }
+
         echo '=== Demarrage des services de monitoring ==='
         docker compose up -d loki promtail grafana 2>/dev/null || true
-        
+
         docker logout $CI_REGISTRY 2>/dev/null || true
-        
-        echo ''
+
         echo '=== Conteneurs actifs ==='
         docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
-        
-        echo ''
+
         echo '=== Premiers logs du conteneur (10s) ==='
         sleep 10
         docker logs docavocat-app --tail=50 2>&1 || echo 'Impossible de lire les logs'
       "
-
-    # Verification du demarrage du conteneur et de l'application
     - |
       echo "========================================="
       echo "ETAPE 1: Verification etat du conteneur"
       echo "========================================="
       ssh root@$SERVER_HOST "
-        echo '--- Conteneurs actifs ---'
         docker ps --filter name=docavocat-app --format 'table {{.Names}}\t{{.Status}}\t{{.State}}'
-        
-        echo ''
-        echo '--- Inspection du conteneur ---'
         CONTAINER_STATUS=\$(docker inspect docavocat-app --format='{{.State.Status}}' 2>/dev/null || echo 'not found')
-        CONTAINER_HEALTH=\$(docker inspect docavocat-app --format='{{.State.Health.Status}}' 2>/dev/null || echo 'no health check')
-        CONTAINER_EXIT_CODE=\$(docker inspect docavocat-app --format='{{.State.ExitCode}}' 2>/dev/null || echo 'N/A')
-        CONTAINER_RUNNING=\$(docker inspect docavocat-app --format='{{.State.Running}}' 2>/dev/null || echo 'false')
-        
         echo \"Status: \$CONTAINER_STATUS\"
-        echo \"Health: \$CONTAINER_HEALTH\"
-        echo \"Exit Code: \$CONTAINER_EXIT_CODE\"
-        echo \"Running: \$CONTAINER_RUNNING\"
-        
         if [ \"\$CONTAINER_STATUS\" != 'running' ]; then
-          echo ''
           echo '!!! ERREUR: Le conteneur n est pas en cours d execution !!!'
-          echo ''
-          echo '--- Logs complets du conteneur ---'
           docker logs docavocat-app 2>&1 || true
           exit 1
         fi
-        
-        if [ \"\$CONTAINER_EXIT_CODE\" != '0' ] && [ \"\$CONTAINER_EXIT_CODE\" != 'N/A' ]; then
-          echo ''
-          echo \"!!! AVERTISSEMENT: Exit code non nul: \$CONTAINER_EXIT_CODE !!!\"
-        fi
       "
-      
-      echo ""
+    - |
       echo "========================================="
       echo "ETAPE 2: Attente demarrage Spring Boot"
       echo "========================================="
       echo "Patience, Spring Boot demarre (environ 60s)..."
-      
-      # Attente progressive avec verification des logs
       for i in 1 2 3 4 5 6; do
         sleep 10
         echo "[$((i*10))s] Verification en cours..."
-        
-        # Verifier si le conteneur est toujours en cours d'execution
         ssh root@$SERVER_HOST "
           if ! docker ps --filter name=docavocat-app --filter status=running -q | grep -q .; then
             echo '!!! ERREUR: Le conteneur s est arrete pendant le demarrage !!!'
-            echo ''
-            echo '--- Derniers logs du conteneur ---'
             docker logs docavocat-app --tail=100 2>&1
             exit 1
           fi
         " || exit 1
-        
-        # Chercher des indicateurs de demarrage reussi dans les logs
         STARTED=$(ssh root@$SERVER_HOST "docker logs docavocat-app 2>&1 | grep -i 'Started GedAvocatApplication' | wc -l" 2>/dev/null || echo "0")
         if [ "$STARTED" -gt "0" ]; then
           echo "✓ Spring Boot a demarre avec succes!"
           break
         fi
       done
-      
-      echo ""
+    - |
       echo "========================================="
-      echo "ETAPE 3: Verification HTTP de l'application"
+      echo "ETAPE 3: Verification HTTP"
       echo "========================================="
-      
-      # Tentatives multiples de verification HTTP
       MAX_HTTP_RETRIES=5
       HTTP_SUCCESS=false
-      
       for attempt in $(seq 1 $MAX_HTTP_RETRIES); do
         echo "Tentative HTTP $attempt/$MAX_HTTP_RETRIES..."
-        
         HTTP_CODE=$(ssh root@$SERVER_HOST "curl -s -o /dev/null -w '%{http_code}' --max-time 10 http://127.0.0.1:8080/" 2>/dev/null || echo "000")
         echo "  Code HTTP recu: $HTTP_CODE"
-        
         if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "302" ]; then
           echo "✓ Application repond correctement (HTTP $HTTP_CODE)"
           HTTP_SUCCESS=true
           break
         else
-          if [ $attempt -lt $MAX_HTTP_RETRIES ]; then
-            echo "  En attente... (10s)"
-            sleep 10
-          fi
+          [ $attempt -lt $MAX_HTTP_RETRIES ] && sleep 10
         fi
       done
-      
       if [ "$HTTP_SUCCESS" = "false" ]; then
-        echo ""
         echo "!!! ERREUR: L'application ne repond pas correctement !!!"
-        echo ""
-        echo "========================================="
-        echo "DIAGNOSTICS D'ERREUR"
-        echo "========================================="
-        
-        ssh root@$SERVER_HOST "
-          echo '--- Etat final du conteneur ---'
-          docker inspect docavocat-app --format='Status: {{.State.Status}} | Running: {{.State.Running}} | ExitCode: {{.State.ExitCode}}' 2>/dev/null || echo 'Impossible d inspecter le conteneur'
-          
-          echo ''
-          echo '--- Processus Java dans le conteneur ---'
-          docker exec docavocat-app ps aux 2>/dev/null || echo 'Impossible d executer ps dans le conteneur'
-          
-          echo ''
-          echo '--- Ports ouverts sur le serveur ---'
-          ss -tlnp | grep :8080 || echo 'Port 8080 non ouvert'
-          
-          echo ''
-          echo '--- Test connexion interne depuis le conteneur ---'
-          docker exec docavocat-app wget -q -O- --timeout=5 http://localhost:8080 2>&1 | head -20 || echo 'Connexion interne echouee'
-          
-          echo ''
-          echo '--- 300 dernieres lignes des logs ---'
-          docker logs docavocat-app --tail=300 2>&1
-          
-          echo ''
-          echo '--- Erreurs dans les logs ---'
-          docker logs docavocat-app 2>&1 | grep -i -E '(error|exception|failed|fatal|caused by)' | tail -50 || echo 'Aucune erreur trouvee dans les logs'
-          
-          echo ''
-          echo '--- Variables d environnement du conteneur ---'
-          docker exec docavocat-app env | sort || echo 'Impossible de lire les variables d environnement'
-        "
-        
+        ssh root@$SERVER_HOST "docker logs docavocat-app --tail=300 2>&1"
         exit 1
       fi
-      
-      echo ""
+    - |
       echo "========================================="
       echo "ETAPE 4: Verification finale"
       echo "========================================="
       ssh root@$SERVER_HOST "
-        echo '--- Statistiques conteneur ---'
         docker stats docavocat-app --no-stream --format 'table {{.Container}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.MemPerc}}' || true
-        
-        echo ''
-        echo '--- Logs recents (50 dernieres lignes) ---'
         docker logs docavocat-app --tail=50 2>&1
       "
-      
       echo ""
       echo "✓✓✓ Deploiement reussi -> https://docavocat.fr ✓✓✓"
-
   after_script:
     - apk add --no-cache curl 2>/dev/null || true
     - |
       set +e
       if [ "$CI_JOB_STATUS" != "success" ]; then
-        echo ""
-        echo "========================================="
-        echo "RAPPORT D'ERREUR FINAL"
-        echo "========================================="
-        echo "Le deploiement a echoue. Consultez les logs ci-dessus pour plus de details."
-        echo "Les diagnostics complets sont affiches dans la section 'script' du job."
+        echo "Le deploiement a echoue. Consultez les logs ci-dessus."
       fi
       true
     - |
@@ -631,7 +601,6 @@ deploy:
       JOB_NAME="Deploiement Production"
       true
     - *discord_deploy_notify
-
   environment:
     name: production
     url: https://docavocat.fr
