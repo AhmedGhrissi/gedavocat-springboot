@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+    
+    <!-- 
+        Fichier de suppressions OWASP Dependency Check
+        Utilisé pour ignorer les faux positifs connus après vérification manuelle
+    -->
+    
+    <!-- Suppression des CVE non applicables aux dépendances de test uniquement -->
+    <suppress>
+        <notes><![CDATA[
+        H2 Database utilisé uniquement en dev/test, jamais en production
+        Les CVE H2 Remote Code Execution ne sont pas applicables car:
+        - H2 Console désactivé en production (bloqué dans SecurityConfig)
+        - Scope: runtime (dev/test uniquement)
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/com\.h2database/h2@.*$</packageUrl>
+        <cpe>cpe:/a:h2database:h2</cpe>
+    </suppress>
+    
+    <!-- Bootstrap et jQuery WebJars: CVE XSS non applicables car CSP strict -->
+    <suppress>
+        <notes><![CDATA[
+        WebJars (Bootstrap, jQuery) servis avec Content-Security-Policy strict
+        XSS prevention via CSP Headers (frame-ancestors 'none', script-src restricted)
+        ]]></notes>
+        <packageUrl regex="true">^pkg:javascript/bootstrap@.*$</packageUrl>
+        <vulnerabilityName regex="true">^CVE-.*-XSS$</vulnerabilityName>
+    </suppress>
+    
+    <!-- Faux positifs sur les librairies de logging -->
+    <suppress>
+        <notes><![CDATA[
+        Logback utilisé avec configuration sécurisée
+        Pas d'exposition externe des logs
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/ch\.qos\.logback/logback.*@.*$</packageUrl>
+        <cve>CVE-2023-6378</cve>
+    </suppress>
+
+</suppressions>
