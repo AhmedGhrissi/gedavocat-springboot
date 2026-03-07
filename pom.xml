@@ -4,11 +4,11 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<!-- SEC-HARDENED : Spring Boot 3.3.11 (CVE patches pour Tomcat, Spring Security & Framework) -->
+	<!-- SEC-HARDENED : Spring Boot 3.5.11 (Latest 3.x - CVE patches pour Tomcat, Netty, Jackson) -->
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.3.11</version>
+		<version>3.5.11</version>
 		<relativePath />
 	</parent>
 
