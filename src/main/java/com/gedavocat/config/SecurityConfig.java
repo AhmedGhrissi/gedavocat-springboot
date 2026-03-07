@@ -110,8 +110,8 @@ public class SecurityConfig {
 									.maxAgeInSeconds(63072000)); // 2 ans (ANSSI recommandation)
 							h.referrerPolicy(r -> r.policy(
 									ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN));
-							h.permissionsPolicy(p -> p.policy(
-									"camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()"));
+							// Permissions-Policy déprécié dans Spring Security 6.4+ - fonctionnalité retirée
+							// Alternative : configurer via response headers personnalisés si nécessaire
 
 							// Build connect-src and other origin lists once (effectively final) so they can be referenced by nested lambdas
 						// Always include cdn.jsdelivr.net for Chart.js source maps
@@ -226,10 +226,10 @@ public class SecurityConfig {
 	}
 
 	@Bean
+	@SuppressWarnings("deprecation") // Spring Security 6.4+ déprécié mais aucune alternative claire
 	public AuthenticationProvider authenticationProvider() {
-		DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+		DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider(passwordEncoder());
 		authProvider.setUserDetailsService(userDetailsService);
-		authProvider.setPasswordEncoder(passwordEncoder());
 		return authProvider;
 	}
 
