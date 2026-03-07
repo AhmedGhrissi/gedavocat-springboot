@@ -120,6 +120,9 @@ stages:
 audit-code-security:
   stage: security
   image: maven:3.9-eclipse-temurin-17
+  variables:
+    # Skip OWASP dans audit-security.sh (job dédié owasp-dependency-check le fait déjà)
+    SKIP_OWASP_AUDIT: "true"
   before_script:
     - apt-get update -qq && apt-get install -yqq curl nodejs npm git > /dev/null 2>&1 || true
     - chmod +x ./audit-security.sh
@@ -162,6 +165,7 @@ audit-code-security:
 owasp-dependency-check:
   stage: security
   image: maven:3.9-eclipse-temurin-17
+  timeout: 30m  # Timeout 30 minutes (sans clé NVD, prend ~20-30min)
   before_script:
     - apt-get update -qq && apt-get install -yqq curl > /dev/null 2>&1 || true
   script:
@@ -176,8 +180,10 @@ owasp-dependency-check:
       # Ajouter la clé NVD si disponible (évite le rate-limiting)
       if [ -n "${NVD_API_KEY:-}" ]; then
         MVN_ARGS="$MVN_ARGS -DnvdApiKey=$NVD_API_KEY"
+        echo "NVD_API_KEY configurée — scan rapide (~2-3 min)"
       else
-        echo "NVD_API_KEY non définie — audit possible mais plus lent (rate-limited)"
+        echo "NVD_API_KEY non définie — scan lent (~20-30 min sans clé)"
+        echo "Obtenir une clé gratuite : https://nvd.nist.gov/developers/request-an-api-key"
       fi
       mvn $MVN_ARGS
   after_script:
@@ -196,10 +202,11 @@ owasp-dependency-check:
     expire_in: 90 days
   allow_failure: true   # Non bloquant temporairement (problèmes techniques NVD)
   cache:
-    key: "maven-$CI_COMMIT_REF_SLUG"
+    key: "owasp-nvd-data"  # Cache global pour la base NVD (partagé entre branches)
     paths:
       - .m2/repository/
-    policy: pull
+      - .m2/repository/org/owasp/dependency-check-data/
+    policy: pull-push  # Télécharge ET sauvegarde le cache (base NVD ~500MB)
 
 snyk-security-scan:
   stage: security
