@@ -4,11 +4,11 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<!-- SEC-HARDENED : Spring Boot 3.2.12 (CVE patches pour Spring Security & Framework) -->
+	<!-- SEC-HARDENED : Spring Boot 3.3.11 (CVE patches pour Tomcat, Spring Security & Framework) -->
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.2.12</version>
+		<version>3.3.11</version>
 		<relativePath />
 	</parent>
 
@@ -130,26 +130,26 @@
 			<version>2.18.0</version>
 		</dependency>
 
-		<!-- PDF Signature (iText 7) — SEC-HARDENED : 7.2.6 security patches -->
-		<dependency>
-			<groupId>com.itextpdf</groupId>
-			<artifactId>kernel</artifactId>
-			<version>7.2.6</version>
-		</dependency>
-		<dependency>
-			<groupId>com.itextpdf</groupId>
-			<artifactId>layout</artifactId>
-			<version>7.2.6</version>
-		</dependency>
-		<dependency>
-			<groupId>com.itextpdf</groupId>
-			<artifactId>forms</artifactId>
-			<version>7.2.6</version>
-		</dependency>
-		<dependency>
-			<groupId>com.itextpdf</groupId>
-			<artifactId>sign</artifactId>
-			<version>7.2.6</version>
+<!-- PDF Signature (iText 8) — SEC-HARDENED : 8.0.5 security patches (CVE-2024-* fixes) -->
+	<dependency>
+		<groupId>com.itextpdf</groupId>
+		<artifactId>kernel</artifactId>
+		<version>8.0.5</version>
+	</dependency>
+	<dependency>
+		<groupId>com.itextpdf</groupId>
+		<artifactId>layout</artifactId>
+		<version>8.0.5</version>
+	</dependency>
+	<dependency>
+		<groupId>com.itextpdf</groupId>
+		<artifactId>forms</artifactId>
+		<version>8.0.5</version>
+	</dependency>
+	<dependency>
+		<groupId>com.itextpdf</groupId>
+		<artifactId>sign</artifactId>
+		<version>8.0.5</version>
 		</dependency>
 
 		<!-- Spring Boot DevTools -->
