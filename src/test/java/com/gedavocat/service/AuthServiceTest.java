@@ -28,6 +28,7 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Tests du service d'authentification")
+@SuppressWarnings("null")
 class AuthServiceTest {
 
     @Mock private UserRepository userRepository;

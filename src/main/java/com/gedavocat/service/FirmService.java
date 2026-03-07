@@ -28,6 +28,7 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@SuppressWarnings("null")
 public class FirmService {
 
     private final FirmRepository firmRepository;

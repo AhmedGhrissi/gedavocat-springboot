@@ -23,7 +23,7 @@ import java.util.Map;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-@SuppressWarnings("unchecked")
+@SuppressWarnings({"unchecked", "null"})
 public class StripePaymentService {
     
     @Value("${stripe.api.key:}")

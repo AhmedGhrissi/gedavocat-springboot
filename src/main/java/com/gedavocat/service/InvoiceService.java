@@ -45,6 +45,7 @@ import java.io.ByteArrayOutputStream;
 @Slf4j                        // ← ajouter ceci
 @Service
 @RequiredArgsConstructor
+@SuppressWarnings("null")
 public class InvoiceService {
 
     private final InvoiceRepository invoiceRepository;

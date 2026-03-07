@@ -21,7 +21,7 @@ import java.util.*;
  */
 @Service
 @Slf4j
-@SuppressWarnings({"unchecked", "rawtypes"})
+@SuppressWarnings({"unchecked", "rawtypes", "null"})
 public class PayPlugService {
 
     @Value("${payplug.secret.key:}")

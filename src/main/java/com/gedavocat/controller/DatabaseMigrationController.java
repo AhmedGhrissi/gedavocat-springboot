@@ -109,11 +109,11 @@ public class DatabaseMigrationController {
                     "total_ttc = COALESCE(total_ttc, (unit_price * quantity * 1.20)) " +
                     "WHERE unit_price_ht IS NULL AND unit_price IS NOT NULL"
                 );
-                int rowsUpdated = jdbcTemplate.queryForObject(
+                Integer rowsUpdated = jdbcTemplate.queryForObject(
                     "SELECT COUNT(*) FROM invoice_items WHERE unit_price_ht IS NOT NULL", 
                     Integer.class
                 );
-                result.put("step2_data_migration", "migrated " + rowsUpdated + " rows");
+                result.put("step2_data_migration", "migrated " + (rowsUpdated != null ? rowsUpdated : 0) + " rows");
             } catch (Exception e) {
                 log.error("Migration step2 data_migration", e);
                 result.put("step2_data_migration", "error or no old data");

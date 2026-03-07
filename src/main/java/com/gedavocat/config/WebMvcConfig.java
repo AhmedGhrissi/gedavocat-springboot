@@ -2,23 +2,25 @@ package com.gedavocat.config;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.lang.NonNull;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
 @RequiredArgsConstructor
+@SuppressWarnings("null")
 public class WebMvcConfig implements WebMvcConfigurer {
 
     private final ErrorStatusInterceptor errorStatusInterceptor;
 
     @Override
-    public void addInterceptors(InterceptorRegistry registry) {
+    public void addInterceptors(@NonNull InterceptorRegistry registry) {
         registry.addInterceptor(errorStatusInterceptor).addPathPatterns("/**");
     }
 
     @Override
-    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+    public void addResourceHandlers(@NonNull ResourceHandlerRegistry registry) {
         // Webjars (Bootstrap, Font Awesome, jQuery)
         registry.addResourceHandler("/webjars/**")
                 .addResourceLocations("classpath:/META-INF/resources/webjars/")

@@ -24,6 +24,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @DisplayName("Tests du contrôleur d'authentification")
+@SuppressWarnings("null")
 class AuthControllerTest {
 
     @Autowired

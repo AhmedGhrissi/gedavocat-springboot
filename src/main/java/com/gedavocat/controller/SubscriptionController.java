@@ -27,6 +27,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequestMapping("/subscription")
 @RequiredArgsConstructor
 @Slf4j
+@SuppressWarnings("null")
 public class SubscriptionController {
 
     private final StripeService stripeService;

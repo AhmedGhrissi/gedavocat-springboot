@@ -25,6 +25,7 @@ import java.util.Map;
 @RequestMapping("/payment")
 @RequiredArgsConstructor
 @Slf4j
+@SuppressWarnings("null")
 public class PaymentController {
 
     private final PayPlugService payPlugService;

@@ -38,6 +38,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('ADMIN')")
 @Slf4j
+@SuppressWarnings("null")
 public class AdminController {
 
     private final AdminMetricsService metricsService;

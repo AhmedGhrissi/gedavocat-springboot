@@ -18,6 +18,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @Slf4j
 @Transactional(readOnly = true)
+@SuppressWarnings("null")
 public class BarreauService {
 
     private final BarreauRepository barreauRepository;

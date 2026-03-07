@@ -5,6 +5,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.lang.NonNull;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -40,7 +41,7 @@ public class RateLimitingFilter extends OncePerRequestFilter {
     private final Map<String, RateBucket> globalBuckets = new ConcurrentHashMap<>();
 
     @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) {
+    protected boolean shouldNotFilter(@NonNull HttpServletRequest request) {
         String path = request.getRequestURI();
         // Ne pas filtrer les assets statiques
         return path.startsWith("/css/") || path.startsWith("/js/") || path.startsWith("/img/")
@@ -49,9 +50,9 @@ public class RateLimitingFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(@NonNull HttpServletRequest request,
+                                    @NonNull HttpServletResponse response,
+                                    @NonNull FilterChain filterChain) throws ServletException, IOException {
         String clientIp = getClientIp(request);
         String path = request.getRequestURI();
         String method = request.getMethod();

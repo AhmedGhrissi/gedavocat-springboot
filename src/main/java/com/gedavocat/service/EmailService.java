@@ -15,6 +15,7 @@ import java.nio.charset.StandardCharsets;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@SuppressWarnings("null")
 public class EmailService {
 
     private final JavaMailSender mailSender;

@@ -41,6 +41,7 @@ import java.util.UUID;
 @Controller
 @RequestMapping("/invoices")
 @RequiredArgsConstructor
+@SuppressWarnings("null")
 public class InvoiceWebController {
 
     private final InvoiceService invoiceService;
@@ -169,7 +170,11 @@ public class InvoiceWebController {
                     redirectAttributes.addFlashAttribute("importError", "Fichier trop volumineux (max 20 Mo).");
                     return "redirect:/invoices";
                 }
-                String filename = UUID.randomUUID() + "_" + file.getOriginalFilename()
+                String originalFilename = file.getOriginalFilename();
+                if (originalFilename == null) {
+                    originalFilename = "document.pdf";
+                }
+                String filename = UUID.randomUUID() + "_" + originalFilename
                     .replaceAll("[^a-zA-Z0-9._-]", "_");
                 Path invoicesDir = Paths.get(uploadDir).getParent().resolve("invoices");
                 Files.createDirectories(invoicesDir);

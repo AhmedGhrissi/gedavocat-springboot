@@ -28,6 +28,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@SuppressWarnings("null")
 public class ClientInvitationService {
 
     private final ClientRepository clientRepository;

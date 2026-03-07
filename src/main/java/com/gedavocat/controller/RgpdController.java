@@ -39,6 +39,7 @@ import java.util.*;
 @RequestMapping("/rgpd")
 @RequiredArgsConstructor
 @Slf4j
+@SuppressWarnings("null")
 public class RgpdController {
 
     private final UserRepository userRepository;

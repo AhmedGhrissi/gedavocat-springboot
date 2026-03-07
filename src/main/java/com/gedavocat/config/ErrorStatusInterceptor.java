@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
+import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -23,8 +24,8 @@ import java.util.Map;
 public class ErrorStatusInterceptor implements HandlerInterceptor {
 
     @Override
-    public void postHandle(HttpServletRequest request, HttpServletResponse response,
-                           Object handler, @Nullable ModelAndView modelAndView) throws Exception {
+    public void postHandle(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response,
+                           @NonNull Object handler, @Nullable ModelAndView modelAndView) throws Exception {
         if (modelAndView == null) return;
 
         String viewName = modelAndView.getViewName();

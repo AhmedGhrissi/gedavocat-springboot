@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 @RequiredArgsConstructor
+@SuppressWarnings("null")
 public class FirmManagementService {
 
     private final FirmMemberRepository firmMemberRepository;

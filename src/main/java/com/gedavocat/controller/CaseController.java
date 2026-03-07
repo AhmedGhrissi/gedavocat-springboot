@@ -40,6 +40,7 @@ import java.util.Set;
 @RequiredArgsConstructor
 @PreAuthorize("hasAnyRole('LAWYER', 'ADMIN', 'LAWYER_SECONDARY', 'AVOCAT_ADMIN')")
 @Slf4j
+@SuppressWarnings("null")
 public class CaseController {
 
     /**

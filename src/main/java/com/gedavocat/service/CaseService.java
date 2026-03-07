@@ -30,6 +30,7 @@ import java.util.Objects;
 @Service
 @Slf4j
 @RequiredArgsConstructor
+@SuppressWarnings("null")
 public class CaseService {
     
     private final CaseRepository caseRepository;

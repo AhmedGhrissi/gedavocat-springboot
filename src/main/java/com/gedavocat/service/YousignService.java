@@ -30,7 +30,7 @@ import java.util.Map;
  */
 @Service
 @Slf4j
-@SuppressWarnings({"unchecked", "rawtypes"})
+@SuppressWarnings({"unchecked", "rawtypes", "null"})
 public class YousignService {
     
     @Value("${yousign.api.key:}")

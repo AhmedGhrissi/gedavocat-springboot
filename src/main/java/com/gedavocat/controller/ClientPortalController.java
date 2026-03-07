@@ -54,6 +54,7 @@ import java.util.zip.ZipOutputStream;
 @RequiredArgsConstructor
 @Slf4j
 @PreAuthorize("hasRole('CLIENT')")
+@SuppressWarnings("null")
 public class ClientPortalController {
 
     private final CaseService caseService;

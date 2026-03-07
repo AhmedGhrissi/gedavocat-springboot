@@ -13,6 +13,7 @@ import java.io.InputStream;
  * Utilisée notamment pour passer un PDF filigrané à {@link com.gedavocat.service.DocumentService}
  * sans avoir besoin de réécrire le fichier temporaire sur disque.
  */
+@SuppressWarnings("null")
 public class ByteArrayMultipartFile implements MultipartFile {
 
     private final String name;
@@ -22,7 +23,7 @@ public class ByteArrayMultipartFile implements MultipartFile {
 
     public ByteArrayMultipartFile(String name, String originalFilename,
                                    String contentType, byte[] content) {
-        this.name             = name;
+        this.name             = name != null ? name : "";
         this.originalFilename = originalFilename;
         this.contentType      = contentType;
         this.content          = content;

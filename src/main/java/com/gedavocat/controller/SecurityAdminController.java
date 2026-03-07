@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 @RestController
 @RequestMapping("/api/security/admin")
 @PreAuthorize("hasRole('ADMIN') or hasRole('DPO')")
+@SuppressWarnings("null")
 public class SecurityAdminController {
 
     private static final Logger log = LoggerFactory.getLogger(SecurityAdminController.class);

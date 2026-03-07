@@ -39,6 +39,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 @PreAuthorize("hasAnyRole('LAWYER', 'ADMIN', 'AVOCAT_ADMIN')")
 @Slf4j
+@SuppressWarnings("null")
 public class SignatureController {
 
     private final YousignService yousignService;
