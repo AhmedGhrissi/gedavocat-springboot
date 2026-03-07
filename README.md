@@ -2,14 +2,18 @@
 
 <div align="center">
 
-![Java](https://img.shields.io/badge/Java-21-orange?style=for-the-badge&logo=openjdk)
-![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.4-brightgreen?style=for-the-badge&logo=spring)
-![MySQL](https://img.shields.io/badge/MySQL-8.0-blue?style=for-the-badge&logo=mysql)
+[![CI/CD Pipeline](https://github.com/AhmedGhrissi/gedavocat-springboot/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/AhmedGhrissi/gedavocat-springboot/actions/workflows/ci-cd.yml)
+[![Security Scan](https://github.com/AhmedGhrissi/gedavocat-springboot/actions/workflows/security-scan.yml/badge.svg)](https://github.com/AhmedGhrissi/gedavocat-springboot/actions/workflows/security-scan.yml)
+![Java](https://img.shields.io/badge/Java-17-orange?style=for-the-badge&logo=openjdk)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.12-brightgreen?style=for-the-badge&logo=spring)
+![MySQL](https://img.shields.io/badge/MySQL-8.3-blue?style=for-the-badge&logo=mysql)
 ![License](https://img.shields.io/badge/License-Proprietary-red?style=for-the-badge)
 ![Security](https://img.shields.io/badge/Security-Banking%20Level-success?style=for-the-badge&logo=security)
-![Tests](https://img.shields.io/badge/Tests-100%25%20Passing-brightgreen?style=for-the-badge&logo=checkmarx)
+![Tests](https://img.shields.io/badge/Tests-Passing-brightgreen?style=for-the-badge&logo=checkmarx)
 
 **Système de Gestion Électronique de Documents sécurisé pour cabinets d'avocats**
+
+[📖 Documentation](./SECURITY-SCANNING-GUIDE.md) • [🔒 Security](./SECURITY-SCAN-REPORT.md) • [🚀 Deploy Guide](./bin/DEPLOYMENT.md)
 
 </div>
 
