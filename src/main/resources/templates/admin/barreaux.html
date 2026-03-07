@@ -461,7 +461,7 @@
                         <!-- Type d'utilisateur -->
                         <div class="mb-3">
                             <label class="form-label fw-bold">Type d'utilisateur <span class="text-danger">*</span></label>
-                            <div class="d-flex gap-3">
+                            <div class="d-flex gap-3 flex-wrap">
                                 <div class="form-check">
                                     <input class="form-check-input" type="radio" name="role" id="roleLawyer" value="LAWYER" checked onchange="toggleSubscriptionFields()">
                                     <label class="form-check-label" for="roleLawyer">
@@ -469,9 +469,27 @@
                                     </label>
                                 </div>
                                 <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="role" id="roleAvocatAdmin" value="AVOCAT_ADMIN" onchange="toggleSubscriptionFields()">
+                                    <label class="form-check-label" for="roleAvocatAdmin">
+                                        <i class="fas fa-user-cog text-warning"></i> Avocat Admin
+                                    </label>
+                                </div>
+                                <div class="form-check">
                                     <input class="form-check-input" type="radio" name="role" id="roleClient" value="CLIENT" onchange="toggleSubscriptionFields()">
                                     <label class="form-check-label" for="roleClient">
                                         <i class="fas fa-user text-info"></i> Client
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="role" id="roleLawyerSecondary" value="LAWYER_SECONDARY" onchange="toggleSubscriptionFields()">
+                                    <label class="form-check-label" for="roleLawyerSecondary">
+                                        <i class="fas fa-user-friends text-secondary"></i> Collaborateur
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="role" id="roleHuissier" value="HUISSIER" onchange="toggleSubscriptionFields()">
+                                    <label class="form-check-label" for="roleHuissier">
+                                        <i class="fas fa-gavel text-dark"></i> Huissier
                                     </label>
                                 </div>
                             </div>
@@ -527,7 +545,8 @@
         /* ===================== Fonctions globales (appelées via onclick) ===================== */
         function toggleSubscriptionFields() {
             var isLawyer = document.getElementById('roleLawyer').checked;
-            document.getElementById('subscriptionInfo').style.display = isLawyer ? 'block' : 'none';
+            var isAvocatAdmin = document.getElementById('roleAvocatAdmin') && document.getElementById('roleAvocatAdmin').checked;
+            document.getElementById('subscriptionInfo').style.display = (isLawyer || isAvocatAdmin) ? 'block' : 'none';
         }
         function togglePasswordVisibility() {
             var pwdInput = document.getElementById('newPassword');

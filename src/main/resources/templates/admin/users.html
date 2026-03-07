@@ -475,9 +475,27 @@
                                     </label>
                                 </div>
                                 <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="role" id="roleAvocatAdmin" value="AVOCAT_ADMIN" onchange="toggleSubscriptionFields()">
+                                    <label class="form-check-label" for="roleAvocatAdmin">
+                                        <i class="fas fa-user-cog text-warning"></i> Avocat Admin
+                                    </label>
+                                </div>
+                                <div class="form-check">
                                     <input class="form-check-input" type="radio" name="role" id="roleClient" value="CLIENT" onchange="toggleSubscriptionFields()">
                                     <label class="form-check-label" for="roleClient">
                                         <i class="fas fa-user text-info"></i> Client
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="role" id="roleLawyerSecondary" value="LAWYER_SECONDARY" onchange="toggleSubscriptionFields()">
+                                    <label class="form-check-label" for="roleLawyerSecondary">
+                                        <i class="fas fa-user-friends text-secondary"></i> Collaborateur
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="role" id="roleHuissier" value="HUISSIER" onchange="toggleSubscriptionFields()">
+                                    <label class="form-check-label" for="roleHuissier">
+                                        <i class="fas fa-gavel text-dark"></i> Huissier
                                     </label>
                                 </div>
                             </div>
@@ -537,12 +555,13 @@
         function toggleSubscriptionFields() {
             var isAdmin = document.getElementById('roleAdmin') && document.getElementById('roleAdmin').checked;
             var isLawyer = document.getElementById('roleLawyer') && document.getElementById('roleLawyer').checked;
+            var isAvocatAdmin = document.getElementById('roleAvocatAdmin') && document.getElementById('roleAvocatAdmin').checked;
             var subscriptionInfo = document.getElementById('subscriptionInfo');
             
             if (subscriptionInfo) {
                 if (isAdmin) {
                     subscriptionInfo.style.display = 'none';
-                } else if (isLawyer) {
+                } else if (isLawyer || isAvocatAdmin) {
                     subscriptionInfo.style.display = 'block';
                     subscriptionInfo.className = 'alert alert-info mb-0';
                     subscriptionInfo.innerHTML = '<i class="fas fa-info-circle"></i> L\'avocat sera créé avec un abonnement <strong>Essentiel</strong> actif (10 clients max).';

@@ -190,8 +190,8 @@ public class UserService {
         user.setTermsAcceptedAt(LocalDateTime.now());
         user.setGdprConsentAt(LocalDateTime.now());
 
-        // Pour les avocats, définir un abonnement par défaut
-        if (UserRole.valueOf(role) == UserRole.LAWYER) {
+        // Pour les avocats (LAWYER et AVOCAT_ADMIN), définir un abonnement par défaut
+        if (UserRole.valueOf(role) == UserRole.LAWYER || UserRole.valueOf(role) == UserRole.AVOCAT_ADMIN) {
             user.setSubscriptionPlan(User.SubscriptionPlan.ESSENTIEL);
             user.setSubscriptionStatus(User.SubscriptionStatus.ACTIVE);
             user.setMaxClients(10);
