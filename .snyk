@@ -1,0 +1,32 @@
+# Snyk (https://snyk.io) policy file
+# Documentation: https://docs.snyk.io/scan-using-snyk/policies/the-.snyk-file
+version: v1.25.0
+
+# Ignorer temporairement certaines vulnérabilités (si faux positifs ou non applicables)
+ignore: {}
+  # Exemple:
+  # 'SNYK-JAVA-ORGSPRINGFRAMEWORK-12345':
+  #   - '*':
+  #       reason: 'Non applicable - configuration sécurisée en place'
+  #       expires: '2026-04-07T00:00:00.000Z'
+  #       created: '2026-03-07T00:00:00.000Z'
+
+# Patches automatiques (si disponibles)
+patch: {}
+
+# Options de scan
+# language-settings:
+#   java:
+#     maven-central-enabled: true
+
+# Exclusions de dossiers
+exclude:
+  global:
+    - node_modules/
+    - target/
+    - bin/
+    - .git/
+    - test/
+    - tests/
+    - e2e/test-results/
+    - e2e/playwright-report/

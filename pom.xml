@@ -323,7 +323,7 @@
 			<plugin>
 				<groupId>org.owasp</groupId>
 				<artifactId>dependency-check-maven</artifactId>
-				<version>10.0.4</version>
+				<version>11.1.0</version>
 				<configuration>
 					<!-- Seuil CVSS : échec du build si CVE >= 7.0 (HIGH) -->
 					<failBuildOnCVSS>7</failBuildOnCVSS>
@@ -340,6 +340,11 @@
 					<!-- Timeouts augmentés pour permettre le téléchargement initial -->
 					<connectionTimeout>120000</connectionTimeout><!-- 2 min -->
 					<readTimeout>300000</readTimeout><!-- 5 min -->
+					<!-- Désactiver temporairement NVD API à cause d'incompatibilité -->
+					<nvdDatafeedEnabled>false</nvdDatafeedEnabled>
+					<nvdApiServEnabled>false</nvdApiServEnabled>
+					<!-- Utiliser OSS Index -->
+					<ossindexAnalyzerEnabled>true</ossindexAnalyzerEnabled>
 					<!-- Analyseurs activés -->
 					<assemblyAnalyzerEnabled>false</assemblyAnalyzerEnabled>
 					<nodeAnalyzerEnabled>false</nodeAnalyzerEnabled>

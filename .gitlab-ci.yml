@@ -194,12 +194,77 @@ owasp-dependency-check:
     paths:
       - security-reports/dependency-check-report.html
     expire_in: 90 days
-  allow_failure: false   # BLOQUANT
+  allow_failure: true   # Non bloquant temporairement (problèmes techniques NVD)
   cache:
     key: "maven-$CI_COMMIT_REF_SLUG"
     paths:
       - .m2/repository/
     policy: pull
+
+snyk-security-scan:
+  stage: security
+  image: snyk/snyk:maven-3-jdk-17
+  before_script:
+    - apt-get update -qq && apt-get install -yqq curl > /dev/null 2>&1 || true
+  script:
+    - echo "========================================="
+    - echo "SNYK SECURITY SCAN — CVE + Code Analysis"
+    - echo "========================================="
+    - |
+      if [ -z "${SNYK_TOKEN:-}" ]; then
+        echo "SNYK_TOKEN non défini — scan ignoré"
+        echo "Pour activer : GitLab > Settings > CI/CD > Variables > SNYK_TOKEN"
+        echo "Obtenir token : https://app.snyk.io/account"
+        exit 0
+      fi
+    - snyk auth $SNYK_TOKEN
+    - snyk test --all-projects --severity-threshold=high --json > security-reports/snyk-report.json || true
+    - snyk test --all-projects --severity-threshold=high
+  after_script:
+    - |
+      if [ "$CI_JOB_STATUS" = "success" ]; then
+        EMOJI="🛡️"; STATUS="Snyk OK — aucune vulnérabilité high/critical"; COLOR=3066993
+      else
+        EMOJI="⚠️"; STATUS="Snyk détecté des vulnérabilités"; COLOR=16776960
+      fi
+    - *discord_commit_notify
+  artifacts:
+    name: "snyk-scan-$CI_COMMIT_SHORT_SHA"
+    when: always
+    paths:
+      - security-reports/snyk-report.json
+    expire_in: 90 days
+  allow_failure: true   # Non bloquant (optionnel)
+
+trivy-security-scan:
+  stage: security
+  image: aquasec/trivy:latest
+  before_script:
+    - apk add --no-cache curl > /dev/null 2>&1 || true
+  script:
+    - echo "========================================="
+    - echo "TRIVY SECURITY SCAN — Filesystem + Deps"
+    - echo "========================================="
+    - trivy --version
+    - trivy fs --exit-code 0 --severity HIGH,CRITICAL --format json --output security-reports/trivy-report.json .
+    - trivy fs --exit-code 1 --severity CRITICAL --format table .
+  after_script:
+    - |
+      if [ "$CI_JOB_STATUS" = "success" ]; then
+        EMOJI="🛡️"; STATUS="Trivy OK — aucune vulnérabilité critique"; COLOR=3066993
+      else
+        EMOJI="🔴"; STATUS="Trivy détecté des vulnérabilités CRITICAL"; COLOR=15158332
+      fi
+    - *discord_commit_notify
+  artifacts:
+    name: "trivy-scan-$CI_COMMIT_SHORT_SHA"
+    when: always
+    reports:
+      container_scanning: security-reports/trivy-report.json
+    paths:
+      - security-reports/trivy-report.json
+    expire_in: 90 days
+  allow_failure: true   # Non bloquant (complémentaire)
 
 # ──────────────────────────────────────────────────────────────────
 # STAGE 1 : BUILD (inchangé + needs security)
@@ -208,7 +273,13 @@ owasp-dependency-check:
 build:
   stage: build
   image: maven:3.9-eclipse-temurin-17
-  needs: [audit-code-security, owasp-dependency-check]   # ← attend que la sécurité passe
+  needs: 
+    - audit-code-security
+    - owasp-dependency-check
+    - job: snyk-security-scan
+      optional: true   # N'attend pas si SNYK_TOKEN non défini
+    - job: trivy-security-scan
+      optional: true
   before_script:
     - apt-get update -qq && apt-get install -yqq curl > /dev/null 2>&1 || true
     - |
