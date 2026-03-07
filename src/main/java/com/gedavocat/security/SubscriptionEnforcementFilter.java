@@ -49,6 +49,7 @@ public class SubscriptionEnforcementFilter extends OncePerRequestFilter {
         "/rpva",
         "/invoices",
         "/permissions",
+        "/firm",
         "/api/clients",
         "/api/cases",
         "/api/documents",
@@ -130,9 +131,9 @@ public class SubscriptionEnforcementFilter extends OncePerRequestFilter {
             return;
         }
 
-        // Vérifier le rôle — seuls les LAWYER sont soumis au paywall
+        // Vérifier le rôle — seuls les LAWYER et AVOCAT_ADMIN sont soumis au paywall
         boolean isLawyer = auth.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_LAWYER"));
+                .anyMatch(a -> a.getAuthority().equals("ROLE_LAWYER") || a.getAuthority().equals("ROLE_AVOCAT_ADMIN"));
         
         if (!isLawyer) {
             // ADMIN, CLIENT, HUISSIER, LAWYER_SECONDARY : pas de paywall

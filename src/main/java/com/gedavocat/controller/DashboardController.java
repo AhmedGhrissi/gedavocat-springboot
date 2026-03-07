@@ -28,7 +28,7 @@ import java.util.List;
 
 @Controller
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('LAWYER', 'ADMIN', 'CLIENT', 'LAWYER_SECONDARY', 'HUISSIER')")
+@PreAuthorize("hasAnyRole('LAWYER', 'ADMIN', 'CLIENT', 'LAWYER_SECONDARY', 'HUISSIER', 'AVOCAT_ADMIN')")
 @Slf4j
 public class DashboardController {
 

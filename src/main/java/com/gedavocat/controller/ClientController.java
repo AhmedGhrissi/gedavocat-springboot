@@ -25,7 +25,7 @@ import java.util.List;
 @Controller
 @RequestMapping("/clients")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('LAWYER', 'ADMIN', 'LAWYER_SECONDARY')")
+@PreAuthorize("hasAnyRole('LAWYER', 'ADMIN', 'LAWYER_SECONDARY', 'AVOCAT_ADMIN')")
 public class ClientController {
 
     private final ClientService clientService;

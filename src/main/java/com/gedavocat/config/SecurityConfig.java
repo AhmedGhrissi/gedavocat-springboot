@@ -75,16 +75,19 @@ public class SecurityConfig {
 						.requestMatchers("/payment/**").authenticated()
 						.requestMatchers("/api/webhooks/**").permitAll()
 						// Allow CLIENTs to GET individual invoices and PDFs (view/download)
-						.requestMatchers(HttpMethod.GET, "/invoices/*", "/invoices/*/pdf").hasAnyRole("CLIENT", "LAWYER", "ADMIN")
-						.requestMatchers("/invoices/my-invoices").hasAnyRole("CLIENT", "LAWYER", "ADMIN")
-						.requestMatchers("/invoices/**", "/api/invoices/**").hasAnyRole("LAWYER", "ADMIN")
+						.requestMatchers(HttpMethod.GET, "/invoices/*", "/invoices/*/pdf").hasAnyRole("CLIENT", "LAWYER", "ADMIN", "AVOCAT_ADMIN")
+						.requestMatchers("/invoices/my-invoices").hasAnyRole("CLIENT", "LAWYER", "ADMIN", "AVOCAT_ADMIN")
+						.requestMatchers("/invoices/**", "/api/invoices/**").hasAnyRole("LAWYER", "ADMIN", "AVOCAT_ADMIN")
 						
 						// Pages avocat et admin (collaborateurs bloqués pour documents)
 						.requestMatchers("/dashboard", "/clients/**", "/cases/**", "/signatures/**",
 							"/rpva/**", "/permissions/**", "/api/clients/**", "/api/cases/**")
-						.hasAnyRole("LAWYER", "ADMIN", "LAWYER_SECONDARY")
+						.hasAnyRole("LAWYER", "ADMIN", "LAWYER_SECONDARY", "AVOCAT_ADMIN")
 						.requestMatchers("/documents/**", "/api/documents/**")
-						.hasAnyRole("LAWYER", "ADMIN")
+						.hasAnyRole("LAWYER", "ADMIN", "AVOCAT_ADMIN")
+
+						// Gestion du cabinet (avocat principal et avocat admin)
+						.requestMatchers("/firm/**").hasAnyRole("LAWYER", "ADMIN", "AVOCAT_ADMIN")
 
 						// Portail huissier
 						.requestMatchers("/my-cases-huissier/**").hasRole("HUISSIER")
@@ -184,8 +187,8 @@ public class SecurityConfig {
 									response.sendRedirect("/my-cases-huissier");
 									return;
 								}
-								// LAWYER : vérifier si l'abonnement est actif
-								if (roles.contains("ROLE_LAWYER")) {
+								// LAWYER / AVOCAT_ADMIN : vérifier si l'abonnement est actif
+								if (roles.contains("ROLE_LAWYER") || roles.contains("ROLE_AVOCAT_ADMIN")) {
 									var optUser = userRepository.findByEmail(authentication.getName());
 									if (optUser.isPresent() && !optUser.get().hasActiveSubscription()) {
 										// Vérifier s'il y a une URL sauvegardée (ex: retour Stripe)

@@ -25,7 +25,7 @@ import java.util.regex.Pattern;
 @Controller
 @RequestMapping("/settings")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('LAWYER', 'ADMIN')")
+@PreAuthorize("hasAnyRole('LAWYER', 'ADMIN', 'AVOCAT_ADMIN')")
 @Slf4j
 public class SettingsController {
 

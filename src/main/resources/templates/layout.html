@@ -111,8 +111,8 @@
                 </a>
             </div>
 
-            <!-- Avocat principal : accès complet -->
-            <div sec:authorize="hasRole('LAWYER')">
+            <!-- Avocat principal / Avocat Admin : accès complet -->
+            <div sec:authorize="hasAnyRole('LAWYER', 'AVOCAT_ADMIN')">
                 <a th:href="@{/dashboard}" class="nav-link">
                     <i class="fas fa-home"></i>
                     <span>Tableau de bord</span>
@@ -234,7 +234,7 @@
                                 <i class="fas fa-cog me-2"></i> Paramètres
                             </a>
                         </li>
-                        <li sec:authorize="hasAnyRole('LAWYER','ADMIN')">
+                        <li sec:authorize="hasAnyRole('LAWYER','ADMIN','AVOCAT_ADMIN')">
                             <a class="dropdown-item" th:href="@{/payment/manage}">
                                 <i class="fas fa-credit-card me-2"></i> Mon abonnement
                             </a>

@@ -112,9 +112,9 @@ public class InvoiceController {
             if (isClient && !user.getId().equals(clientId)) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
-            // Pour LAWYER : utiliser la version avec vérification ownership
+            // Pour LAWYER / AVOCAT_ADMIN : utiliser la version avec vérification ownership
             boolean isLawyer = authentication.getAuthorities().stream()
-                    .anyMatch(a -> a.getAuthority().equals("ROLE_LAWYER"));
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_LAWYER") || a.getAuthority().equals("ROLE_AVOCAT_ADMIN"));
             if (isLawyer) {
                 List<InvoiceResponse> invoices = invoiceService.getInvoicesByClient(clientId, user.getId());
                 return ResponseEntity.ok(invoices);

@@ -25,7 +25,7 @@ import java.util.List;
 @Controller
 @RequestMapping("/firm")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('LAWYER')")
+@PreAuthorize("hasAnyRole('LAWYER', 'AVOCAT_ADMIN')")
 @Slf4j
 public class FirmManagementController {
 

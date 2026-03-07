@@ -112,7 +112,7 @@ public class FirmService {
         // Compter le nombre d'avocats actuels dans ce cabinet
         long lawyersCount = userRepository.countByFirmIdAndRoleIn(
             firmId, 
-            java.util.Arrays.asList(User.UserRole.LAWYER, User.UserRole.LAWYER_SECONDARY)
+            java.util.Arrays.asList(User.UserRole.LAWYER, User.UserRole.LAWYER_SECONDARY, User.UserRole.AVOCAT_ADMIN)
         );
         
         boolean canAdd = firm.canAddMoreLawyers((int) lawyersCount);

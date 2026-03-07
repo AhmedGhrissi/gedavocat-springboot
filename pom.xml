@@ -94,7 +94,6 @@
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
-			<version>${lombok.version}</version>
 			<scope>provided</scope>
 		</dependency>
 
@@ -319,6 +318,8 @@
 			<!-- SEC-HARDENED : OWASP Dependency-Check pour scan CVE automatique -->
 			<!-- Exécution : mvn dependency-check:check -->
 			<!-- Rapport : target/dependency-check-report.html -->
+			<!-- NVD API Key : https://nvd.nist.gov/developers/request-an-api-key -->
+			<!-- Variable d'environnement : export NVD_API_KEY=<your-key> -->
 			<plugin>
 				<groupId>org.owasp</groupId>
 				<artifactId>dependency-check-maven</artifactId>
@@ -331,12 +332,22 @@
 						<format>HTML</format>
 						<format>JSON</format>
 					</formats>
+					<!-- NVD API Configuration -->
+					<nvdApiKey>${env.NVD_API_KEY}</nvdApiKey>
+					<nvdApiDelay>8000</nvdApiDelay><!-- 8s entre requêtes (gratuit) -->
+					<nvdMaxRetryCount>5</nvdMaxRetryCount>
+					<nvdValidForHours>24</nvdValidForHours><!-- Cache 24h -->
+					<!-- Timeouts augmentés pour permettre le téléchargement initial -->
+					<connectionTimeout>120000</connectionTimeout><!-- 2 min -->
+					<readTimeout>300000</readTimeout><!-- 5 min -->
 					<!-- Analyseurs activés -->
 					<assemblyAnalyzerEnabled>false</assemblyAnalyzerEnabled>
 					<nodeAnalyzerEnabled>false</nodeAnalyzerEnabled>
 					<retireJsAnalyzerEnabled>true</retireJsAnalyzerEnabled>
 					<!-- Exclure les dépendances de test -->
 					<skipTestScope>true</skipTestScope>
+					<!-- Update automatique uniquement si la base est périmée -->
+					<autoUpdate>true</autoUpdate>
 				</configuration>
 			</plugin>
 		</plugins>

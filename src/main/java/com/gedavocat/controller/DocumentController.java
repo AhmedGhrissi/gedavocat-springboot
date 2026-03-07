@@ -38,7 +38,7 @@ import java.util.stream.Collectors;
 @Controller
 @RequestMapping("/documents")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('LAWYER', 'ADMIN', 'LAWYER_SECONDARY')")
+@PreAuthorize("hasAnyRole('LAWYER', 'ADMIN', 'LAWYER_SECONDARY', 'AVOCAT_ADMIN')")
 public class DocumentController {
 
     private final DocumentService documentService;

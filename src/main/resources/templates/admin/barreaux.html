@@ -18,7 +18,7 @@
                     <h1 style="font-size:1.5rem;font-weight:800;letter-spacing:-0.025em;margin-bottom:4px;color:#fff">
                         <i class="fas fa-landmark me-2"></i>Gestion des Barreaux
                     </h1>
-                    <p style="font-size:0.875rem;margin:0;color:rgba(255,255,255,0.8)">Administration des barreaux français</p>
+                    <p style="font-size:0.875rem;margin:0;color:rgba(255,255,255,0.8)">Administration des barreaux franï¿½ais</p>
                 </div>
             </div>
         </div>
@@ -113,6 +113,7 @@
                             <option value="" th:selected="${filterRole == ''}">Tous les rÃ´les</option>
                             <option value="ADMIN"   th:selected="${filterRole == 'ADMIN'}">Administrateur</option>
                             <option value="LAWYER"  th:selected="${filterRole == 'LAWYER'}">Avocat</option>
+                            <option value="AVOCAT_ADMIN"  th:selected="${filterRole == 'AVOCAT_ADMIN'}">Avocat Admin</option>
                             <option value="CLIENT"  th:selected="${filterRole == 'CLIENT'}">Client</option>
                             <option value="LAWYER_SECONDARY"  th:selected="${filterRole == 'LAWYER_SECONDARY'}">Collaborateur</option>
                             <option value="HUISSIER"  th:selected="${filterRole == 'HUISSIER'}">Huissier</option>
@@ -216,6 +217,7 @@
                                     <span th:switch="${user.role}" class="badge">
                                         <span th:case="'ADMIN'" class="badge bg-danger">Admin</span>
                                         <span th:case="'LAWYER'" class="badge bg-primary">Avocat</span>
+                                        <span th:case="'AVOCAT_ADMIN'" class="badge bg-warning text-dark">Avocat Admin</span>
                                         <span th:case="'CLIENT'" class="badge bg-info">Client</span>
                                         <span th:case="*" class="badge bg-secondary" th:text="${user.role}">Autre</span>
                                     </span>
@@ -403,6 +405,7 @@
                                 <select class="form-select" name="role" id="edit-role">
                                     <option value="ADMIN">Administrateur</option>
                                     <option value="LAWYER">Avocat</option>
+                                    <option value="AVOCAT_ADMIN">Avocat Admin</option>
                                     <option value="CLIENT">Client</option>
                                     <option value="LAWYER_SECONDARY">Collaborateur</option>
                                     <option value="HUISSIER">Huissier</option>

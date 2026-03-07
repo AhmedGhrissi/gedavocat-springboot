@@ -26,7 +26,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/document-shares")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('LAWYER', 'ADMIN')")
+@PreAuthorize("hasAnyRole('LAWYER', 'ADMIN', 'AVOCAT_ADMIN')")
 public class DocumentShareController {
 
     private final DocumentShareService documentShareService;

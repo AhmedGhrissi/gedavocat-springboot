@@ -53,7 +53,7 @@ public class CaseShareController {
      * Formulaire de création d'un lien de partage
      */
     @GetMapping("/cases/{id}/share")
-    @PreAuthorize("hasAnyRole('LAWYER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('LAWYER', 'ADMIN', 'AVOCAT_ADMIN')")
     @Transactional(readOnly = true)
     public String shareForm(@PathVariable String id, Model model, Authentication authentication) {
         User user = getCurrentUser(authentication);
@@ -99,7 +99,7 @@ public class CaseShareController {
      * Crée un lien de partage pour un dossier
      */
     @PostMapping("/cases/{id}/share")
-    @PreAuthorize("hasAnyRole('LAWYER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('LAWYER', 'ADMIN', 'AVOCAT_ADMIN')")
     public String createShareLink(
             @PathVariable String id,
             @RequestParam(required = false) String description,
@@ -130,7 +130,7 @@ public class CaseShareController {
      * Révoque un lien de partage
      */
     @PostMapping("/cases/{id}/share/{linkId}/revoke")
-    @PreAuthorize("hasAnyRole('LAWYER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('LAWYER', 'ADMIN', 'AVOCAT_ADMIN')")
     public String revokeLink(
             @PathVariable String id,
             @PathVariable String linkId,

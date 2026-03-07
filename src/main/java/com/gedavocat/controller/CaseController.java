@@ -38,7 +38,7 @@ import java.util.Set;
 @Controller
 @RequestMapping("/cases")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('LAWYER', 'ADMIN', 'LAWYER_SECONDARY')")
+@PreAuthorize("hasAnyRole('LAWYER', 'ADMIN', 'LAWYER_SECONDARY', 'AVOCAT_ADMIN')")
 @Slf4j
 public class CaseController {
 

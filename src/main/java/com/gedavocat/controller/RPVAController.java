@@ -33,7 +33,7 @@ import java.util.Map;
 @Controller
 @RequestMapping("/rpva")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('LAWYER', 'ADMIN')")
+@PreAuthorize("hasAnyRole('LAWYER', 'ADMIN', 'AVOCAT_ADMIN')")
 public class RPVAController {
 
     private final RPVAService rpvaService;

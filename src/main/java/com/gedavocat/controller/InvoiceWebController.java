@@ -68,7 +68,7 @@ public class InvoiceWebController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('LAWYER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('LAWYER', 'ADMIN', 'AVOCAT_ADMIN')")
     public String index(Model model, Authentication authentication,
                        @RequestParam(required = false) String status,
                        @RequestParam(required = false) String client) {
@@ -105,7 +105,7 @@ public class InvoiceWebController {
      * Affiche le formulaire de création d'une facture
      */
     @GetMapping("/new")
-    @PreAuthorize("hasAnyRole('LAWYER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('LAWYER', 'ADMIN', 'AVOCAT_ADMIN')")
     public String newInvoice(Model model, Authentication authentication) {
         try {
             String lawyerId = getCurrentUser(authentication).getId();
@@ -122,7 +122,7 @@ public class InvoiceWebController {
      * Importer une facture PDF existante
      */
     @PostMapping("/import")
-    @PreAuthorize("hasAnyRole('LAWYER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('LAWYER', 'ADMIN', 'AVOCAT_ADMIN')")
     public String importInvoice(
             Authentication authentication,
             @RequestParam("clientId") String clientId,
@@ -223,7 +223,7 @@ public class InvoiceWebController {
      * Affiche une facture spécifique
      */
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('LAWYER', 'CLIENT')")
+    @PreAuthorize("hasAnyRole('LAWYER', 'CLIENT', 'AVOCAT_ADMIN')")
     public String show(@PathVariable String id, Model model, Authentication authentication) {
         try {
             User user = getCurrentUser(authentication);
@@ -242,7 +242,7 @@ public class InvoiceWebController {
      * Affiche le formulaire d'édition d'une facture
      */
     @GetMapping("/{id}/edit")
-    @PreAuthorize("hasAnyRole('LAWYER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('LAWYER', 'ADMIN', 'AVOCAT_ADMIN')")
     public String edit(@PathVariable String id, Model model, Authentication authentication) {
         try {
             User user = getCurrentUser(authentication);
@@ -283,7 +283,7 @@ public class InvoiceWebController {
 
  // InvoiceWebController.java — ajouter cet endpoint
     @GetMapping("/{id}/pdf")
-    @PreAuthorize("hasAnyRole('LAWYER', 'CLIENT', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('LAWYER', 'CLIENT', 'ADMIN', 'AVOCAT_ADMIN')")
     public ResponseEntity<byte[]> downloadPdf(@PathVariable String id,
                                                Authentication authentication) {
         try {
@@ -310,4 +310,3 @@ public class InvoiceWebController {
         }
     }
 }
-

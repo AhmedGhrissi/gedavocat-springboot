@@ -246,6 +246,7 @@ public class User {
     public enum UserRole {
         ADMIN("Administrateur"),
         LAWYER("Avocat"),
+        AVOCAT_ADMIN("Avocat Admin"),
         CLIENT("Client"),
         LAWYER_SECONDARY("Collaborateur"),
         HUISSIER("Huissier");
@@ -348,6 +349,13 @@ public class User {
      */
     public boolean isHuissier() {
         return this.role == UserRole.HUISSIER;
+    }
+
+    /**
+     * Vérifier si l'utilisateur est avocat admin (gestionnaire du cabinet)
+     */
+    public boolean isAvocatAdmin() {
+        return this.role == UserRole.AVOCAT_ADMIN;
     }
 
     /**

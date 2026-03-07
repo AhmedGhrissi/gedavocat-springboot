@@ -42,7 +42,7 @@ public interface UserRepository extends JpaRepository<User, String> {
     /**
      * Trouve tous les avocats
      */
-    @Query("SELECT u FROM User u WHERE u.role = 'LAWYER' OR u.role = 'LAWYER_SECONDARY'")
+    @Query("SELECT u FROM User u WHERE u.role = 'LAWYER' OR u.role = 'LAWYER_SECONDARY' OR u.role = 'AVOCAT_ADMIN'")
     List<User> findAllLawyers();
     
     /**
@@ -117,6 +117,6 @@ public interface UserRepository extends JpaRepository<User, String> {
     /**
      * Trouve tous les avocats d'un cabinet
      */
-    @Query("SELECT u FROM User u WHERE u.firm.id = :firmId AND (u.role = 'LAWYER' OR u.role = 'LAWYER_SECONDARY')")
+    @Query("SELECT u FROM User u WHERE u.firm.id = :firmId AND (u.role = 'LAWYER' OR u.role = 'LAWYER_SECONDARY' OR u.role = 'AVOCAT_ADMIN')")
     List<User> findLawyersByFirmId(@Param("firmId") String firmId);
 }

@@ -31,7 +31,7 @@ import java.util.List;
 @Controller
 @RequestMapping("/appointments")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('LAWYER', 'ADMIN')")
+@PreAuthorize("hasAnyRole('LAWYER', 'ADMIN', 'AVOCAT_ADMIN')")
 public class AppointmentController {
 
     private final AppointmentService appointmentService;

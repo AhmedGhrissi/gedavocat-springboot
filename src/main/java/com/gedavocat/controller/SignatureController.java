@@ -37,7 +37,7 @@ import java.util.Map;
 @Controller
 @RequestMapping("/signatures")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('LAWYER', 'ADMIN')")
+@PreAuthorize("hasAnyRole('LAWYER', 'ADMIN', 'AVOCAT_ADMIN')")
 @Slf4j
 public class SignatureController {
 
