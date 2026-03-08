@@ -308,12 +308,14 @@ build:
   stage: build
   image: maven:3.9-eclipse-temurin-17
   needs: 
-    - audit-code-security
-    - owasp-dependency-check
+    - job: audit-code-security
+      optional: true   # N'attend pas si SKIP_SECURITY=true
+    - job: owasp-dependency-check
+      optional: true   # N'attend pas si SKIP_SECURITY=true
     - job: snyk-security-scan
       optional: true   # N'attend pas si SNYK_TOKEN non défini
     - job: trivy-security-scan
-      optional: true
+      optional: true   # N'attend pas si SKIP_SECURITY=true
   before_script:
     - apt-get update -qq && apt-get install -yqq curl > /dev/null 2>&1 || true
     - |
