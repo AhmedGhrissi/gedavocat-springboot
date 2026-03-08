@@ -7,12 +7,12 @@
 
 set -e
 
-UPLOAD_DIR="${APP_UPLOAD_DIR:-/opt/gedavocat/uploads/documents}"
-SIGNATURE_DIR="${APP_SIGNATURE_DIR:-/opt/gedavocat/uploads/signatures}"
-INVOICE_DIR="/opt/gedavocat/uploads/invoices"
-TEMP_DIR="${APP_TEMP_DIR:-/opt/gedavocat/temp}"
-LOG_DIR="/opt/gedavocat/logs"
-BACKUP_DIR="/opt/gedavocat/backups"
+UPLOAD_DIR="${APP_UPLOAD_DIR:-/opt/docavocat/uploads/documents}"
+SIGNATURE_DIR="${APP_SIGNATURE_DIR:-/opt/docavocat/uploads/signatures}"
+INVOICE_DIR="/opt/docavocat/uploads/invoices"
+TEMP_DIR="${APP_TEMP_DIR:-/opt/docavocat/temp}"
+LOG_DIR="/opt/docavocat/logs"
+BACKUP_DIR="/opt/docavocat/backups"
 CRYPTO_KEYS_DIR="/app/config/keys"
 
 # Créer les sous-répertoires si absents

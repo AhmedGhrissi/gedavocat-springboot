@@ -50,14 +50,14 @@ COPY --from=builder /build/target/app.jar /app/app.jar
 COPY docker/entrypoint.sh /app/entrypoint.sh
 
 # Créer les répertoires de données avec les bons droits
-RUN mkdir -p /opt/gedavocat/uploads/documents \
-             /opt/gedavocat/uploads/signatures \
-             /opt/gedavocat/uploads/invoices \
-             /opt/gedavocat/temp \
-             /opt/gedavocat/logs \
-             /opt/gedavocat/backups \
+RUN mkdir -p /opt/docavocat/uploads/documents \
+             /opt/docavocat/uploads/signatures \
+             /opt/docavocat/uploads/invoices \
+             /opt/docavocat/temp \
+             /opt/docavocat/logs \
+             /opt/docavocat/backups \
              /app/config/keys \
-    && chown -R docavocat:docavocat /opt/gedavocat /app \
+    && chown -R docavocat:docavocat /opt/docavocat /app \
     && chmod +x /app/entrypoint.sh \
     && chmod 600 /app/app.jar
 

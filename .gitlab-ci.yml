@@ -55,7 +55,7 @@ default:
 variables:
   MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
   MAVEN_CLI_OPTS: "--batch-mode --no-transfer-progress"
-  REMOTE_DIR: "/opt/gedavocat"
+  REMOTE_DIR: "/opt/docavocat"
 
 stages:
   - security      # ← NOUVEAU — tolérance zéro, bloque tout si échec

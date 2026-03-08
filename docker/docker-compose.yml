@@ -25,8 +25,8 @@ services:
     restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: gedavocat
-      MYSQL_USER: gedavocat
+      MYSQL_DATABASE: doc_avocat
+      MYSQL_USER: doc_avocat
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     volumes:
       - mysql_data:/var/lib/mysql
@@ -39,7 +39,7 @@ services:
     networks:
       - docavocat-net
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "gedavocat", "-p${MYSQL_PASSWORD}"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "doc_avocat", "-p${MYSQL_PASSWORD}"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -67,12 +67,12 @@ services:
       SERVER_PORT: 8080
 
       # Base de données — SEC-HARDENED : useSSL=true, ddl-auto=validate
-      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/gedavocat?useSSL=true&requireSSL=true&serverTimezone=Europe/Paris&allowPublicKeyRetrieval=true&useUnicode=true&characterEncoding=UTF-8"
-      SPRING_DATASOURCE_USERNAME: gedavocat
+      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/doc_avocat?useSSL=true&requireSSL=true&serverTimezone=Europe/Paris&allowPublicKeyRetrieval=true&useUnicode=true&characterEncoding=UTF-8"
+      SPRING_DATASOURCE_USERNAME: doc_avocat
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
       # Variables référencées dans application.properties (pour éviter PlaceholderResolutionException)
-      DB_USERNAME: gedavocat
+      DB_USERNAME: doc_avocat
       DB_PASSWORD: ${MYSQL_PASSWORD}
       APP_BASE_URL: https://docavocat.fr
 
@@ -97,14 +97,14 @@ services:
       MAIL_FROM: ${MAIL_USERNAME:-noreply@docavocat.fr}
 
       # Application  
-      APP_UPLOAD_DIR: /opt/gedavocat/uploads/documents
-      APP_SIGNATURE_DIR: /opt/gedavocat/uploads/signatures
-      APP_TEMP_DIR: /opt/gedavocat/temp
+      APP_UPLOAD_DIR: /opt/docavocat/uploads/documents
+      APP_SIGNATURE_DIR: /opt/docavocat/uploads/signatures
+      APP_TEMP_DIR: /opt/docavocat/temp
       SPRING_PROFILES_ACTIVE: prod
       MAINTENANCE_ENABLED: ${MAINTENANCE_ENABLED:-false}
 
       # Ressources statiques externes (prioritaires sur celles du JAR)
-      SPRING_WEB_RESOURCES_STATIC_LOCATIONS: "file:/opt/gedavocat/static-override/,classpath:/static/"
+      SPRING_WEB_RESOURCES_STATIC_LOCATIONS: "file:/opt/docavocat/static-override/,classpath:/static/"
 
       # Services externes (APIs)
       YOUSIGN_API_KEY: ${YOUSIGN_API_KEY} # gitleaks:allow - env var reference
@@ -132,11 +132,11 @@ services:
       LOGGING_STRUCTURED_FORMAT_CONSOLE_ENABLED: "false"
 
     volumes:
-      - /opt/gedavocat/uploads:/opt/gedavocat/uploads
-      - /opt/gedavocat/logs:/opt/gedavocat/logs
-      - /opt/gedavocat/temp:/opt/gedavocat/temp
-      - /opt/gedavocat/backups:/opt/gedavocat/backups
-      - /opt/gedavocat/static-override:/opt/gedavocat/static-override:ro
+      - /opt/docavocat/uploads:/opt/docavocat/uploads
+      - /opt/docavocat/logs:/opt/docavocat/logs
+      - /opt/docavocat/temp:/opt/docavocat/temp
+      - /opt/docavocat/backups:/opt/docavocat/backups
+      - /opt/docavocat/static-override:/opt/docavocat/static-override:ro
       # Docker socket removed for security — DO NOT mount docker.sock in app container
     networks:
       - docavocat-net
@@ -162,7 +162,7 @@ services:
     command: -config.file=/etc/loki/local-config.yaml
     volumes:
       - loki_data:/loki
-      - /opt/gedavocat/loki:/etc/loki:ro
+      - /opt/docavocat/loki:/etc/loki:ro
     networks:
       - docavocat-net
     healthcheck:
@@ -180,7 +180,7 @@ services:
     volumes:
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      - /opt/gedavocat/promtail:/etc/promtail:ro
+      - /opt/docavocat/promtail:/etc/promtail:ro
       - promtail_positions:/tmp/promtail
     networks:
       - docavocat-net
@@ -234,7 +234,7 @@ services:
     container_name: docavocat-mysql-exporter
     restart: unless-stopped
     environment:
-      DATA_SOURCE_NAME: "gedavocat:${MYSQL_PASSWORD}@(mysql:3306)/"
+      DATA_SOURCE_NAME: "doc_avocat:${MYSQL_PASSWORD}@(mysql:3306)/"
     networks:
       - docavocat-net
     ports:

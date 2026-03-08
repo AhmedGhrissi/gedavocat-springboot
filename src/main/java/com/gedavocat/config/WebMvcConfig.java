@@ -40,11 +40,11 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 .resourceChain(false);
 
         registry.addResourceHandler("/favicon.svg")
-                .addResourceLocations("classpath:/static/favicon.svg")
+                .addResourceLocations("classpath:/static/")
                 .resourceChain(false);
 
         registry.addResourceHandler("/robots.txt")
-                .addResourceLocations("classpath:/static/robots.txt")
+                .addResourceLocations("classpath:/static/")
                 .resourceChain(false);
 
         registry.addResourceHandler("/.well-known/**")
