@@ -570,6 +570,18 @@ deploy:
         echo 'MAIL_USERNAME=${MAIL_USERNAME:-noreply@docavocat.fr}' >> .env
         echo 'MAIL_PASSWORD=${MAIL_PASSWORD}' >> .env
       "
+    - |
+      ssh root@$SERVER_HOST "
+        cd $REMOTE_DIR
+        for VAR in DPO_NAME DPO_EMAIL DPO_PHONE DPO_ADDRESS DPO_CERTIFICATION; do
+          sed -i \"/^\${VAR}=/d\" .env
+        done
+        echo 'DPO_NAME=${DPO_NAME:-À Configurer}' >> .env
+        echo 'DPO_EMAIL=${DPO_EMAIL:-dpo@docavocat.fr}' >> .env
+        echo 'DPO_PHONE=${DPO_PHONE:-}' >> .env
+        echo 'DPO_ADDRESS=${DPO_ADDRESS:-}' >> .env
+        echo 'DPO_CERTIFICATION=${DPO_CERTIFICATION:-}' >> .env
+      "
     - ssh root@$SERVER_HOST "mkdir -p $REMOTE_DIR/loki $REMOTE_DIR/promtail $REMOTE_DIR/grafana/provisioning/datasources $REMOTE_DIR/grafana/provisioning/dashboards"
     - scp docker/loki/local-config.yaml root@$SERVER_HOST:$REMOTE_DIR/loki/local-config.yaml
     - scp docker/promtail/config.yaml root@$SERVER_HOST:$REMOTE_DIR/promtail/config.yaml
