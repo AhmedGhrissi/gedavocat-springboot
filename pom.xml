@@ -23,6 +23,8 @@
 		<maven.compiler.source>17</maven.compiler.source>
 		<maven.compiler.target>17</maven.compiler.target>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<!-- SEC FIX CVE-2025-41232: Spring Security 6.4.6 (override parent 6.4.5) -->
+		<spring-security.version>6.4.6</spring-security.version>
 		<!-- explicit Lombok version for the annotationProcessorPaths -->
 		<lombok.version>1.18.34</lombok.version>
 	</properties>

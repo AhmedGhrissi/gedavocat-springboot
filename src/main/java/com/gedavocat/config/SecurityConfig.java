@@ -226,7 +226,6 @@ public class SecurityConfig {
 	}
 
 	@Bean
-	@SuppressWarnings("deprecation") // Spring Security 6.4+ déprécié mais aucune alternative claire
 	public AuthenticationProvider authenticationProvider() {
 		DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider(passwordEncoder());
 		authProvider.setUserDetailsService(userDetailsService);
