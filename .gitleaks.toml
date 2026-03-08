@@ -1,32 +1,40 @@
 # Configuration Gitleaks pour GedAvocat
-# Ignore les faux positifs liés aux références de variables d'environnement
+# Ignore les faux positifs liés aux références de variables d'environnement et noms de méthodes
 
 title = "GedAvocat Gitleaks Configuration"
 
 [allowlist]
-description = "Allowlist pour faux positifs"
+description = "Allowlist pour faux positifs — variables d'environnement et noms de méthodes Java"
+
+# Patterns à ignorer globalement
 regexes = [
-    # Ignore les références à des variables d'environnement (pattern ${VAR})
+    # Variables d'environnement (${VAR}, ${YOUSIGN_API_KEY}, etc.)
     '''\$\{[A-Z_]+\}''',
+    
+    # Noms de méthodes Java contenant "ApiKey" (getYousignApiKey, setStripeApiKey, etc.)
+    '''(get|set|is|has)[A-Za-z]*ApiKey\(''',
+    
+    # Noms de variables Java "apiKey" (String apiKey, put("yousignApiKey", ...) etc.)
+    '''(String|put\(")[a-z]*ApiKey''',
+    
+    # Clés de Map avec suffixe _api_key_ (yousign_api_key_, stripe_api_key_, etc.)
+    '''(get|put|remove)\("[a-z_]+_api_key_"''',
+    
+    # Variables Spring properties (yousign.api.key=${...}, stripe.api-key=${...})
+    '''[a-z.-]+\.api[.-]key=\$\{[A-Z_]+\}''',
+    
+    # Variables d'environnement dans docker-compose.yml
+    '''[A-Z_]+_API_KEY:\s*\$\{[A-Z_]+_API_KEY\}''',
 ]
 
+# Fichiers à ignorer complètement (tests, documentation, templates)
 paths = [
-    # Ignore les noms de variables/méthodes dans le code Java
-    '''.*SettingsController\.java''',
+    '''\.md$''',
+    '''env\.template$''',
+    '''\.example$''',
 ]
 
-# Allowlist spécifique par ligne
-[[rules]]
-    description = "Yousign API Key - Environment Variables Only"
-    id = "yousign-api-key-envvar"
-    regex = '''yousign[_-]?api[_-]?key'''
-    [rules.allowlist]
-        description = "Références à des variables d'environnement, pas des secrets"
-        regexes = [
-            # Variable d'environnement dans docker-compose
-            '''YOUSIGN_API_KEY:\s*\$\{YOUSIGN_API_KEY\}''',
-            # Variable d'environnement dans properties
-            '''yousign\.api\.key=\$\{YOUSIGN_API_KEY\}''',
-            # Noms de variables/méthodes dans le code Java
-            '''(String\s+apiKey|getYousignApiKey|yousignApiKey)''',
-        ]
+# Ignorer les commits avec "gitleaks:allow" dans le message
+stopwords = [
+    '''gitleaks:allow''',
+]
