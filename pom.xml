@@ -355,6 +355,10 @@
 				<configuration>
 					<!-- Seuil CVSS : échec du build si CVE >= 7.0 (HIGH) -->
 					<failBuildOnCVSS>7</failBuildOnCVSS>
+					<!-- WORKAROUND : désactiver failOnError car bug NVD API parse (CVSS v4 "SAFETY" enum) -->
+					<!-- Issue: https://github.com/jeremylong/DependencyCheck/issues -->
+					<!-- TODO: Retirer failOnError=false quand dependency-check-maven > 11.1.0 disponible -->
+					<failOnError>false</failOnError>
 					<!-- Format du rapport -->
 					<formats>
 						<format>HTML</format>
@@ -368,6 +372,8 @@
 					<!-- Timeouts augmentés pour permettre le téléchargement initial -->
 					<connectionTimeout>120000</connectionTimeout><!-- 2 min -->
 					<readTimeout>300000</readTimeout><!-- 5 min -->
+					<!-- WORKAROUND : désactiver CISA Known Exploited (403 Forbidden) -->
+					<knownExploitedAnalyzerEnabled>false</knownExploitedAnalyzerEnabled>
 					<!-- Utiliser OSS Index pour scan plus rapide -->
 					<ossindexAnalyzerEnabled>true</ossindexAnalyzerEnabled>
 					<!-- Analyseurs activés -->
