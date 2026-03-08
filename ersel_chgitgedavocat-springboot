@@ -1,0 +1,11 @@
+ .gitlab-ci.yml                                     |  2 [32m+[m[31m-[m
+ docker/Dockerfile                                  | 14 [32m+++[m[31m----[m
+ docker/docker-compose.yml                          | 36 [32m++++++++[m[31m--------[m
+ docker/entrypoint.sh                               | 12 [32m+++[m[31m---[m
+ env.template                                       |  2 [32m+[m[31m-[m
+ sql/V20260308__rename_database.sql                 | 49 [32m++++++++++++++++++++++[m
+ .../java/com/gedavocat/config/SecurityConfig.java  |  2 [32m+[m[31m-[m
+ .../java/com/gedavocat/config/WebMvcConfig.java    |  4 [32m+[m[31m-[m
+ src/main/resources/application-h2.properties       |  4 [32m+[m[31m-[m
+ src/main/resources/application.properties          |  4 [32m+[m[31m-[m
+ 10 files changed, 89 insertions(+), 40 deletions(-)

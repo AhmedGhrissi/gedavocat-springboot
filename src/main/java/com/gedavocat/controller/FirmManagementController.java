@@ -35,7 +35,8 @@ public class FirmManagementController {
 
     @GetMapping("/members")
     public String membersPage(Authentication auth, Model model) {
-        User currentUser = userRepository.findByEmail(auth.getName()).orElseThrow();
+        User currentUser = userRepository.findByEmail(auth.getName())
+                .orElseThrow(() -> new IllegalStateException("Utilisateur non trouvé"));
 
         if (currentUser.getFirm() == null) {
             model.addAttribute("error", "Vous devez avoir un cabinet pour gérer les membres");
@@ -62,13 +63,14 @@ public class FirmManagementController {
             return "redirect:/firm/members";
         }
 
-        User currentUser = userRepository.findByEmail(auth.getName()).orElseThrow();
+        User currentUser = userRepository.findByEmail(auth.getName())
+                .orElseThrow(() -> new IllegalStateException("Utilisateur non trouvé"));
         String firmId = currentUser.getFirm().getId();
 
         try {
             firmManagementService.addMember(firmId, request, currentUser.getId());
             redirectAttrs.addFlashAttribute("success", "Membre ajouté avec succès");
-        } catch (Exception e) {
+        } catch (IllegalArgumentException | IllegalStateException e) {
             log.error("Error adding member", e);
             redirectAttrs.addFlashAttribute("error", e.getMessage());
         }
@@ -80,13 +82,14 @@ public class FirmManagementController {
     public String removeMember(@PathVariable String memberId,
                               Authentication auth,
                               RedirectAttributes redirectAttrs) {
-        User currentUser = userRepository.findByEmail(auth.getName()).orElseThrow();
+        User currentUser = userRepository.findByEmail(auth.getName())
+                .orElseThrow(() -> new IllegalStateException("Utilisateur non trouvé"));
         String firmId = currentUser.getFirm().getId();
 
         try {
             firmManagementService.removeMember(firmId, memberId, currentUser.getId());
             redirectAttrs.addFlashAttribute("success", "Membre retiré avec succès");
-        } catch (Exception e) {
+        } catch (IllegalArgumentException | IllegalStateException e) {
             log.error("Error removing member", e);
             redirectAttrs.addFlashAttribute("error", e.getMessage());
         }
@@ -96,7 +99,8 @@ public class FirmManagementController {
 
     @GetMapping("/cases/assign")
     public String assignCasePage(Authentication auth, Model model) {
-        User currentUser = userRepository.findByEmail(auth.getName()).orElseThrow();
+        User currentUser = userRepository.findByEmail(auth.getName())
+                .orElseThrow(() -> new IllegalStateException("Utilisateur non trouvé"));
 
         if (currentUser.getFirm() == null) {
             model.addAttribute("error", "Vous devez avoir un cabinet");
@@ -123,13 +127,14 @@ public class FirmManagementController {
             return "redirect:/firm/cases/assign";
         }
 
-        User currentUser = userRepository.findByEmail(auth.getName()).orElseThrow();
+        User currentUser = userRepository.findByEmail(auth.getName())
+                .orElseThrow(() -> new IllegalStateException("Utilisateur non trouvé"));
         String firmId = currentUser.getFirm().getId();
 
         try {
             firmManagementService.assignCase(firmId, request, currentUser.getId());
             redirectAttrs.addFlashAttribute("success", "Dossier affecté avec succès");
-        } catch (Exception e) {
+        } catch (IllegalArgumentException | IllegalStateException e) {
             log.error("Error assigning case", e);
             redirectAttrs.addFlashAttribute("error", e.getMessage());
         }
@@ -141,13 +146,14 @@ public class FirmManagementController {
     public String unassignCase(@PathVariable String assignmentId,
                               Authentication auth,
                               RedirectAttributes redirectAttrs) {
-        User currentUser = userRepository.findByEmail(auth.getName()).orElseThrow();
+        User currentUser = userRepository.findByEmail(auth.getName())
+                .orElseThrow(() -> new IllegalStateException("Utilisateur non trouvé"));
         String firmId = currentUser.getFirm().getId();
 
         try {
             firmManagementService.unassignCase(firmId, assignmentId, currentUser.getId());
             redirectAttrs.addFlashAttribute("success", "Affectation révoquée");
-        } catch (Exception e) {
+        } catch (IllegalArgumentException | IllegalStateException e) {
             log.error("Error unassigning case", e);
             redirectAttrs.addFlashAttribute("error", e.getMessage());
         }
