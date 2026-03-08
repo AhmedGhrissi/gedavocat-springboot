@@ -117,9 +117,6 @@ docker/init/
 # E2E tests (Playwright - dev only)
 e2e/
 
-# Scripts (backup, SQL - déjà sur serveur)
-scripts/
-
 # Nginx config (déjà sur serveur)
 config/nginx.conf
 
