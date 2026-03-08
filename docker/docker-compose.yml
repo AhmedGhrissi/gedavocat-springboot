@@ -71,6 +71,10 @@ services:
       SPRING_DATASOURCE_USERNAME: gedavocat
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      # Variables référencées dans application.properties (pour éviter PlaceholderResolutionException)
+      DB_USERNAME: gedavocat
+      DB_PASSWORD: ${MYSQL_PASSWORD}
+      APP_BASE_URL: https://docavocat.fr
 
       # JWT — SEC-HARDENED : 15 min access + 4h refresh (OWASP)
       JWT_SECRET: ${JWT_SECRET}
@@ -92,8 +96,7 @@ services:
       SPRING_MAIL_PROPERTIES_MAIL_SMTP_SSL_TRUST: ${MAIL_HOST}
       MAIL_FROM: ${MAIL_USERNAME:-noreply@docavocat.fr}
 
-      # Application
-      APP_BASE-URL: https://docavocat.fr
+      # Application  
       APP_UPLOAD_DIR: /opt/gedavocat/uploads/documents
       APP_SIGNATURE_DIR: /opt/gedavocat/uploads/signatures
       APP_TEMP_DIR: /opt/gedavocat/temp
