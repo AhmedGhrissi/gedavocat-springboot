@@ -116,6 +116,10 @@ services:
       DPO_ADDRESS: ${DPO_ADDRESS:-}
       DPO_CERTIFICATION: ${DPO_CERTIFICATION:-}
 
+      # PRA — Plan de Reprise d'Activité (ISO 27001)
+      PRA_CONTACT: ${PRA_CONTACT}
+      PRA_BACKUP_SITE: ${PRA_BACKUP_SITE:-}
+
       # Logs JSON structurés (lisibles par Loki/Promtail)
       LOGGING_STRUCTURED_FORMAT_CONSOLE_ENABLED: "false"
 
