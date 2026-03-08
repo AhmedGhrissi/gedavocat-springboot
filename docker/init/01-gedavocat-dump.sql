@@ -1,8 +1,8 @@
-CREATE DATABASE  IF NOT EXISTS `doc_avocat` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
-USE `doc_avocat`;
+CREATE DATABASE  IF NOT EXISTS `gedavocat` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
+USE `gedavocat`;
 -- MySQL dump 10.13  Distrib 8.0.44, for Win64 (x86_64)
 --
--- Host: 127.0.0.1    Database: doc_avocat
+-- Host: 127.0.0.1    Database: gedavocat
 -- ------------------------------------------------------
 -- Server version	8.0.39
 
@@ -1085,4 +1085,3 @@ UNLOCK TABLES;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
 -- Dump completed on 2026-03-09  0:09:54
-

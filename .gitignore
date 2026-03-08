@@ -112,7 +112,9 @@ Dockerfile.deploy
 # Docker infrastructure configs (déjà sur serveur)
 # SEC-HARDENED : Dockerfile DOIT être versionné pour la CI/CD
 docker/docker-compose.dev.yml
-docker/init/
+docker/init/*
+!docker/init/*.sql
+!docker/init/README.md
 
 # E2E tests (Playwright - dev only)
 e2e/

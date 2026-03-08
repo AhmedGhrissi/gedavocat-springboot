@@ -1,6 +1,6 @@
 # Dump d'Initialisation de la Base de Données
 
-## Fichier : 01-complete-dump.sql
+## Fichier : 01-gedavocat-dump.sql
 
 Ce fichier contient le dump complet de la base de données DocAvocat :
 - **22 tables** avec leur structure
@@ -19,7 +19,7 @@ Si vous voulez importer ce dump dans une base existante :
 
 ### Localement (Docker) :
 ```bash
-docker exec -i docavocat-mysql mysql -u doc_avocat -p doc_avocat < 01-complete-dump.sql
+docker exec -i docavocat-mysql mysql -u gedavocat -p gedavocat < 01-gedavocat-dump.sql
 ```
 
 ### Sur serveur distant :
@@ -42,10 +42,9 @@ docker-compose up -d mysql # Recrée et charge le dump automatiquement
 
 ## Source
 
-Ce dump a été généré depuis la base `gedavocat` et adapté pour `doc_avocat` :
-- Base originale : `gedavocat`
-- Base cible : `doc_avocat`
-- Toutes les occurrences de "gedavocat" ont été remplacées par "doc_avocat"
+Ce dump a été généré depuis la base `gedavocat` :
+- Base : `gedavocat`
+- Utilisateur : `gedavocat`
 
 ## Tables Incluses
 
@@ -67,7 +66,7 @@ Pour mettre à jour ce dump avec les données actuelles :
 
 ```bash
 # Exporter depuis le conteneur Docker local
-docker exec docavocat-mysql mysqldump -u doc_avocat -p'DocAvocat2026!DevDB' doc_avocat > docker/init/01-complete-dump.sql
+docker exec docavocat-mysql mysqldump -u gedavocat -p'DocAvocat2026!DevDB' gedavocat > docker/init/01-gedavocat-dump.sql
 
 # Ou utiliser le script
 .\scripts\export-schema.ps1

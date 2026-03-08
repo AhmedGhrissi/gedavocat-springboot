@@ -25,21 +25,21 @@ services:
     restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: doc_avocat
-      MYSQL_USER: doc_avocat
+      MYSQL_DATABASE: gedavocat
+      MYSQL_USER: gedavocat
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     volumes:
       - mysql_data:/var/lib/mysql
       # Script d'initialisation complète de la BDD (structure + données)
       # Exécuté uniquement au premier démarrage (fresh install)
-      - ./init/01-complete-dump.sql:/docker-entrypoint-initdb.d/01-complete-dump.sql:ro
+      - ./init/01-gedavocat-dump.sql:/docker-entrypoint-initdb.d/01-gedavocat-dump.sql:ro
     ports:
       # Accessible uniquement en local (pour les backups manuels via mysqldump)
       - "127.0.0.1:3307:3306"
     networks:
       - docavocat-net
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "doc_avocat", "-p${MYSQL_PASSWORD}"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "gedavocat", "-p${MYSQL_PASSWORD}"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -67,12 +67,12 @@ services:
       SERVER_PORT: 8080
 
       # Base de données — SEC-HARDENED : useSSL=true, ddl-auto=validate
-      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/doc_avocat?useSSL=true&requireSSL=true&serverTimezone=Europe/Paris&allowPublicKeyRetrieval=true&useUnicode=true&characterEncoding=UTF-8"
-      SPRING_DATASOURCE_USERNAME: doc_avocat
+      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/gedavocat?useSSL=true&requireSSL=true&serverTimezone=Europe/Paris&allowPublicKeyRetrieval=true&useUnicode=true&characterEncoding=UTF-8"
+      SPRING_DATASOURCE_USERNAME: gedavocat
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
       # Variables référencées dans application.properties (pour éviter PlaceholderResolutionException)
-      DB_USERNAME: doc_avocat
+      DB_USERNAME: gedavocat
       DB_PASSWORD: ${MYSQL_PASSWORD}
       APP_BASE_URL: https://docavocat.fr
 
