@@ -73,6 +73,13 @@ temp/
 dump_*.sql
 *_dump.sql
 backup_*.sql
+*.sql
+!sql/V*.sql
+!docker/init/.gitkeep
+
+# Documentation locale (garder seulement README.md)
+*.md
+!README.md
 
 # Python (audit scripts locaux)
 *.py
@@ -113,8 +120,7 @@ Dockerfile.deploy
 # SEC-HARDENED : Dockerfile DOIT être versionné pour la CI/CD
 docker/docker-compose.dev.yml
 docker/init/*
-!docker/init/*.sql
-!docker/init/README.md
+!docker/init/.gitkeep
 
 # E2E tests (Playwright - dev only)
 e2e/
