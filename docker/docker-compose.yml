@@ -109,6 +109,13 @@ services:
       STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY:-}
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
 
+      # RGPD — DPO (requis par loi française)
+      DPO_NAME: ${DPO_NAME}
+      DPO_EMAIL: ${DPO_EMAIL}
+      DPO_PHONE: ${DPO_PHONE:-}
+      DPO_ADDRESS: ${DPO_ADDRESS:-}
+      DPO_CERTIFICATION: ${DPO_CERTIFICATION:-}
+
       # Logs JSON structurés (lisibles par Loki/Promtail)
       LOGGING_STRUCTURED_FORMAT_CONSOLE_ENABLED: "false"
 
