@@ -272,7 +272,7 @@ public class SettingsController {
                     ? "••••" + apiKey.substring(apiKey.length() - 4)
                     : "••••";
             }
-            userData.put("yousignApiKey", maskedKey);
+            userData.put("yousignApiKey", maskedKey); // gitleaks:allow
             return ResponseEntity.ok(userData);
         } catch (Exception e) {
             log.error("Erreur récupération données utilisateur", e);

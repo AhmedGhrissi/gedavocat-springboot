@@ -22,15 +22,15 @@ public class SettingsService {
     /**
      * Récupère la clé API Yousign d'un utilisateur
      */
-    public String getYousignApiKey(String userId) {
-        return userSettings.get("yousign_api_key_" + userId);
+    public String getYousignApiKey(String userId) { // gitleaks:allow
+        return userSettings.get("yousign_api_key_" + userId); // gitleaks:allow
     }
 
     /**
      * Vérifie si Yousign est configuré pour un utilisateur
      */
     public boolean isYousignConfigured(String userId) {
-        String apiKey = getYousignApiKey(userId);
+        String apiKey = getYousignApiKey(userId); // gitleaks:allow
         return apiKey != null && !apiKey.isEmpty();
     }
 
@@ -39,11 +39,11 @@ public class SettingsService {
      */
     public void saveYousignSettings(String userId, String apiKey, boolean sandbox) {
         if (apiKey != null && !apiKey.trim().isEmpty()) {
-            userSettings.put("yousign_api_key_" + userId, apiKey.trim());
+            userSettings.put("yousign_api_key_" + userId, apiKey.trim()); // gitleaks:allow
             yousignSandbox.put("yousign_sandbox_" + userId, sandbox);
         } else {
             // Supprimer la configuration si la clé est vide
-            userSettings.remove("yousign_api_key_" + userId);
+            userSettings.remove("yousign_api_key_" + userId); // gitleaks:allow
             yousignSandbox.remove("yousign_sandbox_" + userId);
         }
     }
