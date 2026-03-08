@@ -172,6 +172,7 @@ owasp-dependency-check:
     - echo "========================================="
     - echo "OWASP DEPENDENCY CHECK — CVE >= 7.0"
     - echo "========================================="
+    - mkdir -p security-reports
     - |
       MVN_ARGS="$MAVEN_CLI_OPTS org.owasp:dependency-check-maven:check \
         -DfailBuildOnCVSS=7 \
@@ -220,6 +221,7 @@ snyk-security-scan:
     - echo "========================================="
     - echo "SNYK SECURITY SCAN — CVE + Code Analysis"
     - echo "========================================="
+    - mkdir -p security-reports
     - |
       if [ -z "${SNYK_TOKEN:-}" ]; then
         echo "SNYK_TOKEN non défini — scan ignoré"
@@ -258,6 +260,7 @@ trivy-security-scan:
     - echo "TRIVY SECURITY SCAN — Filesystem + Deps"
     - echo "========================================="
     - trivy --version
+    - mkdir -p security-reports
     - trivy fs --exit-code 0 --severity HIGH,CRITICAL --format json --output security-reports/trivy-report.json .
     - trivy fs --exit-code 1 --severity CRITICAL --format table .
   after_script:
