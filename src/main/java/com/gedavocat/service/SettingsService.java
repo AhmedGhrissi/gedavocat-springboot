@@ -37,7 +37,7 @@ public class SettingsService {
     /**
      * Sauvegarde les paramètres Yousign
      */
-    public void saveYousignSettings(String userId, String apiKey, boolean sandbox) {
+    public void saveYousignSettings(String userId, String apiKey, boolean sandbox) { // gitleaks:allow
         if (apiKey != null && !apiKey.trim().isEmpty()) {
             userSettings.put("yousign_api_key_" + userId, apiKey.trim()); // gitleaks:allow
             yousignSandbox.put("yousign_sandbox_" + userId, sandbox);
@@ -52,7 +52,7 @@ public class SettingsService {
      * Teste la connexion Yousign
      */
     public boolean testYousignConnection(String userId) {
-        String apiKey = getYousignApiKey(userId);
+        String apiKey = getYousignApiKey(userId); // gitleaks:allow
         if (apiKey == null || apiKey.isEmpty()) {
             return false;
         }
@@ -87,13 +87,13 @@ public class SettingsService {
     public Map<String, Object> getUserSettings(String userId) {
         Map<String, Object> settings = new ConcurrentHashMap<>();
         
-        String apiKey = getYousignApiKey(userId);
+        String apiKey = getYousignApiKey(userId); // gitleaks:allow
         if (apiKey != null) {
             // Masquer une partie de la clé pour la sécurité
             String maskedKey = apiKey.substring(0, Math.min(4, apiKey.length())) + 
                              "*".repeat(Math.max(0, apiKey.length() - 8)) + 
                              (apiKey.length() > 4 ? apiKey.substring(Math.max(4, apiKey.length() - 4)) : "");
-            settings.put("yousignApiKeyMasked", maskedKey);
+            settings.put("yousignApiKeyMasked", maskedKey); // gitleaks:allow
         }
         
         settings.put("yousignConfigured", isYousignConfigured(userId));

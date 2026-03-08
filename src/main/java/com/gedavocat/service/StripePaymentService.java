@@ -26,8 +26,8 @@ import java.util.Map;
 @SuppressWarnings({"unchecked", "null"})
 public class StripePaymentService {
     
-    @Value("${stripe.api.key:}")
-    private String stripeApiKey;
+    @Value("${stripe.api.key:}") // gitleaks:allow
+    private String stripeApiKey; // gitleaks:allow
     
     @Value("${stripe.webhook.secret:}")
     private String webhookSecret;
@@ -54,7 +54,7 @@ public class StripePaymentService {
     ) {
         try {
             // Configuration de Stripe (à faire avec la librairie Stripe)
-            // Stripe.apiKey = stripeApiKey;
+            // Stripe.apiKey = stripeApiKey; // gitleaks:allow
             
             double price = getPriceForPlan(planType);
             
@@ -326,6 +326,6 @@ public class StripePaymentService {
      * Vérifier si Stripe est configuré
      */
     public boolean isConfigured() {
-        return stripeApiKey != null && !stripeApiKey.isEmpty();
+        return stripeApiKey != null && !stripeApiKey.isEmpty(); // gitleaks:allow
     }
 }

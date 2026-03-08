@@ -27,8 +27,8 @@ import java.util.Map;
 public class StripeService {
 
     // Injected from env var (not hardcoded) - audit-security-approved
-    @Value("${stripe.api.key:}")
-    private String stripeApiKey;
+    @Value("${stripe.api.key:}") // gitleaks:allow
+    private String stripeApiKey; // gitleaks:allow
 
     @Value("${stripe.publishable.key:}")
     private String stripePublishableKey;
@@ -66,7 +66,7 @@ public class StripeService {
      */
     @PostConstruct
     public void init() {
-        Stripe.apiKey = stripeApiKey;
+        Stripe.apiKey = stripeApiKey; // gitleaks:allow
 
         // Construire le mapping plan+period → priceId
         priceMap = new HashMap<>();
@@ -84,9 +84,9 @@ public class StripeService {
      * Vérifie si Stripe est correctement configuré
      */
     public boolean isConfigured() {
-        return stripeApiKey != null &&
-               !stripeApiKey.isBlank() &&
-               !stripeApiKey.startsWith("sk_test_dummy") &&
+        return stripeApiKey != null && // gitleaks:allow
+               !stripeApiKey.isBlank() && // gitleaks:allow
+               !stripeApiKey.startsWith("sk_test_dummy") && // gitleaks:allow
                stripePublishableKey != null &&
                !stripePublishableKey.isBlank() &&
                !stripePublishableKey.startsWith("pk_test_dummy");

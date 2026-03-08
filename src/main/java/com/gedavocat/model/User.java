@@ -428,8 +428,8 @@ public class User {
 
     // SEC-HARDENED : chiffrement AES-256-GCM transparent via JPA Converter
     @Convert(converter = com.gedavocat.security.crypto.MfaSecretAttributeConverter.class)
-    @Column(name = "mfa_secret", length = 512)
-    private String mfaSecret;
+    @Column(name = "mfa_secret", length = 512) // gitleaks:allow
+    private String mfaSecret; // gitleaks:allow
 
     @Column(name = "mfa_enabled")
     private Boolean mfaEnabled = Boolean.FALSE;

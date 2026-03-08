@@ -26,7 +26,7 @@ public class JwtService {
     private static final String JWT_ISSUER = "docavocat.fr";
     private static final String JWT_AUDIENCE = "docavocat-api";
     
-    @Value("${jwt.secret}")
+    @Value("${jwt.secret}") // gitleaks:allow
     private String secretKey;
     
     @Value("${jwt.expiration}")
@@ -46,11 +46,11 @@ public class JwtService {
     public void validateSecret() {
         if (secretKey == null || secretKey.isBlank()) {
             throw new IllegalStateException(
-                "JWT_SECRET n'est pas défini. Configurez la variable d'environnement JWT_SECRET.");
+                "JWT_SECRET n'est pas défini. Configurez la variable d'environnement JWT_SECRET."); // gitleaks:allow
         }
         if (secretKey.contains("CHANGE_ME") || secretKey.equals("dummy") || secretKey.length() < 32) {
             throw new IllegalStateException(
-                "JWT_SECRET est une valeur par défaut ou trop courte (min 32 caractères en Base64). "
+                "JWT_SECRET est une valeur par défaut ou trop courte (min 32 caractères en Base64). " // gitleaks:allow
                 + "Générez un secret aléatoire : openssl rand -base64 64");
         }
     }

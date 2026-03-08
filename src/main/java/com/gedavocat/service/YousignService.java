@@ -33,7 +33,7 @@ import java.util.Map;
 @SuppressWarnings({"unchecked", "rawtypes", "null"})
 public class YousignService {
     
-    @Value("${yousign.api.key:}")
+    @Value("${yousign.api.key:}") // gitleaks:allow
     private String apiKey;
     
     @Value("${yousign.api.url:https://api-sandbox.yousign.app}")
@@ -55,7 +55,7 @@ public class YousignService {
             String signatureLevel
     ) {
         if (!isConfigured()) {
-            throw new RuntimeException("Yousign n'est pas configuré. Veuillez ajouter la variable YOUSIGN_API_KEY dans votre configuration.");
+            throw new RuntimeException("Yousign n'est pas configuré. Veuillez ajouter la variable YOUSIGN_API_KEY dans votre configuration."); // gitleaks:allow
         }
         
         try {

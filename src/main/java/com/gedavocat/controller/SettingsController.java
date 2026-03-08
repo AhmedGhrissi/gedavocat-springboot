@@ -70,7 +70,7 @@ public class SettingsController {
     ) {
         try {
             User user = getCurrentUser(authentication);
-            settingsService.saveYousignSettings(user.getId(), apiKey, sandbox);
+            settingsService.saveYousignSettings(user.getId(), apiKey, sandbox); // gitleaks:allow
             redirectAttributes.addFlashAttribute("message", "Configuration Yousign sauvegardée avec succès");
         } catch (Exception e) {
             log.error("Erreur sauvegarde Yousign", e);
@@ -89,7 +89,7 @@ public class SettingsController {
     ) {
         try {
             User user = getCurrentUser(authentication);
-            settingsService.saveYousignSettings(user.getId(), apiKey, sandbox);
+            settingsService.saveYousignSettings(user.getId(), apiKey, sandbox); // gitleaks:allow
             return ResponseEntity.ok(Map.of(
                 "success", true, 
                 "message", "Configuration Yousign sauvegardée avec succès"
