@@ -111,6 +111,11 @@ services:
       STRIPE_API_KEY: ${STRIPE_API_KEY:-} # gitleaks:allow - env var reference
       STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY:-}
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      
+      # RPVA — Réseau Privé Virtuel Avocats (e-Barreau)
+      RPVA_API_KEY: ${RPVA_API_KEY:-}
+      RPVA_CERT_PATH: ${RPVA_CERT_PATH:-}
+      RPVA_CERT_PASSWORD: ${RPVA_CERT_PASSWORD:-}
 
       # RGPD — DPO (requis par loi française)
       DPO_NAME: ${DPO_NAME}
