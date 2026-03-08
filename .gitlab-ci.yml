@@ -248,8 +248,9 @@ snyk-security-scan:
 
 trivy-security-scan:
   stage: security
-  image: aquasec/trivy:latest
-  entrypoint: [""]  # Override pour permettre exécution shell normale (after_script Discord)
+  image:
+    name: aquasec/trivy:latest
+    entrypoint: [""]  # Override pour permettre exécution shell normale (after_script Discord)
   before_script:
     - apk add --no-cache curl > /dev/null 2>&1 || true
   script:
