@@ -30,9 +30,9 @@ services:
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     volumes:
       - mysql_data:/var/lib/mysql
-      # Note : le script init/01-schema.sql n'est exécuté qu'une seule fois
-      # à la création du volume (fresh install). Décommenter si nécessaire.
-      # - ./init/01-schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      # Script d'initialisation complète de la BDD (structure + données)
+      # Exécuté uniquement au premier démarrage (fresh install)
+      - ./init/01-complete-dump.sql:/docker-entrypoint-initdb.d/01-complete-dump.sql:ro
     ports:
       # Accessible uniquement en local (pour les backups manuels via mysqldump)
       - "127.0.0.1:3307:3306"
