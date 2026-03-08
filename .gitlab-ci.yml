@@ -578,11 +578,11 @@ deploy:
         sed -i '/^DPO_PHONE=/d' .env
         sed -i '/^DPO_ADDRESS=/d' .env
         sed -i '/^DPO_CERTIFICATION=/d' .env
-        echo \"DPO_NAME=${DPO_NAME:-A Configurer}\" >> .env
-        echo \"DPO_EMAIL=${DPO_EMAIL:-dpo@docavocat.fr}\" >> .env
-        echo \"DPO_PHONE=${DPO_PHONE:-}\" >> .env
-        echo \"DPO_ADDRESS=${DPO_ADDRESS:-}\" >> .env
-        echo \"DPO_CERTIFICATION=${DPO_CERTIFICATION:-}\" >> .env
+        echo 'DPO_NAME=A Configurer' >> .env
+        echo 'DPO_EMAIL=dpo@docavocat.fr' >> .env
+        echo 'DPO_PHONE=' >> .env
+        echo 'DPO_ADDRESS=' >> .env
+        echo 'DPO_CERTIFICATION=' >> .env
       "
     - ssh root@$SERVER_HOST "mkdir -p $REMOTE_DIR/loki $REMOTE_DIR/promtail $REMOTE_DIR/grafana/provisioning/datasources $REMOTE_DIR/grafana/provisioning/dashboards"
     - scp docker/loki/local-config.yaml root@$SERVER_HOST:$REMOTE_DIR/loki/local-config.yaml
