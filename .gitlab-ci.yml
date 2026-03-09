@@ -574,7 +574,16 @@ deploy:
       echo "CI_REGISTRY_IMAGE=$CI_REGISTRY_IMAGE"
       echo "CI_COMMIT_SHORT_SHA=$CI_COMMIT_SHORT_SHA"
       echo "APP_IMAGE complet : $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA"
-    - ssh root@$SERVER_HOST "sed -i '/^APP_IMAGE=/d' $REMOTE_DIR/.env && echo \"APP_IMAGE=$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA\" >> $REMOTE_DIR/.env"
+    - |
+      ssh root@$SERVER_HOST "
+        cd $REMOTE_DIR
+        # Ensure .env ends with a newline (GitLab File variables may strip trailing newline)
+        sed -i -e '\$a\\' .env
+        # Remove any existing APP_IMAGE line (including if concatenated with previous line)
+        sed -i '/APP_IMAGE=/d' .env
+        # Append APP_IMAGE on its own line
+        echo 'APP_IMAGE=$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA' >> .env
+      "
     - |
       ssh root@$SERVER_HOST "
         cd $REMOTE_DIR
