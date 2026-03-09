@@ -564,7 +564,7 @@ deploy:
       # Créer ou copier le fichier .env s'il n'existe pas
       if [ -n "${ENV_PROD:-}" ]; then
         echo "Copie de ENV_PROD vers le serveur..."
-        echo "$ENV_PROD" | ssh root@$SERVER_HOST "cat > $REMOTE_DIR/.env"
+        cat "$ENV_PROD" | ssh root@$SERVER_HOST "cat > $REMOTE_DIR/.env"
       else
         echo "ENV_PROD non définie, création d'un fichier .env minimal..."
         ssh root@$SERVER_HOST "touch $REMOTE_DIR/.env"
