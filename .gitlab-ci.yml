@@ -647,11 +647,8 @@ deploy:
         docker compose stop app 2>/dev/null || true
         docker compose rm -f app 2>/dev/null || true
 
-        echo '=== Demarrage du nouveau conteneur ==='
-        docker compose up -d --no-deps app || { echo 'ERREUR demarrage'; docker compose logs app; exit 1; }
-
-        echo '=== Demarrage des services de monitoring ==='
-        docker compose up -d loki promtail grafana 2>/dev/null || true
+        echo '=== Demarrage de tous les services ==='
+        docker compose up -d || { echo 'ERREUR demarrage'; docker compose logs app; exit 1; }
 
         docker logout $CI_REGISTRY 2>/dev/null || true
 
