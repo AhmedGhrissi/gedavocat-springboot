@@ -569,6 +569,11 @@ deploy:
         echo "ENV_PROD non définie, création d'un fichier .env minimal..."
         ssh root@$SERVER_HOST "touch $REMOTE_DIR/.env"
       fi
+    - |
+      # Debug : afficher les variables GitLab
+      echo "CI_REGISTRY_IMAGE=$CI_REGISTRY_IMAGE"
+      echo "CI_COMMIT_SHORT_SHA=$CI_COMMIT_SHORT_SHA"
+      echo "APP_IMAGE complet : $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA"
     - ssh root@$SERVER_HOST "sed -i '/^APP_IMAGE=/d' $REMOTE_DIR/.env && echo \"APP_IMAGE=$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA\" >> $REMOTE_DIR/.env"
     - |
       ssh root@$SERVER_HOST "
@@ -580,6 +585,10 @@ deploy:
         echo 'MAIL_PORT=${MAIL_PORT:-587}' >> .env
         echo 'MAIL_USERNAME=${MAIL_USERNAME:-noreply@docavocat.fr}' >> .env
         echo 'MAIL_PASSWORD=${MAIL_PASSWORD}' >> .env
+        
+        echo '=== Contenu du .env apres modifications ==='
+        cat .env
+        echo '=== Fin du .env ==='
       "
     - |
       ssh root@$SERVER_HOST "
@@ -629,8 +638,14 @@ deploy:
           fi
         done
 
+        echo '=== Debug : fichiers dans le repertoire ==='
+        pwd
+        ls -la
+        echo '=== Verification APP_IMAGE dans .env ==='
+        grep APP_IMAGE .env || echo 'APP_IMAGE non trouve dans .env !'
+        
         echo '=== Pull de la nouvelle image ==='
-        docker compose pull app || { echo 'ERREUR pull image'; exit 1; }
+        docker compose pull app || { echo 'ERREUR pull image'; docker compose config | head -20; exit 1; }
 
         echo '=== Arret de l ancien conteneur ==='
         docker compose stop app 2>/dev/null || true
