@@ -546,6 +546,8 @@ deploy:
   script:
     - |
       ssh root@$SERVER_HOST "
+        echo '=== Création du répertoire si nécessaire ==='
+        mkdir -p $REMOTE_DIR/docker
         echo '=== Espace disque avant nettoyage ==='
         df -h / | tail -1
         echo '--- Nettoyage Docker ---'
