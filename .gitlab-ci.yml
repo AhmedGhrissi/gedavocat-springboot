@@ -782,10 +782,36 @@ deploy:
       fi
     - |
       echo "========================================="
-      echo "ETAPE 4: Fix nginx CSP duplicate (empeche form-action conflit)"
+      echo "ETAPE 4: Fix nginx — www redirect + suppression headers en double"
       echo "========================================="
       ssh root@$SERVER_HOST "
-        echo '--- Suppression des headers CSP/security en double dans nginx ---'
+        echo '=== 4a. Redirect www -> non-www (obligatoire pour sessions/cookies) ==='
+        # Creer le server block www->non-www si absent
+        WWW_REDIRECT='/etc/nginx/conf.d/www-redirect-docavocat.conf'
+        if [ ! -f \"\$WWW_REDIRECT\" ]; then
+          echo 'Creation redirect www.docavocat.fr -> docavocat.fr'
+          cat > \"\$WWW_REDIRECT\" <<'NGINXEOF'
+server {
+    listen 80;
+    listen [::]:80;
+    server_name www.docavocat.fr;
+    return 301 https://docavocat.fr\$request_uri;
+}
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    server_name www.docavocat.fr;
+    ssl_certificate /etc/letsencrypt/live/docavocat.fr/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/docavocat.fr/privkey.pem;
+    return 301 https://docavocat.fr\$request_uri;
+}
+NGINXEOF
+          echo '  -> Fichier cree: '\"\$WWW_REDIRECT\"
+        else
+          echo '  -> Redirect www deja en place, OK'
+        fi
+
+        echo '=== 4b. Suppression des headers CSP/security en double dans nginx ==='
         echo '--- (Spring Boot gere deja tous les security headers) ---'
         for CONF in /etc/nginx/sites-enabled/docavocat* /etc/nginx/conf.d/docavocat* /etc/nginx/sites-enabled/default; do
           if [ -f \"\$CONF\" ]; then
@@ -803,7 +829,9 @@ deploy:
             fi
           fi
         done
-        nginx -t && nginx -s reload || echo 'WARN: nginx reload failed, check config manually'
+
+        echo '=== 4c. Test et reload nginx ==='
+        nginx -t && nginx -s reload && echo 'nginx reloaded OK' || echo 'WARN: nginx reload failed, check config manually'
       "
     - |
       echo "========================================="

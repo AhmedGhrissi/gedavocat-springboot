@@ -135,11 +135,9 @@ public class SecurityConfig {
 							final String styleSrc = "'self' 'unsafe-inline'" + extraStyleOrigins;
 							final String fontSrc  = "'self'" + extraFontOrigins;
 
-							// CSP FIX: form-action uses 'self' only — CSRF tokens provide the primary
-							// protection against cross-site form submissions. Explicit domain names
-							// in form-action can cause blocking when nginx adds its own CSP header
-							// (browsers enforce ALL CSP policies). Stripe checkout uses JS redirect,
-							// not form POST, so it doesn't need form-action allowlisting.
+							// CSP : form-action autorise 'self' + les deux variantes du domaine
+							// (www et non-www) pour éviter le blocage si nginx ne redirige pas www→non-www.
+							// Nginx DOIT rediriger www→non-www, mais ceci est un filet de sécurité.
 							// Content-Security-Policy header configuration
 							h.contentSecurityPolicy(csp -> csp.policyDirectives(
 									"default-src 'self'; " +
@@ -152,9 +150,8 @@ public class SecurityConfig {
 									"frame-src 'self' https://js.stripe.com https://hooks.stripe.com; " +
 									"object-src 'none'; " +
 									"base-uri 'self'; " +
-									"form-action 'self'; " +
-									// frame-ancestors 'self' (au lieu de 'none') pour compatibilité
-									// avec les proxys Zero-Trust qui wrappent dans un iframe same-origin
+									"form-action 'self' https://docavocat.fr https://www.docavocat.fr; " +
+									// frame-ancestors 'self' pour compatibilité Zero-Trust
 									"frame-ancestors 'self'"));
 							// COOP/CORP : SAME_ORIGIN_ALLOW_POPUPS au lieu de SAME_ORIGIN strict.
 							// SAME_ORIGIN bloque les proxys corporate qui injectent du JS monitoring/DLP.
