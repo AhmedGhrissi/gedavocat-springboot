@@ -782,7 +782,32 @@ deploy:
       fi
     - |
       echo "========================================="
-      echo "ETAPE 4: Verification finale"
+      echo "ETAPE 4: Fix nginx CSP duplicate (empeche form-action conflit)"
+      echo "========================================="
+      ssh root@$SERVER_HOST "
+        echo '--- Suppression des headers CSP/security en double dans nginx ---'
+        echo '--- (Spring Boot gere deja tous les security headers) ---'
+        for CONF in /etc/nginx/sites-enabled/docavocat* /etc/nginx/conf.d/docavocat* /etc/nginx/sites-enabled/default; do
+          if [ -f \"\$CONF\" ]; then
+            echo \"Checking \$CONF ...\"
+            if grep -q 'Content-Security-Policy\|X-Frame-Options\|X-Content-Type-Options\|Referrer-Policy\|Strict-Transport-Security\|Permissions-Policy' \"\$CONF\"; then
+              echo \"  -> Found duplicate security headers, commenting them out\"
+              sed -i 's/^\\(\\s*add_header.*Content-Security-Policy\\)/#CSP_DUPLICATE \\1/' \"\$CONF\"
+              sed -i 's/^\\(\\s*add_header.*X-Frame-Options\\)/#XFRAME_DUPLICATE \\1/' \"\$CONF\"
+              sed -i 's/^\\(\\s*add_header.*X-Content-Type-Options\\)/#XCTO_DUPLICATE \\1/' \"\$CONF\"
+              sed -i 's/^\\(\\s*add_header.*Referrer-Policy\\)/#RP_DUPLICATE \\1/' \"\$CONF\"
+              sed -i 's/^\\(\\s*add_header.*Permissions-Policy\\)/#PP_DUPLICATE \\1/' \"\$CONF\"
+              echo \"  -> Done. Headers will be served by Spring Boot only.\"
+            else
+              echo \"  -> No duplicate headers found, OK\"
+            fi
+          fi
+        done
+        nginx -t && nginx -s reload || echo 'WARN: nginx reload failed, check config manually'
+      "
+    - |
+      echo "========================================="
+      echo "ETAPE 5: Verification finale"
       echo "========================================="
       ssh root@$SERVER_HOST "
         docker stats docavocat-app --no-stream --format 'table {{.Container}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.MemPerc}}' || true

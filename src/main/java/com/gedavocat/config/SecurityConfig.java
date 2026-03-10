@@ -129,6 +129,11 @@ public class SecurityConfig {
 							final String styleSrc = "'self' 'unsafe-inline'" + extraStyleOrigins;
 							final String fontSrc  = "'self'" + extraFontOrigins;
 
+							// CSP FIX: form-action uses 'self' only — CSRF tokens provide the primary
+							// protection against cross-site form submissions. Explicit domain names
+							// in form-action can cause blocking when nginx adds its own CSP header
+							// (browsers enforce ALL CSP policies). Stripe checkout uses JS redirect,
+							// not form POST, so it doesn't need form-action allowlisting.
 							// Content-Security-Policy header configuration
 							h.contentSecurityPolicy(csp -> csp.policyDirectives(
 									"default-src 'self'; " +
@@ -141,7 +146,7 @@ public class SecurityConfig {
 									"frame-src 'self' https://js.stripe.com https://hooks.stripe.com; " +
 									"object-src 'none'; " +
 									"base-uri 'self'; " +
-									"form-action 'self' https://docavocat.fr https://checkout.stripe.com; " +
+									"form-action 'self'; " +
 									"frame-ancestors 'none'"));
 							h.crossOriginOpenerPolicy(coop -> coop.policy(
 									org.springframework.security.web.header.writers.CrossOriginOpenerPolicyHeaderWriter.CrossOriginOpenerPolicy.SAME_ORIGIN));
