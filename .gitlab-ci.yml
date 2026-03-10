@@ -683,6 +683,19 @@ deploy:
           docker exec docavocat-mysql sh -c 'mysql -u root -p\"\$MYSQL_ROOT_PASSWORD\" gedavocat < /docker-entrypoint-initdb.d/01-gedavocat-dump.sql' 2>&1 && echo 'Import dump OK' || echo 'Import echoue — ddl-auto=update prendra le relais'
         }
 
+        echo '=== Verification cle MFA_ENCRYPTION_KEY (AES-256 = 32 octets base64) ==='
+        MFA_KEY=\$(grep '^MFA_ENCRYPTION_KEY=' .env 2>/dev/null | cut -d= -f2-)
+        MFA_LEN=\$(echo -n \"\$MFA_KEY\" | base64 -d 2>/dev/null | wc -c)
+        echo \"MFA key longueur decodee: \${MFA_LEN} octets\"
+        if [ \"\$MFA_LEN\" != '32' ]; then
+          echo 'Cle MFA invalide — generation nouvelle cle AES-256...'
+          NEW_MFA_KEY=\$(openssl rand -base64 32)
+          sed -i \"s|^MFA_ENCRYPTION_KEY=.*|MFA_ENCRYPTION_KEY=\$NEW_MFA_KEY|\" .env
+          echo 'Nouvelle cle MFA ecrite dans .env'
+        else
+          echo 'Cle MFA OK (32 octets)'
+        fi
+
         echo '=== Recreation du conteneur app (force-recreate) ==='
         docker compose up -d --force-recreate --no-deps app || { echo 'ERREUR demarrage app'; docker compose logs app --tail=50; exit 1; }
 
