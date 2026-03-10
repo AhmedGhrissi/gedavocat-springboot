@@ -1,0 +1,31 @@
+name: Mirror to GitLab
+
+on:
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: read
+
+jobs:
+  push_to_gitlab:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Push main to GitLab
+        env:
+          GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
+          GITLAB_REPO: https://gitlab.com/AhmedGhrissi/gedavocat-springboot.git
+        run: |
+          set -e
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          # Add GitLab remote using the token from secrets
+          git remote add gitlab "https://oauth2:${GITLAB_TOKEN}@gitlab.com/AhmedGhrissi/gedavocat-springboot.git"
+          # Push only the main branch; use force-with-lease to avoid clobbering remote unexpectedly
+          git push --force-with-lease gitlab HEAD:main
+
+# End of file
