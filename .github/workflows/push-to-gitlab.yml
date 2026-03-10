@@ -1,0 +1,26 @@
+name: Push main to GitLab
+on:
+  push:
+    branches: [ main ]
+jobs:
+  push-to-gitlab:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout full repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+      - name: Push main branch to GitLab
+        env:
+          GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
+          GITLAB_REPO: ${{ secrets.GITLAB_REPO }} # ex: https://gitlab.com/ahmed.ghrissi/gedavocat-springboot.git
+        run: |
+          TARGET="${GITLAB_REPO#https://}"
+          git remote add gitlab "https://oauth2:${GITLAB_TOKEN}@${TARGET}"
+          git push gitlab refs/heads/main:refs/heads/main --force
