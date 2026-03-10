@@ -64,9 +64,9 @@ stages:
   - package
   - deploy
 
-# ────────────────────────────────────────────────────────────────
+# ──────────────────────────────────────────────────────────────────
 # ANCRES DISCORD (inchangées)
-# ────────────────────────────────────────────────────────────────
+# ──────────────────────────────────────────────────────────────────
 
 .discord_commit_notify: &discord_commit_notify
   - |
@@ -79,12 +79,12 @@ stages:
       AUTHOR="${GITLAB_USER_NAME:-CI}"
       SHA="${CI_COMMIT_SHORT_SHA:-????}"
       TITLE="${CI_COMMIT_TITLE:-}"
-      COMMIT_MSG=$(printf '%s' "$TITLE" | head -c 80 | sed 's/\/\\/g; s/"/\"/g; s/\t/ /g')
-      PAYLOAD=$(printf '{"embeds":[{"title":"%s %s","description":"**Branche :** `%s`\n**Commit :** [`%s`](%s)\n**Par :** %s\n**Message :** %s\n\n[Logs job ->](%s/-/jobs/%s)","color":%s,"footer":{"text":"DocAvocat CI/CD"},"timestamp":"%s"}]}' 
-        "$EMOJI" "$STATUS" 
-        "$BRANCH" "$SHA" "$CI_PIPELINE_URL" "$AUTHOR" "$COMMIT_MSG" 
-        "$CI_PROJECT_URL" "$CI_JOB_ID" 
-        "$COLOR" 
+      COMMIT_MSG=$(printf '%s' "$TITLE" | head -c 80 | sed 's/\\/\\\\/g; s/"/\\"/g; s/	/ /g')
+      PAYLOAD=$(printf '{"embeds":[{"title":"%s %s","description":"**Branche :** `%s`\\n**Commit :** [`%s`](%s)\\n**Par :** %s\\n**Message :** %s\\n\\n[Logs job ->](%s/-/jobs/%s)","color":%s,"footer":{"text":"DocAvocat CI/CD"},"timestamp":"%s"}]}' \
+        "$EMOJI" "$STATUS" \
+        "$BRANCH" "$SHA" "$CI_PIPELINE_URL" "$AUTHOR" "$COMMIT_MSG" \
+        "$CI_PROJECT_URL" "$CI_JOB_ID" \
+        "$COLOR" \
         "$(date -u '+%Y-%m-%dT%H:%M:%SZ')")
       RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$WEBHOOK" \
            -H "Content-Type: application/json" \
@@ -102,8 +102,8 @@ stages:
       AUTHOR="${GITLAB_USER_NAME:-CI}"
       SHA="${CI_COMMIT_SHORT_SHA:-????}"
       TITLE="${CI_COMMIT_TITLE:-}"
-      COMMIT_MSG=$(printf '%s' "$TITLE" | head -c 80 | sed 's/\/\\/g; s/"/\"/g; s/\t/ /g')
-      PAYLOAD=$(printf '{"embeds":[{"title":"%s %s","description":"**Branche :** `%s`\n**Commit :** [`%s`](%s)\n**Par :** %s\n**Message :** %s\n\n[Logs job ->](%s/-/jobs/%s)","color":%s,"footer":{"text":"DocAvocat CI/CD"},"timestamp":"%s"}]}' \
+      COMMIT_MSG=$(printf '%s' "$TITLE" | head -c 80 | sed 's/\\/\\\\/g; s/"/\\"/g; s/	/ /g')
+      PAYLOAD=$(printf '{"embeds":[{"title":"%s %s","description":"**Branche :** `%s`\\n**Commit :** [`%s`](%s)\\n**Par :** %s\\n**Message :** %s\\n\\n[Logs job ->](%s/-/jobs/%s)","color":%s,"footer":{"text":"DocAvocat CI/CD"},"timestamp":"%s"}]}' \
         "$EMOJI" "$STATUS" \
         "$BRANCH" "$SHA" "$CI_PIPELINE_URL" "$AUTHOR" "$COMMIT_MSG" \
         "$CI_PROJECT_URL" "$CI_JOB_ID" \
@@ -119,6 +119,7 @@ stages:
 # ──────────────────────────────────────────────────────────────────
 # STAGE 0 : SECURITY (NOUVEAU — bloquant, toutes branches)
 # ──────────────────────────────────────────────────────────────────
+
 audit-code-security:
   stage: security
   image: maven:3.9-eclipse-temurin-17
@@ -136,7 +137,7 @@ audit-code-security:
     - |
       WEBHOOK="${DISCORD_WEBHOOK:-}"
       [ -z "$WEBHOOK" ] && true || {
-        PAYLOAD=$(printf '{"embeds":[{"title":"[SHIELD] Audit securite demarre","description":"**Branche :** `%s`\n**Commit :** [`%s`](%s)\n**Par :** %s\n\n*Analyse OWASP, secrets, injections, RGPD...*","color":16776960,"footer":{"text":"DocAvocat CI/CD"},"timestamp":"%s"}]}' \
+        PAYLOAD=$(printf '{"embeds":[{"title":"[SHIELD] Audit securite demarre","description":"**Branche :** `%s`\\n**Commit :** [`%s`](%s)\\n**Par :** %s\\n\\n*Analyse OWASP, secrets, injections, RGPD...*","color":16776960,"footer":{"text":"DocAvocat CI/CD"},"timestamp":"%s"}]}' \
           "${CI_COMMIT_BRANCH:-MR}" "${CI_COMMIT_SHORT_SHA:-????}" \
           "$CI_PIPELINE_URL" "${GITLAB_USER_NAME:-CI}" \
           "$(date -u '+%Y-%m-%dT%H:%M:%SZ')")
@@ -196,4 +197,559 @@ owasp-dependency-check:
         echo "NVD_API_KEY non définie — scan lent (~20-30 min sans clé)"
         echo "Obtenir une clé gratuite : https://nvd.nist.gov/developers/request-an-api-key"
       fi
-      mvn $MVN_ARG
+      mvn $MVN_ARGS
+  after_script:
+    - |
+      if [ "$CI_JOB_STATUS" = "success" ]; then
+        EMOJI="[SHIELD]"; STATUS="OWASP OK — aucune CVE critique dans les dependances"; COLOR=3066993
+      else
+        EMOJI="[ALERT]"; STATUS="OWASP FAIL — CVE critique detectee dans les dependances !"; COLOR=15158332
+      fi
+    - *discord_commit_notify
+  artifacts:
+    name: "owasp-$CI_COMMIT_SHORT_SHA"
+    when: always
+    paths:
+      - security-reports/dependency-check-report.html
+    expire_in: 90 days
+  allow_failure: true   # Non bloquant temporairement (problèmes techniques NVD)
+  cache:
+    key: "owasp-nvd-data"  # Cache global pour la base NVD (partagé entre branches)
+    paths:
+      - .m2/repository/
+      - .m2/repository/org/owasp/dependency-check-data/
+    policy: pull-push  # Télécharge ET sauvegarde le cache (base NVD ~500MB)
+
+snyk-security-scan:
+  stage: security
+  image: maven:3.9-eclipse-temurin-17
+  rules:
+    - if: '$SKIP_SECURITY == "true"'
+      when: never
+    - when: always
+  before_script:
+    - apt-get update -qq && apt-get install -yqq curl > /dev/null 2>&1 || true
+    # Install Snyk CLI (compatible ARM64)
+    - curl -Lo /usr/local/bin/snyk https://static.snyk.io/cli/latest/snyk-linux || curl -Lo /usr/local/bin/snyk https://static.snyk.io/cli/latest/snyk-linux-arm64
+    - chmod +x /usr/local/bin/snyk
+  script:
+    - echo "========================================="
+    - echo "SNYK SECURITY SCAN — CVE + Code Analysis"
+    - echo "========================================="
+    - mkdir -p security-reports
+    - |
+      if [ -z "${SNYK_TOKEN:-}" ]; then
+        echo "SNYK_TOKEN non défini — scan ignoré"
+        echo "Pour activer : GitLab > Settings > CI/CD > Variables > SNYK_TOKEN"
+        echo "Obtenir token : https://app.snyk.io/account"
+        exit 0
+      fi
+    - snyk auth $SNYK_TOKEN
+    - snyk test --all-projects --severity-threshold=high --json > security-reports/snyk-report.json || true
+    - snyk test --all-projects --severity-threshold=high
+  after_script:
+    - |
+      if [ "$CI_JOB_STATUS" = "success" ]; then
+        EMOJI="🛡️"; STATUS="Snyk OK — aucune vulnérabilité high/critical"; COLOR=3066993
+      else
+        EMOJI="⚠️"; STATUS="Snyk détecté des vulnérabilités"; COLOR=16776960
+      fi
+    - *discord_commit_notify
+  artifacts:
+    name: "snyk-scan-$CI_COMMIT_SHORT_SHA"
+    when: always
+    paths:
+      - security-reports/snyk-report.json
+    expire_in: 90 days
+  allow_failure: true   # Non bloquant (optionnel)
+
+trivy-security-scan:
+  stage: security
+  image:
+    name: aquasec/trivy:latest
+    entrypoint: [""]  # Override pour permettre exécution shell normale (after_script Discord)
+  rules:
+    - if: '$SKIP_SECURITY == "true"'
+      when: never
+    - when: always
+  before_script:
+    - apk add --no-cache curl > /dev/null 2>&1 || true
+  script:
+    - echo "========================================="
+    - echo "TRIVY SECURITY SCAN — Filesystem + Deps"
+    - echo "========================================="
+    - trivy --version
+    - mkdir -p security-reports
+    - trivy fs --exit-code 0 --severity HIGH,CRITICAL --format json --output security-reports/trivy-report.json .
+    - trivy fs --exit-code 1 --severity CRITICAL --format table .
+  after_script:
+    - |
+      if [ "$CI_JOB_STATUS" = "success" ]; then
+        EMOJI="🛡️"; STATUS="Trivy OK — aucune vulnérabilité critique"; COLOR=3066993
+      else
+        EMOJI="🔴"; STATUS="Trivy détecté des vulnérabilités CRITICAL"; COLOR=15158332
+      fi
+    - *discord_commit_notify
+  artifacts:
+    name: "trivy-scan-$CI_COMMIT_SHORT_SHA"
+    when: always
+    reports:
+      container_scanning: security-reports/trivy-report.json
+    paths:
+      - security-reports/trivy-report.json
+    expire_in: 90 days
+  allow_failure: true   # Non bloquant (complémentaire)
+
+# ──────────────────────────────────────────────────────────────────
+# STAGE 1 : BUILD (inchangé + needs security)
+# ──────────────────────────────────────────────────────────────────
+
+build:
+  stage: build
+  image: maven:3.9-eclipse-temurin-17
+  needs: 
+    - job: audit-code-security
+      optional: true   # N'attend pas si SKIP_SECURITY=true
+    - job: owasp-dependency-check
+      optional: true   # N'attend pas si SKIP_SECURITY=true
+    - job: snyk-security-scan
+      optional: true   # N'attend pas si SNYK_TOKEN non défini
+    - job: trivy-security-scan
+      optional: true   # N'attend pas si SKIP_SECURITY=true
+  before_script:
+    - apt-get update -qq && apt-get install -yqq curl > /dev/null 2>&1 || true
+    - |
+      WEBHOOK="${DISCORD_WEBHOOK:-${DISCORD_COMMIT_WEBHOOK:-}}"
+      [ -z "$WEBHOOK" ] && true || {
+        BRANCH="${CI_COMMIT_BRANCH:-MR}"
+        AUTHOR="${GITLAB_USER_NAME:-CI}"
+        SHA="${CI_COMMIT_SHORT_SHA:-????}"
+        TITLE="${CI_COMMIT_TITLE:-}"
+        COMMIT_MSG=$(printf '%s' "$TITLE" | head -c 80 | sed 's/\\/\\\\/g; s/"/\\"/g; s/	/ /g')
+        if [ "$BRANCH" = "main" ]; then
+          SCOPE="branche main - pipeline complet (security -> build -> test -> package -> deploy)"
+        else
+          SCOPE="branche feature - security + build + test uniquement"
+        fi
+        PAYLOAD=$(printf '{"embeds":[{"title":"[START] Pipeline demarre","description":"**Branche :** `%s`\\n**Commit :** [`%s`](%s)\\n**Par :** %s\\n**Message :** %s\\n**Scope :** %s","color":16776960,"footer":{"text":"DocAvocat CI/CD"},"timestamp":"%s"}]}' \
+          "$BRANCH" "$SHA" "$CI_PIPELINE_URL" "$AUTHOR" "$COMMIT_MSG" "$SCOPE" "$(date -u '+%Y-%m-%dT%H:%M:%SZ')")
+        RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$WEBHOOK" \
+             -H "Content-Type: application/json" \
+             -d "$PAYLOAD")
+        echo "Discord pipeline-start: HTTP $RESPONSE"
+      }
+  script:
+    - echo "========================================="
+    - echo "COMPILATION MAVEN"
+    - echo "========================================="
+    - |
+      if ! mvn $MAVEN_CLI_OPTS compile; then
+        echo ""
+        echo "ERREUR: La compilation Maven a echoue!"
+        echo ""
+        echo "--- Derniers messages d'erreur ---"
+        tail -100 target/*.log 2>/dev/null || echo "Pas de fichier log trouve"
+        exit 1
+      fi
+      echo ""
+      echo "✓ Compilation reussie"
+  after_script:
+    - |
+      if [ "$CI_JOB_STATUS" = "success" ]; then
+        EMOJI="[OK]"; STATUS="Build compile avec succes"; COLOR=3066993
+      else
+        EMOJI="[FAIL]"; STATUS="ECHEC de compilation - voir logs"; COLOR=15158332
+      fi
+      JOB_NAME="Build Maven"
+    - *discord_commit_notify
+  cache:
+    key: "maven-$CI_COMMIT_REF_SLUG"
+    paths:
+      - .m2/repository/
+
+# ──────────────────────────────────────────────────────────────────
+# STAGE 2 : TEST (inchangé)
+# ──────────────────────────────────────────────────────────────────
+
+test:
+  stage: test
+  image: maven:3.9-eclipse-temurin-17
+  needs: [build]
+  before_script:
+    - apt-get update -qq && apt-get install -yqq curl > /dev/null 2>&1 || true
+  script:
+    - echo "========================================="
+    - echo "EXECUTION DES TESTS UNITAIRES"
+    - echo "========================================="
+    - |
+      if ! mvn $MAVEN_CLI_OPTS test; then
+        echo ""
+        echo "ERREUR: Les tests unitaires ont echoue!"
+        echo ""
+        echo "--- Rapport des tests echoues ---"
+        find target/surefire-reports -name "*.txt" -exec echo "=== {} ===" \; -exec cat {} \; 2>/dev/null || echo "Pas de rapport de test trouve"
+        echo ""
+        echo "--- Derniers logs Maven ---"
+        tail -200 target/*.log 2>/dev/null || echo "Pas de fichier log trouve"
+        exit 1
+      fi
+      echo ""
+      echo "✓ Tous les tests sont passes"
+  after_script:
+    - |
+      if [ "$CI_JOB_STATUS" = "success" ]; then
+        EMOJI="[OK]"; STATUS="Tests unitaires passes"; COLOR=3066993
+      else
+        EMOJI="[FAIL]"; STATUS="TESTS ECHOUES - deploiement bloque !"; COLOR=15158332
+      fi
+      JOB_NAME="Tests unitaires"
+    - *discord_commit_notify
+  cache:
+    key: "maven-$CI_COMMIT_REF_SLUG"
+    paths:
+      - .m2/repository/
+    policy: pull
+  artifacts:
+    when: always
+    reports:
+      junit: target/surefire-reports/TEST-*.xml
+    paths:
+      - target/surefire-reports/
+    expire_in: 2 weeks
+
+# ──────────────────────────────────────────────────────────────────
+# STAGE 3 : PACKAGE (inchangé)
+# ──────────────────────────────────────────────────────────────────
+
+package:
+  stage: package
+  image: docker:27-cli
+  needs: [test]
+  variables:
+    DOCKER_BUILDKIT: "1"
+    DOCKER_CLI_EXPERIMENTAL: "enabled"
+  before_script:
+    - |
+      MAX_RETRIES=3
+      RETRY_COUNT=0
+      until [ $RETRY_COUNT -ge $MAX_RETRIES ]; do
+        echo "Tentative de connexion au registry ($((RETRY_COUNT+1))/$MAX_RETRIES)..."
+        if docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY" 2>&1; then
+          echo "Connexion reussie au registry"
+          break
+        else
+          RETRY_COUNT=$((RETRY_COUNT+1))
+          if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+            echo "Echec de connexion, nouvelle tentative dans 10s..."
+            sleep 10
+          else
+            echo "ERREUR: Impossible de se connecter au registry apres $MAX_RETRIES tentatives"
+            exit 1
+          fi
+        fi
+      done
+  script:
+    - echo "========================================="
+    - echo "ETAPE 1 - Build de l'image Docker"
+    - echo "========================================="
+    - |
+      echo "Repository: $CI_REGISTRY_IMAGE"
+      echo "SHA: $CI_COMMIT_SHORT_SHA"
+      echo ""
+      if ! docker build \
+        --file docker/Dockerfile \
+        --tag "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA" \
+        --tag "$CI_REGISTRY_IMAGE:latest" \
+        --progress=plain \
+        .; then
+        echo ""
+        echo "ERREUR: Le build Docker a echoue!"
+        exit 1
+      fi
+      echo ""
+      echo "✓ Image buildee avec succes"
+      docker images | grep -E "(REPOSITORY|$CI_REGISTRY_IMAGE)" || true
+    - echo ""
+    - echo "========================================="
+    - echo "ETAPE 2 - Push des images vers le registry"
+    - echo "========================================="
+    - |
+      MAX_RETRIES=3
+      for TAG in "$CI_COMMIT_SHORT_SHA" "latest"; do
+        echo ""
+        echo "--- Push de l'image :$TAG ---"
+        RETRY_COUNT=0
+        until [ $RETRY_COUNT -ge $MAX_RETRIES ]; do
+          echo "Tentative ($((RETRY_COUNT+1))/$MAX_RETRIES)..."
+          if docker push "$CI_REGISTRY_IMAGE:$TAG" 2>&1; then
+            echo "✓ Image :$TAG poussee avec succes"
+            break
+          else
+            RETRY_COUNT=$((RETRY_COUNT+1))
+            if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+              echo "! Echec du push, nouvelle tentative dans 15s..."
+              sleep 15
+            else
+              echo "ERREUR: Impossible de pousser l'image :$TAG apres $MAX_RETRIES tentatives"
+              exit 1
+            fi
+          fi
+        done
+      done
+      echo ""
+      echo "✓✓✓ Toutes les images poussees avec succes ✓✓✓"
+  after_script:
+    - apk add --no-cache curl --quiet 2>/dev/null || true
+    - |
+      if [ "$CI_JOB_STATUS" = "success" ]; then
+        EMOJI="[DOCKER]"; STATUS="Image Docker prete - cliquer Play sur deploy"; COLOR=3447003
+      else
+        EMOJI="[FAIL]"; STATUS="ECHEC build image Docker"; COLOR=15158332
+      fi
+      JOB_NAME="Package Docker"
+    - *discord_deploy_notify
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE == "web"
+
+# ──────────────────────────────────────────────────────────────────
+# STAGE 4 : DEPLOY (inchangé)
+# ──────────────────────────────────────────────────────────────────
+
+deploy:
+  stage: deploy
+  image: alpine:3.19
+  needs: [package]
+  when: manual
+  allow_failure: false
+  before_script:
+    - apk add --no-cache openssh-client curl
+    - eval $(ssh-agent -s)
+    - tr -d '\r' < "$SSH_PRIVATE_KEY" > /tmp/id_rsa
+    - echo "" >> /tmp/id_rsa
+    - chmod 600 /tmp/id_rsa
+    - ssh-keygen -l -f /tmp/id_rsa 2>&1 || (echo "CLE INVALIDE - voir debug:"; head -1 /tmp/id_rsa; tail -1 /tmp/id_rsa | cat -A; wc -l /tmp/id_rsa; exit 1)
+    - ssh-add /tmp/id_rsa
+    - mkdir -p ~/.ssh && chmod 700 ~/.ssh
+    - echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+    - |
+      [ -z "${DISCORD_WEBHOOK:-}" ] && true || {
+        PAYLOAD=$(printf '{"embeds":[{"title":"[DEPLOY] Deploiement en cours...","description":"**Branche :** `%s`\\n**Commit :** [`%s`](%s)\\n**Par :** %s\\n\\n*Envoi fichiers -> restart -> check HTTP...*\\n\\n[Logs deploy ->](%s/-/jobs/%s)","color":16776960,"footer":{"text":"DocAvocat CI/CD"},"timestamp":"%s"}]}' \
+          "$CI_COMMIT_BRANCH" "$CI_COMMIT_SHORT_SHA" "$CI_PIPELINE_URL" \
+          "$GITLAB_USER_NAME" "$CI_PROJECT_URL" "$CI_JOB_ID" \
+          "$(date -u '+%Y-%m-%dT%H:%M:%SZ')")
+        RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${DISCORD_WEBHOOK}" \
+             -H "Content-Type: application/json" \
+             -d "$PAYLOAD")
+        echo "Discord deploy-start: HTTP $RESPONSE"
+      }
+  script:
+    - |
+      ssh root@$SERVER_HOST "
+        echo '=== Création du répertoire si nécessaire ==='
+        mkdir -p $REMOTE_DIR/docker
+        echo '=== Espace disque avant nettoyage ==='
+        df -h / | tail -1
+        echo '--- Nettoyage Docker ---'
+        docker system prune -af --filter 'until=72h' 2>/dev/null || true
+        docker volume prune -f 2>/dev/null || true
+        truncate -s 0 /var/lib/docker/containers/*/*-json.log 2>/dev/null || true
+        apt-get clean 2>/dev/null || true
+        rm -rf /var/lib/apt/lists/* /tmp/* 2>/dev/null || true
+        echo '=== Espace disque apres nettoyage ==='
+        df -h / | tail -1
+      "
+    - scp docker/docker-compose.yml root@$SERVER_HOST:$REMOTE_DIR/docker-compose.yml
+    - |
+      # Créer ou copier le fichier .env s'il n'existe pas
+      if [ -n "${ENV_PROD:-}" ]; then
+        echo "Copie de ENV_PROD vers le serveur..."
+        cat "$ENV_PROD" | ssh root@$SERVER_HOST "cat > $REMOTE_DIR/.env"
+      else
+        echo "ENV_PROD non définie, création d'un fichier .env minimal..."
+        ssh root@$SERVER_HOST "touch $REMOTE_DIR/.env"
+      fi
+    - |
+      ssh root@$SERVER_HOST "
+        cd $REMOTE_DIR
+        # Ensure .env ends with a newline (GitLab File variables may strip trailing newline)
+        sed -i -e '\$a\\' .env
+        # Remove any existing APP_IMAGE line (including if concatenated with previous line)
+        sed -i '/APP_IMAGE=/d' .env
+        # Append APP_IMAGE on its own line
+        echo 'APP_IMAGE=$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA' >> .env
+      "
+    - |
+      ssh root@$SERVER_HOST "
+        cd $REMOTE_DIR
+        for VAR in MAIL_HOST MAIL_PORT MAIL_USERNAME MAIL_PASSWORD; do
+          sed -i \"/^\${VAR}=/d\" .env
+        done
+        echo 'MAIL_HOST=${MAIL_HOST:-smtp-relay.brevo.com}' >> .env
+        echo 'MAIL_PORT=${MAIL_PORT:-587}' >> .env
+        echo 'MAIL_USERNAME=${MAIL_USERNAME:-noreply@docavocat.fr}' >> .env
+        echo 'MAIL_PASSWORD=${MAIL_PASSWORD}' >> .env
+      "
+    - |
+      ssh root@$SERVER_HOST "
+        cd $REMOTE_DIR
+        sed -i '/^DPO_NAME=/d' .env
+        sed -i '/^DPO_EMAIL=/d' .env
+        sed -i '/^DPO_PHONE=/d' .env
+        sed -i '/^DPO_ADDRESS=/d' .env
+        sed -i '/^DPO_CERTIFICATION=/d' .env
+        sed -i '/^PRA_CONTACT=/d' .env
+        sed -i '/^PRA_BACKUP_SITE=/d' .env
+        echo 'DPO_NAME=A Configurer' >> .env
+        echo 'DPO_EMAIL=dpo@docavocat.fr' >> .env
+        echo 'DPO_PHONE=' >> .env
+        echo 'DPO_ADDRESS=' >> .env
+        echo 'DPO_CERTIFICATION=' >> .env
+        echo 'PRA_CONTACT=IT Manager - A Configurer' >> .env
+        echo 'PRA_BACKUP_SITE=' >> .env
+      "
+    - ssh root@$SERVER_HOST "mkdir -p $REMOTE_DIR/loki $REMOTE_DIR/promtail $REMOTE_DIR/grafana/provisioning/datasources $REMOTE_DIR/grafana/provisioning/dashboards"
+    - scp docker/loki/local-config.yaml root@$SERVER_HOST:$REMOTE_DIR/loki/local-config.yaml
+    - scp docker/promtail/config.yaml root@$SERVER_HOST:$REMOTE_DIR/promtail/config.yaml
+    - scp docker/grafana/provisioning/datasources/loki.yaml root@$SERVER_HOST:$REMOTE_DIR/grafana/provisioning/datasources/loki.yaml
+    - scp docker/grafana/provisioning/dashboards/dashboards.yaml root@$SERVER_HOST:$REMOTE_DIR/grafana/provisioning/dashboards/dashboards.yaml
+    - scp docker/grafana/provisioning/dashboards/docavocat.json root@$SERVER_HOST:$REMOTE_DIR/grafana/provisioning/dashboards/docavocat.json
+    - |
+      ssh root@$SERVER_HOST "
+        set -e
+        cd $REMOTE_DIR
+
+        MAX_RETRIES=3
+        RETRY_COUNT=0
+        until [ \$RETRY_COUNT -ge \$MAX_RETRIES ]; do
+          echo \"Tentative de connexion au registry (\$((RETRY_COUNT+1))/\$MAX_RETRIES)...\"
+          if docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY 2>&1; then
+            echo \"Connexion reussie au registry\"
+            break
+          else
+            RETRY_COUNT=\$((RETRY_COUNT+1))
+            if [ \$RETRY_COUNT -lt \$MAX_RETRIES ]; then
+              echo \"Echec de connexion, nouvelle tentative dans 10s...\"
+              sleep 10
+            else
+              echo \"ERREUR: Impossible de se connecter au registry apres \$MAX_RETRIES tentatives\"
+              exit 1
+            fi
+          fi
+        done
+
+        echo '=== Pull de la nouvelle image ==='
+        docker compose pull app || { echo 'ERREUR pull image'; exit 1; }
+
+        echo '=== Arret de l ancien conteneur ==='
+        docker stop docavocat-app 2>/dev/null || true
+        docker rm -f docavocat-app 2>/dev/null || true
+        docker compose stop app 2>/dev/null || true
+        docker compose rm -f app 2>/dev/null || true
+
+        echo '=== Demarrage du nouveau conteneur ==='
+        docker compose up -d --no-deps app || { echo 'ERREUR demarrage'; docker compose logs app; exit 1; }
+
+        echo '=== Demarrage des services de monitoring ==='
+        docker compose up -d loki promtail grafana 2>/dev/null || true
+
+        docker logout $CI_REGISTRY 2>/dev/null || true
+
+        echo '=== Conteneurs actifs ==='
+        docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
+
+        echo '=== Premiers logs du conteneur (10s) ==='
+        sleep 10
+        docker logs docavocat-app --tail=50 2>&1 || echo 'Impossible de lire les logs'
+      "
+    - |
+      echo "========================================="
+      echo "ETAPE 1: Verification etat du conteneur"
+      echo "========================================="
+      ssh root@$SERVER_HOST "
+        docker ps --filter name=docavocat-app --format 'table {{.Names}}\t{{.Status}}\t{{.State}}'
+        CONTAINER_STATUS=\$(docker inspect docavocat-app --format='{{.State.Status}}' 2>/dev/null || echo 'not found')
+        echo \"Status: \$CONTAINER_STATUS\"
+        if [ \"\$CONTAINER_STATUS\" != 'running' ]; then
+          echo '!!! ERREUR: Le conteneur n est pas en cours d execution !!!'
+          docker logs docavocat-app 2>&1 || true
+          exit 1
+        fi
+      "
+    - |
+      echo "========================================="
+      echo "ETAPE 2: Attente demarrage Spring Boot"
+      echo "========================================="
+      echo "Patience, Spring Boot demarre (environ 60s)..."
+      for i in 1 2 3 4 5 6; do
+        sleep 10
+        echo "[$((i*10))s] Verification en cours..."
+        ssh root@$SERVER_HOST "
+          if ! docker ps --filter name=docavocat-app --filter status=running -q | grep -q .; then
+            echo '!!! ERREUR: Le conteneur s est arrete pendant le demarrage !!!'
+            docker logs docavocat-app --tail=100 2>&1
+            exit 1
+          fi
+        " || exit 1
+        STARTED=$(ssh root@$SERVER_HOST "docker logs docavocat-app 2>&1 | grep -i 'Started GedAvocatApplication' | wc -l" 2>/dev/null || echo "0")
+        if [ "$STARTED" -gt "0" ]; then
+          echo "✓ Spring Boot a demarre avec succes!"
+          break
+        fi
+      done
+    - |
+      echo "========================================="
+      echo "ETAPE 3: Verification HTTP"
+      echo "========================================="
+      MAX_HTTP_RETRIES=5
+      HTTP_SUCCESS=false
+      for attempt in $(seq 1 $MAX_HTTP_RETRIES); do
+        echo "Tentative HTTP $attempt/$MAX_HTTP_RETRIES..."
+        HTTP_CODE=$(ssh root@$SERVER_HOST "curl -s -o /dev/null -w '%{http_code}' --max-time 10 http://127.0.0.1:8080/" 2>/dev/null || echo "000")
+        echo "  Code HTTP recu: $HTTP_CODE"
+        if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "302" ]; then
+          echo "✓ Application repond correctement (HTTP $HTTP_CODE)"
+          HTTP_SUCCESS=true
+          break
+        else
+          [ $attempt -lt $MAX_HTTP_RETRIES ] && sleep 10
+        fi
+      done
+      if [ "$HTTP_SUCCESS" = "false" ]; then
+        echo "!!! ERREUR: L'application ne repond pas correctement !!!"
+        ssh root@$SERVER_HOST "docker logs docavocat-app --tail=300 2>&1"
+        exit 1
+      fi
+    - |
+      echo "========================================="
+      echo "ETAPE 4: Verification finale"
+      echo "========================================="
+      ssh root@$SERVER_HOST "
+        docker stats docavocat-app --no-stream --format 'table {{.Container}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.MemPerc}}' || true
+        docker logs docavocat-app --tail=50 2>&1
+      "
+      echo ""
+      echo "✓✓✓ Deploiement reussi -> https://docavocat.fr ✓✓✓"
+  after_script:
+    - apk add --no-cache curl 2>/dev/null || true
+    - |
+      set +e
+      if [ "$CI_JOB_STATUS" != "success" ]; then
+        echo "Le deploiement a echoue. Consultez les logs ci-dessus."
+      fi
+      true
+    - |
+      set +e
+      if [ "$CI_JOB_STATUS" = "success" ]; then
+        EMOJI="[PROD]"; STATUS="DEPLOYE EN PRODUCTION ! https://docavocat.fr"; COLOR=3066993
+      else
+        EMOJI="[FAIL]"; STATUS="ECHEC DU DEPLOIEMENT - voir logs detailles"; COLOR=15158332
+      fi
+      JOB_NAME="Deploiement Production"
+      true
+    - *discord_deploy_notify
+  environment:
+    name: production
+    url: https://docavocat.fr
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE == "web"
