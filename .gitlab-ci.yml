@@ -654,11 +654,11 @@ deploy:
         MYSQL_WAIT=0
         while [ \$MYSQL_WAIT -lt 120 ]; do
           MYSQL_STATUS=\$(docker inspect docavocat-mysql --format='{{.State.Health.Status}}' 2>/dev/null || echo 'not found')
-          if [ "\$MYSQL_STATUS" = "healthy" ]; then
-            echo "MySQL healthy apres \${MYSQL_WAIT}s"
+          if [ \"\$MYSQL_STATUS\" = \"healthy\" ]; then
+            echo \"MySQL healthy apres \${MYSQL_WAIT}s\"
             break
           fi
-          echo "  MySQL status: \$MYSQL_STATUS (\${MYSQL_WAIT}s/120s)"
+          echo \"  MySQL status: \$MYSQL_STATUS \${MYSQL_WAIT}s/120s\"
           sleep 5
           MYSQL_WAIT=\$((MYSQL_WAIT + 5))
         done
