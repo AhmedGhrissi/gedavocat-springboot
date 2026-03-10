@@ -786,26 +786,24 @@ deploy:
       echo "========================================="
       ssh root@$SERVER_HOST "
         echo '=== 4a. Redirect www -> non-www (obligatoire pour sessions/cookies) ==='
-        # Creer le server block www->non-www si absent
         WWW_REDIRECT='/etc/nginx/conf.d/www-redirect-docavocat.conf'
         if [ ! -f \"\$WWW_REDIRECT\" ]; then
           echo 'Creation redirect www.docavocat.fr -> docavocat.fr'
-          cat > \"\$WWW_REDIRECT\" <<'NGINXEOF'
-server {
-    listen 80;
-    listen [::]:80;
-    server_name www.docavocat.fr;
-    return 301 https://docavocat.fr\$request_uri;
-}
-server {
-    listen 443 ssl;
-    listen [::]:443 ssl;
-    server_name www.docavocat.fr;
-    ssl_certificate /etc/letsencrypt/live/docavocat.fr/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/docavocat.fr/privkey.pem;
-    return 301 https://docavocat.fr\$request_uri;
-}
-NGINXEOF
+          printf '%s\n' \
+            'server {' \
+            '    listen 80;' \
+            '    listen [::]:80;' \
+            '    server_name www.docavocat.fr;' \
+            '    return 301 https://docavocat.fr\\\$request_uri;' \
+            '}' \
+            'server {' \
+            '    listen 443 ssl;' \
+            '    listen [::]:443 ssl;' \
+            '    server_name www.docavocat.fr;' \
+            '    ssl_certificate /etc/letsencrypt/live/docavocat.fr/fullchain.pem;' \
+            '    ssl_certificate_key /etc/letsencrypt/live/docavocat.fr/privkey.pem;' \
+            '    return 301 https://docavocat.fr\\\$request_uri;' \
+            '}' > \"\$WWW_REDIRECT\"
           echo '  -> Fichier cree: '\"\$WWW_REDIRECT\"
         else
           echo '  -> Redirect www deja en place, OK'
