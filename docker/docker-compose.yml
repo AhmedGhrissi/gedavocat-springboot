@@ -60,6 +60,8 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
+    links:
+      - mysql
     ports:
       # Exposé uniquement sur localhost — nginx du host proxyfie vers ici
       - "127.0.0.1:8080:8080"

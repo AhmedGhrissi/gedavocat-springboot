@@ -641,18 +641,44 @@ deploy:
         echo '=== Pull de la nouvelle image ==='
         docker compose pull app || { echo 'ERREUR pull image'; exit 1; }
 
-        echo '=== Arret propre via Docker Compose ==='
-        docker compose down --remove-orphans --timeout 30 2>/dev/null || true
+        echo '=== Nettoyage ancien reseau prefixe (migration one-shot) ==='
+        docker network rm docavocat_docavocat-net 2>/dev/null || true
 
-        echo '=== Demarrage du nouveau conteneur ==='
-        docker compose up -d --no-deps app || { echo 'ERREUR demarrage'; docker compose logs app; exit 1; }
+        echo '=== Etat avant recreation ==='
+        docker ps --format 'table {{.Names}}\t{{.Status}}' 2>/dev/null || true
+        docker network ls --filter name=docavocat 2>/dev/null || true
 
-        echo '=== Demarrage des services de monitoring ==='
-        docker compose up -d loki promtail grafana 2>/dev/null || true
+        echo '=== S assurer que MySQL tourne ==='
+        docker compose up -d mysql
+        echo 'Attente healthcheck MySQL (max 120s)...'
+        MYSQL_WAIT=0
+        while [ \$MYSQL_WAIT -lt 120 ]; do
+          MYSQL_STATUS=\$(docker inspect docavocat-mysql --format='{{.State.Health.Status}}' 2>/dev/null || echo 'not found')
+          if [ "\$MYSQL_STATUS" = "healthy" ]; then
+            echo "MySQL healthy apres \${MYSQL_WAIT}s"
+            break
+          fi
+          echo "  MySQL status: \$MYSQL_STATUS (\${MYSQL_WAIT}s/120s)"
+          sleep 5
+          MYSQL_WAIT=\$((MYSQL_WAIT + 5))
+        done
+
+        echo '=== Recreation du conteneur app (force-recreate) ==='
+        docker compose up -d --force-recreate --no-deps app || { echo 'ERREUR demarrage app'; docker compose logs app --tail=50; exit 1; }
+
+        echo '=== Demarrage services monitoring ==='
+        docker compose up -d loki promtail grafana prometheus cadvisor node-exporter 2>/dev/null || true
 
         echo '=== Verification connectivite reseau ==='
         sleep 5
-        docker exec docavocat-app getent hosts mysql && echo 'DNS mysql OK' || echo 'WARN: DNS mysql non resolu (attente entrypoint)'
+        echo '--- Reseaux Docker ---'
+        docker network ls --filter name=docavocat
+        echo '--- Conteneurs sur docavocat-net ---'
+        docker network inspect docavocat-net --format='{{range .Containers}}{{.Name}} {{end}}' 2>/dev/null || echo 'Reseau docavocat-net non trouve!'
+        echo '--- DNS mysql depuis app ---'
+        docker exec docavocat-app getent hosts mysql && echo 'DNS mysql OK' || echo 'ERREUR: DNS mysql non resolu!'
+        echo '--- IP MySQL ---'
+        docker inspect docavocat-mysql --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' 2>/dev/null || echo 'MySQL IP non trouvee'
 
         docker logout $CI_REGISTRY 2>/dev/null || true
 
