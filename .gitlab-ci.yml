@@ -678,15 +678,10 @@ deploy:
         fi
 
         echo '=== Migration schema BDD (import dump si tables manquantes) ==='
-        set -a; . ./.env 2>/dev/null; set +a
-        if ! docker exec docavocat-mysql sh -c 'mysql -u root -p\"\$MYSQL_ROOT_PASSWORD\" gedavocat -N -e \"SELECT 1 FROM appointments LIMIT 1\"' 2>/dev/null; then
-          echo 'Table appointments manquante — import du dump complet...'
-          docker exec docavocat-mysql sh -c 'mysql -u root -p\"\$MYSQL_ROOT_PASSWORD\" gedavocat < /docker-entrypoint-initdb.d/01-gedavocat-dump.sql' \
-            && echo 'Import dump OK' \
-            || echo 'Import dump echoue — ddl-auto=update prendra le relais'
-        else
-          echo 'Tables existent deja — skip import'
-        fi
+        docker exec docavocat-mysql sh -c 'mysql -u root -p\"\$MYSQL_ROOT_PASSWORD\" gedavocat -N -e \"SELECT 1 FROM appointments LIMIT 1\"' 2>/dev/null && echo 'Tables OK — skip import' || {
+          echo 'Table appointments manquante — import du dump...'
+          docker exec docavocat-mysql sh -c 'mysql -u root -p\"\$MYSQL_ROOT_PASSWORD\" gedavocat < /docker-entrypoint-initdb.d/01-gedavocat-dump.sql' 2>&1 && echo 'Import dump OK' || echo 'Import echoue — ddl-auto=update prendra le relais'
+        }
 
         echo '=== Recreation du conteneur app (force-recreate) ==='
         docker compose up -d --force-recreate --no-deps app || { echo 'ERREUR demarrage app'; docker compose logs app --tail=50; exit 1; }
