@@ -29,10 +29,12 @@ import java.util.concurrent.ConcurrentHashMap;
 @Slf4j
 public class RateLimitingFilter extends OncePerRequestFilter {
 
-    private static final int AUTH_MAX = 10;
-    private static final int EMAIL_MAX = 3;
-    private static final int API_MAX = 60;
-    private static final int GLOBAL_MAX = 200;
+    // Limites relevées pour compatibilité réseaux corporate (NAT/proxy partagé)
+    // où des dizaines d'utilisateurs partagent la même IP publique.
+    private static final int AUTH_MAX = 20;      // était 10 — doublé pour proxys corporate
+    private static final int EMAIL_MAX = 5;      // était 3
+    private static final int API_MAX = 120;      // était 60 — doublé pour usage normal derrière proxy
+    private static final int GLOBAL_MAX = 500;   // était 200 — proxys corporate génèrent beaucoup de hits
     private static final long WINDOW_MILLIS = 60_000L;
 
     private final Map<String, RateBucket> authBuckets = new ConcurrentHashMap<>();

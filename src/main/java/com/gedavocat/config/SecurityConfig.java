@@ -101,13 +101,19 @@ public class SecurityConfig {
 				// Content-Security-Policy (CSP), X-Content-Type-Options, Referrer-Policy,
 				// Permissions-Policy, Cross-Origin-Opener-Policy, Cross-Origin-Resource-Policy
 				.headers(h -> {
-							h.frameOptions(f -> f.deny());
+							// X-Frame-Options SAMEORIGIN (au lieu de DENY) : permet l'affichage
+							// dans les portails Zero-Trust (Zscaler, Cisco Umbrella) qui wrappent
+							// les pages dans un iframe same-origin. Clickjacking reste bloqué.
+							h.frameOptions(f -> f.sameOrigin());
 							h.contentTypeOptions(Customizer.withDefaults());
-							// Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
+							// HSTS : 6 mois sans preload ni includeSubDomains.
+							// preload empêche les proxys corporate SSL-inspection de fonctionner
+							// (le navigateur refuse toute connexion non-HTTPS même via proxy MITM légal).
+							// includeSubDomains peut bloquer des sous-domaines futurs derrière un proxy.
 							h.httpStrictTransportSecurity(hsts -> hsts
-									.includeSubDomains(true)
-									.preload(true)
-									.maxAgeInSeconds(63072000)); // 2 ans (ANSSI recommandation)
+									.includeSubDomains(false)
+									.preload(false)
+									.maxAgeInSeconds(15768000)); // 6 mois (compromis sécurité/compatibilité)
 							h.referrerPolicy(r -> r.policy(
 									ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN));
 							// Permissions-Policy déprécié dans Spring Security 6.4+ - fonctionnalité retirée
@@ -147,11 +153,19 @@ public class SecurityConfig {
 									"object-src 'none'; " +
 									"base-uri 'self'; " +
 									"form-action 'self'; " +
-									"frame-ancestors 'none'"));
+									// frame-ancestors 'self' (au lieu de 'none') pour compatibilité
+									// avec les proxys Zero-Trust qui wrappent dans un iframe same-origin
+									"frame-ancestors 'self'"));
+							// COOP/CORP : SAME_ORIGIN_ALLOW_POPUPS au lieu de SAME_ORIGIN strict.
+							// SAME_ORIGIN bloque les proxys corporate qui injectent du JS monitoring/DLP.
+							// SAME_ORIGIN_ALLOW_POPUPS maintient l'isolation contre les attaques Spectre
+							// tout en permettant les popups légitimes (Stripe checkout, OAuth).
 							h.crossOriginOpenerPolicy(coop -> coop.policy(
-									org.springframework.security.web.header.writers.CrossOriginOpenerPolicyHeaderWriter.CrossOriginOpenerPolicy.SAME_ORIGIN));
+									org.springframework.security.web.header.writers.CrossOriginOpenerPolicyHeaderWriter.CrossOriginOpenerPolicy.SAME_ORIGIN_ALLOW_POPUPS));
+							// CORP : CROSS_ORIGIN pour permettre aux proxys de charger les ressources.
+							// La CSP (default-src 'self') protège déjà contre le chargement de ressources tierces.
 							h.crossOriginResourcePolicy(corp -> corp.policy(
-									org.springframework.security.web.header.writers.CrossOriginResourcePolicyHeaderWriter.CrossOriginResourcePolicy.SAME_ORIGIN));
+									org.springframework.security.web.header.writers.CrossOriginResourcePolicyHeaderWriter.CrossOriginResourcePolicy.CROSS_ORIGIN));
 							})
 				// Session avec état pour le formLogin (pas stateless)
 				// SEC FIX L-02 : protection contre session fixation
