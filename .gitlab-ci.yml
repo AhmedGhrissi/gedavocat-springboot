@@ -641,27 +641,41 @@ deploy:
         echo '=== Pull de la nouvelle image ==='
         docker compose pull app || { echo 'ERREUR pull image'; exit 1; }
 
-        echo '=== Nettoyage ancien reseau prefixe (migration one-shot) ==='
+        echo '=== Nettoyage anciens reseaux prefixes ==='
         docker network rm docavocat_docavocat-net 2>/dev/null || true
+        docker network rm gedavocat_docavocat-net 2>/dev/null || true
 
         echo '=== Etat avant recreation ==='
         docker ps --format 'table {{.Names}}\t{{.Status}}' 2>/dev/null || true
         docker network ls --filter name=docavocat 2>/dev/null || true
 
         echo '=== S assurer que MySQL tourne ==='
-        docker compose up -d mysql
-        echo 'Attente healthcheck MySQL (max 120s)...'
-        MYSQL_WAIT=0
-        while [ \$MYSQL_WAIT -lt 120 ]; do
-          MYSQL_STATUS=\$(docker inspect docavocat-mysql --format='{{.State.Health.Status}}' 2>/dev/null || echo 'not found')
-          if [ \"\$MYSQL_STATUS\" = \"healthy\" ]; then
-            echo \"MySQL healthy apres \${MYSQL_WAIT}s\"
-            break
-          fi
-          echo \"  MySQL status: \$MYSQL_STATUS \${MYSQL_WAIT}s/120s\"
-          sleep 5
-          MYSQL_WAIT=\$((MYSQL_WAIT + 5))
-        done
+        MYSQL_HEALTH=\$(docker inspect docavocat-mysql --format='{{.State.Health.Status}}' 2>/dev/null || echo 'absent')
+        echo \"MySQL actuel: \$MYSQL_HEALTH\"
+        if [ \"\$MYSQL_HEALTH\" = \"healthy\" ]; then
+          echo 'MySQL deja running et healthy — skip re-creation'
+          docker network connect docavocat-net docavocat-mysql 2>/dev/null || true
+        else
+          echo 'MySQL pas healthy, tentative de demarrage via compose...'
+          docker compose up -d mysql 2>/dev/null || {
+            echo 'Conflit conteneur — adoption du conteneur existant...'
+            docker stop docavocat-mysql 2>/dev/null || true
+            docker rm docavocat-mysql 2>/dev/null || true
+            docker compose up -d mysql || { echo 'ERREUR demarrage MySQL'; exit 1; }
+          }
+          echo 'Attente healthcheck MySQL (max 120s)...'
+          MYSQL_WAIT=0
+          while [ \$MYSQL_WAIT -lt 120 ]; do
+            MYSQL_STATUS=\$(docker inspect docavocat-mysql --format='{{.State.Health.Status}}' 2>/dev/null || echo 'not found')
+            if [ \"\$MYSQL_STATUS\" = \"healthy\" ]; then
+              echo \"MySQL healthy apres \${MYSQL_WAIT}s\"
+              break
+            fi
+            echo \"  MySQL status: \$MYSQL_STATUS \${MYSQL_WAIT}s/120s\"
+            sleep 5
+            MYSQL_WAIT=\$((MYSQL_WAIT + 5))
+          done
+        fi
 
         echo '=== Recreation du conteneur app (force-recreate) ==='
         docker compose up -d --force-recreate --no-deps app || { echo 'ERREUR demarrage app'; docker compose logs app --tail=50; exit 1; }
