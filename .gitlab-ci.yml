@@ -677,6 +677,20 @@ deploy:
           done
         fi
 
+        echo '=== Migration schema BDD (import dump si tables manquantes) ==='
+        TABLES_COUNT=\$(docker exec docavocat-mysql mysql -u root -p\"\$MYSQL_ROOT_PASSWORD\" -N -e \"SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='gedavocat'\" 2>/dev/null || echo '0')
+        echo \"Tables existantes dans gedavocat: \$TABLES_COUNT\"
+        if [ \"\$TABLES_COUNT\" -lt 20 ] 2>/dev/null; then
+          echo 'Schema incomplet — import du dump complet...'
+          docker exec docavocat-mysql bash -c 'mysql -u root -p\"\$MYSQL_ROOT_PASSWORD\" gedavocat < /docker-entrypoint-initdb.d/01-gedavocat-dump.sql' \
+            && echo 'Import dump OK' \
+            || echo 'ATTENTION: Echec import dump'
+          TABLES_AFTER=\$(docker exec docavocat-mysql mysql -u root -p\"\$MYSQL_ROOT_PASSWORD\" -N -e \"SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='gedavocat'\" 2>/dev/null || echo '?')
+          echo \"Tables apres import: \$TABLES_AFTER\"
+        else
+          echo 'Schema complet — skip import'
+        fi
+
         echo '=== Recreation du conteneur app (force-recreate) ==='
         docker compose up -d --force-recreate --no-deps app || { echo 'ERREUR demarrage app'; docker compose logs app --tail=50; exit 1; }
 
