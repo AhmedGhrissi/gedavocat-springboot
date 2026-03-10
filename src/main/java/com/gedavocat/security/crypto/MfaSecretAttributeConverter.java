@@ -10,6 +10,7 @@ import javax.crypto.Cipher;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.ByteBuffer;
+import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.util.Base64;
 
@@ -66,18 +67,22 @@ public class MfaSecretAttributeConverter implements AttributeConverter<String, S
         }
         try {
             byte[] decoded = Base64.getDecoder().decode(key);
-            if (decoded.length != 32) {
-                throw new IllegalArgumentException(
-                    "La clé MFA doit faire exactement 32 octets (256 bits). "
-                    + "Reçu: " + decoded.length + " octets. "
-                    + "Générez: openssl rand -base64 32");
+            if (decoded.length == 32) {
+                encryptionKeyBytes = decoded;
+                log.info("SEC-MFA: Clé de chiffrement MFA initialisée (AES-256-GCM, 32 octets)");
+            } else {
+                log.warn("SEC-MFA: Clé MFA fait {} octets au lieu de 32. "
+                    + "Dérivation SHA-256 appliquée pour obtenir 32 octets. "
+                    + "Recommandé: openssl rand -base64 32", decoded.length);
+                MessageDigest sha256 = MessageDigest.getInstance("SHA-256");
+                encryptionKeyBytes = sha256.digest(decoded);
+                log.info("SEC-MFA: Clé de chiffrement MFA initialisée (AES-256-GCM, dérivée SHA-256)");
             }
-            encryptionKeyBytes = decoded;
-            log.info("SEC-MFA: Clé de chiffrement MFA initialisée (AES-256-GCM)");
         } catch (IllegalArgumentException e) {
-            if (e.getMessage().contains("32 octets")) throw e;
             throw new IllegalArgumentException(
                 "security.mfa.encryption-key n'est pas un Base64 valide: " + e.getMessage());
+        } catch (Exception e) {
+            throw new RuntimeException("Erreur initialisation clé MFA: " + e.getMessage(), e);
         }
     }
 
