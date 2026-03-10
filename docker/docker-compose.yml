@@ -347,6 +347,7 @@ services:
 # ── Réseau interne ──────────────────────────────────────────
 networks:
   docavocat-net:
+    name: docavocat-net
     driver: bridge
 
 # ── Volumes persistants ─────────────────────────────────────

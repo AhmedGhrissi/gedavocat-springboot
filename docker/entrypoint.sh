@@ -23,6 +23,35 @@ done
 # L'utilisateur docavocat est déjà défini par USER dans le Dockerfile
 # Pas besoin de chown ni de gosu
 
+# ── Attendre que MySQL soit joignable (DNS + port) ────────────
+# Docker DNS peut mettre quelques secondes à propager les noms de service.
+echo "Attente de la resolution DNS de mysql..."
+WAIT_MAX=60
+WAIT_COUNT=0
+while [ $WAIT_COUNT -lt $WAIT_MAX ]; do
+  if getent hosts mysql >/dev/null 2>&1; then
+    echo "DNS mysql resolu apres ${WAIT_COUNT}s"
+    break
+  fi
+  WAIT_COUNT=$((WAIT_COUNT + 2))
+  sleep 2
+done
+if [ $WAIT_COUNT -ge $WAIT_MAX ]; then
+  echo "ATTENTION: mysql non resolu apres ${WAIT_MAX}s — demarrage quand meme..."
+fi
+
+# Attendre que le port 3306 soit ouvert (max 30s supplementaires)
+echo "Verification port mysql:3306..."
+PORT_WAIT=0
+while [ $PORT_WAIT -lt 30 ]; do
+  if curl -s -o /dev/null --max-time 2 --connect-timeout 2 telnet://mysql:3306 2>/dev/null; then
+    echo "Port mysql:3306 accessible apres ${PORT_WAIT}s"
+    break
+  fi
+  PORT_WAIT=$((PORT_WAIT + 2))
+  sleep 2
+done
+
 # Lancer l'application
 exec java \
     -Xms256m -Xmx512m \

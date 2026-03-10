@@ -641,17 +641,18 @@ deploy:
         echo '=== Pull de la nouvelle image ==='
         docker compose pull app || { echo 'ERREUR pull image'; exit 1; }
 
-        echo '=== Arret de l ancien conteneur ==='
-        docker stop docavocat-app 2>/dev/null || true
-        docker rm -f docavocat-app 2>/dev/null || true
-        docker compose stop app 2>/dev/null || true
-        docker compose rm -f app 2>/dev/null || true
+        echo '=== Arret propre via Docker Compose ==='
+        docker compose down --remove-orphans --timeout 30 2>/dev/null || true
 
         echo '=== Demarrage du nouveau conteneur ==='
         docker compose up -d --no-deps app || { echo 'ERREUR demarrage'; docker compose logs app; exit 1; }
 
         echo '=== Demarrage des services de monitoring ==='
         docker compose up -d loki promtail grafana 2>/dev/null || true
+
+        echo '=== Verification connectivite reseau ==='
+        sleep 5
+        docker exec docavocat-app getent hosts mysql && echo 'DNS mysql OK' || echo 'WARN: DNS mysql non resolu (attente entrypoint)'
 
         docker logout $CI_REGISTRY 2>/dev/null || true
 
