@@ -67,6 +67,15 @@ public class AuthService {
             throw new IllegalArgumentException("Vous devez accepter le traitement de vos données personnelles");
         }
 
+        // Vérifier l'unicité du SIREN avant tout write en base
+        if (request.getFirmName() != null && !request.getFirmName().trim().isEmpty()) {
+            String sirenToCheck = request.getFirmSiren();
+            if (sirenToCheck != null) {
+                sirenToCheck = sirenToCheck.replaceAll("[\\s\\-\\.]", "").trim();
+            }
+            firmService.validateSirenUniqueness(sirenToCheck);
+        }
+
         // Créer le nouvel utilisateur
         User user = new User();
 

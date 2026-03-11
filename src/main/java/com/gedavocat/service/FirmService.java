@@ -36,6 +36,16 @@ public class FirmService {
     private final ClientRepository clientRepository;
 
     /**
+     * Valider l'unicité du SIREN SANS écrire en base.
+     * À appeler avant tout userRepository.save() lors de l'inscription.
+     */
+    public void validateSirenUniqueness(String siren) {
+        if (siren != null && !siren.isBlank() && firmRepository.existsBySiren(siren)) {
+            throw new IllegalArgumentException("Un cabinet avec ce numéro SIREN existe déjà");
+        }
+    }
+
+    /**
      * Créer un nouveau cabinet d'avocats
      */
     @Transactional
