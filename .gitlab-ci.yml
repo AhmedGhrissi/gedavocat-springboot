@@ -377,6 +377,10 @@ test:
   stage: test
   image: maven:3.9-eclipse-temurin-17
   needs: [build]
+  rules:
+    - if: '$FAST_DEPLOY == "true"'
+      when: never
+    - when: always
   before_script:
     - apt-get update -qq && apt-get install -yqq curl > /dev/null 2>&1 || true
   script:
@@ -426,7 +430,11 @@ test:
 package:
   stage: package
   image: docker:27-cli
-  needs: [test]
+  needs:
+    - job: test
+      optional: true
+    - job: build
+      optional: true
   variables:
     DOCKER_BUILDKIT: "1"
     DOCKER_CLI_EXPERIMENTAL: "enabled"
