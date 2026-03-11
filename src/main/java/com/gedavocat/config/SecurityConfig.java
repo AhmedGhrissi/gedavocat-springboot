@@ -135,23 +135,23 @@ public class SecurityConfig {
 							final String styleSrc = "'self' 'unsafe-inline'" + extraStyleOrigins;
 							final String fontSrc  = "'self'" + extraFontOrigins;
 
-							// CSP : form-action autorise 'self' + les deux variantes du domaine
-							// (www et non-www) pour éviter le blocage si nginx ne redirige pas www→non-www.
-							// Nginx DOIT rediriger www→non-www, mais ceci est un filet de sécurité.
 							// Content-Security-Policy header configuration
+							// NOTE: form-action volontairement absent du CSP.
+							// La protection contre les soumissions cross-site est assuree par les
+							// tokens CSRF (Spring Security les genere et les valide automatiquement).
+							// form-action dans le CSP causait des blocages persistants car nginx
+							// peut ajouter un 2e header CSP qui entre en conflit (le navigateur
+							// enforce les DEUX headers et la directive la plus restrictive gagne).
 							h.contentSecurityPolicy(csp -> csp.policyDirectives(
 									"default-src 'self'; " +
 									"script-src " + scriptSrc + "; " +
 									"style-src " + styleSrc + "; " +
 									"font-src " + fontSrc + "; " +
-									// SEC-CSP FIX : restrict img-src to self + data: only (no wildcard https:)
 						"img-src 'self' data:; " +
 									"connect-src " + connectSrc + "; " +
 									"frame-src 'self' https://js.stripe.com https://hooks.stripe.com; " +
 									"object-src 'none'; " +
 									"base-uri 'self'; " +
-									"form-action 'self' https://docavocat.fr https://www.docavocat.fr; " +
-									// frame-ancestors 'self' pour compatibilité Zero-Trust
 									"frame-ancestors 'self'"));
 							// COOP/CORP : SAME_ORIGIN_ALLOW_POPUPS au lieu de SAME_ORIGIN strict.
 							// SAME_ORIGIN bloque les proxys corporate qui injectent du JS monitoring/DLP.
