@@ -809,35 +809,60 @@ deploy:
           echo '  -> Redirect www deja en place, OK'
         fi
 
-        echo '=== 4b. Suppression des headers CSP/security en double dans nginx ==='
-        echo '--- (Spring Boot gere deja tous les security headers) ---'
-        for CONF in /etc/nginx/sites-enabled/docavocat* /etc/nginx/conf.d/docavocat* /etc/nginx/sites-enabled/default; do
-          if [ -f \"\$CONF\" ]; then
-            echo \"Checking \$CONF ...\"
-            if grep -q 'Content-Security-Policy\|X-Frame-Options\|X-Content-Type-Options\|Referrer-Policy\|Strict-Transport-Security\|Permissions-Policy' \"\$CONF\"; then
-              echo \"  -> Found duplicate security headers, commenting them out\"
-              sed -i 's/^\\(\\s*add_header.*Content-Security-Policy\\)/#CSP_DUPLICATE \\1/' \"\$CONF\"
-              sed -i 's/^\\(\\s*add_header.*X-Frame-Options\\)/#XFRAME_DUPLICATE \\1/' \"\$CONF\"
-              sed -i 's/^\\(\\s*add_header.*X-Content-Type-Options\\)/#XCTO_DUPLICATE \\1/' \"\$CONF\"
-              sed -i 's/^\\(\\s*add_header.*Referrer-Policy\\)/#RP_DUPLICATE \\1/' \"\$CONF\"
-              sed -i 's/^\\(\\s*add_header.*Permissions-Policy\\)/#PP_DUPLICATE \\1/' \"\$CONF\"
-              echo \"  -> Done. Headers will be served by Spring Boot only.\"
-            else
-              echo \"  -> No duplicate headers found, OK\"
+        echo '=== 4b. SUPPRESSION BRUTALE de tous les headers security dans TOUTE la config nginx ==='
+        echo '--- Spring Boot gere TOUS les security headers — nginx ne doit en ajouter AUCUN ---'
+        echo '--- Scan de /etc/nginx/ en entier (sites-available, sites-enabled, conf.d, snippets) ---'
+        FOUND_CSP=0
+        for CONF in \$(grep -rl 'add_header' /etc/nginx/ 2>/dev/null || true); do
+          echo \"Scanning \$CONF ...\"
+          for HDR in Content-Security-Policy X-Frame-Options X-Content-Type-Options Referrer-Policy Strict-Transport-Security Permissions-Policy X-XSS-Protection; do
+            if grep -q \"\$HDR\" \"\$CONF\"; then
+              echo \"  -> Commenting out \$HDR in \$CONF\"
+              sed -i \"/\$HDR/s/^\\(\\s*\\)\\(add_header\\)/\\1# DISABLED_BY_CI \\2/\" \"\$CONF\"
+              FOUND_CSP=1
             fi
-          fi
+          done
         done
+        if [ \"\$FOUND_CSP\" = '1' ]; then
+          echo '  -> Headers nginx commentes. Seul Spring Boot servira les security headers.'
+        else
+          echo '  -> Aucun header security trouve dans nginx, OK'
+        fi
 
         echo '=== 4c. Test et reload nginx ==='
         nginx -t && nginx -s reload && echo 'nginx reloaded OK' || echo 'WARN: nginx reload failed, check config manually'
       "
     - |
       echo "========================================="
-      echo "ETAPE 5: Verification finale"
+      echo "ETAPE 5: Verification finale + preuve CSP OK"
       echo "========================================="
       ssh root@$SERVER_HOST "
         docker stats docavocat-app --no-stream --format 'table {{.Container}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.MemPerc}}' || true
-        docker logs docavocat-app --tail=50 2>&1
+        docker logs docavocat-app --tail=20 2>&1
+        echo ''
+        echo '=== VERIFICATION CSP HEADERS (preuve form-action absent) ==='
+        echo '--- curl -sI https://docavocat.fr/login ---'
+        CSP_HEADERS=\$(curl -sI https://docavocat.fr/login | grep -i content-security-policy || true)
+        echo \"\$CSP_HEADERS\"
+        if echo \"\$CSP_HEADERS\" | grep -qi 'form-action'; then
+          echo ''
+          echo '!!! ALERTE: form-action ENCORE PRESENT dans les headers !!!'
+          echo '!!! Il y a probablement un fichier nginx non couvert !!!'
+          echo '--- Recherche dans toute la config nginx: ---'
+          grep -rn 'form-action' /etc/nginx/ 2>/dev/null || echo 'Pas trouve dans /etc/nginx/'
+          grep -rn 'Content-Security-Policy' /etc/nginx/ 2>/dev/null || echo 'Pas de CSP dans /etc/nginx/'
+        else
+          echo ''
+          echo 'OK: form-action absent des headers -> login fonctionnel'
+        fi
+        NB_CSP=\$(echo \"\$CSP_HEADERS\" | grep -ci content-security-policy || true)
+        if [ \"\$NB_CSP\" -gt 1 ]; then
+          echo '!!! ALERTE: PLUSIEURS headers CSP detectes (nginx + Spring Boot) !!!'
+        elif [ \"\$NB_CSP\" -eq 1 ]; then
+          echo 'OK: Un seul header CSP (Spring Boot only)'
+        else
+          echo 'WARN: Aucun header CSP detecte (app pas encore up?)'
+        fi
       "
       echo ""
       echo "✓✓✓ Deploiement reussi -> https://docavocat.fr ✓✓✓"
