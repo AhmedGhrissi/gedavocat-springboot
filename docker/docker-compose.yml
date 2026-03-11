@@ -62,7 +62,7 @@ services:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
     volumes:
       - /opt/docavocat/backups:/backups
-      - ./backup/backup.sh:/backup.sh:ro
+      - ./scripts/backup.sh:/backup.sh:ro
     entrypoint: ["bash", "/backup.sh"]
     networks:
       - docavocat-net

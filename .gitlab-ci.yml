@@ -613,6 +613,9 @@ deploy:
     - scp docker/grafana/provisioning/datasources/loki.yaml root@$SERVER_HOST:$REMOTE_DIR/grafana/provisioning/datasources/loki.yaml
     - scp docker/grafana/provisioning/dashboards/dashboards.yaml root@$SERVER_HOST:$REMOTE_DIR/grafana/provisioning/dashboards/dashboards.yaml
     - scp docker/grafana/provisioning/dashboards/docavocat.json root@$SERVER_HOST:$REMOTE_DIR/grafana/provisioning/dashboards/docavocat.json
+    - ssh root@$SERVER_HOST "mkdir -p $REMOTE_DIR/scripts"
+    - scp docker/scripts/backup.sh root@$SERVER_HOST:$REMOTE_DIR/scripts/backup.sh
+    - ssh root@$SERVER_HOST "sed -i 's/\r//' $REMOTE_DIR/scripts/backup.sh && chmod +x $REMOTE_DIR/scripts/backup.sh"
     - |
       ssh root@$SERVER_HOST "
         set -e
