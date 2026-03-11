@@ -6,7 +6,10 @@ import com.gedavocat.model.User;
 import com.gedavocat.repository.CaseRepository;
 import com.gedavocat.repository.DocumentRepository;
 import com.gedavocat.repository.UserRepository;
+import com.gedavocat.security.crypto.SecureCryptographyService;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,13 +32,20 @@ import java.util.UUID;
 @SuppressWarnings("null")
 public class DocumentService {
     
+    private static final Logger log = LoggerFactory.getLogger(DocumentService.class);
+    private static final String FILE_ENCRYPTION_KEY_ID = "data_encryption_key";
+
     private final DocumentRepository documentRepository;
     private final CaseRepository caseRepository;
     private final UserRepository userRepository;
     private final AuditService auditService;
+    private final SecureCryptographyService cryptographyService;
     
     @Value("${app.upload.dir}")
     private String uploadDir;
+
+    @Value("${security.file-encryption.enabled:true}")
+    private boolean fileEncryptionEnabled;
     
     /**
      * Récupère tous les documents d'un dossier
@@ -159,7 +169,19 @@ public class DocumentService {
                 throw new SecurityException("Path traversal détecté");
             }
             Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-            
+
+            // SEC-HARDENED : chiffrement at-rest AES-256-GCM
+            boolean encrypted = false;
+            if (fileEncryptionEnabled) {
+                try {
+                    cryptographyService.encryptFile(filePath, FILE_ENCRYPTION_KEY_ID);
+                    encrypted = true;
+                    log.info("Document chiffré at-rest: {}", uniqueFilename);
+                } catch (Exception e) {
+                    log.error("Échec chiffrement document {} — stocké en clair", uniqueFilename, e);
+                }
+            }
+
             // Créer l'entité document
             Document document = new Document();
             document.setId(UUID.randomUUID().toString());
@@ -173,13 +195,14 @@ public class DocumentService {
             document.setPath(filePath.toString());
             document.setVersion(1);
             document.setIsLatest(true);
+            document.setEncrypted(encrypted);
             document.setCreatedAt(LocalDateTime.now());
             
             Document saved = documentRepository.save(document);
             
             // Audit
             auditService.log("DOCUMENT_UPLOADED", "Document", saved.getId(), 
-                "Upload du document: " + originalFilename, userId);
+                "Upload du document: " + originalFilename + (encrypted ? " [chiffré]" : " [non chiffré]"), userId);
             
             return saved;
             
@@ -348,6 +371,28 @@ public class DocumentService {
         if (document.getCaseEntity() == null || document.getCaseEntity().getLawyer() == null
                 || !document.getCaseEntity().getLawyer().getId().equals(userId)) {
             throw new SecurityException("Accès non autorisé à ce document");
+        }
+    }
+
+    /**
+     * Récupère le contenu déchiffré d'un document pour téléchargement.
+     * Si le document est chiffré at-rest, le déchiffre à la volée.
+     */
+    @Transactional(readOnly = true)
+    public byte[] getDecryptedFileContent(String documentId, String userId) {
+        Document document = getDocumentById(documentId);
+        verifyDocumentOwnership(document, userId);
+
+        Path filePath = Paths.get(document.getPath());
+        try {
+            if (Boolean.TRUE.equals(document.getEncrypted())) {
+                return cryptographyService.decryptFile(filePath, FILE_ENCRYPTION_KEY_ID);
+            } else {
+                return Files.readAllBytes(filePath);
+            }
+        } catch (Exception e) {
+            log.error("Erreur lecture document {}: {}", documentId, e.getMessage());
+            throw new RuntimeException("Impossible de lire le document", e);
         }
     }
     

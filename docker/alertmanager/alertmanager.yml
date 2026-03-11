@@ -1,0 +1,45 @@
+# ============================================================
+# DocAvocat — Alertmanager Configuration
+# Notifications : Discord (webhook)
+# ============================================================
+
+global:
+  resolve_timeout: 5m
+
+route:
+  receiver: 'discord-critical'
+  group_by: ['alertname', 'severity']
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+  routes:
+    # Alertes critiques → notification immédiate
+    - match:
+        severity: critical
+      receiver: 'discord-critical'
+      group_wait: 10s
+      repeat_interval: 1h
+    # Alertes warning → notification groupée
+    - match:
+        severity: warning
+      receiver: 'discord-warning'
+      group_wait: 1m
+      repeat_interval: 4h
+
+receivers:
+  - name: 'discord-critical'
+    webhook_configs:
+      - url: 'http://discord-webhook:9094'
+        send_resolved: true
+  - name: 'discord-warning'
+    webhook_configs:
+      - url: 'http://discord-webhook:9094'
+        send_resolved: true
+
+# Anti-spam : inhiber les warnings si un critical existe déjà
+inhibit_rules:
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['alertname', 'instance']

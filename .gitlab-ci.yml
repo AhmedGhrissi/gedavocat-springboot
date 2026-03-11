@@ -300,9 +300,66 @@ trivy-security-scan:
     expire_in: 90 days
   allow_failure: true   # Non bloquant (complémentaire)
 
+# ── Semgrep SAST (remplace CodeQL de GitHub Actions) ──────────
+semgrep-sast:
+  stage: security
+  image: semgrep/semgrep:latest
+  rules:
+    - if: '$SKIP_SECURITY == "true"'
+      when: never
+    - when: always
+  script:
+    - echo "========================================="
+    - echo "SEMGREP SAST — Analyse statique du code"
+    - echo "========================================="
+    - mkdir -p security-reports
+    - semgrep scan --config auto --config p/java --config p/owasp-top-ten --config p/secrets --json --output security-reports/semgrep-report.json . || true
+    - semgrep scan --config auto --config p/java --config p/owasp-top-ten --config p/secrets --error --severity ERROR .
+  after_script:
+    - |
+      if [ "$CI_JOB_STATUS" = "success" ]; then
+        EMOJI="[SAST]"; STATUS="Semgrep SAST OK — aucune faille critique"; COLOR=3066993
+      else
+        EMOJI="[ALERT]"; STATUS="Semgrep SAST — faille critique détectée !"; COLOR=15158332
+      fi
+    - *discord_commit_notify
+  artifacts:
+    name: "semgrep-$CI_COMMIT_SHORT_SHA"
+    when: always
+    paths:
+      - security-reports/semgrep-report.json
+    expire_in: 90 days
+  allow_failure: true
+
 # ──────────────────────────────────────────────────────────────────
 # STAGE 1 : BUILD (inchangé + needs security)
 # ──────────────────────────────────────────────────────────────────
+
+# ── SBOM — CycloneDX (Software Bill of Materials) ─────────────
+# Requis : EU Cyber Resilience Act (CRA), NIST SSDF, EO 14028
+sbom-generate:
+  stage: build
+  image: maven:3.9-eclipse-temurin-17
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE == "web"
+  script:
+    - echo "========================================="
+    - echo "SBOM — CycloneDX (Supply Chain Security)"
+    - echo "========================================="
+    - mkdir -p security-reports
+    - mvn $MAVEN_CLI_OPTS org.cyclonedx:cyclonedx-maven-plugin:makeAggregateBom -DoutputFormat=json -DoutputName=sbom
+    - cp target/sbom.json security-reports/sbom-cyclonedx.json
+    - echo "SBOM generated — $(jq '.components | length' security-reports/sbom-cyclonedx.json 2>/dev/null || echo '?') components"
+  artifacts:
+    name: "sbom-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - security-reports/sbom-cyclonedx.json
+    expire_in: 1 year
+  cache:
+    key: "maven-$CI_COMMIT_REF_SLUG"
+    paths:
+      - .m2/repository/
+    policy: pull
 
 build:
   stage: build
@@ -511,6 +568,41 @@ package:
   rules:
     - if: $CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE == "web"
 
+# ── Trivy : scan de l'image Docker buildée ────────────────────
+trivy-image-scan:
+  stage: package
+  needs: [package]
+  image:
+    name: aquasec/trivy:latest
+    entrypoint: [""]
+  variables:
+    TRIVY_USERNAME: $CI_REGISTRY_USER
+    TRIVY_PASSWORD: $CI_REGISTRY_PASSWORD
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE == "web"
+  script:
+    - echo "========================================="
+    - echo "TRIVY IMAGE SCAN — CVE dans l'image Docker"
+    - echo "========================================="
+    - mkdir -p security-reports
+    - trivy image --exit-code 0 --severity HIGH,CRITICAL --format json --output security-reports/trivy-image-report.json "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA"
+    - trivy image --exit-code 1 --severity CRITICAL --ignore-unfixed "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA"
+  after_script:
+    - |
+      if [ "$CI_JOB_STATUS" = "success" ]; then
+        EMOJI="[DOCKER]"; STATUS="Trivy image OK — aucune CVE critique dans l'image"; COLOR=3066993
+      else
+        EMOJI="[ALERT]"; STATUS="Trivy image — CVE CRITICAL dans l'image Docker !"; COLOR=15158332
+      fi
+    - *discord_commit_notify
+  artifacts:
+    name: "trivy-image-$CI_COMMIT_SHORT_SHA"
+    when: always
+    paths:
+      - security-reports/trivy-image-report.json
+    expire_in: 90 days
+  allow_failure: true
+
 # ──────────────────────────────────────────────────────────────────
 # STAGE 4 : DEPLOY (inchangé)
 # ──────────────────────────────────────────────────────────────────
@@ -559,6 +651,8 @@ deploy:
         df -h / | tail -1
       "
     - scp docker/docker-compose.yml root@$SERVER_HOST:$REMOTE_DIR/docker-compose.yml
+    - scp docker/nginx/docavocat.conf root@$SERVER_HOST:/etc/nginx/sites-available/docavocat.conf
+    - ssh root@$SERVER_HOST "ln -sf /etc/nginx/sites-available/docavocat.conf /etc/nginx/sites-enabled/ 2>/dev/null || true"
     - |
       # Créer ou copier le fichier .env s'il n'existe pas
       if [ -n "${ENV_PROD:-}" ]; then
@@ -607,12 +701,17 @@ deploy:
         echo 'PRA_CONTACT=IT Manager - A Configurer' >> .env
         echo 'PRA_BACKUP_SITE=' >> .env
       "
-    - ssh root@$SERVER_HOST "mkdir -p $REMOTE_DIR/loki $REMOTE_DIR/promtail $REMOTE_DIR/grafana/provisioning/datasources $REMOTE_DIR/grafana/provisioning/dashboards"
+    - ssh root@$SERVER_HOST "mkdir -p $REMOTE_DIR/loki $REMOTE_DIR/promtail $REMOTE_DIR/prometheus $REMOTE_DIR/alertmanager $REMOTE_DIR/grafana/provisioning/datasources $REMOTE_DIR/grafana/provisioning/dashboards"
     - scp docker/loki/local-config.yaml root@$SERVER_HOST:$REMOTE_DIR/loki/local-config.yaml
     - scp docker/promtail/config.yaml root@$SERVER_HOST:$REMOTE_DIR/promtail/config.yaml
+    - scp docker/prometheus/prometheus.yml root@$SERVER_HOST:$REMOTE_DIR/prometheus/prometheus.yml
+    - scp docker/prometheus/alerts.yml root@$SERVER_HOST:$REMOTE_DIR/prometheus/alerts.yml
+    - scp docker/alertmanager/alertmanager.yml root@$SERVER_HOST:$REMOTE_DIR/alertmanager/alertmanager.yml
     - scp docker/grafana/provisioning/datasources/loki.yaml root@$SERVER_HOST:$REMOTE_DIR/grafana/provisioning/datasources/loki.yaml
+    - scp docker/grafana/provisioning/datasources/prometheus.yml root@$SERVER_HOST:$REMOTE_DIR/grafana/provisioning/datasources/prometheus.yml
     - scp docker/grafana/provisioning/dashboards/dashboards.yaml root@$SERVER_HOST:$REMOTE_DIR/grafana/provisioning/dashboards/dashboards.yaml
     - scp docker/grafana/provisioning/dashboards/docavocat.json root@$SERVER_HOST:$REMOTE_DIR/grafana/provisioning/dashboards/docavocat.json
+    - scp docker/grafana/provisioning/dashboards/docavocat-metrics.json root@$SERVER_HOST:$REMOTE_DIR/grafana/provisioning/dashboards/docavocat-metrics.json
     - ssh root@$SERVER_HOST "mkdir -p $REMOTE_DIR/scripts"
     - scp docker/scripts/backup.sh root@$SERVER_HOST:$REMOTE_DIR/scripts/backup.sh
     - ssh root@$SERVER_HOST "sed -i 's/\r//' $REMOTE_DIR/scripts/backup.sh && chmod +x $REMOTE_DIR/scripts/backup.sh"
@@ -702,7 +801,7 @@ deploy:
         docker compose up -d --force-recreate --no-deps app || { echo 'ERREUR demarrage app'; docker compose logs app --tail=50; exit 1; }
 
         echo '=== Demarrage services monitoring ==='
-        docker compose up -d loki promtail grafana prometheus cadvisor node-exporter 2>/dev/null || true
+        docker compose up -d loki promtail grafana prometheus cadvisor node-exporter mysql-exporter alertmanager discord-webhook 2>/dev/null || true
 
         echo '=== Verification connectivite reseau ==='
         sleep 5
@@ -868,6 +967,34 @@ deploy:
       "
       echo ""
       echo "✓✓✓ Deploiement reussi -> https://docavocat.fr ✓✓✓"
+    # ── Smoke tests post-deploy ──
+    - |
+      echo "========================================="
+      echo "ETAPE 6: Smoke tests automatiques"
+      echo "========================================="
+      SMOKE_PASS=true
+      # Test 1: Page de login accessible
+      HTTP_LOGIN=$(ssh root@$SERVER_HOST "curl -s -o /dev/null -w '%{http_code}' --max-time 10 https://docavocat.fr/login" 2>/dev/null || echo "000")
+      echo "  [1] GET /login = HTTP $HTTP_LOGIN"
+      [ "$HTTP_LOGIN" = "200" ] || SMOKE_PASS=false
+      # Test 2: Redirect HTTP → HTTPS
+      HTTP_REDIRECT=$(ssh root@$SERVER_HOST "curl -s -o /dev/null -w '%{http_code}' --max-time 10 http://docavocat.fr/" 2>/dev/null || echo "000")
+      echo "  [2] HTTP redirect = HTTP $HTTP_REDIRECT"
+      [ "$HTTP_REDIRECT" = "301" ] || [ "$HTTP_REDIRECT" = "302" ] || SMOKE_PASS=false
+      # Test 3: MySQL query count
+      USER_COUNT=$(ssh root@$SERVER_HOST "docker exec docavocat-mysql mysql -u gedavocat -p\"\$(grep MYSQL_PASSWORD /opt/docavocat/.env | head -1 | cut -d= -f2-)\" gedavocat -N -e 'SELECT COUNT(*) FROM users' 2>/dev/null" || echo "ERR")
+      echo "  [3] Users in DB = $USER_COUNT"
+      [ "$USER_COUNT" != "ERR" ] && [ "$USER_COUNT" -gt 0 ] 2>/dev/null || SMOKE_PASS=false
+      # Test 4: HSTS header present
+      HSTS=$(ssh root@$SERVER_HOST "curl -sI --max-time 10 https://docavocat.fr/login | grep -i strict-transport-security | wc -l" 2>/dev/null || echo "0")
+      echo "  [4] HSTS header = $HSTS"
+      [ "$HSTS" -ge 1 ] 2>/dev/null || echo "  WARN: HSTS manquant"
+      echo ""
+      if [ "$SMOKE_PASS" = "true" ]; then
+        echo "✓ Tous les smoke tests passes"
+      else
+        echo "⚠ Certains smoke tests ont echoue — verifier manuellement"
+      fi
   after_script:
     - apk add --no-cache curl 2>/dev/null || true
     - |
@@ -889,5 +1016,50 @@ deploy:
   environment:
     name: production
     url: https://docavocat.fr
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE == "web"
+
+# ──────────────────────────────────────────────────────────────────
+# DAST — OWASP ZAP Baseline Scan (post-deploy)
+# ──────────────────────────────────────────────────────────────────
+dast-zap-baseline:
+  stage: deploy
+  image:
+    name: ghcr.io/zaproxy/zaproxy:stable
+    entrypoint: [""]
+  needs: ["deploy-production"]
+  variables:
+    GIT_STRATEGY: none
+  script:
+    - echo "=== OWASP ZAP Baseline Scan ==="
+    - echo "Cible — https://docavocat.fr"
+    - |
+      mkdir -p /zap/wrk
+      zap-baseline.py \
+        -t https://docavocat.fr \
+        -r zap-report.html \
+        -J zap-report.json \
+        -c zap-baseline.conf \
+        -I \
+        || true
+    - echo "=== Scan termine ==="
+    - |
+      if [ -f /zap/wrk/zap-report.json ]; then
+        ALERTS=$(python3 -c "import json; d=json.load(open('/zap/wrk/zap-report.json')); print(sum(1 for s in d.get('site',[]) for a in s.get('alerts',[]) if a.get('riskcode','0') in ('3',)))" 2>/dev/null || echo "?")
+        echo "Alertes HIGH: $ALERTS"
+        if [ "$ALERTS" != "?" ] && [ "$ALERTS" -gt 0 ] 2>/dev/null; then
+          echo "⚠ $ALERTS alerte(s) HIGH detectee(s) — consulter le rapport"
+        else
+          echo "✓ Aucune alerte HIGH"
+        fi
+      fi
+    - cp /zap/wrk/zap-report.* . 2>/dev/null || true
+  artifacts:
+    paths:
+      - zap-report.html
+      - zap-report.json
+    expire_in: 30 days
+    when: always
+  allow_failure: true
   rules:
     - if: $CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE == "web"

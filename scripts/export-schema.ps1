@@ -61,7 +61,10 @@ if ($LASTEXITCODE -eq 0) {
     Write-Host "   - ./init/01-schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro" -ForegroundColor Cyan
     Write-Host ""
     Write-Host "2. Pour réinitialiser complètement la BDD :" -ForegroundColor White
-    Write-Host "   docker-compose down -v" -ForegroundColor Cyan
+    Write-Host "   ⚠ ATTENTION: 'docker-compose down -v' SUPPRIME toutes les données !" -ForegroundColor Red
+    Write-Host "   Faites d'abord un backup : ./scripts/backup-encrypted.sh" -ForegroundColor Yellow
+    Write-Host "   docker-compose down" -ForegroundColor Cyan
+    Write-Host "   docker volume rm gedavocat_mysql-data  # seulement si certain" -ForegroundColor Cyan
     Write-Host "   docker-compose up -d mysql" -ForegroundColor Cyan
     Write-Host ""
     Write-Host "3. Le schéma sera automatiquement chargé au premier démarrage" -ForegroundColor White

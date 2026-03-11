@@ -9,6 +9,8 @@ import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import javax.crypto.spec.GCMParameterSpec;
+import javax.crypto.CipherInputStream;
+import javax.crypto.CipherOutputStream;
 import java.security.*;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
@@ -16,6 +18,8 @@ import java.util.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -262,6 +266,74 @@ public class SecureCryptographyService {
         secureRandom.nextBytes(randomBytes);
         
         return randomBytes;
+    }
+
+    /**
+     * Chiffre un fichier sur disque avec AES-256-GCM.
+     * Format : [12 bytes IV][ciphertext+tag]
+     * Le fichier original est remplacé par sa version chiffrée.
+     *
+     * @return l'IV utilisé (encodé Base64) pour stockage en BDD
+     */
+    public String encryptFile(Path filePath, String keyId) throws Exception {
+        CryptoKey cryptoKey = keyStore.get(keyId);
+        if (cryptoKey == null) {
+            throw new IllegalArgumentException("Clé non trouvée: " + keyId);
+        }
+        if (isKeyExpired(cryptoKey)) {
+            throw new SecurityException("Clé expirée: " + keyId);
+        }
+
+        SecretKey secretKey = new SecretKeySpec(cryptoKey.getKeyBytes(), AES_ALGORITHM);
+
+        byte[] iv = new byte[GCM_IV_LENGTH];
+        secureRandom.nextBytes(iv);
+
+        Cipher cipher = Cipher.getInstance(AES_TRANSFORMATION);
+        cipher.init(Cipher.ENCRYPT_MODE, secretKey, new GCMParameterSpec(GCM_TAG_LENGTH * 8, iv));
+
+        byte[] plaintext = Files.readAllBytes(filePath);
+        byte[] ciphertext = cipher.doFinal(plaintext);
+
+        // Écrire : IV + ciphertext
+        Path encryptedPath = filePath;
+        try (OutputStream os = Files.newOutputStream(encryptedPath)) {
+            os.write(iv);
+            os.write(ciphertext);
+        }
+
+        // Effacer le plaintext de la mémoire
+        Arrays.fill(plaintext, (byte) 0);
+
+        return Base64.getEncoder().encodeToString(iv);
+    }
+
+    /**
+     * Déchiffre un fichier chiffré par encryptFile().
+     * Lit le IV depuis les 12 premiers octets du fichier.
+     *
+     * @return le contenu déchiffré en bytes
+     */
+    public byte[] decryptFile(Path filePath, String keyId) throws Exception {
+        CryptoKey cryptoKey = keyStore.get(keyId);
+        if (cryptoKey == null) {
+            throw new IllegalArgumentException("Clé non trouvée: " + keyId);
+        }
+
+        SecretKey secretKey = new SecretKeySpec(cryptoKey.getKeyBytes(), AES_ALGORITHM);
+
+        byte[] fileContent = Files.readAllBytes(filePath);
+        if (fileContent.length < GCM_IV_LENGTH) {
+            throw new SecurityException("Fichier chiffré invalide (trop court)");
+        }
+
+        byte[] iv = Arrays.copyOfRange(fileContent, 0, GCM_IV_LENGTH);
+        byte[] ciphertext = Arrays.copyOfRange(fileContent, GCM_IV_LENGTH, fileContent.length);
+
+        Cipher cipher = Cipher.getInstance(AES_TRANSFORMATION);
+        cipher.init(Cipher.DECRYPT_MODE, secretKey, new GCMParameterSpec(GCM_TAG_LENGTH * 8, iv));
+
+        return cipher.doFinal(ciphertext);
     }
 
     /**

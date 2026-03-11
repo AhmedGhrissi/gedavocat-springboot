@@ -1,0 +1,5 @@
+Contact: mailto:security@docavocat.fr
+Preferred-Languages: fr, en
+Canonical: https://docavocat.fr/.well-known/security.txt
+Expires: 2027-03-11T00:00:00.000Z
+Policy: https://docavocat.fr/legal/security-policy

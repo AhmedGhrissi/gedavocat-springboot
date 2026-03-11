@@ -15,7 +15,7 @@
     <title layout:title-pattern="$CONTENT_TITLE - $LAYOUT_TITLE">DocAvocat</title>
 
     <!-- Safety: early no-op stub to avoid ReferenceError when pages call toggleNotifPanel before main scripts load -->
-    <script>
+    <script th:attr="nonce=${cspNonce}">
         window.toggleNotifPanel = window.toggleNotifPanel || function() {
             // noop stub — real implementation will be attached by the main scripts.
             // This prevents an uncaught ReferenceError when a button with onclick calls toggleNotifPanel()
@@ -500,7 +500,7 @@
     <!-- Bootstrap JS from WebJars (served from this application) -->
     <script th:src="@{/webjars/bootstrap/5.3.3/js/bootstrap.bundle.min.js}"></script>
     <script src="/js/scanner.js" defer></script>
-    <script>
+    <script th:attr="nonce=${cspNonce}">
         // CSRF tokens pour les requêtes AJAX
         const _csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
         const _csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content;
@@ -865,7 +865,7 @@
             </div>
         </div>
     </div>
-    <script>
+    <script th:attr="nonce=${cspNonce}">
         (function() {
             if (!localStorage.getItem('cookieConsent')) {
                 document.getElementById('cookieConsentBanner').style.display = 'block';
@@ -894,7 +894,7 @@
         </div>
     </div>
 
-    <script>
+    <script th:attr="nonce=${cspNonce}">
     (function() {
         var overlay = document.getElementById('appModalOverlay');
         var box     = document.getElementById('appModalBox');
@@ -1042,7 +1042,7 @@
     </script>
 
     <!-- Dark Mode Toggle -->
-    <script>
+    <script th:attr="nonce=${cspNonce}">
         (function() {
             const html = document.documentElement;
             const toggle = document.getElementById('darkModeToggle');
@@ -1069,7 +1069,7 @@
     </script>
 
     <!-- Notification system -->
-    <script th:inline="javascript">
+    <script th:inline="javascript" th:attr="nonce=${cspNonce}">
     (function() {
         const csrfToken = document.querySelector('meta[name="_csrf"]')?.content
                        || document.querySelector('input[name="_csrf"]')?.value || '';
@@ -1163,7 +1163,7 @@
     </script>
 
     <!-- Fallback handlers and lightweight global error banner (diagnostic, non-invasive) -->
-    <script>
+    <script th:attr="nonce=${cspNonce}">
     (function(){
         // Global onerror to help spot silent JS failures (shows a small dismissible banner)
         window.addEventListener('error', function(e) {

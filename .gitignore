@@ -158,6 +158,20 @@ start-local.bat
 *.sh.bak
 generate_docs.py
 
+# Old scan reports & scripts (cleaned up)
+snyk-*.json
+audit-security.sh
+check-mysql.ps1
+migrate_to_docavocat.sh
+pre-push-hook
+start-demo.ps1
+test-owasp-scan.*
+ersel_chgitgedavocat-springboot
+guide-email-docavocat.pdf
+
+# GitHub Actions (using GitLab CI)
+.github/workflows/
+
 # Application configs (non-prod)
 src/main/resources/application-backup.properties
 src/main/resources/application-clean.properties

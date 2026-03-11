@@ -32,7 +32,10 @@ Disallow: /invoices/
 Disallow: /api/
 Disallow: /payment/
 Disallow: /subscription/
-Disallow: /payment/
+Disallow: /actuator/
+Disallow: /h2-console/
+Disallow: /.env
+Disallow: /.git/
 
 # Interdire les crawlers de scraping agressif
 User-agent: AhrefsBot

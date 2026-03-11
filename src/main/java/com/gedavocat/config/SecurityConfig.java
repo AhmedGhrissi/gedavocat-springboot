@@ -120,39 +120,9 @@ public class SecurityConfig {
 							// Alternative : configurer via response headers personnalisés si nécessaire
 
 							// Build connect-src and other origin lists once (effectively final) so they can be referenced by nested lambdas
-						// Always include cdn.jsdelivr.net for Chart.js source maps
-						final String connectSrc = "'self' https://api.stripe.com https://api.payplug.com https://cdn.jsdelivr.net";
-							// Always allow the CDN for script/style/font resources so external UI libs (FullCalendar, cdnjs, Google Fonts) can load
-							final String extraScriptOrigins = " https://cdn.jsdelivr.net";
-							final String extraStyleOrigins = " https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com";
-							// Allow data: URIs for embedded/base64 fonts (some libs inline fonts as data: URIs)
-							final String extraFontOrigins = " data: https://cdnjs.cloudflare.com https://fonts.gstatic.com";
-
-							final String scriptSrc = "'self' 'unsafe-inline' https://js.stripe.com" + extraScriptOrigins;
-						// Note: 'unsafe-inline' is kept for script-src because Thymeleaf templates
-						// use inline onclick/onsubmit handlers. For full CSP Level 3 compliance,
-						// migrate to nonce-based CSP with th:attr in a future sprint.
-							final String styleSrc = "'self' 'unsafe-inline'" + extraStyleOrigins;
-							final String fontSrc  = "'self'" + extraFontOrigins;
-
-							// Content-Security-Policy header configuration
-							// NOTE: form-action volontairement absent du CSP.
-							// La protection contre les soumissions cross-site est assuree par les
-							// tokens CSRF (Spring Security les genere et les valide automatiquement).
-							// form-action dans le CSP causait des blocages persistants car nginx
-							// peut ajouter un 2e header CSP qui entre en conflit (le navigateur
-							// enforce les DEUX headers et la directive la plus restrictive gagne).
-							h.contentSecurityPolicy(csp -> csp.policyDirectives(
-									"default-src 'self'; " +
-									"script-src " + scriptSrc + "; " +
-									"style-src " + styleSrc + "; " +
-									"font-src " + fontSrc + "; " +
-						"img-src 'self' data:; " +
-									"connect-src " + connectSrc + "; " +
-									"frame-src 'self' https://js.stripe.com https://hooks.stripe.com; " +
-									"object-src 'none'; " +
-									"base-uri 'self'; " +
-									"frame-ancestors 'self'"));
+						// CSP header is now set dynamically by CspNonceFilter (per-request nonce).
+						// Spring Security's static CSP is disabled to avoid duplicate headers.
+						// See CspNonceFilter.java for the full CSP policy.
 							// COOP/CORP : SAME_ORIGIN_ALLOW_POPUPS au lieu de SAME_ORIGIN strict.
 							// SAME_ORIGIN bloque les proxys corporate qui injectent du JS monitoring/DLP.
 							// SAME_ORIGIN_ALLOW_POPUPS maintient l'isolation contre les attaques Spectre
@@ -231,7 +201,7 @@ public class SecurityConfig {
 								response.sendRedirect("/login?error=true");
 							}).permitAll())
 				.logout(logout -> logout.logoutUrl("/logout").logoutSuccessUrl("/login")
-							.deleteCookies("JSESSIONID").invalidateHttpSession(true).permitAll());
+							.deleteCookies("DOCAVOCAT_SESSION", "JSESSIONID").invalidateHttpSession(true).permitAll());
 
 		return http.build();
 	}

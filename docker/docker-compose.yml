@@ -50,6 +50,32 @@ services:
       --default-time-zone=Europe/Paris
       --max_connections=200
       --innodb_buffer_pool_size=256M
+      --default_table_encryption=ON
+      --require_secure_transport=ON
+      --local_infile=OFF
+      --skip-symbolic-links
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "3"
+        tag: "docavocat-mysql"
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - DAC_OVERRIDE
+      - SETGID
+      - SETUID
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '1.0'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
 
   # ── Backup automatique MySQL ────────────────────────────────
   # Dump complet toutes les 4h → /opt/docavocat/backups
@@ -173,9 +199,26 @@ services:
         max-size: "50m"
         max-file: "5"
         tag: "docavocat-app"
+    # SEC-HARDENED : non-root, no-new-privileges, capabilities minimales
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+    read_only: true
+    tmpfs:
+      - /tmp:size=100M
+    deploy:
+      resources:
+        limits:
+          memory: 768M
+          cpus: '1.0'
+        reservations:
+          memory: 384M
+          cpus: '0.25'
     healthcheck:
-      # SEC-HARDENED : actuator désactivé en prod, vérifier la page de login
-      test: ["CMD", "curl", "-f", "http://localhost:8080/login"]
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -197,6 +240,11 @@ services:
       interval: 30s
       timeout: 5s
       retries: 5
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   # ── Promtail (collecte les logs Docker → Loki) ──────────────
   promtail:
@@ -213,6 +261,16 @@ services:
       - docavocat-net
     depends_on:
       - loki
+    healthcheck:
+      test: ["CMD-SHELL", "cat /proc/1/status || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   # ── Prometheus (métriques time-series) ──────────────────────
   prometheus:
@@ -237,6 +295,11 @@ services:
       interval: 30s
       timeout: 5s
       retries: 5
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   # ── Node Exporter (métriques système) ───────────────────────
   node-exporter:
@@ -254,6 +317,16 @@ services:
       - docavocat-net
     ports:
       - "127.0.0.1:9100:9100"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:9100/metrics"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   # ── MySQL Exporter (métriques MySQL) ────────────────────────
   mysql-exporter:
@@ -269,6 +342,16 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:9104/metrics"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   # ── cAdvisor (métriques Docker) ─────────────────────────────
   cadvisor:
@@ -288,6 +371,16 @@ services:
       - docavocat-net
     ports:
       - "127.0.0.1:8081:8080"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   # ── Grafana (interface web de visualisation) ────────────────
   # Accès UNIQUEMENT via tunnel SSH :
@@ -371,6 +464,65 @@ services:
         max-file: "3"
         tag: "docavocat-grafana"
 
+  # ── Alertmanager (routage des alertes Prometheus) ───────────
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    container_name: docavocat-alertmanager
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+    volumes:
+      - ./alertmanager:/etc/alertmanager:ro
+      - alertmanager_data:/alertmanager
+    networks:
+      - docavocat-net
+    ports:
+      - "127.0.0.1:9093:9093"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:9093/-/healthy"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: '0.25'
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ── Discord Webhook Relay (Alertmanager → Discord) ──────────
+  discord-webhook:
+    image: benjojo/alertmanager-discord:latest
+    container_name: docavocat-discord-webhook
+    restart: unless-stopped
+    environment:
+      DISCORD_WEBHOOK: ${DISCORD_WEBHOOK_URL}
+    networks:
+      - docavocat-net
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    deploy:
+      resources:
+        limits:
+          memory: 64M
+          cpus: '0.10'
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
 # ── Réseau interne ──────────────────────────────────────────
 networks:
   docavocat-net:
@@ -388,4 +540,6 @@ volumes:
   promtail_positions:
     driver: local
   prometheus_data:
+    driver: local
+  alertmanager_data:
     driver: local

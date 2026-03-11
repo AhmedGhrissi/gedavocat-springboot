@@ -69,6 +69,6 @@ USER docavocat
 
 # Healthcheck intégré
 HEALTHCHECK --interval=30s --timeout=10s --start-period=90s --retries=3 \
-    CMD curl -f http://localhost:8080/login || exit 1
+    CMD curl -f http://localhost:8080/actuator/health || exit 1
 
 ENTRYPOINT ["/app/entrypoint.sh"]

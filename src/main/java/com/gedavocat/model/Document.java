@@ -104,6 +104,9 @@ public class Document {
     @Column(name = "is_latest", nullable = false)
     private Boolean isLatest = true;
     
+    @Column(name = "encrypted", nullable = false)
+    private Boolean encrypted = false;
+    
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
     
