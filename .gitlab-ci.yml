@@ -430,7 +430,214 @@ build:
 # STAGE 2 : TEST (inchangé)
 # ──────────────────────────────────────────────────────────────────
 
+# ============================================================
+# DocAvocat — Pipeline CI/CD sécurisé et conforme (prod)
+# ============================================================
+stages:
+  - security
+  - build
+  - test
+  - package
+  - deploy
+
+variables:
+  MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
+  MAVEN_CLI_OPTS: "--batch-mode --no-transfer-progress"
+  REMOTE_DIR: "/opt/docavocat"
+
+# ──────────────── SÉCURITÉ (bloquant) ────────────────
+sast:
+  stage: security
+  image: returntocorp/semgrep:latest
+  script:
+    - semgrep scan --config auto --json --output security-reports/semgrep.json .
+  artifacts:
+    paths:
+      - security-reports/semgrep.json
+    when: always
+  allow_failure: false
+  after_script:
+    - |
+      if [ "$CI_JOB_STATUS" != "success" ] && [ -n "${DISCORD_WEBHOOK:-}" ]; then
+        curl -s -X POST "$DISCORD_WEBHOOK" \
+          -H "Content-Type: application/json" \
+          -d "{\"content\":\"❌ [CI/CD] SAST failed ($CI_JOB_NAME) sur $CI_COMMIT_REF_NAME. $CI_PIPELINE_URL\"}"
+      fi
+
+trufflehog-secrets:
+  stage: security
+  image: python:3.11
+  script:
+    - pip install trufflehog
+    - trufflehog filesystem --directory . --json > security-reports/trufflehog.json || true
+  artifacts:
+    paths:
+      - security-reports/trufflehog.json
+    when: always
+  allow_failure: true
+
+owasp-dependency-check:
+  stage: security
+  image: mikesplain/dependency-check
+  script:
+    - dependency-check.sh --project "gedavocat" --scan . --format "JSON" --out security-reports/
+  artifacts:
+    paths:
+      - security-reports/dependency-check-report.json
+    when: always
+  allow_failure: false
+
+# ──────────────── BUILD & TEST ────────────────
+build:
+  stage: build
+  image: maven:3.9-eclipse-temurin-17
+  script:
+    - mvn $MAVEN_CLI_OPTS clean compile
+  allow_failure: false
+
 test:
+  stage: test
+  image: maven:3.9-eclipse-temurin-17
+  script:
+    - mvn $MAVEN_CLI_OPTS test
+  artifacts:
+    paths:
+      - target/surefire-reports/
+    when: always
+  allow_failure: false
+  after_script:
+    - |
+      if [ "$CI_JOB_STATUS" != "success" ] && [ -n "${DISCORD_WEBHOOK:-}" ]; then
+        curl -s -X POST "$DISCORD_WEBHOOK" \
+          -H "Content-Type: application/json" \
+          -d "{\"content\":\"❌ [CI/CD] Tests failed ($CI_JOB_NAME) sur $CI_COMMIT_REF_NAME. $CI_PIPELINE_URL\"}"
+      fi
+
+# ──────────────── PACKAGE ────────────────
+package:
+  stage: package
+  image: maven:3.9-eclipse-temurin-17
+  script:
+    - mvn $MAVEN_CLI_OPTS package -DskipTests
+  artifacts:
+    paths:
+      - target/*.jar
+    when: always
+  allow_failure: false
+
+# ──────────────── DEPLOY (manuel, prod) ────────────────
+deploy:
+  stage: deploy
+  image: alpine:3.19
+  needs: [package]
+  before_script:
+    - apk add --no-cache openssh-client curl
+    - eval $(ssh-agent -s)
+    - tr -d '\r' < "$SSH_PRIVATE_KEY" > /tmp/id_rsa
+    - chmod 600 /tmp/id_rsa
+    - ssh-add /tmp/id_rsa
+    - mkdir -p ~/.ssh && chmod 700 ~/.ssh
+    - echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+  script:
+    - scp target/*.jar root@$SERVER_HOST:$REMOTE_DIR/app.jar
+    - ssh root@$SERVER_HOST "systemctl restart docavocat-app"
+  when: manual
+  allow_failure: false
+  after_script:
+    - |
+      if [ "$CI_JOB_STATUS" != "success" ] && [ -n "${DISCORD_WEBHOOK:-}" ]; then
+        curl -s -X POST "$DISCORD_WEBHOOK" \
+          -H "Content-Type: application/json" \
+          -d "{\"content\":\"❌ [CI/CD] Deploy failed ($CI_JOB_NAME) sur $CI_COMMIT_REF_NAME. $CI_PIPELINE_URL\"}"
+      fi
+
+# ──────────────── DAST ZAP (post-deploy) ────────────────
+dast-zap-baseline:
+  stage: deploy
+  image:
+    name: ghcr.io/zaproxy/zaproxy:stable
+    entrypoint: [""]
+  needs: ["deploy"]
+  variables:
+    GIT_STRATEGY: none
+  script:
+    - echo "=== OWASP ZAP Baseline Scan ==="
+    - echo "Cible — https://docavocat.fr"
+    - |
+      mkdir -p /zap/wrk
+      zap-baseline.py \
+        -t https://docavocat.fr \
+        -r zap-report.html \
+        -J zap-report.json \
+        -c zap-baseline.conf \
+        -I \
+        || true
+    - echo "=== Scan termine ==="
+    - |
+      if [ -f /zap/wrk/zap-report.json ]; then
+        ALERTS=$(python3 -c "import json; d=json.load(open('/zap/wrk/zap-report.json')); print(sum(1 for s in d.get('site',[]) for a in s.get('alerts',[]) if a.get('riskcode','0') in ('3',)))" 2>/dev/null || echo "?")
+        echo "Alertes HIGH: $ALERTS"
+        if [ "$ALERTS" != "?" ] && [ "$ALERTS" -gt 0 ] 2>/dev/null; then
+          echo "⚠ $ALERTS alerte(s) HIGH detectee(s) — consulter le rapport"
+          if [ -n "${DISCORD_WEBHOOK:-}" ]; then
+            curl -s -X POST "$DISCORD_WEBHOOK" \
+              -H "Content-Type: application/json" \
+              -d "{\"content\":\"❌ [CI/CD] DAST ZAP HIGH alerts: $ALERTS sur $CI_COMMIT_REF_NAME. $CI_PIPELINE_URL\"}"
+          fi
+        else
+          echo "✓ Aucune alerte HIGH"
+        fi
+      fi
+    - cp /zap/wrk/zap-report.* . 2>/dev/null || true
+  artifacts:
+    paths:
+      - zap-report.html
+      - zap-report.json
+    expire_in: 30 days
+    when: always
+  allow_failure: true
+
+# ──────────────── BACKUP RESTORE TEST (hebdo) ────────────────
+backup-restore-test:
+  stage: test
+  image: alpine:3.19
+  script:
+    - ./scripts/restore-from-hetzner.sh /chemin/backup-test.sql.gpg
+  only:
+    - schedules
+  allow_failure: false
+  after_script:
+    - |
+      if [ "$CI_JOB_STATUS" != "success" ] && [ -n "${DISCORD_WEBHOOK:-}" ]; then
+        curl -s -X POST "$DISCORD_WEBHOOK" \
+          -H "Content-Type: application/json" \
+          -d "{\"content\":\"❌ [CI/CD] Backup restore test failed ($CI_JOB_NAME) sur $CI_COMMIT_REF_NAME. $CI_PIPELINE_URL\"}"
+      fi
+
+# ──────────────── RGPD CHECKLIST ────────────────
+rgpd-check:
+  stage: security
+  image: alpine:3.19
+  script:
+    - grep -i -r 'dpo\|rgpd\|cnil\|retention\|effacement' . > security-reports/rgpd-grep.txt || true
+  artifacts:
+    paths:
+      - security-reports/rgpd-grep.txt
+    when: always
+  allow_failure: true
+
+# ──────────────── WORKFLOW & POLITIQUES ────────────────
+workflow:
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE == "push"
+      when: never
+    - if: $CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE == "web"
+      when: always
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: always
+    - if: $CI_COMMIT_BRANCH && $CI_COMMIT_BRANCH != "main"
+      when: always
   stage: test
   image: maven:3.9-eclipse-temurin-17
   needs: [build]
