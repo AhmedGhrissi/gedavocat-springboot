@@ -51,6 +51,31 @@ services:
       --max_connections=200
       --innodb_buffer_pool_size=256M
 
+  # ── Backup automatique MySQL ────────────────────────────────
+  # Dump complet toutes les 4h → /opt/docavocat/backups
+  # Rétention 30 jours. Prêt pour upload S3 (Phase 2 Scaleway).
+  backup:
+    image: mysql:8.0
+    container_name: docavocat-backup
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    volumes:
+      - /opt/docavocat/backups:/backups
+      - ./backup/backup.sh:/backup.sh:ro
+    entrypoint: ["bash", "/backup.sh"]
+    networks:
+      - docavocat-net
+    depends_on:
+      mysql:
+        condition: service_healthy
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        tag: "docavocat-backup"
+
   # ── Application Spring Boot ─────────────────────────────────
   # L'image est définie par APP_IMAGE dans .env (injecté par la CI)
   app:
