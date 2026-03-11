@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="theme-color" content="#1E3A5F">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="shortcut icon" href="/favicon.svg">
+    <title layout:title-pattern="$CONTENT_TITLE - $LAYOUT_TITLE">DocAvocat</title>
+
+    <link th:href="@{/webjars/bootstrap/5.3.3/css/bootstrap.min.css}" rel="stylesheet">
+    <link th:href="@{/webjars/font-awesome/6.4.0/css/all.min.css}" rel="stylesheet">
+    <link th:href="@{/css/global-unified-theme.css}" rel="stylesheet">
+
+    <th:block layout:fragment="extra-css"></th:block>
+</head>
+<body style="background: var(--bg-subtle, #f8fafc); min-height: 100vh;">
+
+    <header style="background: #1E3A5F; padding: 1rem 2rem; display: flex; align-items: center; gap: 1rem;">
+        <a href="/" style="display: flex; align-items: center; gap: 0.75rem; text-decoration: none; color: #fff;">
+            <i class="fas fa-scale-balanced" style="font-size: 1.4rem;"></i>
+            <span style="font-weight: 700; font-size: 1.2rem; letter-spacing: 0.02em;">DocAvocat</span>
+        </a>
+    </header>
+
+    <main id="main-content">
+        <div layout:fragment="content"></div>
+    </main>
+
+    <footer style="text-align: center; padding: 2rem; color: #64748b; font-size: 0.85rem; border-top: 1px solid #e2e8f0; margin-top: 3rem;">
+        &copy; 2026 DocAvocat &mdash;
+        <a th:href="@{/legal/terms}" style="color: #1E3A5F;">CGU</a> &middot;
+        <a th:href="@{/legal/privacy}" style="color: #1E3A5F;">Confidentialité</a>
+    </footer>
+
+    <script th:src="@{/webjars/bootstrap/5.3.3/js/bootstrap.bundle.min.js}"></script>
+    <th:block layout:fragment="extra-js"></th:block>
+</body>
+</html>
