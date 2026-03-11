@@ -1,6 +1,0 @@
-#!/bin/bash
-# Placer ce fichier dans : .git/hooks/pre-push
-# chmod +x .git/hooks/pre-push
-
-echo "🔐 Lancement de l'audit sécurité pré-push..."
-bash "$(git rev-parse --show-toplevel)/audit-security.sh"
