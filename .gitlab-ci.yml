@@ -1039,7 +1039,7 @@ dast-zap-baseline:
   image:
     name: ghcr.io/zaproxy/zaproxy:stable
     entrypoint: [""]
-  needs: ["deploy-production"]
+  needs: ["deploy"]
   variables:
     GIT_STRATEGY: none
   script:
