@@ -30,6 +30,8 @@
 #
 # VARIABLES OPTIONNELLES (Run pipeline > Variables) :
 #   SKIP_SECURITY    true     Pour tester rapidement sans scans (dev only)
+#   FAST_DEPLOY      true     Correctif rapide : skip scans securite + deploy auto (~15 min)
+#                             Workflow : GitLab -> Run pipeline sur main -> Variable FAST_DEPLOY=true
 # ============================================================
 
 # Controle du declenchement des pipelines
@@ -127,7 +129,7 @@ audit-code-security:
     # Skip OWASP dans audit-security.sh (job dédié owasp-dependency-check le fait déjà)
     SKIP_OWASP_AUDIT: "true"
   rules:
-    - if: '$SKIP_SECURITY == "true"'
+    - if: '$SKIP_SECURITY == "true" || $FAST_DEPLOY == "true"'
       when: never
     - when: always
   before_script:
@@ -174,7 +176,7 @@ owasp-dependency-check:
   image: maven:3.9-eclipse-temurin-17
   timeout: 30m  # Timeout 30 minutes (sans clé NVD, prend ~20-30min)
   rules:
-    - if: '$SKIP_SECURITY == "true"'
+    - if: '$SKIP_SECURITY == "true" || $FAST_DEPLOY == "true"'
       when: never
     - when: always
   before_script:
@@ -224,7 +226,7 @@ snyk-security-scan:
   stage: security
   image: maven:3.9-eclipse-temurin-17
   rules:
-    - if: '$SKIP_SECURITY == "true"'
+    - if: '$SKIP_SECURITY == "true" || $FAST_DEPLOY == "true"'
       when: never
     - when: always
   before_script:
@@ -269,7 +271,7 @@ trivy-security-scan:
     name: aquasec/trivy:latest
     entrypoint: [""]  # Override pour permettre exécution shell normale (after_script Discord)
   rules:
-    - if: '$SKIP_SECURITY == "true"'
+    - if: '$SKIP_SECURITY == "true" || $FAST_DEPLOY == "true"'
       when: never
     - when: always
   before_script:
@@ -432,6 +434,10 @@ test:
   stage: test
   image: maven:3.9-eclipse-temurin-17
   needs: [build]
+  rules:
+    - if: '$FAST_DEPLOY == "true"'
+      when: never
+    - when: always
   before_script:
     - apt-get update -qq && apt-get install -yqq curl > /dev/null 2>&1 || true
   script:
@@ -481,7 +487,11 @@ test:
 package:
   stage: package
   image: docker:27-cli
-  needs: [test]
+  needs:
+    - job: test
+      optional: true
+    - job: build
+      optional: true
   variables:
     DOCKER_BUILDKIT: "1"
     DOCKER_CLI_EXPERIMENTAL: "enabled"
@@ -559,7 +569,7 @@ package:
     - apk add --no-cache curl --quiet 2>/dev/null || true
     - |
       if [ "$CI_JOB_STATUS" = "success" ]; then
-        EMOJI="[DOCKER]"; STATUS="Image Docker prete - cliquer Play sur deploy"; COLOR=3447003
+        EMOJI="[DOCKER]"; STATUS="Image Docker prete${FAST_DEPLOY:+ - deploy auto en cours}${FAST_DEPLOY:-" - cliquer Play sur deploy"}"; COLOR=3447003
       else
         EMOJI="[FAIL]"; STATUS="ECHEC build image Docker"; COLOR=15158332
       fi
@@ -611,7 +621,6 @@ deploy:
   stage: deploy
   image: alpine:3.19
   needs: [package]
-  when: manual
   allow_failure: false
   before_script:
     - apk add --no-cache openssh-client curl
@@ -1017,7 +1026,10 @@ deploy:
     name: production
     url: https://docavocat.fr
   rules:
+    - if: $CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE == "web" && $FAST_DEPLOY == "true"
+      when: on_success
     - if: $CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE == "web"
+      when: manual
 
 # ──────────────────────────────────────────────────────────────────
 # DAST — OWASP ZAP Baseline Scan (post-deploy)
