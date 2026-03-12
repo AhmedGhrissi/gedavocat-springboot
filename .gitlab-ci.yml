@@ -24,10 +24,6 @@ workflow:
     - if: $CI_COMMIT_BRANCH && $CI_COMMIT_BRANCH != "main"
       when: always
 
-default:
-  tags:
-    - vps
-
 variables:
   MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
   MAVEN_CLI_OPTS: "--batch-mode --no-transfer-progress"
