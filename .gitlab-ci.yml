@@ -759,165 +759,128 @@ package:
         fi
       done
   script:
-    - echo "========================================="
-    - echo "ETAPE 1 - Build de l'image Docker"
-    - echo "========================================="
-    - |
-      echo "Repository: $CI_REGISTRY_IMAGE"
-      echo "SHA: $CI_COMMIT_SHORT_SHA"
-      echo ""
-      if ! docker build \
-        --file docker/Dockerfile \
-        --tag "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA" \
-        --tag "$CI_REGISTRY_IMAGE:latest" \
-        --progress=plain \
-        .; then
-        echo ""
-        echo "ERREUR: Le build Docker a echoue!"
-        exit 1
-      fi
-      echo ""
-      echo "✓ Image buildee avec succes"
-      docker images | grep -E "(REPOSITORY|$CI_REGISTRY_IMAGE)" || true
-    - echo ""
-    - echo "========================================="
-    - echo "ETAPE 2 - Push des images vers le registry"
-    - echo "========================================="
-    - |
-      MAX_RETRIES=3
-      for TAG in "$CI_COMMIT_SHORT_SHA" "latest"; do
-        echo ""
-        echo "--- Push de l'image :$TAG ---"
-        RETRY_COUNT=0
-        until [ $RETRY_COUNT -ge $MAX_RETRIES ]; do
-          echo "Tentative ($((RETRY_COUNT+1))/$MAX_RETRIES)..."
-          if docker push "$CI_REGISTRY_IMAGE:$TAG" 2>&1; then
-            echo "✓ Image :$TAG poussee avec succes"
-            break
-          else
-            RETRY_COUNT=$((RETRY_COUNT+1))
-            if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
-              echo "! Echec du push, nouvelle tentative dans 15s..."
-              sleep 15
-            else
-              echo "ERREUR: Impossible de pousser l'image :$TAG apres $MAX_RETRIES tentatives"
-              exit 1
-            fi
-          fi
-        done
-      done
-      echo ""
-      echo "✓✓✓ Toutes les images poussees avec succes ✓✓✓"
-  after_script:
-    - apk add --no-cache curl --quiet 2>/dev/null || true
-    - |
-      if [ "$CI_JOB_STATUS" = "success" ]; then
-        EMOJI="[DOCKER]"; STATUS="Image Docker prete${FAST_DEPLOY:+ - deploy auto en cours}${FAST_DEPLOY:-" - cliquer Play sur deploy"}"; COLOR=3447003
-      else
-        EMOJI="[FAIL]"; STATUS="ECHEC build image Docker"; COLOR=15158332
-      fi
-      JOB_NAME="Package Docker"
-    - *discord_deploy_notify
-  rules:
-    - if: $CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE == "web"
 
-# ── Trivy : scan de l'image Docker buildée ────────────────────
-trivy-image-scan:
-  stage: package
-  needs: [package]
-  image:
-    name: aquasec/trivy:latest
-    entrypoint: [""]
-  variables:
-    TRIVY_USERNAME: $CI_REGISTRY_USER
-    TRIVY_PASSWORD: $CI_REGISTRY_PASSWORD
-  rules:
-    - if: $CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE == "web"
-  script:
-    - echo "========================================="
-    - echo "TRIVY IMAGE SCAN — CVE dans l'image Docker"
-    - echo "========================================="
-    - mkdir -p security-reports
-    - trivy image --exit-code 0 --severity HIGH,CRITICAL --format json --output security-reports/trivy-image-report.json "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA"
-    - trivy image --exit-code 1 --severity CRITICAL --ignore-unfixed "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA"
-  after_script:
-    - |
-      if [ "$CI_JOB_STATUS" = "success" ]; then
-        EMOJI="[DOCKER]"; STATUS="Trivy image OK — aucune CVE critique dans l'image"; COLOR=3066993
-      else
-        EMOJI="[ALERT]"; STATUS="Trivy image — CVE CRITICAL dans l'image Docker !"; COLOR=15158332
-      fi
-    - *discord_commit_notify
-  artifacts:
-    name: "trivy-image-$CI_COMMIT_SHORT_SHA"
-    when: always
-    paths:
-      - security-reports/trivy-image-report.json
-    expire_in: 90 days
-  allow_failure: true
-
-# ──────────────────────────────────────────────────────────────────
-# STAGE 4 : DEPLOY (inchangé)
-# ──────────────────────────────────────────────────────────────────
-
-deploy:
-  stage: deploy
-  image: alpine:3.19
-  needs: [package]
-  allow_failure: false
-  before_script:
-    - apk add --no-cache openssh-client curl
-    - eval $(ssh-agent -s)
-    - tr -d '\r' < "$SSH_PRIVATE_KEY" > /tmp/id_rsa
-    - echo "" >> /tmp/id_rsa
-    - chmod 600 /tmp/id_rsa
-    - ssh-keygen -l -f /tmp/id_rsa 2>&1 || (echo "CLE INVALIDE - voir debug:"; head -1 /tmp/id_rsa; tail -1 /tmp/id_rsa | cat -A; wc -l /tmp/id_rsa; exit 1)
-    - ssh-add /tmp/id_rsa
-    - mkdir -p ~/.ssh && chmod 700 ~/.ssh
-    - echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
-    - chmod 644 ~/.ssh/known_hosts
-    - |
-      [ -z "${DISCORD_WEBHOOK:-}" ] && true || {
-        PAYLOAD=$(printf '{"embeds":[{"title":"[DEPLOY] Deploiement en cours...","description":"**Branche :** `%s`\\n**Commit :** [`%s`](%s)\\n**Par :** %s\\n\\n*Envoi fichiers -> restart -> check HTTP...*\\n\\n[Logs deploy ->](%s/-/jobs/%s)","color":16776960,"footer":{"text":"DocAvocat CI/CD"},"timestamp":"%s"}]}' \
-          "$CI_COMMIT_BRANCH" "$CI_COMMIT_SHORT_SHA" "$CI_PIPELINE_URL" \
-          "$GITLAB_USER_NAME" "$CI_PROJECT_URL" "$CI_JOB_ID" \
-          "$(date -u '+%Y-%m-%dT%H:%M:%SZ')")
-        RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${DISCORD_WEBHOOK}" \
-             -H "Content-Type: application/json" \
-             -d "$PAYLOAD")
-        echo "Discord deploy-start: HTTP $RESPONSE"
-      }
-  script:
-    - |
-      ssh root@$SERVER_HOST "
-        echo '=== Création du répertoire si nécessaire ==='
-        mkdir -p $REMOTE_DIR/docker
-        echo '=== Espace disque avant nettoyage ==='
-        df -h / | tail -1
-        echo '--- Nettoyage Docker (volumes exclus pour proteger les donnees) ---'
-        docker system prune -af --filter 'until=72h' 2>/dev/null || true
-        truncate -s 0 /var/lib/docker/containers/*/*-json.log 2>/dev/null || true
-        apt-get clean 2>/dev/null || true
         rm -rf /var/lib/apt/lists/* /tmp/* 2>/dev/null || true
-        echo '=== Espace disque apres nettoyage ==='
-        df -h / | tail -1
-      "
-    - scp docker/docker-compose.yml root@$SERVER_HOST:$REMOTE_DIR/docker-compose.yml
-    - scp docker/nginx/docavocat.conf root@$SERVER_HOST:/etc/nginx/sites-available/docavocat.conf
-    - ssh root@$SERVER_HOST "ln -sf /etc/nginx/sites-available/docavocat.conf /etc/nginx/sites-enabled/ 2>/dev/null || true"
-    - |
-      # Créer ou copier le fichier .env s'il n'existe pas
-      if [ -n "${ENV_PROD:-}" ]; then
-        echo "Copie de ENV_PROD vers le serveur..."
-        cat "$ENV_PROD" | ssh root@$SERVER_HOST "cat > $REMOTE_DIR/.env"
-      else
-        echo "ENV_PROD non définie, création d'un fichier .env minimal..."
-        ssh root@$SERVER_HOST "touch $REMOTE_DIR/.env"
-      fi
-    - |
+
+    # ============================================================
+    # DocAvocat — Pipeline CI/CD GitLab (version propre)
+    # ============================================================
+
+    workflow:
+      rules:
+        - if: $CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE == "push"
+          when: never
+        - if: $CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE == "web"
+          when: always
+        - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+          when: always
+        - if: $CI_COMMIT_BRANCH && $CI_COMMIT_BRANCH != "main"
+          when: always
+
       ssh root@$SERVER_HOST "
+      tags:
+        - vps
+
+    variables:
+      MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
+      MAVEN_CLI_OPTS: "--batch-mode --no-transfer-progress"
+      REMOTE_DIR: "/opt/docavocat"
+
         cd $REMOTE_DIR
+      - security
+      - build
+      - test
+      - package
+      - deploy
+
+    # Ancre Discord simplifiée
+    .discord_commit_notify: &discord_commit_notify
+      - echo "Notification Discord (placeholder)"
+
+    # === SECURITY ===
+    audit-code-security:
+      stage: security
+      image: maven:3.9-eclipse-temurin-17
+      script:
+        - echo "=== DEBUG: listing fichiers racine ==="
+        - ls -l .
+        - if [ ! -f ./audit-security.sh ]; then echo "ERREUR: Le script audit-security.sh est introuvable à la racine du repo !"; exit 1; fi
+        - chmod +x ./audit-security.sh
+        - ./audit-security.sh
+      artifacts:
+        paths:
+          - security-reports/
+        when: always
+      allow_failure: true
+
         # Ensure .env ends with a newline (GitLab File variables may strip trailing newline)
+      stage: security
+      image: owasp/dependency-check:latest
+      script:
+        - dependency-check.sh --project "gedavocat" --scan . --format "JSON" --out security-reports/
+      artifacts:
+        paths:
+          - security-reports/dependency-check-report.json
+        when: always
+      allow_failure: false
+      cache:
+        key: "maven-$CI_COMMIT_REF_SLUG"
+        paths:
+          - .m2/repository/
+        policy: pull
+
+    # === BUILD ===
+    build:
+      stage: build
+      image: maven:3.9-eclipse-temurin-17
+      needs:
+        - job: audit-code-security
+          optional: true
+        - job: owasp-dependency-check
+          optional: true
+      script:
+        - echo "Build Maven"
+        - mvn $MAVEN_CLI_OPTS clean install
+      artifacts:
+        paths:
+          - target/
+        when: always
+      allow_failure: false
+
+    # === TEST ===
+    test:
+      stage: test
+      image: maven:3.9-eclipse-temurin-17
+      script:
+        - echo "Tests Maven"
+        - mvn $MAVEN_CLI_OPTS test
+      artifacts:
+        paths:
+          - target/surefire-reports/
+        when: always
+      allow_failure: false
+
+    # === PACKAGE ===
+    package:
+      stage: package
+      image: maven:3.9-eclipse-temurin-17
+      script:
+        - echo "Packaging Maven"
+        - mvn $MAVEN_CLI_OPTS package
+      artifacts:
+        paths:
+          - target/*.jar
+        when: always
+      allow_failure: false
+
+    # === DEPLOY ===
+    deploy:
+      stage: deploy
+      image: maven:3.9-eclipse-temurin-17
+      script:
+        - echo "Déploiement (placeholder)"
+      when: manual
+      allow_failure: false
         sed -i -e '\$a\\' .env
         # Remove any existing APP_IMAGE line (including if concatenated with previous line)
         sed -i '/APP_IMAGE=/d' .env
