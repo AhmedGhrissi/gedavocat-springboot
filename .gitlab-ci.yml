@@ -472,7 +472,7 @@ trufflehog-secrets:
 
 owasp-dependency-check:
   stage: security
-  image: mikesplain/dependency-check
+  image: owasp/dependency-check:latest
   script:
     - dependency-check.sh --project "gedavocat" --scan . --format "JSON" --out security-reports/
   artifacts:
@@ -507,7 +507,7 @@ build:
         AUTHOR="${GITLAB_USER_NAME:-CI}"
         SHA="${CI_COMMIT_SHORT_SHA:-????}"
         TITLE="${CI_COMMIT_TITLE:-}"
-        COMMIT_MSG=$(printf '%s' "$TITLE" | head -c 80 | sed 's/\\/\\\\/g; s/"/\\"/g; s/\t/ /g')
+        COMMIT_MSG=$(printf '%s' "$TITLE" | head -c 80 | sed 's/\\/\\\\/g; s/"/\\"/g; s/	/ /g')
         if [ "$BRANCH" = "main" ]; then
           SCOPE="branche main - pipeline complet (security -> build -> test -> package -> deploy)"
         else
