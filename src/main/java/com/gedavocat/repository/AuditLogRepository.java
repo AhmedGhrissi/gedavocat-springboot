@@ -67,4 +67,13 @@ public interface AuditLogRepository extends JpaRepository<AuditLog, String> {
     long countByCreatedAtBefore(LocalDateTime date);
 
     long countByActionAndCreatedAtAfter(String action, LocalDateTime date);
+
+    /**
+     * SEC RGPD F-11 : Anonymise les adresses IP dans les logs d'audit antérieurs à une date.
+     * Utilisé par RgpdPurgeScheduler pour la minimisation des données (Art. 5 RGPD).
+     */
+    @Modifying
+    @Transactional
+    @Query("UPDATE AuditLog a SET a.ipAddress = '0.0.0.0' WHERE a.createdAt < :cutoff AND a.ipAddress IS NOT NULL AND a.ipAddress <> '0.0.0.0'")
+    int anonymizeOldIpAddresses(@Param("cutoff") LocalDateTime cutoff);
 }

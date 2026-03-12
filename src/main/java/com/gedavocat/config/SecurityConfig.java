@@ -106,14 +106,14 @@ public class SecurityConfig {
 							// les pages dans un iframe same-origin. Clickjacking reste bloqué.
 							h.frameOptions(f -> f.sameOrigin());
 							h.contentTypeOptions(Customizer.withDefaults());
-							// HSTS : 6 mois sans preload ni includeSubDomains.
-							// preload empêche les proxys corporate SSL-inspection de fonctionner
-							// (le navigateur refuse toute connexion non-HTTPS même via proxy MITM légal).
-							// includeSubDomains peut bloquer des sous-domaines futurs derrière un proxy.
+							// HSTS : 1 an, includeSubDomains + preload (niveau bancaire ANSSI/OWASP).
+							// Preload permet d'inscrire le domaine dans la liste HSTS des navigateurs,
+							// includeSubDomains protège tous les sous-domaines.
+							// Valeur min pour preload list : 31536000 (1 an).
 							h.httpStrictTransportSecurity(hsts -> hsts
-									.includeSubDomains(false)
-									.preload(false)
-									.maxAgeInSeconds(15768000)); // 6 mois (compromis sécurité/compatibilité)
+									.includeSubDomains(true)
+									.preload(true)
+									.maxAgeInSeconds(31536000)); // 1 an (niveau bancaire sécurité/compatibilité)
 							h.referrerPolicy(r -> r.policy(
 									ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN));
 							// Permissions-Policy déprécié dans Spring Security 6.4+ - fonctionnalité retirée

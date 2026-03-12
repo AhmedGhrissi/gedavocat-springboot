@@ -89,9 +89,9 @@ public class AuthController {
             Model model,
             RedirectAttributes redirectAttributes
     ) {
-        log.info("🔵 POST /register - Tentative d'inscription pour email: {}", request.getEmail());
-        log.debug("📋 Données reçues: firstName={}, lastName={}, plan={}, billing={}",
-            request.getFirstName(), request.getLastName(), request.getSubscriptionPlan(), billing);
+        log.info("🔵 POST /register - Tentative d'inscription (email masqué pour RGPD)");
+        log.debug("📋 Données reçues: plan={}, billing={}",
+            request.getSubscriptionPlan(), billing);
 
         // Validation personnalisée : vérifier que les mots de passe correspondent
         if (request.getPassword() != null && request.getConfirmPassword() != null
@@ -128,7 +128,7 @@ public class AuthController {
 
             // Envoyer le code de vérification et rediriger
             String email = request.getEmail().trim().toLowerCase();
-            log.info("📧 Envoi du code de vérification à: {}", email);
+            log.info("📧 Envoi du code de vérification (email masqué pour RGPD)");
             emailVerificationService.generateAndSend(email);
 
             redirectAttributes.addFlashAttribute("info",

@@ -2,6 +2,7 @@ package com.gedavocat.service;
 
 import com.gedavocat.model.User;
 import com.gedavocat.repository.UserRepository;
+import com.gedavocat.util.PasswordValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -89,6 +90,10 @@ public class PasswordResetService {
             user.setResetTokenExpiry(null);
             userRepository.save(user);
             return false;
+        }
+        // SEC FIX F-04 : validation complexité mot de passe (defense-in-depth)
+        if (!PasswordValidator.isValid(newPassword)) {
+            throw new IllegalArgumentException(PasswordValidator.PASSWORD_REQUIREMENTS_MESSAGE);
         }
         user.setPassword(passwordEncoder.encode(newPassword));
         user.setEmailVerified(true);
