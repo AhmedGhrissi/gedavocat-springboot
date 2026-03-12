@@ -433,12 +433,17 @@ deploy:
       fi
       echo "=== Blue/Green : actif=${ACTIVE_SLOT}:${ACTIVE_PORT} => deploiement sur ${IDLE_SLOT}:${IDLE_PORT} ==="
 
+      # Mapper les slots aux noms de services docker-compose
+      # blue=8080 → service "app" | green=8081 → service "app-green"
+      ACTIVE_SERVICE=$([ "$ACTIVE_SLOT" = "blue" ] && echo "app" || echo "app-green")
+      IDLE_SERVICE=$([ "$IDLE_SLOT" = "blue" ] && echo "app" || echo "app-green")
+
       echo "=== Nettoyage disque (images orphelines) ==="
       docker image prune -f || true
       df -h /
 
       echo "=== Pull nouvelle image sur slot ${IDLE_SLOT} ==="
-      docker compose pull app-${IDLE_SLOT}
+      docker compose pull ${IDLE_SERVICE}
 
       echo "=== Verification MySQL ==="
       for i in $(seq 1 30); do
@@ -448,7 +453,7 @@ deploy:
       done
 
       echo "=== Demarrage slot ${IDLE_SLOT} (l ancien reste actif) ==="
-      docker compose up -d --no-deps --force-recreate app-${IDLE_SLOT}
+      docker compose up -d --no-deps --force-recreate ${IDLE_SERVICE}
 
       echo "=== Attente health check slot ${IDLE_SLOT}:${IDLE_PORT} ==="
       READY=0
@@ -464,7 +469,7 @@ deploy:
 
       if [ "$READY" != "1" ]; then
         echo "ERREUR: Slot ${IDLE_SLOT} non pret — rollback (slot ${ACTIVE_SLOT} reste actif)"
-        docker compose stop app-${IDLE_SLOT} || true
+        docker compose stop ${IDLE_SERVICE} || true
         exit 1
       fi
 
@@ -487,7 +492,7 @@ deploy:
         echo "ERREUR: Site inaccessible apres bascule HTTP $HTTP_CODE — rollback nginx"
         echo "upstream docavocat_app { server 127.0.0.1:${ACTIVE_PORT}; }" > "$UPSTREAM_FILE"
         nginx -s reload
-        docker compose stop app-${IDLE_SLOT} || true
+        docker compose stop ${IDLE_SERVICE} || true
         exit 1
       fi
 
@@ -498,7 +503,7 @@ deploy:
       echo "=== Arret propre de l ancien slot ${ACTIVE_SLOT} ==="
       # Attendre 30s que les connexions en cours se terminent (keep-alive nginx)
       sleep 30
-      docker compose stop app-${ACTIVE_SLOT} || true
+      docker compose stop ${ACTIVE_SERVICE} || true
 
       echo "=== Nettoyage images obsoletes ==="
       docker image prune -f || true
