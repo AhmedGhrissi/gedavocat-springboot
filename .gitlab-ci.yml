@@ -32,6 +32,7 @@ variables:
   MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
   MAVEN_CLI_OPTS: "--batch-mode --no-transfer-progress"
   REMOTE_DIR: "/opt/docavocat"
+  GIT_DEPTH: "1"  # shallow clone — checkout x10 plus rapide
   # SEC FIX N-10 : définir DEPLOY_USER dans les variables CI/CD GitLab (utilisateur non-root)
   # Créer un utilisateur 'deploy' sur le serveur avec accès sudo limité au docker compose
   # DEPLOY_USER: "deploy"  # valeur par défaut dans les scripts : deploy
@@ -96,7 +97,9 @@ stages:
 
 audit-code-security:
   stage: security
-  image: maven:3.9-eclipse-temurin-17
+  image:
+    name: maven:3.9-eclipse-temurin-17
+    pull_policy: if-not-present
   rules:
     - if: '$SKIP_SECURITY == "true" || $FAST_DEPLOY == "true"'
       when: never
@@ -138,7 +141,9 @@ owasp-dependency-check:
 
 snyk-security-scan:
   stage: security
-  image: maven:3.9-eclipse-temurin-17
+  image:
+    name: maven:3.9-eclipse-temurin-17
+    pull_policy: if-not-present
   rules:
     - if: '$SKIP_SECURITY == "true" || $FAST_DEPLOY == "true"'
       when: never
@@ -274,7 +279,9 @@ rgpd-check:
 
 sbom-generate:
   stage: build
-  image: maven:3.9-eclipse-temurin-17
+  image:
+    name: maven:3.9-eclipse-temurin-17
+    pull_policy: if-not-present
   rules:
     - if: '$FAST_DEPLOY == "true"'
       when: never
@@ -297,7 +304,9 @@ sbom-generate:
 
 build:
   stage: build
-  image: maven:3.9-eclipse-temurin-17
+  image:
+    name: maven:3.9-eclipse-temurin-17
+    pull_policy: if-not-present
   needs:
     - job: audit-code-security
       optional: true
@@ -356,7 +365,9 @@ build:
 
 test:
   stage: test
-  image: maven:3.9-eclipse-temurin-17
+  image:
+    name: maven:3.9-eclipse-temurin-17
+    pull_policy: if-not-present
   needs:
     - build
   rules:
@@ -408,7 +419,9 @@ backup-restore-test:
 
 package:
   stage: package
-  image: docker:27-cli
+  image:
+    name: docker:27-cli
+    pull_policy: if-not-present
   needs:
     - job: build
     - job: test
