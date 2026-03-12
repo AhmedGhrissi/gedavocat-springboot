@@ -399,6 +399,9 @@ deploy:
       # Authentification au GitLab Container Registry sur le serveur
       ssh root@"${SERVER_HOST}" "docker login -u '${CI_REGISTRY_USER}' -p '${CI_REGISTRY_PASSWORD}' '${CI_REGISTRY}'"
     - |
+      # Synchroniser docker-compose.yml sur le serveur (toujours à jour avec le repo)
+      scp docker/docker-compose.yml root@"${SERVER_HOST}":/opt/docavocat/docker-compose.yml
+    - |
       ssh root@"${SERVER_HOST}" bash -s << 'ENDSSH'
       set -e
       cd /opt/docavocat
