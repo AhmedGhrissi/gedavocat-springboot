@@ -377,9 +377,11 @@ deploy:
     url: https://docavocat.fr
   script:
     - apk add --no-cache openssh-client curl bash
-    - eval $(ssh-agent -s)
-    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
     - mkdir -p ~/.ssh && chmod 700 ~/.ssh
+    - printf '%s\n' "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/deploy_key
+    - chmod 600 ~/.ssh/deploy_key
+    - eval $(ssh-agent -s)
+    - ssh-add ~/.ssh/deploy_key
     - echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
     - chmod 644 ~/.ssh/known_hosts
     - echo "$ENV_PROD" | ssh root@"${SERVER_HOST}" "cat > /opt/docavocat/.env && chmod 600 /opt/docavocat/.env"
