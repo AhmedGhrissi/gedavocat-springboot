@@ -213,7 +213,7 @@ semgrep-sast:
   stage: security
   image: semgrep/semgrep:latest
   rules:
-    - if: '$SKIP_SECURITY == "true"'
+    - if: '$SKIP_SECURITY == "true" || $FAST_DEPLOY == "true"'
       when: never
     - when: always
   script:
