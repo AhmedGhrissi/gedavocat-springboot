@@ -463,8 +463,11 @@ services:
     image: prom/mysqld-exporter:v0.15.1
     container_name: docavocat-mysql-exporter
     restart: unless-stopped
+    command:
+      - "--mysqld.username=gedavocat"
+      - "--mysqld.address=mysql:3306"
     environment:
-      DATA_SOURCE_NAME: "gedavocat:${MYSQL_PASSWORD}@(mysql:3306)/"
+      MYSQLD_EXPORTER_PASSWORD: "${MYSQL_PASSWORD}"
     networks:
       - docavocat-net
     ports:
@@ -631,7 +634,7 @@ services:
 
   # ── Discord Webhook Relay (Alertmanager → Discord) ──────────
   discord-webhook:
-    image: benjojo/alertmanager-discord:latest
+    image: rogerrum/alertmanager-discord:latest  # multiarch amd64+arm64 (remplace benjojo/alertmanager-discord amd64-only)
     container_name: docavocat-discord-webhook
     restart: unless-stopped
     environment:

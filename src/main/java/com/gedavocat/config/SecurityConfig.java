@@ -56,6 +56,9 @@ public class SecurityConfig {
 						.requestMatchers("/test/**").denyAll()
 						// SEC FIX M-11 : bloquer /api/debug-status
 						.requestMatchers("/api/debug-status").denyAll()
+						// Actuator — health et prometheus accessibles en interne (Prometheus scrape)
+						// Sécurisé côté nginx : /actuator bloqué pour les clients externes (404)
+						.requestMatchers("/actuator/health", "/actuator/prometheus").permitAll()
 						// Pages publiques
 						.requestMatchers("/", "/login", "/register", "/maintenance", "/subscription/pricing",
 						"/subscription/success", "/subscription/cancel",
