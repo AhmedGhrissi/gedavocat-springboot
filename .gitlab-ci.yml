@@ -225,8 +225,11 @@ semgrep-sast:
 
 gitleaks-secrets:
   stage: security
-  image: zricethezav/gitleaks:latest
+  image:
+    name: zricethezav/gitleaks:latest
+    entrypoint: [""]
   script:
+    - mkdir -p security-reports
     - gitleaks detect --source . --report-format json --report-path security-reports/gitleaks.json || true
   artifacts:
     paths:
