@@ -376,7 +376,7 @@ backup-restore-test:
   only:
     - schedules
   allow_failure: false
-  .
+
 # ---- PACKAGE ----
 
 package:
