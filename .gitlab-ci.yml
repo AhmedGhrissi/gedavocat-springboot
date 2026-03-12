@@ -410,8 +410,9 @@ package:
   stage: package
   image: docker:27-cli
   needs:
+    - job: build
     - job: test
-      optional: true  # SEC FIX N-09 : test est skippé en FAST_DEPLOY, optional: true évite le blocage
+      optional: true  # skippé en FAST_DEPLOY, optional: true évite le blocage
   variables:
     DOCKER_BUILDKIT: "1"
     DOCKER_CLI_EXPERIMENTAL: "enabled"
