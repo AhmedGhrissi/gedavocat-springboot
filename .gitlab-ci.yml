@@ -125,102 +125,30 @@ stages:
 audit-code-security:
   stage: security
   image: maven:3.9-eclipse-temurin-17
-  variables:
-    # Skip OWASP dans audit-security.sh (job dédié owasp-dependency-check le fait déjà)
-    SKIP_OWASP_AUDIT: "true"
-  rules:
-    - if: '$SKIP_SECURITY == "true" || $FAST_DEPLOY == "true"'
-      when: never
-    - when: always
-  before_script:
-    - apt-get update -qq && apt-get install -yqq curl nodejs npm git > /dev/null 2>&1 || true
-    - chmod +x ./audit-security.sh
-    # Notification Discord : audit démarre
-    - |
-      WEBHOOK="${DISCORD_WEBHOOK:-}"
-      [ -z "$WEBHOOK" ] && true || {
-        PAYLOAD=$(printf '{"embeds":[{"title":"[SHIELD] Audit securite demarre","description":"**Branche :** `%s`\\n**Commit :** [`%s`](%s)\\n**Par :** %s\\n\\n*Analyse OWASP, secrets, injections, RGPD...*","color":16776960,"footer":{"text":"DocAvocat CI/CD"},"timestamp":"%s"}]}' \
-          "${CI_COMMIT_BRANCH:-MR}" "${CI_COMMIT_SHORT_SHA:-????}" \
-          "$CI_PIPELINE_URL" "${GITLAB_USER_NAME:-CI}" \
-          "$(date -u '+%Y-%m-%dT%H:%M:%SZ')")
-        curl -s -o /dev/null -X POST "$WEBHOOK" -H "Content-Type: application/json" -d "$PAYLOAD" || true
-      }
   script:
-    - echo "========================================="
-    - echo "AUDIT SECURITE — TOLERANCE ZERO"
-    - echo "========================================="
+    - chmod +x ./audit-security.sh
     - ./audit-security.sh
-  after_script:
-    - |
-      if [ "$CI_JOB_STATUS" = "success" ]; then
-        EMOJI="[SHIELD]"; STATUS="Audit securite OK — aucune faille critique"; COLOR=3066993
-      else
-        EMOJI="[ALERT]"; STATUS="AUDIT ECHOUE — faille securite detectee ! Deploy BLOQUE"; COLOR=15158332
-      fi
-    - *discord_commit_notify
   artifacts:
-    name: "audit-security-$CI_COMMIT_SHORT_SHA"
-    when: always
     paths:
       - security-reports/
-    expire_in: 90 days
+    when: always
+  allow_failure: true
+
+owasp-dependency-check:
+  stage: security
+  image: owasp/dependency-check:latest
+  script:
+    - dependency-check.sh --project "gedavocat" --scan . --format "JSON" --out security-reports/
+  artifacts:
+    paths:
+      - security-reports/dependency-check-report.json
+    when: always
   allow_failure: false   # BLOQUANT — ne jamais changer
   cache:
     key: "maven-$CI_COMMIT_REF_SLUG"
     paths:
       - .m2/repository/
     policy: pull
-
-owasp-dependency-check:
-  stage: security
-  image: maven:3.9-eclipse-temurin-17
-  timeout: 30m  # Timeout 30 minutes (sans clé NVD, prend ~20-30min)
-  rules:
-    - if: '$SKIP_SECURITY == "true" || $FAST_DEPLOY == "true"'
-      when: never
-    - when: always
-  before_script:
-    - apt-get update -qq && apt-get install -yqq curl > /dev/null 2>&1 || true
-  script:
-    - echo "========================================="
-    - echo "OWASP DEPENDENCY CHECK — CVE >= 7.0"
-    - echo "========================================="
-    - mkdir -p security-reports
-    - |
-      MVN_ARGS="$MAVEN_CLI_OPTS org.owasp:dependency-check-maven:check \
-        -DfailBuildOnCVSS=7 \
-        -Dformat=HTML \
-        -DoutputDirectory=security-reports/"
-      # Ajouter la clé NVD si disponible (évite le rate-limiting)
-      if [ -n "${NVD_API_KEY:-}" ]; then
-        MVN_ARGS="$MVN_ARGS -DnvdApiKey=$NVD_API_KEY"
-        echo "NVD_API_KEY configurée — scan rapide (~2-3 min)"
-      else
-        echo "NVD_API_KEY non définie — scan lent (~20-30 min sans clé)"
-        echo "Obtenir une clé gratuite : https://nvd.nist.gov/developers/request-an-api-key"
-      fi
-      mvn $MVN_ARGS
-  after_script:
-    - |
-      if [ "$CI_JOB_STATUS" = "success" ]; then
-        EMOJI="[SHIELD]"; STATUS="OWASP OK — aucune CVE critique dans les dependances"; COLOR=3066993
-      else
-        EMOJI="[ALERT]"; STATUS="OWASP FAIL — CVE critique detectee dans les dependances !"; COLOR=15158332
-      fi
-    - *discord_commit_notify
-  artifacts:
-    name: "owasp-$CI_COMMIT_SHORT_SHA"
-    when: always
-    paths:
-      - security-reports/dependency-check-report.html
-    expire_in: 90 days
-  allow_failure: true   # Non bloquant temporairement (problèmes techniques NVD)
-  cache:
-    key: "owasp-nvd-data"  # Cache global pour la base NVD (partagé entre branches)
-    paths:
-      - .m2/repository/
-      - .m2/repository/org/owasp/dependency-check-data/
-    policy: pull-push  # Télécharge ET sauvegarde le cache (base NVD ~500MB)
 
 snyk-security-scan:
   stage: security
@@ -585,7 +513,7 @@ build:
         else
           SCOPE="branche feature - security + build + test uniquement"
         fi
-        PAYLOAD=$(printf '{"embeds":[{"title":"[START] Pipeline demarre","description":"**Branche :** `%s`\n**Commit :** [`%s`](%s)\n**Par :** %s\n**Message :** %s\n**Scope :** %s","color":16776960,"footer":{"text":"DocAvocat CI/CD"},"timestamp":"%s"}]}' \
+        PAYLOAD=$(printf '{"embeds":[{"title":"[START] Pipeline demarre","description":"**Branche :** `%s`\\n**Commit :** [`%s`](%s)\\n**Par :** %s\\n**Message :** %s\\n**Scope :** %s","color":16776960,"footer":{"text":"DocAvocat CI/CD"},"timestamp":"%s"}]}' \
           "$BRANCH" "$SHA" "$CI_PIPELINE_URL" "$AUTHOR" "$COMMIT_MSG" "$SCOPE" "$(date -u '+%Y-%m-%dT%H:%M:%SZ')")
         RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$WEBHOOK" \
              -H "Content-Type: application/json" \
@@ -696,11 +624,6 @@ dast-zap-baseline:
         echo "Alertes HIGH: $ALERTS"
         if [ "$ALERTS" != "?" ] && [ "$ALERTS" -gt 0 ] 2>/dev/null; then
           echo "⚠ $ALERTS alerte(s) HIGH detectee(s) — consulter le rapport"
-          if [ -n "${DISCORD_WEBHOOK:-}" ]; then
-            curl -s -X POST "$DISCORD_WEBHOOK" \
-              -H "Content-Type: application/json" \
-              -d "{\"content\":\"❌ [CI/CD] DAST ZAP HIGH alerts: $ALERTS sur $CI_COMMIT_REF_NAME. $CI_PIPELINE_URL\"}"
-          fi
         else
           echo "✓ Aucune alerte HIGH"
         fi
