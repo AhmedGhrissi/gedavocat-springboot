@@ -51,7 +51,6 @@ variables:
 audit-code-security:
   stage: security
   image: maven:3.9-eclipse-temurin-17
-  tags: [vps]
   script:
     - chmod +x ./audit-security.sh
     - ./audit-security.sh
@@ -67,7 +66,6 @@ owasp-dependency-check:
   image:
     name: owasp/dependency-check:latest
     entrypoint: [""]
-  tags: [vps]
   script:
     - mkdir -p security-reports
     - /usr/share/dependency-check/bin/dependency-check.sh
@@ -86,7 +84,6 @@ owasp-dependency-check:
 snyk-security-scan:
   stage: security
   image: maven:3.9-eclipse-temurin-17
-  tags: [vps]
   script:
     - |
       if [ -z "${SNYK_TOKEN:-}" ]; then
@@ -103,7 +100,6 @@ trivy-security-scan:
   image:
     name: aquasec/trivy:latest
     entrypoint: [""]
-  tags: [vps]
   script:
     - trivy fs --exit-code 0 --severity HIGH,CRITICAL --format table .
   allow_failure: true
@@ -111,7 +107,6 @@ trivy-security-scan:
 semgrep-sast:
   stage: security
   image: semgrep/semgrep:latest
-  tags: [vps]
   script:
     - semgrep --config=auto --output semgrep-report.json --json . || true
   allow_failure: true
@@ -126,7 +121,6 @@ gitleaks-secrets:
   image:
     name: zricethezav/gitleaks:latest
     entrypoint: [""]
-  tags: [vps]
   script:
     - gitleaks detect --source . --exit-code 0 --report-format json --report-path gitleaks-report.json || true
   allow_failure: true
@@ -139,7 +133,6 @@ gitleaks-secrets:
 rgpd-check:
   stage: security
   image: alpine:3.19
-  tags: [vps]
   script:
     - apk add --no-cache grep
     - |
@@ -161,7 +154,6 @@ rgpd-check:
 sbom-generate:
   stage: build
   image: maven:3.9-eclipse-temurin-17
-  tags: [vps]
   rules:
     - if: '$CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "web"'
   cache:
@@ -180,7 +172,6 @@ sbom-generate:
 build:
   stage: build
   image: maven:3.9-eclipse-temurin-17
-  tags: [vps]
   needs:
     - audit-code-security
     - owasp-dependency-check
@@ -209,7 +200,6 @@ build:
 test:
   stage: test
   image: maven:3.9-eclipse-temurin-17
-  tags: [vps]
   needs: [build]
   cache:
     key: "$CI_COMMIT_REF_SLUG-maven"
@@ -237,7 +227,6 @@ test:
 backup-restore-test:
   stage: test
   image: alpine:3.19
-  tags: [vps]
   rules:
     - if: '$CI_PIPELINE_SOURCE == "schedule"'
   needs: []
@@ -259,7 +248,6 @@ backup-restore-test:
 e2e-playwright:
   stage: e2e
   image: mcr.microsoft.com/playwright:v1.43.1-focal
-  tags: [vps]
   needs: [build]
   script:
     - |
@@ -288,7 +276,6 @@ e2e-playwright:
 package:
   stage: package
   image: docker:27-cli
-  tags: [vps]
   needs: [build, test, e2e-playwright]
   rules:
     - if: '$CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "web"'
@@ -316,7 +303,6 @@ trivy-image-scan:
   image:
     name: aquasec/trivy:latest
     entrypoint: [""]
-  tags: [vps]
   needs: [package]
   rules:
     - if: '$CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "web"'
@@ -331,7 +317,6 @@ trivy-image-scan:
 deploy:
   stage: deploy
   image: alpine:3.19
-  tags: [vps]
   needs: [package]
   rules:
     - if: '$FAST_DEPLOY == "true" && ($CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "web")'
@@ -478,7 +463,6 @@ dast-zap-baseline:
   image:
     name: ghcr.io/zaproxy/zaproxy:stable
     entrypoint: [""]
-  tags: [vps]
   needs: [deploy]
   rules:
     - if: '$CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "web"'
