@@ -102,11 +102,13 @@ services:
         max-file: "3"
         tag: "docavocat-backup"
 
-  # ── Application Spring Boot ─────────────────────────────────
-  # L'image est définie par APP_IMAGE dans .env (injecté par la CI)
+  # ── Application Spring Boot — Slot BLUE (actif par défaut) ────
+  # Blue/Green deploy : blue=8080, green=8081
+  # Le slot actif est déterminé par /etc/nginx/conf.d/upstream-app.conf
+  # La CI bascule nginx vers le slot prêt (zero-downtime)
   app:
     image: ${APP_IMAGE}
-    container_name: docavocat-app
+    container_name: docavocat-app-blue
     restart: unless-stopped
     depends_on:
       mysql:
@@ -114,18 +116,21 @@ services:
     links:
       - mysql
     ports:
-      # Exposé uniquement sur localhost — nginx du host proxyfie vers ici
+      # Slot BLUE — nginx pointe ici par défaut
       - "127.0.0.1:8080:8080"
     environment:
       SERVER_PORT: 8080
 
       # Base de données — SEC-HARDENED : useSSL=true, ddl-auto=validate
-      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/gedavocat?useSSL=true&requireSSL=true&serverTimezone=Europe/Paris&allowPublicKeyRetrieval=true&useUnicode=true&characterEncoding=UTF-8"
-      SPRING_DATASOURCE_USERNAME: gedavocat
+      # DB_HOST=mysql         → MySQL local Docker (défaut, développement)
+      # DB_HOST=10.0.0.2      → VM dédiée Hetzner via vSwitch (production cible)
+      SPRING_DATASOURCE_URL: "jdbc:mysql://${DB_HOST:-mysql}:${DB_PORT:-3306}/gedavocat?useSSL=true&requireSSL=true&serverTimezone=Europe/Paris&allowPublicKeyRetrieval=true&useUnicode=true&characterEncoding=UTF-8"
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME:-gedavocat}
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
-      # Variables référencées dans application.properties (pour éviter PlaceholderResolutionException)
-      DB_USERNAME: gedavocat
+      DB_HOST: ${DB_HOST:-mysql}
+      DB_PORT: ${DB_PORT:-3306}
+      DB_USERNAME: ${DB_USERNAME:-gedavocat}
       DB_PASSWORD: ${MYSQL_PASSWORD}
       APP_BASE_URL: https://docavocat.fr
 
@@ -219,6 +224,106 @@ services:
           cpus: '0.25'
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+
+  # ── Application Spring Boot — Slot GREEN (déployé en alternance) ─
+  # Ce slot est démarré par la CI lors d'un deploy, puis nginx bascule vers lui.
+  # Il reste arrêté en temps normal (profiles: [green] = optionnel).
+  app-green:
+    image: ${APP_IMAGE}
+    container_name: docavocat-app-green
+    restart: "no"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    links:
+      - mysql
+    ports:
+      # Slot GREEN — port alternatif, invisible depuis l'extérieur tant que nginx ne pointe pas dessus
+      - "127.0.0.1:8081:8080"
+    environment:
+      SERVER_PORT: 8080
+      # Base de données — même config que blue
+      SPRING_DATASOURCE_URL: "jdbc:mysql://${DB_HOST:-mysql}:${DB_PORT:-3306}/gedavocat?useSSL=true&requireSSL=true&serverTimezone=Europe/Paris&allowPublicKeyRetrieval=true&useUnicode=true&characterEncoding=UTF-8"
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME:-gedavocat}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      DB_HOST: ${DB_HOST:-mysql}
+      DB_PORT: ${DB_PORT:-3306}
+      DB_USERNAME: ${DB_USERNAME:-gedavocat}
+      DB_PASSWORD: ${MYSQL_PASSWORD}
+      APP_BASE_URL: https://docavocat.fr
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION: 900000
+      JWT_REFRESH_EXPIRATION: 14400000
+      MFA_ENCRYPTION_KEY: ${MFA_ENCRYPTION_KEY}
+      SPRING_MAIL_HOST: ${MAIL_HOST}
+      SPRING_MAIL_PORT: ${MAIL_PORT:-587}
+      SPRING_MAIL_USERNAME: ${MAIL_USERNAME}
+      SPRING_MAIL_PASSWORD: ${MAIL_PASSWORD}
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH: "true"
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_SSL_ENABLE: "false"
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: "true"
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_REQUIRED: "true"
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_SSL_TRUST: ${MAIL_HOST}
+      MAIL_FROM: ${MAIL_USERNAME:-noreply@docavocat.fr}
+      APP_UPLOAD_DIR: /opt/docavocat/uploads/documents
+      APP_SIGNATURE_DIR: /opt/docavocat/uploads/signatures
+      APP_TEMP_DIR: /opt/docavocat/temp
+      SPRING_PROFILES_ACTIVE: prod
+      MAINTENANCE_ENABLED: ${MAINTENANCE_ENABLED:-false}
+      SPRING_WEB_RESOURCES_STATIC_LOCATIONS: "file:/opt/docavocat/static-override/,classpath:/static/"
+      YOUSIGN_API_KEY: ${YOUSIGN_API_KEY} # gitleaks:allow
+      STRIPE_API_KEY: ${STRIPE_API_KEY:-} # gitleaks:allow
+      STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      RPVA_API_KEY: ${RPVA_API_KEY:-}
+      RPVA_CERT_PATH: ${RPVA_CERT_PATH:-}
+      RPVA_CERT_PASSWORD: ${RPVA_CERT_PASSWORD:-}
+      DPO_NAME: ${DPO_NAME}
+      DPO_EMAIL: ${DPO_EMAIL}
+      DPO_PHONE: ${DPO_PHONE:-}
+      DPO_ADDRESS: ${DPO_ADDRESS:-}
+      DPO_CERTIFICATION: ${DPO_CERTIFICATION:-}
+      PRA_CONTACT: ${PRA_CONTACT}
+      PRA_BACKUP_SITE: ${PRA_BACKUP_SITE:-}
+      LOGGING_STRUCTURED_FORMAT_CONSOLE_ENABLED: "false"
+    volumes:
+      - /opt/docavocat/uploads:/opt/docavocat/uploads
+      - /opt/docavocat/logs:/opt/docavocat/logs
+      - /opt/docavocat/temp:/opt/docavocat/temp
+      - /opt/docavocat/backups:/opt/docavocat/backups
+      - /opt/docavocat/static-override:/opt/docavocat/static-override:ro
+    networks:
+      - docavocat-net
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+        tag: "docavocat-app-green"
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+    read_only: true
+    tmpfs:
+      - /tmp:size=100M
+    deploy:
+      resources:
+        limits:
+          memory: 768M
+          cpus: '1.0'
+        reservations:
+          memory: 384M
+          cpus: '0.25'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 5

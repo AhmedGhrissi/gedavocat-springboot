@@ -216,6 +216,34 @@ done
 cleanup_local
 cleanup_remote
 
+# ── Gestion d’alerte Discord en cas d’échec ──
+alert_discord() {
+    local MSG="$1"
+    if [ -n "${DISCORD_WEBHOOK_URL:-}" ]; then
+        curl -s -X POST "$DISCORD_WEBHOOK_URL" \
+            -H "Content-Type: application/json" \
+            -d "{\"content\":\"$MSG\"}"
+    fi
+}
+
+set +e
+ERROR_MSG=""
+if [ -z "${UPLOADED_FILES[*]}" ]; then
+    ERROR_MSG="Aucun backup généré"
+fi
+for FILE in "${UPLOADED_FILES[@]}"; do
+    if [ ! -f "$FILE" ]; then
+        ERROR_MSG="Backup ou upload échoué ($FILE)"
+    fi
+done
+set -e
+
+if [ -n "$ERROR_MSG" ]; then
+    alert_discord "❌ [Backup DocAvocat] $ERROR_MSG sur $(hostname) à $TIMESTAMP"
+    echo "$LOG_PREFIX $ERROR_MSG (alerte Discord envoyée)"
+    exit 1
+fi
+
 echo "$LOG_PREFIX === Backup terminé ==="
 echo "$LOG_PREFIX Fichiers créés:"
 ls -lh "$BACKUP_DIR"/*_${TIMESTAMP}*.gpg 2>/dev/null || echo "  (aucun)"

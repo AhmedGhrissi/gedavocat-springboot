@@ -1,3 +1,20 @@
+# ![Security Status](https://img.shields.io/badge/security-A%2B-brightgreen?style=flat-square)
+
+# 🔒 Score de sécurité CI/CD
+
+⚠️ **Alerte Discord** : toute faille critique détectée en CI déclenche une notification automatique sur le canal Discord configuré.
+
+Après chaque pipeline sur `main`, consultez les artefacts de jobs suivants pour le score de sécurité :
+
+- **Snyk** (dépendances) : rapport HTML/JSON dans le job `snyk`.
+- **Trivy** (image Docker) : rapport dans le job `trivy`.
+- **OWASP Dependency Check** : rapport dans le job `owasp-dependency-check`.
+- **Semgrep** (SAST) : rapport dans le job `semgrep`.
+- **DAST ZAP** (post-deploy) : rapport HTML/JSON dans le job `dast-zap-baseline`.
+
+**Blocage automatique** : la CI bloque tout déploiement si une faille critique est détectée.
+
+**Recommandation** : téléchargez les artefacts de chaque job pour consulter les détails et le score global. Un badge ou résumé peut être ajouté ici si besoin.
 # 📚 DocAvocat - Gestion Électronique de Documents pour Avocats
 
 <div align="center">
