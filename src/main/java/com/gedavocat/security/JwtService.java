@@ -6,9 +6,6 @@ import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.stereotype.Service;
-
-import jakarta.annotation.PostConstruct;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
@@ -17,10 +14,11 @@ import java.util.Map;
 import java.util.function.Function;
 
 /**
- * Service de gestion des tokens JWT
- * SEC-JWT FIX : ajout validation issuer/audience
+ * Service JWT HMAC-HS256 — DÉSACTIVÉ (SEC FIX F-02)
+ * Remplacé par JwtServiceRS256 (RSA-4096, ANSSI niveau bancaire).
+ * Conservé pour référence. Ne pas réactiver.
  */
-@Service
+// @Service — retiré : JwtServiceRS256 utilisé à la place dans tout le pipeline auth
 public class JwtService {
     
     private static final String JWT_ISSUER = "docavocat.fr";
@@ -38,23 +36,6 @@ public class JwtService {
         this.jwtBlacklistService = jwtBlacklistService;
     }
 
-    /**
-     * SEC-01 FIX : Valide que le secret JWT est correctement défini au démarrage.
-     * Interdit les valeurs par défaut ou trop courtes.
-     */
-    @PostConstruct
-    public void validateSecret() {
-        if (secretKey == null || secretKey.isBlank()) {
-            throw new IllegalStateException(
-                "JWT_SECRET n'est pas défini. Configurez la variable d'environnement JWT_SECRET."); // gitleaks:allow
-        }
-        if (secretKey.contains("CHANGE_ME") || secretKey.equals("dummy") || secretKey.length() < 32) {
-            throw new IllegalStateException(
-                "JWT_SECRET est une valeur par défaut ou trop courte (min 32 caractères en Base64). " // gitleaks:allow
-                + "Générez un secret aléatoire : openssl rand -base64 64");
-        }
-    }
-    
     /**
      * Extrait le nom d'utilisateur (email) du token
      */

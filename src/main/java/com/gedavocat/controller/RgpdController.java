@@ -127,7 +127,6 @@ public class RgpdController {
                     Map<String, Object> logMap = new LinkedHashMap<>();
                     logMap.put("action", log.getAction());
                     logMap.put("details", log.getDetails());
-                    logMap.put("ipAddress", log.getIpAddress());
                     logMap.put("createdAt", log.getCreatedAt() != null ? log.getCreatedAt().toString() : null);
                     logsData.add(logMap);
                 }
@@ -216,12 +215,16 @@ public class RgpdController {
         try {
             List<Case> cases = caseRepository.findByLawyerId(user.getId());
             for (Case c : cases) {
+                // SEC FIX F-08 : anonymiser aussi le nom et la description du dossier
+                c.setName("Dossier supprimé");
+                c.setDescription(null);
                 var docs = documentRepository.findByCaseIdAndNotDeleted(c.getId());
                 for (var doc : docs) {
                     doc.setOriginalName("deleted_document");
                 }
                 documentRepository.saveAll(docs);
             }
+            caseRepository.saveAll(cases);
         } catch (Exception e) {
             log.warn("Erreur anonymisation documents RGPD: {}", e.getMessage());
         }

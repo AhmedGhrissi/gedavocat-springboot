@@ -250,13 +250,6 @@
 			<version>7.4</version>
 		</dependency>
 
-		<!-- Bucket4j (Rate Limiting) -->
-		<dependency>
-			<groupId>com.bucket4j</groupId>
-			<artifactId>bucket4j-core</artifactId>
-			<version>8.7.0</version>
-		</dependency>
-
 		<!-- TOTP (Two-Factor Authentication, alternative to Google Auth) -->
 		<dependency>
 			<groupId>dev.samstevens.totp</groupId>

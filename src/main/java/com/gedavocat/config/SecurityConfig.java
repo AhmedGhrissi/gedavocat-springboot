@@ -5,6 +5,7 @@ import com.gedavocat.security.SubscriptionEnforcementFilter;
 import com.gedavocat.security.UserDetailsServiceImpl;
 import com.gedavocat.security.AccountLockoutService;
 import com.gedavocat.repository.UserRepository;
+import com.gedavocat.security.mfa.MultiFactorAuthenticationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -38,6 +39,7 @@ public class SecurityConfig {
 	private final SubscriptionEnforcementFilter subscriptionFilter;
 	private final AccountLockoutService accountLockoutService;
 	private final UserRepository userRepository;
+	private final MultiFactorAuthenticationService mfaService;
 
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -60,6 +62,7 @@ public class SecurityConfig {
 						"/api/auth/**", "/css/**", "/js/**", "/images/**", "/img/**", "/favicon.ico", "/favicon.svg",
 						"/robots.txt", "/sitemap.xml", "/webjars/**", "/.well-known/**",
 							"/forgot-password", "/reset-password", "/verify-email", "/verify-email/resend",
+							"/mfa-challenge",
 							"/clients/accept-invitation",
 							"/collaborators/accept-invitation", "/collaborators/invitation-info",
 						"/huissiers/accept-invitation", "/huissiers/invitation-info",
@@ -106,14 +109,14 @@ public class SecurityConfig {
 							// les pages dans un iframe same-origin. Clickjacking reste bloqué.
 							h.frameOptions(f -> f.sameOrigin());
 							h.contentTypeOptions(Customizer.withDefaults());
-							// HSTS : 6 mois sans preload ni includeSubDomains.
-							// preload empêche les proxys corporate SSL-inspection de fonctionner
-							// (le navigateur refuse toute connexion non-HTTPS même via proxy MITM légal).
-							// includeSubDomains peut bloquer des sous-domaines futurs derrière un proxy.
+							// HSTS : 1 an, includeSubDomains + preload (niveau bancaire ANSSI/OWASP).
+							// Preload permet d'inscrire le domaine dans la liste HSTS des navigateurs,
+							// includeSubDomains protège tous les sous-domaines.
+							// Valeur min pour preload list : 31536000 (1 an).
 							h.httpStrictTransportSecurity(hsts -> hsts
-									.includeSubDomains(false)
-									.preload(false)
-									.maxAgeInSeconds(15768000)); // 6 mois (compromis sécurité/compatibilité)
+									.includeSubDomains(true)
+									.preload(true)
+									.maxAgeInSeconds(31536000)); // 1 an (niveau bancaire sécurité/compatibilité)
 							h.referrerPolicy(r -> r.policy(
 									ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN));
 							// Permissions-Policy déprécié dans Spring Security 6.4+ - fonctionnalité retirée
@@ -158,8 +161,27 @@ public class SecurityConfig {
 								java.util.Set<String> roles = new java.util.HashSet<>();
 								authentication.getAuthorities().forEach(a -> roles.add(a.getAuthority()));
 								if (roles.contains("ROLE_ADMIN")) {
-									response.sendRedirect("/admin");
-									return;
+									// SEC FIX F-06 : vérifier MFA avant accès admin
+									var optAdmin = userRepository.findByEmail(authentication.getName());
+									if (optAdmin.isPresent()) {
+										var adminUser = optAdmin.get();
+										if (mfaService.requiresMFA(adminUser) && adminUser.isMfaEnabled()) {
+											var mfaSession = request.getSession(true);
+											mfaSession.setAttribute("MFA_PENDING_EMAIL", authentication.getName());
+											mfaSession.setAttribute("MFA_TARGET_URL", "/admin");
+											org.springframework.security.core.context.SecurityContextHolder.clearContext();
+											mfaSession.removeAttribute(org.springframework.security.web.context.HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);
+											response.sendRedirect("/mfa-challenge");
+											return;
+										}
+										response.sendRedirect("/admin");
+										return;
+									} else {
+										// SEC FIX N-01 : admin introuvable en DB — invalider la session, bloquer l'accès
+										request.getSession().invalidate();
+										response.sendError(403);
+										return;
+									}
 								}
 								if (roles.contains("ROLE_CLIENT")) {
 									response.sendRedirect("/my-cases");

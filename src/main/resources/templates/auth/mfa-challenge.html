@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vérification à deux facteurs — DocAvocat</title>
+    <meta name="theme-color" content="#1E3A5F">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/pages/auth.css?v=20260305b">
+</head>
+<body>
+<div class="auth-container">
+    <div class="auth-box">
+        <div class="auth-header">
+            <div class="brand-icon"><i class="fas fa-shield-halved"></i></div>
+            <h2>Authentification à deux facteurs</h2>
+            <p class="text-muted">
+                Saisissez le code à 6 chiffres généré par votre application d'authentification
+                (Google Authenticator, Authy, etc.)
+            </p>
+        </div>
+
+        <!-- Alertes -->
+        <div th:if="${error}" class="alert alert-danger">
+            <i class="fas fa-exclamation-circle"></i>
+            <span th:text="${error}"></span>
+        </div>
+
+        <!-- Formulaire TOTP -->
+        <form th:action="@{/mfa-challenge}" method="post" id="mfaForm">
+            <input type="hidden" name="code" id="hiddenCode">
+
+            <div class="code-inputs mb-4" id="codeBoxes">
+                <input type="text" inputmode="numeric" maxlength="1" class="digit" autofocus>
+                <input type="text" inputmode="numeric" maxlength="1" class="digit">
+                <input type="text" inputmode="numeric" maxlength="1" class="digit">
+                <input type="text" inputmode="numeric" maxlength="1" class="digit">
+                <input type="text" inputmode="numeric" maxlength="1" class="digit">
+                <input type="text" inputmode="numeric" maxlength="1" class="digit">
+            </div>
+
+            <div class="d-grid mb-3">
+                <button type="submit" class="btn btn-primary btn-lg" id="submitBtn" disabled>
+                    <i class="fas fa-check me-2"></i> Vérifier
+                </button>
+            </div>
+        </form>
+
+        <div class="text-center">
+            <a th:href="@{/login}" class="text-muted text-decoration-none small">
+                <i class="fas fa-arrow-left me-1"></i> Retour à la connexion
+            </a>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script th:attr="nonce=${cspNonce}">
+const digits = document.querySelectorAll('.digit');
+const submitBtn = document.getElementById('submitBtn');
+const hiddenCode = document.getElementById('hiddenCode');
+
+digits.forEach((input, idx) => {
+    input.addEventListener('input', () => {
+        input.value = input.value.replace(/\D/, '');
+        if (input.value && idx < digits.length - 1) digits[idx + 1].focus();
+        updateCode();
+    });
+    input.addEventListener('keydown', e => {
+        if (e.key === 'Backspace' && !input.value && idx > 0) digits[idx - 1].focus();
+    });
+    input.addEventListener('paste', e => {
+        e.preventDefault();
+        const pasted = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '');
+        [...pasted.slice(0, 6)].forEach((ch, i) => { if (digits[i]) digits[i].value = ch; });
+        updateCode();
+        digits[Math.min(pasted.length, 5)].focus();
+    });
+});
+
+function updateCode() {
+    const code = [...digits].map(d => d.value).join('');
+    hiddenCode.value = code;
+    submitBtn.disabled = code.length < 6;
+}
+
+(function() {
+    var saved = localStorage.getItem('theme');
+    if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+    }
+})();
+</script>
+</body>
+</html>

@@ -8,7 +8,7 @@ import com.gedavocat.service.AuthService;
 import com.gedavocat.service.BarreauService;
 import com.gedavocat.service.EmailVerificationService;
 import com.gedavocat.security.JwtBlacklistService;
-import com.gedavocat.security.JwtService;
+import com.gedavocat.security.JwtServiceRS256;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,7 +37,7 @@ public class AuthController {
     private final EmailVerificationService emailVerificationService;
     private final UserRepository userRepository;
     private final JwtBlacklistService jwtBlacklistService;
-    private final JwtService jwtService;
+    private final JwtServiceRS256 jwtService;
 
     /**
      * Page de connexion
@@ -89,9 +89,9 @@ public class AuthController {
             Model model,
             RedirectAttributes redirectAttributes
     ) {
-        log.info("🔵 POST /register - Tentative d'inscription pour email: {}", request.getEmail());
-        log.debug("📋 Données reçues: firstName={}, lastName={}, plan={}, billing={}",
-            request.getFirstName(), request.getLastName(), request.getSubscriptionPlan(), billing);
+        log.info("🔵 POST /register - Tentative d'inscription (email masqué pour RGPD)");
+        log.debug("📋 Données reçues: plan={}, billing={}",
+            request.getSubscriptionPlan(), billing);
 
         // Validation personnalisée : vérifier que les mots de passe correspondent
         if (request.getPassword() != null && request.getConfirmPassword() != null
@@ -128,7 +128,7 @@ public class AuthController {
 
             // Envoyer le code de vérification et rediriger
             String email = request.getEmail().trim().toLowerCase();
-            log.info("📧 Envoi du code de vérification à: {}", email);
+            log.info("📧 Envoi du code de vérification (email masqué pour RGPD)");
             emailVerificationService.generateAndSend(email);
 
             redirectAttributes.addFlashAttribute("info",
@@ -245,7 +245,7 @@ public class AuthController {
                     org.springframework.security.web.context.HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
                     org.springframework.security.core.context.SecurityContextHolder.getContext());
 
-                log.info("Auto-login réussi pour {} — redirection vers /login", emailLower);
+                log.info("Auto-login réussi (email masqué pour RGPD) — redirection vers /login");
                 ra.addFlashAttribute("success", "Votre compte a été créé avec succès ! Vous pouvez maintenant vous connecter.");
                 return "redirect:/login";
             } catch (Exception e) {

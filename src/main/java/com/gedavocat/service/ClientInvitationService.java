@@ -69,7 +69,7 @@ public class ClientInvitationService {
         clientRepository.save(client);
 
         sendInvitationEmail(client.getEmail(), client.getName(), lawyerFullName, token);
-        log.info("[ClientInvitation] Invitation envoyée à {} (token: {})", client.getEmail(), token);
+        log.info("[ClientInvitation] Invitation envoyée (email/token masqués pour RGPD)");
     }
 
     /**

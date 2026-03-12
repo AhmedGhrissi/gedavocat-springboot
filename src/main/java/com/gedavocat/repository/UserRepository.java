@@ -3,9 +3,11 @@ package com.gedavocat.repository;
 import com.gedavocat.model.User;
 import com.gedavocat.model.User.UserRole;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -119,4 +121,22 @@ public interface UserRepository extends JpaRepository<User, String> {
      */
     @Query("SELECT u FROM User u WHERE u.firm.id = :firmId AND (u.role = 'LAWYER' OR u.role = 'LAWYER_SECONDARY' OR u.role = 'AVOCAT_ADMIN')")
     List<User> findLawyersByFirmId(@Param("firmId") String firmId);
+
+    /**
+     * SEC RGPD F-11 : Nettoie les tokens de réinitialisation expirés.
+     * Utilisé par RgpdPurgeScheduler pour minimiser les données sensibles (Art. 5 RGPD).
+     */
+    @Modifying
+    @Transactional
+    @Query("UPDATE User u SET u.resetToken = NULL, u.resetTokenExpiry = NULL WHERE u.resetTokenExpiry < :cutoff AND u.resetToken IS NOT NULL")
+    int clearExpiredResetTokens(@Param("cutoff") LocalDateTime cutoff);
+
+    /**
+     * SEC RGPD N-13 : Désactive les comptes inactifs depuis plus de 24 mois (Art. 5.1.e RGPD).
+     * Exclut les comptes ADMIN et les comptes déjà désactivés.
+     */
+    @Modifying
+    @Transactional
+    @Query("UPDATE User u SET u.accountEnabled = false WHERE u.accountEnabled = true AND u.role != 'ADMIN' AND (u.lastLogin < :cutoff OR (u.lastLogin IS NULL AND u.createdAt < :cutoff))")
+    int disableInactiveAccounts(@Param("cutoff") LocalDateTime cutoff);
 }

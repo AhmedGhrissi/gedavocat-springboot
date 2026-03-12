@@ -142,9 +142,12 @@ public class DocumentService {
         }
         
         // SEC FIX H-11 : validation des magic bytes (premiers octets) pour vérifier le contenu réel du fichier
+        // SEC FIX F-18 : readNBytes() garantit la lecture complète (InputStream.read() peut retourner moins)
         try {
-            byte[] header = new byte[Math.min(8, (int) file.getSize())];
-            file.getInputStream().read(header);
+            byte[] header;
+            try (java.io.InputStream magicStream = file.getInputStream()) {
+                header = magicStream.readNBytes(8);
+            }
             if (!validateMagicBytes(header, fileExtension)) {
                 throw new RuntimeException("Le contenu du fichier ne correspond pas à son extension");
             }
@@ -255,7 +258,20 @@ public class DocumentService {
             if (mimeType == null || !ALLOWED_MIMETYPES.contains(mimeType.toLowerCase())) {
                 throw new RuntimeException("Type MIME non autorisé: " + mimeType);
             }
-            
+
+            // SEC FIX F-18 : validation magic bytes également dans uploadNewVersion (absent avant correction)
+            try {
+                byte[] header;
+                try (java.io.InputStream magicStream = file.getInputStream()) {
+                    header = magicStream.readNBytes(8);
+                }
+                if (!validateMagicBytes(header, fileExtension)) {
+                    throw new RuntimeException("Le contenu du fichier ne correspond pas à son extension");
+                }
+            } catch (IOException e) {
+                throw new RuntimeException("Erreur lors de la validation du fichier", e);
+            }
+
             String uniqueFilename = UUID.randomUUID().toString() + fileExtension;
             Path filePath = uploadPath.resolve(uniqueFilename).normalize();
             // SECURITE: Vérification path traversal
