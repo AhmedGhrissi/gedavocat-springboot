@@ -128,7 +128,7 @@ audit-code-security:
   script:
     - echo "=== DEBUG: listing fichiers racine ==="
     - ls -l .
-    - 'if [ ! -f ./audit-security.sh ]; then echo "ERREUR: Le script audit-security.sh est introuvable à la racine du repo !"; exit 1; fi'
+    - if [ ! -f ./audit-security.sh ]; then echo "ERREUR: Le script audit-security.sh est introuvable à la racine du repo !"; exit 1; fi
     - chmod +x ./audit-security.sh
     - ./audit-security.sh
   artifacts:
