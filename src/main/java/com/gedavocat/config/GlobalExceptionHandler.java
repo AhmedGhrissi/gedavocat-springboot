@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.NoHandlerFoundException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -45,6 +46,20 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(NoHandlerFoundException.class)
     public Object handleNotFound(NoHandlerFoundException ex, HttpServletRequest request, HttpServletResponse response) {
+        if (isApiRequest(request)) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "Ressource non trouvée", "status", 404));
+        }
+        ModelAndView mav = new ModelAndView("error");
+        mav.addObject("status", "404 - Page non trouvée");
+        mav.addObject("message", "La page demandée n'existe pas.");
+        mav.setStatus(HttpStatus.NOT_FOUND);
+        try { response.setStatus(HttpStatus.NOT_FOUND.value()); } catch (Exception ignored) {}
+        return mav;
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public Object handleNoResource(NoResourceFoundException ex, HttpServletRequest request, HttpServletResponse response) {
         if (isApiRequest(request)) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("error", "Ressource non trouvée", "status", 404));

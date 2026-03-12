@@ -31,4 +31,14 @@ public class LegalController {
         model.addAttribute("title", "Conditions Générales d'Utilisation");
         return "legal/terms";
     }
+
+    /**
+     * CGU — alias français de /legal/terms
+     */
+    @GetMapping("/cgu")
+    public String showCgu(Model model) {
+        model.addAttribute("page", "legal");
+        model.addAttribute("title", "Conditions Générales d'Utilisation");
+        return "legal/terms";
+    }
 }
