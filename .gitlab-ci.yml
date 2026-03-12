@@ -453,6 +453,23 @@ deploy:
 
       echo "=== Deploiement Blue/Green termine : ${IDLE_SLOT}:${IDLE_PORT} est actif ==="
       ENDSSH
+    - |
+      # Purge cache Cloudflare après déploiement
+      if [ -n "${CLOUDFLARE_API_TOKEN:-}" ] && [ -n "${CLOUDFLARE_ZONE_ID:-}" ]; then
+        echo "Purge cache Cloudflare..."
+        HTTP=$(curl -sf -o /dev/null -w "%{http_code}" -X POST \
+          "https://api.cloudflare.com/client/v4/zones/${CLOUDFLARE_ZONE_ID}/purge_cache" \
+          -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+          -H "Content-Type: application/json" \
+          -d '{"purge_everything":true}' || echo "000")
+        if [ "$HTTP" = "200" ]; then
+          echo "Cache Cloudflare purgé (HTTP 200)"
+        else
+          echo "WARN: Purge Cloudflare HTTP $HTTP (non bloquant)"
+        fi
+      else
+        echo "CLOUDFLARE_API_TOKEN ou CLOUDFLARE_ZONE_ID absent — purge ignorée"
+      fi
   after_script:
     - *discord_deploy_notify
 
