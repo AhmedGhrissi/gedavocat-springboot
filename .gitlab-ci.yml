@@ -1,52 +1,26 @@
 # ============================================================
-# DocAvocat — Pipeline CI/CD GitLab
+# DocAvocat - Pipeline CI/CD GitLab
 #
 # COMPORTEMENT PAR BRANCHE :
-#
-#   Branche feature (ex: JC, dev, fix/...)  push :
-#     -> security + build + test automatiques
-#     -> JAMAIS de package ou deploy
-#
-#   Branche main  push automatique :
-#     -> AUCUN pipeline (protege la prod des pushs accidentels)
-#
-#   Branche main  Run pipeline MANUEL (GitLab UI) :
-#     -> security -> build -> test -> package -> deploy (manuel)
-#     -> Notifications Discord a chaque etape
-#
-# WORKFLOW RECOMMANDE :
-#   1. Developper sur une branche feature
-#   2. Push -> CI valide automatiquement (security + build + test)
-#   3. Merge Request -> review -> merge dans main
-#   4. GitLab -> CI/CD -> Pipelines -> "Run pipeline" sur main
-#   5. Suivre les etapes, cliquer Play sur deploy pour mettre en prod
+#   Branche feature : security + build + test automatiques
+#   Branche main push : AUCUN pipeline (protege la prod)
+#   Branche main Run pipeline MANUEL : security -> build -> test -> package -> deploy
 #
 # VARIABLES GITLAB (Settings > CI/CD > Variables) :
-#   SSH_PRIVATE_KEY  File     Protected    Cle privee SSH du serveur
-#   SSH_KNOWN_HOSTS  Variable Protected    Fingerprints serveur (ssh-keyscan)
-#   ENV_PROD         File     Protected    Contenu du fichier .env prod
-#   DISCORD_WEBHOOK  Variable Masked       URL du webhook Discord
-#   NVD_API_KEY      Variable Protected    Cle API NVD (nvd.nist.gov — gratuit)
-#
-# VARIABLES OPTIONNELLES (Run pipeline > Variables) :
-#   SKIP_SECURITY    true     Pour tester rapidement sans scans (dev only)
-#   FAST_DEPLOY      true     Correctif rapide : skip scans securite + deploy auto (~15 min)
-#                             Workflow : GitLab -> Run pipeline sur main -> Variable FAST_DEPLOY=true
+#   SSH_PRIVATE_KEY  File     Protected
+#   SSH_KNOWN_HOSTS  Variable Protected
+#   ENV_PROD         File     Protected
+#   DISCORD_WEBHOOK  Variable Masked
 # ============================================================
 
-# Controle du declenchement des pipelines
 workflow:
   rules:
-    # main en push automatique -> bloque (protege la prod)
     - if: $CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE == "push"
       when: never
-    # main declenche manuellement (Run pipeline dans l'UI) -> OK
     - if: $CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE == "web"
       when: always
-    # Merge Requests -> security + build + test automatiques
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
       when: always
-    # Branches feature -> security + build + test automatiques
     - if: $CI_COMMIT_BRANCH && $CI_COMMIT_BRANCH != "main"
       when: always
 
@@ -60,15 +34,13 @@ variables:
   REMOTE_DIR: "/opt/docavocat"
 
 stages:
-  - security      # ← NOUVEAU — tolérance zéro, bloque tout si échec
+  - security
   - build
   - test
   - package
   - deploy
 
-# ──────────────────────────────────────────────────────────────────
-# ANCRES DISCORD (inchangées)
-# ──────────────────────────────────────────────────────────────────
+# ---- ANCRES DISCORD ----
 
 .discord_commit_notify: &discord_commit_notify
   - |
@@ -81,7 +53,7 @@ stages:
       AUTHOR="${GITLAB_USER_NAME:-CI}"
       SHA="${CI_COMMIT_SHORT_SHA:-????}"
       TITLE="${CI_COMMIT_TITLE:-}"
-      COMMIT_MSG=$(printf '%s' "$TITLE" | head -c 80 | sed 's/\\/\\\\/g; s/"/\\"/g; s/	/ /g')
+      COMMIT_MSG=$(printf '%s' "$TITLE" | head -c 80 | sed 's/\\/\\\\/g; s/"/\\"/g; s/\t/ /g')
       PAYLOAD=$(printf '{"embeds":[{"title":"%s %s","description":"**Branche :** `%s`\\n**Commit :** [`%s`](%s)\\n**Par :** %s\\n**Message :** %s\\n\\n[Logs job ->](%s/-/jobs/%s)","color":%s,"footer":{"text":"DocAvocat CI/CD"},"timestamp":"%s"}]}' \
         "$EMOJI" "$STATUS" \
         "$BRANCH" "$SHA" "$CI_PIPELINE_URL" "$AUTHOR" "$COMMIT_MSG" \
@@ -104,7 +76,7 @@ stages:
       AUTHOR="${GITLAB_USER_NAME:-CI}"
       SHA="${CI_COMMIT_SHORT_SHA:-????}"
       TITLE="${CI_COMMIT_TITLE:-}"
-      COMMIT_MSG=$(printf '%s' "$TITLE" | head -c 80 | sed 's/\\/\\\\/g; s/"/\\"/g; s/	/ /g')
+      COMMIT_MSG=$(printf '%s' "$TITLE" | head -c 80 | sed 's/\\/\\\\/g; s/"/\\"/g; s/\t/ /g')
       PAYLOAD=$(printf '{"embeds":[{"title":"%s %s","description":"**Branche :** `%s`\\n**Commit :** [`%s`](%s)\\n**Par :** %s\\n**Message :** %s\\n\\n[Logs job ->](%s/-/jobs/%s)","color":%s,"footer":{"text":"DocAvocat CI/CD"},"timestamp":"%s"}]}' \
         "$EMOJI" "$STATUS" \
         "$BRANCH" "$SHA" "$CI_PIPELINE_URL" "$AUTHOR" "$COMMIT_MSG" \
@@ -117,19 +89,15 @@ stages:
       echo "Discord deploy notify: HTTP $RESPONSE"
     fi
     true
-
-
-# ──────────────────────────────────────────────────────────────────
-# STAGE 0 : SECURITY (NOUVEAU — bloquant, toutes branches)
-# ──────────────────────────────────────────────────────────────────
+# ---- SECURITY ----
 
 audit-code-security:
   stage: security
   image: maven:3.9-eclipse-temurin-17
   script:
-    - echo "=== DEBUG: listing fichiers racine ==="
+    - echo "=== Audit securite du code ==="
     - ls -l .
-    - if [ ! -f ./audit-security.sh ]; then echo "ERREUR: Le script audit-security.sh est introuvable à la racine du repo !"; exit 1; fi
+    - test -f ./audit-security.sh || { echo "ERREUR audit-security.sh introuvable"; exit 1; }
     - chmod +x ./audit-security.sh
     - ./audit-security.sh
   artifacts:
@@ -147,7 +115,7 @@ owasp-dependency-check:
     paths:
       - security-reports/dependency-check-report.json
     when: always
-  allow_failure: false   # BLOQUANT — ne jamais changer
+  allow_failure: false
   cache:
     key: "maven-$CI_COMMIT_REF_SLUG"
     paths:
@@ -163,19 +131,14 @@ snyk-security-scan:
     - when: always
   before_script:
     - apt-get update -qq && apt-get install -yqq curl > /dev/null 2>&1 || true
-    # Install Snyk CLI (compatible ARM64)
     - curl -Lo /usr/local/bin/snyk https://static.snyk.io/cli/latest/snyk-linux || curl -Lo /usr/local/bin/snyk https://static.snyk.io/cli/latest/snyk-linux-arm64
     - chmod +x /usr/local/bin/snyk
   script:
-    - echo "========================================="
-    - echo "SNYK SECURITY SCAN — CVE + Code Analysis"
-    - echo "========================================="
+    - echo "SNYK SECURITY SCAN"
     - mkdir -p security-reports
     - |
       if [ -z "${SNYK_TOKEN:-}" ]; then
-        echo "SNYK_TOKEN non défini — scan ignoré"
-        echo "Pour activer : GitLab > Settings > CI/CD > Variables > SNYK_TOKEN"
-        echo "Obtenir token : https://app.snyk.io/account"
+        echo "SNYK_TOKEN non defini - scan ignore"
         exit 0
       fi
     - snyk auth $SNYK_TOKEN
@@ -184,9 +147,9 @@ snyk-security-scan:
   after_script:
     - |
       if [ "$CI_JOB_STATUS" = "success" ]; then
-        EMOJI="🛡️"; STATUS="Snyk OK — aucune vulnérabilité high/critical"; COLOR=3066993
+        EMOJI="[OK]"; STATUS="Snyk OK"; COLOR=3066993
       else
-        EMOJI="⚠️"; STATUS="Snyk détecté des vulnérabilités"; COLOR=16776960
+        EMOJI="[WARN]"; STATUS="Snyk vulnerabilites detectees"; COLOR=16776960
       fi
     - *discord_commit_notify
   artifacts:
@@ -195,13 +158,13 @@ snyk-security-scan:
     paths:
       - security-reports/snyk-report.json
     expire_in: 90 days
-  allow_failure: true   # Non bloquant (optionnel)
+  allow_failure: true
 
 trivy-security-scan:
   stage: security
   image:
     name: aquasec/trivy:latest
-    entrypoint: [""]  # Override pour permettre exécution shell normale (after_script Discord)
+    entrypoint: [""]
   rules:
     - if: '$SKIP_SECURITY == "true" || $FAST_DEPLOY == "true"'
       when: never
@@ -209,9 +172,7 @@ trivy-security-scan:
   before_script:
     - apk add --no-cache curl > /dev/null 2>&1 || true
   script:
-    - echo "========================================="
-    - echo "TRIVY SECURITY SCAN — Filesystem + Deps"
-    - echo "========================================="
+    - echo "TRIVY SECURITY SCAN"
     - trivy --version
     - mkdir -p security-reports
     - trivy fs --exit-code 0 --severity HIGH,CRITICAL --format json --output security-reports/trivy-report.json .
@@ -219,9 +180,9 @@ trivy-security-scan:
   after_script:
     - |
       if [ "$CI_JOB_STATUS" = "success" ]; then
-        EMOJI="🛡️"; STATUS="Trivy OK — aucune vulnérabilité critique"; COLOR=3066993
+        EMOJI="[OK]"; STATUS="Trivy OK"; COLOR=3066993
       else
-        EMOJI="🔴"; STATUS="Trivy détecté des vulnérabilités CRITICAL"; COLOR=15158332
+        EMOJI="[ALERT]"; STATUS="Trivy vulnerabilites CRITICAL"; COLOR=15158332
       fi
     - *discord_commit_notify
   artifacts:
@@ -232,9 +193,8 @@ trivy-security-scan:
     paths:
       - security-reports/trivy-report.json
     expire_in: 90 days
-  allow_failure: true   # Non bloquant (complémentaire)
+  allow_failure: true
 
-# ── Semgrep SAST (remplace CodeQL de GitHub Actions) ──────────
 semgrep-sast:
   stage: security
   image: semgrep/semgrep:latest
@@ -243,18 +203,16 @@ semgrep-sast:
       when: never
     - when: always
   script:
-    - echo "========================================="
-    - echo "SEMGREP SAST — Analyse statique du code"
-    - echo "========================================="
+    - echo "SEMGREP SAST"
     - mkdir -p security-reports
     - semgrep scan --config auto --config p/java --config p/owasp-top-ten --config p/secrets --json --output security-reports/semgrep-report.json . || true
     - semgrep scan --config auto --config p/java --config p/owasp-top-ten --config p/secrets --error --severity ERROR .
   after_script:
     - |
       if [ "$CI_JOB_STATUS" = "success" ]; then
-        EMOJI="[SAST]"; STATUS="Semgrep SAST OK — aucune faille critique"; COLOR=3066993
+        EMOJI="[SAST]"; STATUS="Semgrep SAST OK"; COLOR=3066993
       else
-        EMOJI="[ALERT]"; STATUS="Semgrep SAST — faille critique détectée !"; COLOR=15158332
+        EMOJI="[ALERT]"; STATUS="Semgrep SAST faille critique"; COLOR=15158332
       fi
     - *discord_commit_notify
   artifacts:
@@ -265,25 +223,40 @@ semgrep-sast:
     expire_in: 90 days
   allow_failure: true
 
-# ──────────────────────────────────────────────────────────────────
-# STAGE 1 : BUILD (inchangé + needs security)
-# ──────────────────────────────────────────────────────────────────
+gitleaks-secrets:
+  stage: security
+  image: zricethezav/gitleaks:latest
+  script:
+    - gitleaks detect --source . --report-format json --report-path security-reports/gitleaks.json || true
+  artifacts:
+    paths:
+      - security-reports/gitleaks.json
+    when: always
+  allow_failure: true
 
-# ── SBOM — CycloneDX (Software Bill of Materials) ─────────────
-# Requis : EU Cyber Resilience Act (CRA), NIST SSDF, EO 14028
+rgpd-check:
+  stage: security
+  image: alpine:3.19
+  script:
+    - mkdir -p security-reports
+    - grep -i -r 'dpo\|rgpd\|cnil\|retention\|effacement' . > security-reports/rgpd-grep.txt || true
+  artifacts:
+    paths:
+      - security-reports/rgpd-grep.txt
+    when: always
+  allow_failure: true
+# ---- BUILD ----
+
 sbom-generate:
   stage: build
   image: maven:3.9-eclipse-temurin-17
   rules:
     - if: $CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE == "web"
   script:
-    - echo "========================================="
-    - echo "SBOM — CycloneDX (Supply Chain Security)"
-    - echo "========================================="
+    - echo "SBOM CycloneDX"
     - mkdir -p security-reports
     - mvn $MAVEN_CLI_OPTS org.cyclonedx:cyclonedx-maven-plugin:makeAggregateBom -DoutputFormat=json -DoutputName=sbom
     - cp target/sbom.json security-reports/sbom-cyclonedx.json
-    - echo "SBOM generated — $(jq '.components | length' security-reports/sbom-cyclonedx.json 2>/dev/null || echo '?') components"
   artifacts:
     name: "sbom-$CI_COMMIT_SHORT_SHA"
     paths:
@@ -298,197 +271,6 @@ sbom-generate:
 build:
   stage: build
   image: maven:3.9-eclipse-temurin-17
-  needs: 
-    - job: audit-code-security
-      optional: true   # N'attend pas si SKIP_SECURITY=true
-    - job: owasp-dependency-check
-      optional: true   # N'attend pas si SKIP_SECURITY=true
-    - job: snyk-security-scan
-      optional: true   # N'attend pas si SNYK_TOKEN non défini
-    - job: trivy-security-scan
-      optional: true   # N'attend pas si SKIP_SECURITY=true
-  before_script:
-    - apt-get update -qq && apt-get install -yqq curl > /dev/null 2>&1 || true
-    - |
-      WEBHOOK="${DISCORD_WEBHOOK:-${DISCORD_COMMIT_WEBHOOK:-}}"
-      [ -z "$WEBHOOK" ] && true || {
-        BRANCH="${CI_COMMIT_BRANCH:-MR}"
-        AUTHOR="${GITLAB_USER_NAME:-CI}"
-        SHA="${CI_COMMIT_SHORT_SHA:-????}"
-        TITLE="${CI_COMMIT_TITLE:-}"
-        COMMIT_MSG=$(printf '%s' "$TITLE" | head -c 80 | sed 's/\\/\\\\/g; s/"/\\"/g; s/	/ /g')
-        if [ "$BRANCH" = "main" ]; then
-          SCOPE="branche main - pipeline complet (security -> build -> test -> package -> deploy)"
-        else
-          SCOPE="branche feature - security + build + test uniquement"
-        fi
-        PAYLOAD=$(printf '{"embeds":[{"title":"[START] Pipeline demarre","description":"**Branche :** `%s`\\n**Commit :** [`%s`](%s)\\n**Par :** %s\\n**Message :** %s\\n**Scope :** %s","color":16776960,"footer":{"text":"DocAvocat CI/CD"},"timestamp":"%s"}]}' \
-          "$BRANCH" "$SHA" "$CI_PIPELINE_URL" "$AUTHOR" "$COMMIT_MSG" "$SCOPE" "$(date -u '+%Y-%m-%dT%H:%M:%SZ')")
-        RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$WEBHOOK" \
-             -H "Content-Type: application/json" \
-             -d "$PAYLOAD")
-        echo "Discord pipeline-start: HTTP $RESPONSE"
-      }
-  script:
-    - echo "========================================="
-    - echo "COMPILATION MAVEN"
-    - echo "========================================="
-    - |
-      if ! mvn $MAVEN_CLI_OPTS compile; then
-        echo ""
-        echo "ERREUR: La compilation Maven a echoue!"
-        echo ""
-        echo "--- Derniers messages d'erreur ---"
-        tail -100 target/*.log 2>/dev/null || echo "Pas de fichier log trouve"
-        exit 1
-      fi
-      echo ""
-      echo "✓ Compilation reussie"
-  after_script:
-    - |
-      if [ "$CI_JOB_STATUS" = "success" ]; then
-        EMOJI="[OK]"; STATUS="Build compile avec succes"; COLOR=3066993
-      else
-        EMOJI="[FAIL]"; STATUS="ECHEC de compilation - voir logs"; COLOR=15158332
-      fi
-      JOB_NAME="Build Maven"
-    - *discord_commit_notify
-  cache:
-    key: "maven-$CI_COMMIT_REF_SLUG"
-    paths:
-      - .m2/repository/
-
-# ──────────────────────────────────────────────────────────────────
-# STAGE 2 : TEST (inchangé)
-# ──────────────────────────────────────────────────────────────────
-
-# ============================================================
-# DocAvocat — Pipeline CI/CD sécurisé et conforme (prod)
-# ============================================================
-
-# ──────────────────────────────────────────────
-# PIPELINE STAGES
-# ──────────────────────────────────────────────
-stages:
-  - security
-  - lint
-  - build
-  - test
-  - e2e
-  - package
-  - compliance
-  - deploy
-# ──────────────── LINTING (Checkstyle/Spotless) ────────────────
-lint:
-  stage: lint
-  image: maven:3.9-eclipse-temurin-17
-  script:
-    - mvn $MAVEN_CLI_OPTS spotless:check || mvn $MAVEN_CLI_OPTS checkstyle:check
-  allow_failure: false
-  after_script:
-    - |
-      if [ "$CI_JOB_STATUS" != "success" ] && [ -n "${DISCORD_WEBHOOK:-}" ]; then
-        curl -s -X POST "$DISCORD_WEBHOOK" \
-          -H "Content-Type: application/json" \
-          -d "{\"content\":\"❌ [CI/CD] Lint failed ($CI_JOB_NAME) sur $CI_COMMIT_REF_NAME. $CI_PIPELINE_URL\"}"
-      fi
-# ──────────────── GITLEAKS (Secrets scanning) ────────────────
-gitleaks-secrets:
-  stage: security
-  image: zricethezav/gitleaks:latest
-  script:
-    - gitleaks detect --source . --report-format json --report-path security-reports/gitleaks.json || true
-  artifacts:
-    paths:
-      - security-reports/gitleaks.json
-    when: always
-  allow_failure: true
-# ──────────────── E2E TESTS (Playwright) ────────────────
-e2e-playwright:
-  stage: e2e
-  image: mcr.microsoft.com/playwright:v1.43.1-focal
-  needs: [build]
-  script:
-    - cd e2e
-    - npm ci
-    - npx playwright install --with-deps
-    - npx playwright test
-  artifacts:
-    paths:
-      - e2e/playwright-report/
-      - e2e/test-results/
-    when: always
-  allow_failure: false
-  after_script:
-    - |
-      if [ "$CI_JOB_STATUS" != "success" ] && [ -n "${DISCORD_WEBHOOK:-}" ]; then
-        curl -s -X POST "$DISCORD_WEBHOOK" \
-          -H "Content-Type: application/json" \
-          -d "{\"content\":\"❌ [CI/CD] E2E Playwright failed ($CI_JOB_NAME) sur $CI_COMMIT_REF_NAME. $CI_PIPELINE_URL\"}"
-      fi
-# ──────────────── LICENSE COMPLIANCE ────────────────
-license-compliance:
-  stage: compliance
-  image: maven:3.9-eclipse-temurin-17
-  script:
-    - mvn $MAVEN_CLI_OPTS license:check || echo "License check failed"
-  allow_failure: true
-  artifacts:
-    when: always
-    paths:
-      - target/site/
-
-variables:
-  MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
-  MAVEN_CLI_OPTS: "--batch-mode --no-transfer-progress"
-  REMOTE_DIR: "/opt/docavocat"
-
-# ──────────────── SÉCURITÉ (bloquant) ────────────────
-sast:
-  stage: security
-  image: returntocorp/semgrep:latest
-  script:
-    - semgrep scan --config auto --json --output security-reports/semgrep.json .
-  artifacts:
-    paths:
-      - security-reports/semgrep.json
-    when: always
-  allow_failure: false
-  after_script:
-    - |
-      if [ "$CI_JOB_STATUS" != "success" ] && [ -n "${DISCORD_WEBHOOK:-}" ]; then
-        curl -s -X POST "$DISCORD_WEBHOOK" \
-          -H "Content-Type: application/json" \
-          -d "{\"content\":\"❌ [CI/CD] SAST failed ($CI_JOB_NAME) sur $CI_COMMIT_REF_NAME. $CI_PIPELINE_URL\"}"
-      fi
-
-trufflehog-secrets:
-  stage: security
-  image: python:3.11
-  script:
-    - pip install trufflehog
-    - trufflehog filesystem --directory . --json > security-reports/trufflehog.json || true
-  artifacts:
-    paths:
-      - security-reports/trufflehog.json
-    when: always
-  allow_failure: true
-
-owasp-dependency-check:
-  stage: security
-  image: owasp/dependency-check:latest
-  script:
-    - dependency-check.sh --project "gedavocat" --scan . --format "JSON" --out security-reports/
-  artifacts:
-    paths:
-      - security-reports/dependency-check-report.json
-    when: always
-  allow_failure: false
-
-# ──────────────── BUILD ────────────────
-build:
-  stage: build
-  image: maven:3.9-eclipse-temurin-17
   needs:
     - job: audit-code-security
       optional: true
@@ -500,8 +282,6 @@ build:
       optional: true
     - job: gitleaks-secrets
       optional: true
-    - job: lint
-      optional: true
   before_script:
     - apt-get update -qq && apt-get install -yqq curl > /dev/null 2>&1 || true
     - |
@@ -511,11 +291,11 @@ build:
         AUTHOR="${GITLAB_USER_NAME:-CI}"
         SHA="${CI_COMMIT_SHORT_SHA:-????}"
         TITLE="${CI_COMMIT_TITLE:-}"
-        COMMIT_MSG=$(printf '%s' "$TITLE" | head -c 80 | sed 's/\\/\\\\/g; s/"/\\"/g; s/	/ /g')
+        COMMIT_MSG=$(printf '%s' "$TITLE" | head -c 80 | sed 's/\\/\\\\/g; s/"/\\"/g; s/\t/ /g')
         if [ "$BRANCH" = "main" ]; then
-          SCOPE="branche main - pipeline complet (security -> build -> test -> package -> deploy)"
+          SCOPE="branche main - pipeline complet"
         else
-          SCOPE="branche feature - security + build + test uniquement"
+          SCOPE="branche feature - security + build + test"
         fi
         PAYLOAD=$(printf '{"embeds":[{"title":"[START] Pipeline demarre","description":"**Branche :** `%s`\\n**Commit :** [`%s`](%s)\\n**Par :** %s\\n**Message :** %s\\n**Scope :** %s","color":16776960,"footer":{"text":"DocAvocat CI/CD"},"timestamp":"%s"}]}' \
           "$BRANCH" "$SHA" "$CI_PIPELINE_URL" "$AUTHOR" "$COMMIT_MSG" "$SCOPE" "$(date -u '+%Y-%m-%dT%H:%M:%SZ')")
@@ -525,165 +305,33 @@ build:
         echo "Discord pipeline-start: HTTP $RESPONSE"
       }
   script:
-    - echo "========================================="
     - echo "COMPILATION MAVEN"
-    - echo "========================================="
     - |
       if ! mvn $MAVEN_CLI_OPTS compile; then
-        echo ""
         echo "ERREUR: La compilation Maven a echoue!"
-        echo ""
-        echo "--- Derniers messages d'erreur ---"
-        tail -100 target/*.log 2>/dev/null || echo "Pas de fichier log trouve"
         exit 1
       fi
-      echo ""
-      echo "✓ Compilation reussie"
+      echo "Compilation reussie"
   after_script:
     - |
       if [ "$CI_JOB_STATUS" = "success" ]; then
         EMOJI="[OK]"; STATUS="Build compile avec succes"; COLOR=3066993
       else
-        EMOJI="[FAIL]"; STATUS="ECHEC de compilation - voir logs"; COLOR=15158332
+        EMOJI="[FAIL]"; STATUS="ECHEC de compilation"; COLOR=15158332
       fi
-      JOB_NAME="Build Maven"
     - *discord_commit_notify
   cache:
     key: "maven-$CI_COMMIT_REF_SLUG"
     paths:
       - .m2/repository/
 
-# ──────────────── TEST ────────────────
+# ---- TEST ----
+
 test:
   stage: test
   image: maven:3.9-eclipse-temurin-17
-  needs: [build]
-  script:
-    - mvn $MAVEN_CLI_OPTS test
-  artifacts:
-    paths:
-      - target/surefire-reports/
-    when: always
-  allow_failure: false
-  after_script:
-    - |
-      if [ "$CI_JOB_STATUS" != "success" ] && [ -n "${DISCORD_WEBHOOK:-}" ]; then
-        curl -s -X POST "$DISCORD_WEBHOOK" \
-          -H "Content-Type: application/json" \
-          -d "{\"content\":\"❌ [CI/CD] Tests failed ($CI_JOB_NAME) sur $CI_COMMIT_REF_NAME. $CI_PIPELINE_URL\"}"
-      fi
-
-# ──────────────── DEPLOY (manuel, prod) ────────────────
-deploy:
-  stage: deploy
-  image: alpine:3.19
-  needs: [package]
-  before_script:
-    - apk add --no-cache openssh-client curl
-    - eval $(ssh-agent -s)
-    - tr -d '\r' < "$SSH_PRIVATE_KEY" > /tmp/id_rsa
-    - chmod 600 /tmp/id_rsa
-    - ssh-add /tmp/id_rsa
-    - mkdir -p ~/.ssh && chmod 700 ~/.ssh
-    - echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
-    - chmod 644 ~/.ssh/known_hosts
-  script:
-    - scp target/*.jar root@$SERVER_HOST:$REMOTE_DIR/app.jar
-    - ssh root@$SERVER_HOST "systemctl restart docavocat-app"
-  when: manual
-  allow_failure: false
-  after_script:
-    - |
-      if [ "$CI_JOB_STATUS" != "success" ] && [ -n "${DISCORD_WEBHOOK:-}" ]; then
-        curl -s -X POST "$DISCORD_WEBHOOK" \
-          -H "Content-Type: application/json" \
-          -d "{\"content\":\"❌ [CI/CD] Deploy failed ($CI_JOB_NAME) sur $CI_COMMIT_REF_NAME. $CI_PIPELINE_URL\"}"
-      fi
-
-# ──────────────── DAST ZAP (post-deploy) ────────────────
-dast-zap-baseline:
-  stage: deploy
-  image:
-    name: ghcr.io/zaproxy/zaproxy:stable
-    entrypoint: [""]
-  needs: ["deploy"]
-  variables:
-    GIT_STRATEGY: none
-  script:
-    - echo "=== OWASP ZAP Baseline Scan ==="
-    - echo "Cible — https://docavocat.fr"
-    - |
-      mkdir -p /zap/wrk
-      zap-baseline.py \
-        -t https://docavocat.fr \
-        -r zap-report.html \
-        -J zap-report.json \
-        -c zap-baseline.conf \
-        -I \
-        || true
-    - echo "=== Scan termine ==="
-    - |
-      if [ -f /zap/wrk/zap-report.json ]; then
-        ALERTS=$(python3 -c "import json; d=json.load(open('/zap/wrk/zap-report.json')); print(sum(1 for s in d.get('site',[]) for a in s.get('alerts',[]) if a.get('riskcode','0') in ('3',)))" 2>/dev/null || echo "?")
-        echo "Alertes HIGH: $ALERTS"
-        if [ "$ALERTS" != "?" ] && [ "$ALERTS" -gt 0 ] 2>/dev/null; then
-          echo "⚠ $ALERTS alerte(s) HIGH detectee(s) — consulter le rapport"
-        else
-          echo "✓ Aucune alerte HIGH"
-        fi
-      fi
-    - cp /zap/wrk/zap-report.* . 2>/dev/null || true
-  artifacts:
-    paths:
-      - zap-report.html
-      - zap-report.json
-    expire_in: 30 days
-    when: always
-  allow_failure: true
-
-# ──────────────── BACKUP RESTORE TEST (hebdo) ────────────────
-backup-restore-test:
-  stage: test
-  image: alpine:3.19
-  script:
-    - ./scripts/restore-from-hetzner.sh /chemin/backup-test.sql.gpg
-  only:
-    - schedules
-  allow_failure: false
-  after_script:
-    - |
-      if [ "$CI_JOB_STATUS" != "success" ] && [ -n "${DISCORD_WEBHOOK:-}" ]; then
-        curl -s -X POST "$DISCORD_WEBHOOK" \
-          -H "Content-Type: application/json" \
-          -d "{\"content\":\"❌ [CI/CD] Backup restore test failed ($CI_JOB_NAME) sur $CI_COMMIT_REF_NAME. $CI_PIPELINE_URL\"}"
-      fi
-
-# ──────────────── RGPD CHECKLIST ────────────────
-rgpd-check:
-  stage: security
-  image: alpine:3.19
-  script:
-    - grep -i -r 'dpo\|rgpd\|cnil\|retention\|effacement' . > security-reports/rgpd-grep.txt || true
-  artifacts:
-    paths:
-      - security-reports/rgpd-grep.txt
-    when: always
-  allow_failure: true
-
-# ──────────────── WORKFLOW & POLITIQUES ────────────────
-workflow:
-  rules:
-    - if: $CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE == "push"
-      when: never
-    - if: $CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE == "web"
-      when: always
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-      when: always
-    - if: $CI_COMMIT_BRANCH && $CI_COMMIT_BRANCH != "main"
-      when: always
-  stage: test
-  image: maven:3.9-eclipse-temurin-17
-  needs: [build]
+  needs:
+    - build
   rules:
     - if: '$FAST_DEPLOY == "true"'
       when: never
@@ -691,31 +339,21 @@ workflow:
   before_script:
     - apt-get update -qq && apt-get install -yqq curl > /dev/null 2>&1 || true
   script:
-    - echo "========================================="
     - echo "EXECUTION DES TESTS UNITAIRES"
-    - echo "========================================="
     - |
       if ! mvn $MAVEN_CLI_OPTS test; then
-        echo ""
         echo "ERREUR: Les tests unitaires ont echoue!"
-        echo ""
-        echo "--- Rapport des tests echoues ---"
-        find target/surefire-reports -name "*.txt" -exec echo "=== {} ===" \; -exec cat {} \; 2>/dev/null || echo "Pas de rapport de test trouve"
-        echo ""
-        echo "--- Derniers logs Maven ---"
-        tail -200 target/*.log 2>/dev/null || echo "Pas de fichier log trouve"
+        find target/surefire-reports -name "*.txt" -exec echo "=== {} ===" \; -exec cat {} \; 2>/dev/null || true
         exit 1
       fi
-      echo ""
-      echo "✓ Tous les tests sont passes"
+      echo "Tous les tests sont passes"
   after_script:
     - |
       if [ "$CI_JOB_STATUS" = "success" ]; then
         EMOJI="[OK]"; STATUS="Tests unitaires passes"; COLOR=3066993
       else
-        EMOJI="[FAIL]"; STATUS="TESTS ECHOUES - deploiement bloque !"; COLOR=15158332
+        EMOJI="[FAIL]"; STATUS="TESTS ECHOUES"; COLOR=15158332
       fi
-      JOB_NAME="Tests unitaires"
     - *discord_commit_notify
   cache:
     key: "maven-$CI_COMMIT_REF_SLUG"
@@ -730,11 +368,21 @@ workflow:
       - target/surefire-reports/
     expire_in: 2 weeks
 
-# ──────────────── PACKAGE ────────────────
+backup-restore-test:
+  stage: test
+  image: alpine:3.19
+  script:
+    - ./scripts/restore-from-hetzner.sh /chemin/backup-test.sql.gpg
+  only:
+    - schedules
+  allow_failure: false
+# ---- PACKAGE ----
+
 package:
   stage: package
   image: docker:27-cli
-  needs: [test]
+  needs:
+    - test
   variables:
     DOCKER_BUILDKIT: "1"
     DOCKER_CLI_EXPERIMENTAL: "enabled"
@@ -759,132 +407,41 @@ package:
         fi
       done
   script:
+    - echo "BUILD ET PUSH IMAGE DOCKER"
+    - docker build -t "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA" -t "$CI_REGISTRY_IMAGE:latest" -f docker/Dockerfile .
+    - docker push "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA"
+    - docker push "$CI_REGISTRY_IMAGE:latest"
+    - docker logout "$CI_REGISTRY" 2>/dev/null || true
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE == "web"
+# ---- DEPLOY ----
 
-        rm -rf /var/lib/apt/lists/* /tmp/* 2>/dev/null || true
-
-    # ============================================================
-    # DocAvocat — Pipeline CI/CD GitLab (version propre)
-    # ============================================================
-
-    workflow:
-      rules:
-        - if: $CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE == "push"
-          when: never
-        - if: $CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE == "web"
-          when: always
-        - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-          when: always
-        - if: $CI_COMMIT_BRANCH && $CI_COMMIT_BRANCH != "main"
-          when: always
-
+deploy:
+  stage: deploy
+  image: alpine:3.19
+  needs:
+    - package
+  before_script:
+    - apk add --no-cache openssh-client curl
+    - eval $(ssh-agent -s)
+    - tr -d '\r' < "$SSH_PRIVATE_KEY" > /tmp/id_rsa
+    - chmod 600 /tmp/id_rsa
+    - ssh-add /tmp/id_rsa
+    - mkdir -p ~/.ssh && chmod 700 ~/.ssh
+    - echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+  script:
+    - echo "=== DEPLOIEMENT PRODUCTION ==="
+    - scp docker/docker-compose.yml root@$SERVER_HOST:$REMOTE_DIR/docker-compose.yml
+    - scp docker/Dockerfile root@$SERVER_HOST:$REMOTE_DIR/Dockerfile
+    - scp docker/entrypoint.sh root@$SERVER_HOST:$REMOTE_DIR/entrypoint.sh
+    - scp docker/nginx/docavocat.conf root@$SERVER_HOST:$REMOTE_DIR/nginx/docavocat.conf 2>/dev/null || true
+    - |
       ssh root@$SERVER_HOST "
-      tags:
-        - vps
-
-    variables:
-      MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
-      MAVEN_CLI_OPTS: "--batch-mode --no-transfer-progress"
-      REMOTE_DIR: "/opt/docavocat"
-
         cd $REMOTE_DIR
-      - security
-      - build
-      - test
-      - package
-      - deploy
-
-    # Ancre Discord simplifiée
-    .discord_commit_notify: &discord_commit_notify
-      - echo "Notification Discord (placeholder)"
-
-    # === SECURITY ===
-    audit-code-security:
-      stage: security
-      image: maven:3.9-eclipse-temurin-17
-      script:
-        - echo "=== DEBUG: listing fichiers racine ==="
-        - ls -l .
-        - if [ ! -f ./audit-security.sh ]; then echo "ERREUR: Le script audit-security.sh est introuvable à la racine du repo !"; exit 1; fi
-        - chmod +x ./audit-security.sh
-        - ./audit-security.sh
-      artifacts:
-        paths:
-          - security-reports/
-        when: always
-      allow_failure: true
-
-        # Ensure .env ends with a newline (GitLab File variables may strip trailing newline)
-      stage: security
-      image: owasp/dependency-check:latest
-      script:
-        - dependency-check.sh --project "gedavocat" --scan . --format "JSON" --out security-reports/
-      artifacts:
-        paths:
-          - security-reports/dependency-check-report.json
-        when: always
-      allow_failure: false
-      cache:
-        key: "maven-$CI_COMMIT_REF_SLUG"
-        paths:
-          - .m2/repository/
-        policy: pull
-
-    # === BUILD ===
-    build:
-      stage: build
-      image: maven:3.9-eclipse-temurin-17
-      needs:
-        - job: audit-code-security
-          optional: true
-        - job: owasp-dependency-check
-          optional: true
-      script:
-        - echo "Build Maven"
-        - mvn $MAVEN_CLI_OPTS clean install
-      artifacts:
-        paths:
-          - target/
-        when: always
-      allow_failure: false
-
-    # === TEST ===
-    test:
-      stage: test
-      image: maven:3.9-eclipse-temurin-17
-      script:
-        - echo "Tests Maven"
-        - mvn $MAVEN_CLI_OPTS test
-      artifacts:
-        paths:
-          - target/surefire-reports/
-        when: always
-      allow_failure: false
-
-    # === PACKAGE ===
-    package:
-      stage: package
-      image: maven:3.9-eclipse-temurin-17
-      script:
-        - echo "Packaging Maven"
-        - mvn $MAVEN_CLI_OPTS package
-      artifacts:
-        paths:
-          - target/*.jar
-        when: always
-      allow_failure: false
-
-    # === DEPLOY ===
-    deploy:
-      stage: deploy
-      image: maven:3.9-eclipse-temurin-17
-      script:
-        - echo "Déploiement (placeholder)"
-      when: manual
-      allow_failure: false
+        rm -rf /var/lib/apt/lists/* /tmp/* 2>/dev/null || true
         sed -i -e '\$a\\' .env
-        # Remove any existing APP_IMAGE line (including if concatenated with previous line)
         sed -i '/APP_IMAGE=/d' .env
-        # Append APP_IMAGE on its own line
         echo 'APP_IMAGE=$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA' >> .env
       "
     - |
@@ -929,12 +486,10 @@ package:
     - scp docker/grafana/provisioning/dashboards/docavocat-metrics.json root@$SERVER_HOST:$REMOTE_DIR/grafana/provisioning/dashboards/docavocat-metrics.json
     - ssh root@$SERVER_HOST "mkdir -p $REMOTE_DIR/scripts"
     - scp docker/scripts/backup.sh root@$SERVER_HOST:$REMOTE_DIR/scripts/backup.sh
-    - ssh root@$SERVER_HOST "sed -i 's/\r//' $REMOTE_DIR/scripts/backup.sh && chmod +x $REMOTE_DIR/scripts/backup.sh"
-    - |
+    - ssh root@$SERVER_HOST "sed -i 's/\r//' $REMOTE_DIR/scripts/backup.sh && chmod +x $REMOTE_DIR/scripts/backup.sh"    - |
       ssh root@$SERVER_HOST "
         set -e
         cd $REMOTE_DIR
-
         MAX_RETRIES=3
         RETRY_COUNT=0
         until [ \$RETRY_COUNT -ge \$MAX_RETRIES ]; do
@@ -953,28 +508,20 @@ package:
             fi
           fi
         done
-
         echo '=== Pull de la nouvelle image ==='
         docker compose pull app || { echo 'ERREUR pull image'; exit 1; }
-
-        echo '=== Nettoyage anciens reseaux prefixes ==='
+        echo '=== Nettoyage anciens reseaux ==='
         docker network rm docavocat_docavocat-net 2>/dev/null || true
         docker network rm gedavocat_docavocat-net 2>/dev/null || true
-
-        echo '=== Etat avant recreation ==='
-        docker ps --format 'table {{.Names}}\t{{.Status}}' 2>/dev/null || true
-        docker network ls --filter name=docavocat 2>/dev/null || true
-
         echo '=== S assurer que MySQL tourne ==='
         MYSQL_HEALTH=\$(docker inspect docavocat-mysql --format='{{.State.Health.Status}}' 2>/dev/null || echo 'absent')
         echo \"MySQL actuel: \$MYSQL_HEALTH\"
         if [ \"\$MYSQL_HEALTH\" = \"healthy\" ]; then
-          echo 'MySQL deja running et healthy — skip re-creation'
+          echo 'MySQL deja running et healthy'
           docker network connect docavocat-net docavocat-mysql 2>/dev/null || true
         else
-          echo 'MySQL pas healthy, tentative de demarrage via compose...'
+          echo 'MySQL pas healthy, tentative de demarrage...'
           docker compose up -d mysql 2>/dev/null || {
-            echo 'Conflit conteneur — adoption du conteneur existant...'
             docker stop docavocat-mysql 2>/dev/null || true
             docker rm docavocat-mysql 2>/dev/null || true
             docker compose up -d mysql || { echo 'ERREUR demarrage MySQL'; exit 1; }
@@ -992,91 +539,68 @@ package:
             MYSQL_WAIT=\$((MYSQL_WAIT + 5))
           done
         fi
-
-        echo '=== Migration schema BDD (import dump si tables manquantes) ==='
-        docker exec docavocat-mysql sh -c 'mysql -u root -p\"\$MYSQL_ROOT_PASSWORD\" gedavocat -N -e \"SELECT 1 FROM appointments LIMIT 1\"' 2>/dev/null && echo 'Tables OK — skip import' || {
-          echo 'Table appointments manquante — import du dump...'
-          docker exec docavocat-mysql sh -c 'mysql -u root -p\"\$MYSQL_ROOT_PASSWORD\" gedavocat < /docker-entrypoint-initdb.d/01-gedavocat-dump.sql' 2>&1 && echo 'Import dump OK' || echo 'Import echoue — ddl-auto=update prendra le relais'
+        echo '=== Migration schema BDD ==='
+        docker exec docavocat-mysql sh -c 'mysql -u root -p\"\$MYSQL_ROOT_PASSWORD\" gedavocat -N -e \"SELECT 1 FROM appointments LIMIT 1\"' 2>/dev/null && echo 'Tables OK' || {
+          echo 'Table appointments manquante - import du dump...'
+          docker exec docavocat-mysql sh -c 'mysql -u root -p\"\$MYSQL_ROOT_PASSWORD\" gedavocat < /docker-entrypoint-initdb.d/01-gedavocat-dump.sql' 2>&1 && echo 'Import dump OK' || echo 'Import echoue'
         }
-
-        echo '=== Verification cle MFA_ENCRYPTION_KEY (AES-256 = 32 octets base64) ==='
+        echo '=== Verification cle MFA ==='
         MFA_KEY=\$(grep '^MFA_ENCRYPTION_KEY=' .env 2>/dev/null | cut -d= -f2-)
         MFA_LEN=\$(echo -n \"\$MFA_KEY\" | base64 -d 2>/dev/null | wc -c)
-        echo \"MFA key longueur decodee: \${MFA_LEN} octets\"
+        echo \"MFA key longueur: \${MFA_LEN} octets\"
         if [ \"\$MFA_LEN\" != '32' ]; then
-          echo 'Cle MFA invalide — generation nouvelle cle AES-256...'
+          echo 'Cle MFA invalide - generation nouvelle cle AES-256...'
           NEW_MFA_KEY=\$(openssl rand -base64 32)
           sed -i \"s|^MFA_ENCRYPTION_KEY=.*|MFA_ENCRYPTION_KEY=\$NEW_MFA_KEY|\" .env
           echo 'Nouvelle cle MFA ecrite dans .env'
         else
           echo 'Cle MFA OK (32 octets)'
         fi
-
-        echo '=== Recreation du conteneur app (force-recreate) ==='
+        echo '=== Recreation du conteneur app ==='
         docker compose up -d --force-recreate --no-deps app || { echo 'ERREUR demarrage app'; docker compose logs app --tail=50; exit 1; }
-
         echo '=== Demarrage services monitoring ==='
         docker compose up -d loki promtail grafana prometheus cadvisor node-exporter mysql-exporter alertmanager discord-webhook 2>/dev/null || true
-
         echo '=== Verification connectivite reseau ==='
         sleep 5
-        echo '--- Reseaux Docker ---'
         docker network ls --filter name=docavocat
-        echo '--- Conteneurs sur docavocat-net ---'
         docker network inspect docavocat-net --format='{{range .Containers}}{{.Name}} {{end}}' 2>/dev/null || echo 'Reseau docavocat-net non trouve!'
-        echo '--- DNS mysql depuis app ---'
         docker exec docavocat-app getent hosts mysql && echo 'DNS mysql OK' || echo 'ERREUR: DNS mysql non resolu!'
-        echo '--- IP MySQL ---'
-        docker inspect docavocat-mysql --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' 2>/dev/null || echo 'MySQL IP non trouvee'
-
         docker logout $CI_REGISTRY 2>/dev/null || true
-
-        echo '=== Conteneurs actifs ==='
         docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
-
-        echo '=== Premiers logs du conteneur (10s) ==='
         sleep 10
         docker logs docavocat-app --tail=50 2>&1 || echo 'Impossible de lire les logs'
-      "
-    - |
-      echo "========================================="
+      "    - |
       echo "ETAPE 1: Verification etat du conteneur"
-      echo "========================================="
       ssh root@$SERVER_HOST "
         docker ps --filter name=docavocat-app --format 'table {{.Names}}\t{{.Status}}\t{{.State}}'
         CONTAINER_STATUS=\$(docker inspect docavocat-app --format='{{.State.Status}}' 2>/dev/null || echo 'not found')
         echo \"Status: \$CONTAINER_STATUS\"
         if [ \"\$CONTAINER_STATUS\" != 'running' ]; then
-          echo '!!! ERREUR: Le conteneur n est pas en cours d execution !!!'
+          echo 'ERREUR: Le conteneur n est pas en cours d execution'
           docker logs docavocat-app 2>&1 || true
           exit 1
         fi
       "
     - |
-      echo "========================================="
       echo "ETAPE 2: Attente demarrage Spring Boot"
-      echo "========================================="
-      echo "Patience, Spring Boot demarre (environ 60s)..."
       for i in 1 2 3 4 5 6; do
         sleep 10
         echo "[$((i*10))s] Verification en cours..."
         ssh root@$SERVER_HOST "
           if ! docker ps --filter name=docavocat-app --filter status=running -q | grep -q .; then
-            echo '!!! ERREUR: Le conteneur s est arrete pendant le demarrage !!!'
+            echo 'ERREUR: Le conteneur s est arrete pendant le demarrage'
             docker logs docavocat-app --tail=100 2>&1
             exit 1
           fi
         " || exit 1
         STARTED=$(ssh root@$SERVER_HOST "docker logs docavocat-app 2>&1 | grep -i 'Started GedAvocatApplication' | wc -l" 2>/dev/null || echo "0")
         if [ "$STARTED" -gt "0" ]; then
-          echo "✓ Spring Boot a demarre avec succes!"
+          echo "Spring Boot a demarre avec succes!"
           break
         fi
       done
     - |
-      echo "========================================="
       echo "ETAPE 3: Verification HTTP"
-      echo "========================================="
       MAX_HTTP_RETRIES=5
       HTTP_SUCCESS=false
       for attempt in $(seq 1 $MAX_HTTP_RETRIES); do
@@ -1084,7 +608,7 @@ package:
         HTTP_CODE=$(ssh root@$SERVER_HOST "curl -s -o /dev/null -w '%{http_code}' --max-time 10 http://127.0.0.1:8080/" 2>/dev/null || echo "000")
         echo "  Code HTTP recu: $HTTP_CODE"
         if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "302" ]; then
-          echo "✓ Application repond correctement (HTTP $HTTP_CODE)"
+          echo "Application repond correctement (HTTP $HTTP_CODE)"
           HTTP_SUCCESS=true
           break
         else
@@ -1092,16 +616,14 @@ package:
         fi
       done
       if [ "$HTTP_SUCCESS" = "false" ]; then
-        echo "!!! ERREUR: L'application ne repond pas correctement !!!"
+        echo "ERREUR: L application ne repond pas correctement"
         ssh root@$SERVER_HOST "docker logs docavocat-app --tail=300 2>&1"
         exit 1
       fi
     - |
-      echo "========================================="
-      echo "ETAPE 4: Fix nginx — www redirect + suppression headers en double"
-      echo "========================================="
+      echo "ETAPE 4: Fix nginx"
       ssh root@$SERVER_HOST "
-        echo '=== 4a. Redirect www -> non-www (obligatoire pour sessions/cookies) ==='
+        echo '=== 4a. Redirect www -> non-www ==='
         WWW_REDIRECT='/etc/nginx/conf.d/www-redirect-docavocat.conf'
         if [ ! -f \"\$WWW_REDIRECT\" ]; then
           echo 'Creation redirect www.docavocat.fr -> docavocat.fr'
@@ -1120,113 +642,67 @@ package:
             '    ssl_certificate_key /etc/letsencrypt/live/docavocat.fr/privkey.pem;' \
             '    return 301 https://docavocat.fr\\\$request_uri;' \
             '}' > \"\$WWW_REDIRECT\"
-          echo '  -> Fichier cree: '\"\$WWW_REDIRECT\"
         else
-          echo '  -> Redirect www deja en place, OK'
+          echo 'Redirect www deja en place, OK'
         fi
-
-        echo '=== 4b. SUPPRESSION BRUTALE de tous les headers security dans TOUTE la config nginx ==='
-        echo '--- Spring Boot gere TOUS les security headers — nginx ne doit en ajouter AUCUN ---'
-        echo '--- Scan de /etc/nginx/ en entier (sites-available, sites-enabled, conf.d, snippets) ---'
+        echo '=== 4b. Suppression headers security nginx ==='
         FOUND_CSP=0
         for CONF in \$(grep -rl 'add_header' /etc/nginx/ 2>/dev/null || true); do
-          echo \"Scanning \$CONF ...\"
           for HDR in Content-Security-Policy X-Frame-Options X-Content-Type-Options Referrer-Policy Strict-Transport-Security Permissions-Policy X-XSS-Protection; do
             if grep -q \"\$HDR\" \"\$CONF\"; then
-              echo \"  -> Commenting out \$HDR in \$CONF\"
               sed -i \"/\$HDR/s/^\\(\\s*\\)\\(add_header\\)/\\1# DISABLED_BY_CI \\2/\" \"\$CONF\"
               FOUND_CSP=1
             fi
           done
         done
-        if [ \"\$FOUND_CSP\" = '1' ]; then
-          echo '  -> Headers nginx commentes. Seul Spring Boot servira les security headers.'
-        else
-          echo '  -> Aucun header security trouve dans nginx, OK'
-        fi
-
         echo '=== 4c. Test et reload nginx ==='
-        nginx -t && nginx -s reload && echo 'nginx reloaded OK' || echo 'WARN: nginx reload failed, check config manually'
+        nginx -t && nginx -s reload && echo 'nginx reloaded OK' || echo 'WARN: nginx reload failed'
       "
     - |
-      echo "========================================="
-      echo "ETAPE 5: Verification finale + preuve CSP OK"
-      echo "========================================="
+      echo "ETAPE 5: Verification finale"
       ssh root@$SERVER_HOST "
         docker stats docavocat-app --no-stream --format 'table {{.Container}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.MemPerc}}' || true
         docker logs docavocat-app --tail=20 2>&1
-        echo ''
-        echo '=== VERIFICATION CSP HEADERS (preuve form-action absent) ==='
-        echo '--- curl -sI https://docavocat.fr/login ---'
+        echo '=== VERIFICATION CSP HEADERS ==='
         CSP_HEADERS=\$(curl -sI https://docavocat.fr/login | grep -i content-security-policy || true)
         echo \"\$CSP_HEADERS\"
-        if echo \"\$CSP_HEADERS\" | grep -qi 'form-action'; then
-          echo ''
-          echo '!!! ALERTE: form-action ENCORE PRESENT dans les headers !!!'
-          echo '!!! Il y a probablement un fichier nginx non couvert !!!'
-          echo '--- Recherche dans toute la config nginx: ---'
-          grep -rn 'form-action' /etc/nginx/ 2>/dev/null || echo 'Pas trouve dans /etc/nginx/'
-          grep -rn 'Content-Security-Policy' /etc/nginx/ 2>/dev/null || echo 'Pas de CSP dans /etc/nginx/'
-        else
-          echo ''
-          echo 'OK: form-action absent des headers -> login fonctionnel'
-        fi
         NB_CSP=\$(echo \"\$CSP_HEADERS\" | grep -ci content-security-policy || true)
         if [ \"\$NB_CSP\" -gt 1 ]; then
-          echo '!!! ALERTE: PLUSIEURS headers CSP detectes (nginx + Spring Boot) !!!'
+          echo 'ALERTE: PLUSIEURS headers CSP detectes'
         elif [ \"\$NB_CSP\" -eq 1 ]; then
           echo 'OK: Un seul header CSP (Spring Boot only)'
         else
-          echo 'WARN: Aucun header CSP detecte (app pas encore up?)'
+          echo 'WARN: Aucun header CSP detecte'
         fi
       "
-      echo ""
-      echo "✓✓✓ Deploiement reussi -> https://docavocat.fr ✓✓✓"
-    # ── Smoke tests post-deploy ──
+      echo "Deploiement reussi -> https://docavocat.fr"
     - |
-      echo "========================================="
-      echo "ETAPE 6: Smoke tests automatiques"
-      echo "========================================="
+      echo "ETAPE 6: Smoke tests"
       SMOKE_PASS=true
-      # Test 1: Page de login accessible
       HTTP_LOGIN=$(ssh root@$SERVER_HOST "curl -s -o /dev/null -w '%{http_code}' --max-time 10 https://docavocat.fr/login" 2>/dev/null || echo "000")
       echo "  [1] GET /login = HTTP $HTTP_LOGIN"
       [ "$HTTP_LOGIN" = "200" ] || SMOKE_PASS=false
-      # Test 2: Redirect HTTP → HTTPS
       HTTP_REDIRECT=$(ssh root@$SERVER_HOST "curl -s -o /dev/null -w '%{http_code}' --max-time 10 http://docavocat.fr/" 2>/dev/null || echo "000")
       echo "  [2] HTTP redirect = HTTP $HTTP_REDIRECT"
       [ "$HTTP_REDIRECT" = "301" ] || [ "$HTTP_REDIRECT" = "302" ] || SMOKE_PASS=false
-      # Test 3: MySQL query count
       USER_COUNT=$(ssh root@$SERVER_HOST "docker exec docavocat-mysql mysql -u gedavocat -p\"\$(grep MYSQL_PASSWORD /opt/docavocat/.env | head -1 | cut -d= -f2-)\" gedavocat -N -e 'SELECT COUNT(*) FROM users' 2>/dev/null" || echo "ERR")
       echo "  [3] Users in DB = $USER_COUNT"
       [ "$USER_COUNT" != "ERR" ] && [ "$USER_COUNT" -gt 0 ] 2>/dev/null || SMOKE_PASS=false
-      # Test 4: HSTS header present
       HSTS=$(ssh root@$SERVER_HOST "curl -sI --max-time 10 https://docavocat.fr/login | grep -i strict-transport-security | wc -l" 2>/dev/null || echo "0")
       echo "  [4] HSTS header = $HSTS"
-      [ "$HSTS" -ge 1 ] 2>/dev/null || echo "  WARN: HSTS manquant"
-      echo ""
       if [ "$SMOKE_PASS" = "true" ]; then
-        echo "✓ Tous les smoke tests passes"
+        echo "Tous les smoke tests passes"
       else
-        echo "⚠ Certains smoke tests ont echoue — verifier manuellement"
+        echo "Certains smoke tests ont echoue"
       fi
   after_script:
     - apk add --no-cache curl 2>/dev/null || true
     - |
-      set +e
-      if [ "$CI_JOB_STATUS" != "success" ]; then
-        echo "Le deploiement a echoue. Consultez les logs ci-dessus."
-      fi
-      true
-    - |
-      set +e
       if [ "$CI_JOB_STATUS" = "success" ]; then
         EMOJI="[PROD]"; STATUS="DEPLOYE EN PRODUCTION ! https://docavocat.fr"; COLOR=3066993
       else
-        EMOJI="[FAIL]"; STATUS="ECHEC DU DEPLOIEMENT - voir logs detailles"; COLOR=15158332
+        EMOJI="[FAIL]"; STATUS="ECHEC DU DEPLOIEMENT"; COLOR=15158332
       fi
-      JOB_NAME="Deploiement Production"
-      true
     - *discord_deploy_notify
   environment:
     name: production
@@ -1236,19 +712,19 @@ package:
       when: on_success
     - if: $CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE == "web"
       when: manual
+# ---- DAST ZAP (post-deploy) ----
 
-# ──────────────── DAST — OWASP ZAP Baseline Scan (post-deploy) ────────────────
 dast-zap-baseline:
   stage: deploy
   image:
     name: ghcr.io/zaproxy/zaproxy:stable
     entrypoint: [""]
-  needs: [deploy]
+  needs:
+    - deploy
   variables:
     GIT_STRATEGY: none
   script:
     - echo "=== OWASP ZAP Baseline Scan ==="
-    - echo "Cible — https://docavocat.fr"
     - |
       mkdir -p /zap/wrk
       zap-baseline.py \
@@ -1263,11 +739,6 @@ dast-zap-baseline:
       if [ -f /zap/wrk/zap-report.json ]; then
         ALERTS=$(python3 -c "import json; d=json.load(open('/zap/wrk/zap-report.json')); print(sum(1 for s in d.get('site',[]) for a in s.get('alerts',[]) if a.get('riskcode','0') in ('3',)))" 2>/dev/null || echo "?")
         echo "Alertes HIGH: $ALERTS"
-        if [ "$ALERTS" != "?" ] && [ "$ALERTS" -gt 0 ] 2>/dev/null; then
-          echo "⚠ $ALERTS alerte(s) HIGH detectee(s) — consulter le rapport"
-        else
-          echo "✓ Aucune alerte HIGH"
-        fi
       fi
     - cp /zap/wrk/zap-report.* . 2>/dev/null || true
   artifacts:
