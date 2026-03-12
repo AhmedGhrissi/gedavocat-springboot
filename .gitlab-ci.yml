@@ -384,7 +384,7 @@ deploy:
     - ssh-add ~/.ssh/deploy_key
     - echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
     - chmod 644 ~/.ssh/known_hosts
-    - echo "$ENV_PROD" | ssh root@"${SERVER_HOST}" "cat > /opt/docavocat/.env && chmod 600 /opt/docavocat/.env"
+    - cat "$ENV_PROD" | ssh root@"${SERVER_HOST}" "cat > /opt/docavocat/.env && chmod 600 /opt/docavocat/.env"
     - |
       # Injecter les variables MinIO seulement si définies comme CI/CD vars et absentes de ENV_PROD
       if [ -n "${MINIO_ACCESS_KEY}" ] && [ -n "${MINIO_SECRET_KEY}" ]; then
