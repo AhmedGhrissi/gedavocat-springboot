@@ -393,6 +393,12 @@ deploy:
         echo "WARN: MINIO_ACCESS_KEY/SECRET_KEY non définis — ajouter dans GitLab Settings > CI/CD > Variables"
       fi
     - |
+      # Injecter APP_IMAGE (image Docker buildée par la CI pour ce commit)
+      ssh root@"${SERVER_HOST}" "sed -i '/^APP_IMAGE=/d' /opt/docavocat/.env && echo 'APP_IMAGE=${DOCKER_IMAGE_LATEST}' >> /opt/docavocat/.env"
+    - |
+      # Authentification au GitLab Container Registry sur le serveur
+      ssh root@"${SERVER_HOST}" "docker login -u '${CI_REGISTRY_USER}' -p '${CI_REGISTRY_PASSWORD}' '${CI_REGISTRY}'"
+    - |
       ssh root@"${SERVER_HOST}" bash -s << 'ENDSSH'
       set -e
       cd /opt/docavocat
