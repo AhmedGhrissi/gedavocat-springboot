@@ -74,6 +74,7 @@ dump_*.sql
 *_dump.sql
 backup_*.sql
 *.sql
+!sql/barreaux_france_insert.sql
 !sql/V*.sql
 !docker/init/.gitkeep
 
