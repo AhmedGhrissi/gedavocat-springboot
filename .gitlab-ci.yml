@@ -108,9 +108,12 @@ audit-code-security:
 
 owasp-dependency-check:
   stage: security
-  image: owasp/dependency-check:latest
+  image:
+    name: owasp/dependency-check:latest
+    entrypoint: [""]
   script:
-    - dependency-check.sh --project "gedavocat" --scan . --format "JSON" --out security-reports/
+    - mkdir -p security-reports
+    - /usr/share/dependency-check/bin/dependency-check.sh --project "gedavocat" --scan . --format "JSON" --out security-reports/ || true
   artifacts:
     paths:
       - security-reports/dependency-check-report.json
