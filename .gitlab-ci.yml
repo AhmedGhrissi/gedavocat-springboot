@@ -337,8 +337,12 @@ deploy:
     - chmod 644 ~/.ssh/known_hosts
     - echo "$ENV_PROD" | ssh root@"${SERVER_HOST}" "cat > /opt/docavocat/.env && chmod 600 /opt/docavocat/.env"
     - |
-      # Injecter les variables MinIO si absentes de ENV_PROD
-      ssh root@"${SERVER_HOST}" "grep -q '^MINIO_ACCESS_KEY=' /opt/docavocat/.env || printf '\n# MinIO S3 (CX23 Hetzner)\nMINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}\nMINIO_SECRET_KEY=${MINIO_SECRET_KEY}\n' >> /opt/docavocat/.env"
+      # Injecter les variables MinIO seulement si définies comme CI/CD vars et absentes de ENV_PROD
+      if [ -n "${MINIO_ACCESS_KEY}" ] && [ -n "${MINIO_SECRET_KEY}" ]; then
+        ssh root@"${SERVER_HOST}" "grep -q '^MINIO_ACCESS_KEY=' /opt/docavocat/.env || printf '\n# MinIO S3 (CX23 Hetzner)\nMINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}\nMINIO_SECRET_KEY=${MINIO_SECRET_KEY}\n' >> /opt/docavocat/.env"
+      else
+        echo "WARN: MINIO_ACCESS_KEY/SECRET_KEY non définis — ajouter dans GitLab Settings > CI/CD > Variables"
+      fi
     - |
       ssh root@"${SERVER_HOST}" bash -s << 'ENDSSH'
       set -e
