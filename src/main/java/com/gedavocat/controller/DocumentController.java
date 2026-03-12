@@ -23,8 +23,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.gedavocat.util.ByteArrayMultipartFile;
 
 import java.io.ByteArrayInputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -247,7 +245,7 @@ public class DocumentController {
     ) {
         try {
             User user = getCurrentUser(authentication);
-            Path filePath = documentService.downloadDocument(id, user.getId());
+            byte[] fileBytes = documentService.downloadDocument(id, user.getId());
             Document document = documentService.getDocumentById(id);
 
             // SEC-01 FIX : vérifier ownership selon le rôle
@@ -259,8 +257,8 @@ public class DocumentController {
                 if (isClient) {
                     // SEC-01 FIX : vérifier que le client est bien associé au dossier
                     Case caseEntity = document.getCaseEntity();
-                    boolean isClientOfCase = caseEntity.getClient() != null 
-                        && caseEntity.getClient().getClientUser() != null 
+                    boolean isClientOfCase = caseEntity.getClient() != null
+                        && caseEntity.getClient().getClientUser() != null
                         && caseEntity.getClient().getClientUser().getId().equals(user.getId());
                     if (!isClientOfCase) {
                         throw new org.springframework.security.access.AccessDeniedException("Accès non autorisé");
@@ -269,8 +267,6 @@ public class DocumentController {
                     throw new org.springframework.security.access.AccessDeniedException("Accès non autorisé");
                 }
             }
-
-            byte[] fileBytes = Files.readAllBytes(filePath);
 
             Resource resource = new ByteArrayResource(fileBytes);
 
@@ -296,7 +292,7 @@ public class DocumentController {
     ) {
         try {
             User user = getCurrentUser(authentication);
-            Path filePath = documentService.downloadDocument(id, user.getId());
+            byte[] fileBytes = documentService.downloadDocument(id, user.getId());
             Document document = documentService.getDocumentById(id);
 
             // SEC-01 FIX : vérifier ownership selon le rôle
@@ -307,8 +303,8 @@ public class DocumentController {
             if (!isAdminPreview) {
                 if (isClientPreview) {
                     Case caseEntity = document.getCaseEntity();
-                    boolean isClientOfCase = caseEntity.getClient() != null 
-                        && caseEntity.getClient().getClientUser() != null 
+                    boolean isClientOfCase = caseEntity.getClient() != null
+                        && caseEntity.getClient().getClientUser() != null
                         && caseEntity.getClient().getClientUser().getId().equals(user.getId());
                     if (!isClientOfCase) {
                         throw new org.springframework.security.access.AccessDeniedException("Accès non autorisé");
@@ -317,8 +313,6 @@ public class DocumentController {
                     throw new org.springframework.security.access.AccessDeniedException("Accès non autorisé");
                 }
             }
-
-            byte[] fileBytes = Files.readAllBytes(filePath);
 
             Resource resource = new ByteArrayResource(fileBytes);
 

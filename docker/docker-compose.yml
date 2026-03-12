@@ -175,6 +175,11 @@ services:
       RPVA_CERT_PATH: ${RPVA_CERT_PATH:-}
       RPVA_CERT_PASSWORD: ${RPVA_CERT_PASSWORD:-}
 
+      # MinIO — Stockage S3 compatible (CX23 Hetzner réseau privé 10.0.0.3)
+      MINIO_ENDPOINT: http://10.0.0.3:9000
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+
       # RGPD — DPO (requis par loi française)
       DPO_NAME: ${DPO_NAME}
       DPO_EMAIL: ${DPO_EMAIL}
@@ -283,6 +288,10 @@ services:
       RPVA_API_KEY: ${RPVA_API_KEY:-}
       RPVA_CERT_PATH: ${RPVA_CERT_PATH:-}
       RPVA_CERT_PASSWORD: ${RPVA_CERT_PASSWORD:-}
+      # MinIO — Stockage S3 compatible (CX23 Hetzner réseau privé 10.0.0.3)
+      MINIO_ENDPOINT: http://10.0.0.3:9000
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
       DPO_NAME: ${DPO_NAME}
       DPO_EMAIL: ${DPO_EMAIL}
       DPO_PHONE: ${DPO_PHONE:-}

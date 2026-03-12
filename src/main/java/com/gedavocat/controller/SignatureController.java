@@ -237,8 +237,10 @@ public class SignatureController {
 
             // Créer la demande de signature
             String signerName = signerFirstName.trim() + " " + signerLastName.trim();
+            byte[] fileBytes = documentService.downloadDocument(document.getId(), user.getId());
             Map<String, Object> result = yousignService.createSignatureRequest(
-                    document.getPath(),
+                    fileBytes,
+                    document.getOriginalName(),
                     signerFirstName.trim(),
                     signerLastName.trim(),
                     signerEmail,

@@ -37,8 +37,8 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
+
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -387,8 +387,7 @@ public class ClientPortalController {
                 throw new org.springframework.security.access.AccessDeniedException("Accès non autorisé");
             }
 
-            Path filePath = documentService.downloadDocument(documentId, user.getId());
-            byte[] fileBytes = Files.readAllBytes(filePath);
+            byte[] fileBytes = documentService.downloadDocument(documentId, user.getId());
 
             return ResponseEntity.ok()
                     .contentType(MediaType.parseMediaType(document.getMimetype()))
@@ -426,8 +425,7 @@ public class ClientPortalController {
                 return ResponseEntity.status(403).build();
             }
 
-            Path filePath = documentService.downloadDocument(documentId, user.getId());
-            byte[] fileBytes = Files.readAllBytes(filePath);
+            byte[] fileBytes = documentService.downloadDocument(documentId, user.getId());
 
             return ResponseEntity.ok()
                     .contentType(MediaType.parseMediaType(document.getMimetype()))
@@ -513,8 +511,7 @@ public class ClientPortalController {
             try (ZipOutputStream zos = new ZipOutputStream(baos)) {
                 for (Document doc : documents) {
                     try {
-                        Path filePath = documentService.downloadDocument(doc.getId(), user.getId());
-                        byte[] fileBytes = Files.readAllBytes(filePath);
+                        byte[] fileBytes = documentService.downloadDocument(doc.getId(), user.getId());
 
                         ZipEntry entry = new ZipEntry(sanitizeFilename(doc.getOriginalName()));
                         zos.putNextEntry(entry);

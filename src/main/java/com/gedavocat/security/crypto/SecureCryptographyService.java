@@ -337,6 +337,57 @@ public class SecureCryptographyService {
     }
 
     /**
+     * Chiffre des bytes en mémoire (AES-256-GCM).
+     * Retourne : IV (12 bytes) + ciphertext
+     */
+    public byte[] encryptBytes(byte[] plaintext, String keyId) throws Exception {
+        CryptoKey cryptoKey = keyStore.get(keyId);
+        if (cryptoKey == null) {
+            throw new IllegalArgumentException("Clé non trouvée: " + keyId);
+        }
+        if (isKeyExpired(cryptoKey)) {
+            throw new SecurityException("Clé expirée: " + keyId);
+        }
+
+        SecretKey secretKey = new SecretKeySpec(cryptoKey.getKeyBytes(), AES_ALGORITHM);
+        byte[] iv = new byte[GCM_IV_LENGTH];
+        secureRandom.nextBytes(iv);
+
+        Cipher cipher = Cipher.getInstance(AES_TRANSFORMATION);
+        cipher.init(Cipher.ENCRYPT_MODE, secretKey, new GCMParameterSpec(GCM_TAG_LENGTH * 8, iv));
+        byte[] ciphertext = cipher.doFinal(plaintext);
+
+        byte[] result = new byte[GCM_IV_LENGTH + ciphertext.length];
+        System.arraycopy(iv, 0, result, 0, GCM_IV_LENGTH);
+        System.arraycopy(ciphertext, 0, result, GCM_IV_LENGTH, ciphertext.length);
+
+        Arrays.fill(plaintext, (byte) 0);
+        return result;
+    }
+
+    /**
+     * Déchiffre des bytes en mémoire (AES-256-GCM).
+     * Attend : IV (12 bytes) + ciphertext (format produit par encryptBytes ou encryptFile)
+     */
+    public byte[] decryptBytes(byte[] encryptedData, String keyId) throws Exception {
+        CryptoKey cryptoKey = keyStore.get(keyId);
+        if (cryptoKey == null) {
+            throw new IllegalArgumentException("Clé non trouvée: " + keyId);
+        }
+        if (encryptedData.length < GCM_IV_LENGTH) {
+            throw new SecurityException("Données chiffrées invalides (trop courtes)");
+        }
+
+        SecretKey secretKey = new SecretKeySpec(cryptoKey.getKeyBytes(), AES_ALGORITHM);
+        byte[] iv = Arrays.copyOfRange(encryptedData, 0, GCM_IV_LENGTH);
+        byte[] ciphertext = Arrays.copyOfRange(encryptedData, GCM_IV_LENGTH, encryptedData.length);
+
+        Cipher cipher = Cipher.getInstance(AES_TRANSFORMATION);
+        cipher.init(Cipher.DECRYPT_MODE, secretKey, new GCMParameterSpec(GCM_TAG_LENGTH * 8, iv));
+        return cipher.doFinal(ciphertext);
+    }
+
+    /**
      * Rotation automatique des clés expirées
      */
     public void rotateExpiredKeys() throws Exception {

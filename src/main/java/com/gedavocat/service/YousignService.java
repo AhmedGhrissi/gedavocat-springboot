@@ -8,11 +8,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
-
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,7 +43,8 @@ public class YousignService {
      * Créer une demande de signature complète (multi-étapes Yousign v3)
      */
     public Map<String, Object> createSignatureRequest(
-            String documentPath,
+            byte[] fileBytes,
+            String fileName,
             String signerFirstName,
             String signerLastName,
             String signerEmail,
@@ -83,8 +79,6 @@ public class YousignService {
             log.info("Signature request créée: {}", signatureRequestId);
             
             // ── Étape 2 : Upload du document (multipart) ──
-            byte[] fileBytes = readDocumentFile(documentPath);
-            String fileName = Paths.get(documentPath).getFileName().toString();
             
             HttpHeaders uploadHeaders = new HttpHeaders();
             uploadHeaders.setContentType(MediaType.MULTIPART_FORM_DATA);
@@ -266,22 +260,6 @@ public class YousignService {
     /**
      * Lire les bytes d'un fichier document
      */
-    private byte[] readDocumentFile(String documentPath) {
-        try {
-            Path path = Paths.get(documentPath).normalize();
-            // SEC FIX H-09 : validation path traversal — empêcher la lecture de fichiers en dehors du répertoire d'upload
-            if (path.toString().contains("..") || !path.isAbsolute()) {
-                throw new SecurityException("Path traversal détecté dans le chemin du document");
-            }
-            if (!Files.exists(path)) {
-                throw new RuntimeException("Le fichier n'existe pas");
-            }
-            return Files.readAllBytes(path);
-        } catch (IOException e) {
-            throw new RuntimeException("Impossible de lire le fichier", e);
-        }
-    }
-    
     /**
      * Convertir le niveau de signature UI vers l'API Yousign v3
      */

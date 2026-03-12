@@ -8,7 +8,6 @@ import com.zaxxer.hikari.HikariDataSource;
 import com.zaxxer.hikari.HikariPoolMXBean;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.stereotype.Service;
 
@@ -18,7 +17,6 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -28,7 +26,6 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Stream;
 
 /**
  * Service pour les métriques et informations système de l'admin
@@ -45,9 +42,6 @@ public class AdminMetricsService {
     private final DocumentRepository documentRepository;
     private final InvoiceRepository invoiceRepository;
     private final AuditLogRepository auditLogRepository;
-
-    @Value("${app.upload.dir:./uploads/documents}")
-    private String uploadDir;
 
     private static final long START_TIME = System.currentTimeMillis();
 
@@ -300,17 +294,11 @@ public class AdminMetricsService {
     }
 
     /**
-     * Calcule la taille réelle du répertoire uploads
+     * Calcule la taille totale des documents (depuis la base de données)
      */
     private long getStorageUsed() {
         try {
-            Path p = Paths.get(uploadDir);
-            if (!Files.exists(p)) return 0L;
-            try (Stream<Path> walk = Files.walk(p)) {
-                return walk.filter(Files::isRegularFile)
-                           .mapToLong(f -> f.toFile().length())
-                           .sum();
-            }
+            return documentRepository.sumFileSizeNonDeleted();
         } catch (Exception e) {
             log.warn("Impossible de calculer l'espace utilisé", e);
             return 0L;

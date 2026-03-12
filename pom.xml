@@ -132,6 +132,13 @@
 			<version>2.18.0</version>
 		</dependency>
 
+		<!-- MinIO Java SDK — stockage S3 compatible (documents, signatures) -->
+		<dependency>
+			<groupId>io.minio</groupId>
+			<artifactId>minio</artifactId>
+			<version>8.5.7</version>
+		</dependency>
+
 <!-- PDF Signature (iText 8) — SEC-HARDENED : 8.0.5 security patches (CVE-2024-* fixes) -->
 	<dependency>
 		<groupId>com.itextpdf</groupId>

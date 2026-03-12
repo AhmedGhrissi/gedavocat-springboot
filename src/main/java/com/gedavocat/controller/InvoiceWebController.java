@@ -9,9 +9,9 @@ import com.gedavocat.repository.InvoiceRepository;
 import com.gedavocat.repository.UserRepository;
 import com.gedavocat.service.InvoiceService;
 import com.gedavocat.service.ClientService;
+import com.gedavocat.storage.StorageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -27,9 +27,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
@@ -49,9 +46,9 @@ public class InvoiceWebController {
     private final ClientRepository clientRepository;
     private final InvoiceRepository invoiceRepository;
     private final UserRepository userRepository;
+    private final StorageService storageService;
 
-    @Value("${app.upload.dir:/opt/gedavocat/uploads/documents}")
-    private String uploadDir;
+    private static final String BUCKET = "docavocat-documents";
 
     /**
      * Résout l'utilisateur courant depuis son email (principal name)
@@ -176,11 +173,10 @@ public class InvoiceWebController {
                 }
                 String filename = UUID.randomUUID() + "_" + originalFilename
                     .replaceAll("[^a-zA-Z0-9._-]", "_");
-                Path invoicesDir = Paths.get(uploadDir).getParent().resolve("invoices");
-                Files.createDirectories(invoicesDir);
-                Path dest = invoicesDir.resolve(filename);
-                file.transferTo(dest.toFile());
-                docUrl = "/uploads/invoices/" + filename;
+                String objectKey = "invoices/" + filename;
+                String mimeType = file.getContentType() != null ? file.getContentType() : "application/octet-stream";
+                storageService.storeBytes(BUCKET, objectKey, file.getBytes(), mimeType);
+                docUrl = "/invoices/attachment?key=" + objectKey;
             }
 
             // Calculer TVA et TTC
@@ -283,6 +279,32 @@ public class InvoiceWebController {
         } catch (Exception e) {
             model.addAttribute("error", "Erreur lors du chargement de vos factures");
             return "invoices/my-invoices";
+        }
+    }
+
+ // InvoiceWebController.java — ajouter cet endpoint
+    @GetMapping("/attachment")
+    @PreAuthorize("hasAnyRole('LAWYER', 'CLIENT', 'ADMIN', 'AVOCAT_ADMIN')")
+    public ResponseEntity<byte[]> downloadAttachment(
+            @RequestParam String key,
+            Authentication authentication) {
+        try {
+            User user = getCurrentUser(authentication);
+            // Vérifier qu'une facture accessible par cet utilisateur référence cette clé
+            boolean authorized = invoiceRepository.existsByDocumentUrlAndUserId(
+                    "/invoices/attachment?key=" + key, user.getId());
+            if (!authorized) {
+                return ResponseEntity.status(403).build();
+            }
+            byte[] bytes = storageService.getBytes(BUCKET, key);
+            String filename = key.contains("/") ? key.substring(key.lastIndexOf('/') + 1) : key;
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                    .body(bytes);
+        } catch (Exception e) {
+            log.error("Erreur téléchargement pièce jointe facture", e);
+            return ResponseEntity.notFound().build();
         }
     }
 

@@ -7,6 +7,7 @@ import com.gedavocat.repository.CaseRepository;
 import com.gedavocat.repository.DocumentRepository;
 import com.gedavocat.repository.UserRepository;
 import com.gedavocat.security.crypto.SecureCryptographyService;
+import com.gedavocat.storage.StorageService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,50 +18,53 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
 /**
- * Service de gestion des documents
+ * Service de gestion des documents.
+ * Stockage : MinIO S3 (bucket docavocat-documents).
+ * Rétrocompatibilité : si document.path commence par "/" → lecture disque local (anciens docs).
  */
 @Service
 @RequiredArgsConstructor
 @SuppressWarnings("null")
 public class DocumentService {
-    
+
     private static final Logger log = LoggerFactory.getLogger(DocumentService.class);
     private static final String FILE_ENCRYPTION_KEY_ID = "data_encryption_key";
+    static final String BUCKET_DOCUMENTS = "docavocat-documents";
 
     private final DocumentRepository documentRepository;
     private final CaseRepository caseRepository;
     private final UserRepository userRepository;
     private final AuditService auditService;
     private final SecureCryptographyService cryptographyService;
-    
-    @Value("${app.upload.dir}")
-    private String uploadDir;
+    private final StorageService storageService;
 
     @Value("${security.file-encryption.enabled:true}")
     private boolean fileEncryptionEnabled;
-    
+
+    // Conservé uniquement pour la rétrocompatibilité lecture disque (anciens documents)
+    @Value("${app.upload.dir:./uploads/documents}")
+    private String legacyUploadDir;
+
     /**
      * Récupère tous les documents d'un dossier
      */
     public List<Document> getDocumentsByCase(String caseId) {
         return documentRepository.findByCaseIdAndNotDeleted(caseId);
     }
-    
+
     /**
      * Récupère les dernières versions des documents
      */
     public List<Document> getLatestVersions(String caseId) {
         return documentRepository.findLatestVersionsByCaseId(caseId);
     }
-    
+
     /**
      * Récupère un document par ID (avec Case + Client chargés pour éviter LazyInitializationException)
      */
@@ -69,14 +73,14 @@ public class DocumentService {
         return documentRepository.findByIdWithCaseAndClient(documentId)
                 .orElseThrow(() -> new RuntimeException("Document non trouvé"));
     }
-    
+
     /**
      * Récupère les documents supprimés (corbeille)
      */
     public List<Document> getDeletedDocuments(String caseId) {
         return documentRepository.findDeletedByCaseId(caseId);
     }
-    
+
     private static final java.util.Set<String> ALLOWED_EXTENSIONS = java.util.Set.of(
             ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx",
             ".odt", ".ods", ".odp", ".txt", ".csv", ".rtf",
@@ -98,51 +102,29 @@ public class DocumentService {
             "image/jpeg", "image/png", "image/gif", "image/bmp", "image/tiff", "image/webp",
             "application/zip", "application/x-rar-compressed", "application/x-7z-compressed",
             "message/rfc822", "application/vnd.ms-outlook"
-            // SEC-14 FIX : application/octet-stream retiré — type générique trop permissif
     );
 
     /**
-     * Upload un nouveau document
+     * Upload un nouveau document → stocké dans MinIO (chiffré AES-256-GCM si activé).
      */
     @Transactional
     public Document uploadDocument(String caseId, MultipartFile file, String userId, String userRole) {
         Case caseEntity = caseRepository.findById(caseId)
                 .orElseThrow(() -> new RuntimeException("Dossier non trouvé"));
-        
+
         // SEC-IDOR FIX : vérifier que l'utilisateur est propriétaire du dossier
         if (caseEntity.getLawyer() == null || !caseEntity.getLawyer().getId().equals(userId)) {
             throw new SecurityException("Accès non autorisé à ce dossier");
         }
-        
+
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
-        
-        // SÉCURITÉ : validation du fichier
-        String originalFilename = file.getOriginalFilename();
-        if (originalFilename == null || originalFilename.isBlank()) {
-            throw new RuntimeException("Nom de fichier invalide");
-        }
-        // Sanitize filename — remove path separators and null bytes
-        originalFilename = originalFilename.replaceAll("[/\\\\\\x00]", "_");
-        
-        // Validate extension
-        String fileExtension = "";
-        int dotIndex = originalFilename.lastIndexOf(".");
-        if (dotIndex > 0) {
-            fileExtension = originalFilename.substring(dotIndex).toLowerCase();
-        }
-        if (!ALLOWED_EXTENSIONS.contains(fileExtension)) {
-            throw new RuntimeException("Type de fichier non autorisé: " + fileExtension);
-        }
-        
-        // Validate MIME type
+
+        String originalFilename = validateAndSanitizeFile(file);
+        String fileExtension = getExtension(originalFilename);
         String mimeType = file.getContentType();
-        if (mimeType == null || !ALLOWED_MIMETYPES.contains(mimeType.toLowerCase())) {
-            throw new RuntimeException("Type MIME non autorisé: " + mimeType);
-        }
-        
-        // SEC FIX H-11 : validation des magic bytes (premiers octets) pour vérifier le contenu réel du fichier
-        // SEC FIX F-18 : readNBytes() garantit la lecture complète (InputStream.read() peut retourner moins)
+
+        // SEC FIX H-11 / F-18 : validation magic bytes
         try {
             byte[] header;
             try (java.io.InputStream magicStream = file.getInputStream()) {
@@ -154,30 +136,16 @@ public class DocumentService {
         } catch (IOException e) {
             throw new RuntimeException("Erreur lors de la validation du fichier", e);
         }
-        
-        // Créer le répertoire si nécessaire
-        try {
-            Path uploadPath = Paths.get(uploadDir);
-            if (!Files.exists(uploadPath)) {
-                Files.createDirectories(uploadPath);
-            }
-            
-            // Générer un nom de fichier unique
-            String uniqueFilename = UUID.randomUUID().toString() + fileExtension;
-            
-            // Sauvegarder le fichier
-            Path filePath = uploadPath.resolve(uniqueFilename).normalize();
-            // SECURITE: Vérification path traversal
-            if (!filePath.startsWith(uploadPath.normalize())) {
-                throw new SecurityException("Path traversal détecté");
-            }
-            Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 
-            // SEC-HARDENED : chiffrement at-rest AES-256-GCM
+        try {
+            byte[] fileBytes = file.getBytes();
+            String uniqueFilename = UUID.randomUUID().toString() + fileExtension;
+
+            // SEC-HARDENED : chiffrement at-rest AES-256-GCM avant stockage MinIO
             boolean encrypted = false;
             if (fileEncryptionEnabled) {
                 try {
-                    cryptographyService.encryptFile(filePath, FILE_ENCRYPTION_KEY_ID);
+                    fileBytes = cryptographyService.encryptBytes(fileBytes, FILE_ENCRYPTION_KEY_ID);
                     encrypted = true;
                     log.info("Document chiffré at-rest: {}", uniqueFilename);
                 } catch (Exception e) {
@@ -185,7 +153,10 @@ public class DocumentService {
                 }
             }
 
-            // Créer l'entité document
+            // Stocker dans MinIO — la clé MinIO est uniqueFilename
+            storageService.storeBytes(BUCKET_DOCUMENTS, uniqueFilename, fileBytes,
+                    mimeType != null ? mimeType : "application/octet-stream");
+
             Document document = new Document();
             document.setId(UUID.randomUUID().toString());
             document.setCaseEntity(caseEntity);
@@ -193,93 +164,73 @@ public class DocumentService {
             document.setUploaderRole(userRole);
             document.setFilename(uniqueFilename);
             document.setOriginalName(originalFilename);
-            document.setMimetype(file.getContentType());
+            document.setMimetype(mimeType);
             document.setFileSize(file.getSize());
-            document.setPath(filePath.toString());
+            // path = clé MinIO (pas de "/" au début → nouveau format)
+            document.setPath(uniqueFilename);
             document.setVersion(1);
             document.setIsLatest(true);
             document.setEncrypted(encrypted);
             document.setCreatedAt(LocalDateTime.now());
-            
+
             Document saved = documentRepository.save(document);
-            
-            // Audit
-            auditService.log("DOCUMENT_UPLOADED", "Document", saved.getId(), 
+            auditService.log("DOCUMENT_UPLOADED", "Document", saved.getId(),
                 "Upload du document: " + originalFilename + (encrypted ? " [chiffré]" : " [non chiffré]"), userId);
-            
+
             return saved;
-            
-        } catch (java.nio.file.AccessDeniedException e) {
-            throw new RuntimeException("Erreur de permissions lors de l'upload du fichier");
         } catch (IOException e) {
-            throw new RuntimeException("Erreur lors de l'upload du fichier: " + e.getClass().getSimpleName() + " — " + e.getMessage());
+            throw new RuntimeException("Erreur lors de l'upload du fichier: " + e.getMessage(), e);
         }
     }
-    
+
     /**
-     * Upload une nouvelle version d'un document
-     * SEC-IDOR FIX SVC-02 : vérification ownership avant upload nouvelle version
+     * Upload une nouvelle version d'un document.
      */
     @Transactional
     public Document uploadNewVersion(String parentDocumentId, MultipartFile file, String userId) {
         Document parentDoc = getDocumentById(parentDocumentId);
-        
-        // SÉCURITÉ SVC-02 : vérifier que l'utilisateur est propriétaire du document
         verifyDocumentOwnership(parentDoc, userId);
-        
-        // Marquer l'ancienne version comme non-latest
+
         parentDoc.setIsLatest(false);
         documentRepository.save(parentDoc);
-        
+
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
-        
+
+        String originalFilename = validateAndSanitizeFile(file);
+        String fileExtension = getExtension(originalFilename);
+        String mimeType = file.getContentType();
+
+        // SEC FIX F-18 : validation magic bytes
         try {
-            Path uploadPath = Paths.get(uploadDir);
-            String originalFilename = file.getOriginalFilename();
-            if (originalFilename == null || originalFilename.isBlank()) {
-                throw new RuntimeException("Nom de fichier invalide");
+            byte[] header;
+            try (java.io.InputStream magicStream = file.getInputStream()) {
+                header = magicStream.readNBytes(8);
             }
-            // SECURITE: Sanitize filename — remove path separators and null bytes
-            originalFilename = originalFilename.replaceAll("[/\\\\\\x00]", "_");
-            
-            // Validate extension
-            String fileExtension = "";
-            int dotIndex = originalFilename.lastIndexOf(".");
-            if (dotIndex > 0) {
-                fileExtension = originalFilename.substring(dotIndex).toLowerCase();
+            if (!validateMagicBytes(header, fileExtension)) {
+                throw new RuntimeException("Le contenu du fichier ne correspond pas à son extension");
             }
-            if (!ALLOWED_EXTENSIONS.contains(fileExtension)) {
-                throw new RuntimeException("Type de fichier non autorisé: " + fileExtension);
-            }
-            
-            // Validate MIME type
-            String mimeType = file.getContentType();
-            if (mimeType == null || !ALLOWED_MIMETYPES.contains(mimeType.toLowerCase())) {
-                throw new RuntimeException("Type MIME non autorisé: " + mimeType);
-            }
+        } catch (IOException e) {
+            throw new RuntimeException("Erreur lors de la validation du fichier", e);
+        }
 
-            // SEC FIX F-18 : validation magic bytes également dans uploadNewVersion (absent avant correction)
-            try {
-                byte[] header;
-                try (java.io.InputStream magicStream = file.getInputStream()) {
-                    header = magicStream.readNBytes(8);
-                }
-                if (!validateMagicBytes(header, fileExtension)) {
-                    throw new RuntimeException("Le contenu du fichier ne correspond pas à son extension");
-                }
-            } catch (IOException e) {
-                throw new RuntimeException("Erreur lors de la validation du fichier", e);
-            }
-
+        try {
+            byte[] fileBytes = file.getBytes();
             String uniqueFilename = UUID.randomUUID().toString() + fileExtension;
-            Path filePath = uploadPath.resolve(uniqueFilename).normalize();
-            // SECURITE: Vérification path traversal
-            if (!filePath.startsWith(uploadPath.normalize())) {
-                throw new SecurityException("Path traversal détecté");
+
+            boolean encrypted = false;
+            if (fileEncryptionEnabled) {
+                try {
+                    fileBytes = cryptographyService.encryptBytes(fileBytes, FILE_ENCRYPTION_KEY_ID);
+                    encrypted = true;
+                } catch (Exception e) {
+                    log.error("Échec chiffrement [uploadNewVersion] {} — stocké en clair", uniqueFilename, e);
+                }
             }
-            Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-            
+
+            storageService.storeBytes(BUCKET_DOCUMENTS, uniqueFilename, fileBytes,
+                    mimeType != null ? mimeType : "application/octet-stream");
+
             Document newVersion = new Document();
             newVersion.setId(UUID.randomUUID().toString());
             newVersion.setCaseEntity(parentDoc.getCaseEntity());
@@ -287,102 +238,162 @@ public class DocumentService {
             newVersion.setUploaderRole(user.getRole().name());
             newVersion.setFilename(uniqueFilename);
             newVersion.setOriginalName(originalFilename);
-            newVersion.setMimetype(file.getContentType());
+            newVersion.setMimetype(mimeType);
             newVersion.setFileSize(file.getSize());
-            newVersion.setPath(filePath.toString());
+            newVersion.setPath(uniqueFilename);
             newVersion.setVersion(parentDoc.getVersion() + 1);
             newVersion.setParentDocument(parentDoc);
             newVersion.setIsLatest(true);
+            newVersion.setEncrypted(encrypted);
             newVersion.setCreatedAt(LocalDateTime.now());
-            
+
             Document saved = documentRepository.save(newVersion);
-            
-            // Audit
-            auditService.log("DOCUMENT_UPLOADED", "Document", saved.getId(), 
+            auditService.log("DOCUMENT_UPLOADED", "Document", saved.getId(),
                 "Nouvelle version (v" + saved.getVersion() + "): " + originalFilename, userId);
-            
+
             return saved;
-            
         } catch (IOException e) {
             throw new RuntimeException("Erreur lors de l'upload: " + e.getMessage());
         }
     }
-    
+
     /**
      * Suppression logique (corbeille)
      */
     @Transactional
     public void softDeleteDocument(String documentId, String userId) {
         Document document = getDocumentById(documentId);
-        // SEC-IDOR FIX : vérifier ownership
         verifyDocumentOwnership(document, userId);
         document.softDelete();
         documentRepository.save(document);
-        
-        // Audit
-        auditService.log("DOCUMENT_DELETED", "Document", documentId, 
+        auditService.log("DOCUMENT_DELETED", "Document", documentId,
             "Suppression du document: " + document.getOriginalName(), userId);
     }
-    
+
     /**
      * Restauration depuis la corbeille
      */
     @Transactional
     public void restoreDocument(String documentId, String userId) {
         Document document = getDocumentById(documentId);
-        // SEC-IDOR FIX : vérifier ownership
         verifyDocumentOwnership(document, userId);
         document.restore();
         documentRepository.save(document);
-        
-        // Audit
-        auditService.log("DOCUMENT_RESTORED", "Document", documentId, 
+        auditService.log("DOCUMENT_RESTORED", "Document", documentId,
             "Restauration du document: " + document.getOriginalName(), userId);
     }
-    
+
     /**
-     * Suppression définitive
+     * Suppression définitive — supprime aussi l'objet MinIO.
      */
     @Transactional
     public void permanentDeleteDocument(String documentId, String userId) {
         Document document = getDocumentById(documentId);
-        // SEC-IDOR FIX : vérifier ownership
         verifyDocumentOwnership(document, userId);
-        
-        // Supprimer le fichier physique
+
+        // Supprimer le support physique (MinIO ou disque legacy)
         try {
-            Path filePath = Paths.get(document.getPath());
-            Files.deleteIfExists(filePath);
-        } catch (IOException e) {
-            // Log l'erreur mais continue la suppression de la BDD
+            String path = document.getPath();
+            if (path != null) {
+                if (isLegacyPath(path)) {
+                    Files.deleteIfExists(Paths.get(path));
+                } else {
+                    storageService.delete(BUCKET_DOCUMENTS, path);
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Impossible de supprimer le fichier physique du document {} : {}", documentId, e.getMessage());
         }
-        
+
         String filename = document.getOriginalName();
         documentRepository.delete(document);
-        
-        // Audit
-        auditService.log("DOCUMENT_DELETED", "Document", documentId, 
+        auditService.log("DOCUMENT_DELETED", "Document", documentId,
             "Suppression définitive du document: " + filename, userId);
     }
-    
+
     /**
-     * Télécharger un document
+     * Télécharger un document — retourne les bytes déchiffrés.
+     * Gère la rétrocompatibilité disque local (anciens documents).
      */
-    public Path downloadDocument(String documentId, String userId) {
-        Document document = getDocumentById(documentId);
-        // SEC-IDOR FIX : vérifier ownership
-        verifyDocumentOwnership(document, userId);
-        
-        // Audit
-        auditService.log("DOCUMENT_DOWNLOADED", "Document", documentId, 
-            "Téléchargement du document: " + document.getOriginalName(), userId);
-        
-        return Paths.get(document.getPath());
+    public byte[] downloadDocument(String documentId, String userId) {
+        return getDecryptedFileContent(documentId, userId);
     }
-    
+
     /**
-     * SEC-IDOR FIX : Vérifie que l'utilisateur est propriétaire du document via le dossier
+     * Récupère le contenu déchiffré d'un document.
+     * - Nouveau format (MinIO) : path = clé MinIO (ex: "uuid.pdf")
+     * - Ancien format (disque) : path = chemin absolu (ex: "/opt/docavocat/uploads/...")
      */
+    @Transactional(readOnly = true)
+    public byte[] getDecryptedFileContent(String documentId, String userId) {
+        Document document = getDocumentById(documentId);
+        verifyDocumentOwnership(document, userId);
+
+        try {
+            byte[] fileBytes;
+            String path = document.getPath();
+
+            if (isLegacyPath(path)) {
+                // Rétrocompatibilité : lecture depuis le disque local
+                fileBytes = Files.readAllBytes(Paths.get(path));
+            } else {
+                // Nouveau format : lecture depuis MinIO
+                fileBytes = storageService.getBytes(BUCKET_DOCUMENTS, path);
+            }
+
+            if (Boolean.TRUE.equals(document.getEncrypted())) {
+                return cryptographyService.decryptBytes(fileBytes, FILE_ENCRYPTION_KEY_ID);
+            }
+            return fileBytes;
+        } catch (Exception e) {
+            log.error("Erreur lecture document {}: {}", documentId, e.getMessage());
+            throw new RuntimeException("Impossible de lire le document", e);
+        }
+    }
+
+    /**
+     * Calcule la taille totale des documents d'un avocat (depuis la BDD).
+     */
+    public long getTotalStorageSize(String lawyerId) {
+        return documentRepository.calculateTotalSizeByLawyer(lawyerId);
+    }
+
+    /**
+     * Récupère tous les documents d'un avocat
+     */
+    public List<Document> getAllDocumentsByUser(String lawyerId) {
+        return documentRepository.findByLawyerIdWithCase(lawyerId);
+    }
+
+    // ── Helpers privés ───────────────────────────────────────────────────────
+
+    /** Un chemin est "legacy" s'il commence par "/" (chemin filesystem absolu). */
+    private boolean isLegacyPath(String path) {
+        return path != null && path.startsWith("/");
+    }
+
+    private String validateAndSanitizeFile(MultipartFile file) {
+        String originalFilename = file.getOriginalFilename();
+        if (originalFilename == null || originalFilename.isBlank()) {
+            throw new RuntimeException("Nom de fichier invalide");
+        }
+        originalFilename = originalFilename.replaceAll("[/\\\\\\x00]", "_");
+        String ext = getExtension(originalFilename);
+        if (!ALLOWED_EXTENSIONS.contains(ext)) {
+            throw new RuntimeException("Type de fichier non autorisé: " + ext);
+        }
+        String mimeType = file.getContentType();
+        if (mimeType == null || !ALLOWED_MIMETYPES.contains(mimeType.toLowerCase())) {
+            throw new RuntimeException("Type MIME non autorisé: " + mimeType);
+        }
+        return originalFilename;
+    }
+
+    private String getExtension(String filename) {
+        int dotIndex = filename.lastIndexOf(".");
+        return dotIndex > 0 ? filename.substring(dotIndex).toLowerCase() : "";
+    }
+
     private void verifyDocumentOwnership(Document document, String userId) {
         if (document.getCaseEntity() == null || document.getCaseEntity().getLawyer() == null
                 || !document.getCaseEntity().getLawyer().getId().equals(userId)) {
@@ -391,62 +402,23 @@ public class DocumentService {
     }
 
     /**
-     * Récupère le contenu déchiffré d'un document pour téléchargement.
-     * Si le document est chiffré at-rest, le déchiffre à la volée.
-     */
-    @Transactional(readOnly = true)
-    public byte[] getDecryptedFileContent(String documentId, String userId) {
-        Document document = getDocumentById(documentId);
-        verifyDocumentOwnership(document, userId);
-
-        Path filePath = Paths.get(document.getPath());
-        try {
-            if (Boolean.TRUE.equals(document.getEncrypted())) {
-                return cryptographyService.decryptFile(filePath, FILE_ENCRYPTION_KEY_ID);
-            } else {
-                return Files.readAllBytes(filePath);
-            }
-        } catch (Exception e) {
-            log.error("Erreur lecture document {}: {}", documentId, e.getMessage());
-            throw new RuntimeException("Impossible de lire le document", e);
-        }
-    }
-    
-    /**
-     * Calcule la taille totale des documents d'un avocat
-     */
-    public long getTotalStorageSize(String lawyerId) {
-        return documentRepository.calculateTotalSizeByLawyer(lawyerId);
-    }
-    
-    /**
-     * Récupère tous les documents d'un avocat
-     */
-    public List<Document> getAllDocumentsByUser(String lawyerId) {
-        return documentRepository.findByLawyerIdWithCase(lawyerId);
-    }
-    
-    /**
      * SEC FIX H-11 : Validation des magic bytes pour les formats courants.
-     * Retourne true si les octets d'en-tête correspondent à l'extension déclarée,
-     * ou si l'extension n'a pas de signature connue (on laisse passer les formats texte, etc.)
      */
     private boolean validateMagicBytes(byte[] header, String extension) {
         if (header == null || header.length < 4) return false;
         return switch (extension.toLowerCase()) {
-            case ".pdf" -> header[0] == 0x25 && header[1] == 0x50 && header[2] == 0x44 && header[3] == 0x46; // %PDF
-            case ".png" -> header[0] == (byte) 0x89 && header[1] == 0x50 && header[2] == 0x4E && header[3] == 0x47; // .PNG
+            case ".pdf" -> header[0] == 0x25 && header[1] == 0x50 && header[2] == 0x44 && header[3] == 0x46;
+            case ".png" -> header[0] == (byte) 0x89 && header[1] == 0x50 && header[2] == 0x4E && header[3] == 0x47;
             case ".jpg", ".jpeg" -> header[0] == (byte) 0xFF && header[1] == (byte) 0xD8 && header[2] == (byte) 0xFF;
-            case ".gif" -> header[0] == 0x47 && header[1] == 0x49 && header[2] == 0x46; // GIF
+            case ".gif" -> header[0] == 0x47 && header[1] == 0x49 && header[2] == 0x46;
             case ".zip", ".docx", ".xlsx", ".pptx", ".odt", ".ods", ".odp" ->
-                header[0] == 0x50 && header[1] == 0x4B; // PK (ZIP-based)
-            case ".rar" -> header[0] == 0x52 && header[1] == 0x61 && header[2] == 0x72; // Rar
+                header[0] == 0x50 && header[1] == 0x4B;
+            case ".rar" -> header[0] == 0x52 && header[1] == 0x61 && header[2] == 0x72;
             case ".7z" -> header[0] == 0x37 && header[1] == 0x7A && header[2] == (byte) 0xBC && header[3] == (byte) 0xAF;
-            case ".bmp" -> header[0] == 0x42 && header[1] == 0x4D; // BM
-            case ".tiff" -> (header[0] == 0x49 && header[1] == 0x49) || (header[0] == 0x4D && header[1] == 0x4D); // II or MM
+            case ".bmp" -> header[0] == 0x42 && header[1] == 0x4D;
+            case ".tiff" -> (header[0] == 0x49 && header[1] == 0x49) || (header[0] == 0x4D && header[1] == 0x4D);
             case ".doc", ".xls", ".ppt", ".msg" ->
-                header[0] == (byte) 0xD0 && header[1] == (byte) 0xCF && header[2] == 0x11 && header[3] == (byte) 0xE0; // OLE2
-            // Formats texte : .txt, .csv, .rtf, .eml, .webp — pas de magic bytes fiables ou acceptés tels quels
+                header[0] == (byte) 0xD0 && header[1] == (byte) 0xCF && header[2] == 0x11 && header[3] == (byte) 0xE0;
             default -> true;
         };
     }

@@ -80,6 +80,13 @@ public interface InvoiceRepository extends JpaRepository<Invoice, String> {
      */
     boolean existsByInvoiceNumber(String invoiceNumber);
 
+    /**
+     * Vérifie si une facture avec cette URL de document appartient à l'utilisateur (avocat ou client)
+     */
+    @Query("SELECT COUNT(i) > 0 FROM Invoice i WHERE i.documentUrl = :docUrl " +
+           "AND (i.client.lawyer.id = :userId OR i.client.clientUser.id = :userId)")
+    boolean existsByDocumentUrlAndUserId(@Param("docUrl") String docUrl, @Param("userId") String userId);
+
     @Query("SELECT i FROM Invoice i " +
             "LEFT JOIN FETCH i.items " +
             "LEFT JOIN FETCH i.client " +
