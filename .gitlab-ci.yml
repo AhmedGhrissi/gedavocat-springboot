@@ -354,50 +354,104 @@ deploy:
       set -e
       cd /opt/docavocat
 
-      echo "=== Nettoyage disque ==="
-      docker system prune -f --volumes || true
+      # ── Blue/Green Zero-Downtime Deploy ────────────────────────
+      # Principe : deux slots (blue=8080, green=8081)
+      # La CI determine le slot inactif, le demarre, attend UP, bascule nginx, arrête l'ancien.
+      # nginx -s reload est atomique cote TLS : 0 connexion droppee.
+
+      UPSTREAM_FILE="/etc/nginx/conf.d/upstream-app.conf"
+
+      # Creer le fichier upstream si absent (premiere installation)
+      if [ ! -f "$UPSTREAM_FILE" ]; then
+        echo "upstream docavocat_app { server 127.0.0.1:8080; }" > "$UPSTREAM_FILE"
+      fi
+
+      # Determiner le slot actif (blue=8080, green=8081)
+      CURRENT_PORT=$(grep -oP '127\.0\.0\.1:\K\d+' "$UPSTREAM_FILE" | head -1)
+      if [ "$CURRENT_PORT" = "8080" ]; then
+        ACTIVE_SLOT="blue"
+        IDLE_SLOT="green"
+        IDLE_PORT="8081"
+        ACTIVE_PORT="8080"
+      else
+        ACTIVE_SLOT="green"
+        IDLE_SLOT="blue"
+        IDLE_PORT="8080"
+        ACTIVE_PORT="8081"
+      fi
+      echo "=== Blue/Green : actif=${ACTIVE_SLOT}:${ACTIVE_PORT} => deploiement sur ${IDLE_SLOT}:${IDLE_PORT} ==="
+
+      echo "=== Nettoyage disque (images orphelines) ==="
+      docker image prune -f || true
       df -h /
 
-      echo "=== Deploiement Docker Compose ==="
-      docker compose pull
-      docker compose up -d --remove-orphans
+      echo "=== Pull nouvelle image sur slot ${IDLE_SLOT} ==="
+      docker compose pull app-${IDLE_SLOT}
 
       echo "=== Verification MySQL ==="
       for i in $(seq 1 30); do
-        docker compose exec -T db mysqladmin ping -h localhost --silent 2>/dev/null && echo "MySQL pret" && break || true
+        docker compose exec -T mysql mysqladmin ping -h localhost --silent 2>/dev/null && echo "MySQL pret" && break || true
         echo "Attente MySQL ($i/30)..."
         sleep 2
       done
+
+      echo "=== Demarrage slot ${IDLE_SLOT} (l ancien reste actif) ==="
+      docker compose up -d --no-deps --force-recreate app-${IDLE_SLOT}
+
+      echo "=== Attente health check slot ${IDLE_SLOT}:${IDLE_PORT} ==="
+      READY=0
+      for i in $(seq 1 60); do
+        if curl -sf http://localhost:${IDLE_PORT}/actuator/health 2>/dev/null | grep -q '"status":"UP"'; then
+          echo "Slot ${IDLE_SLOT} pret apres $((i*3))s"
+          READY=1
+          break
+        fi
+        echo "Attente ($i/60)..."
+        sleep 3
+      done
+
+      if [ "$READY" != "1" ]; then
+        echo "ERREUR: Slot ${IDLE_SLOT} non pret — rollback (slot ${ACTIVE_SLOT} reste actif)"
+        docker compose stop app-${IDLE_SLOT} || true
+        exit 1
+      fi
 
       echo "=== Verification cle MFA ==="
       if [ ! -f config/keys/mfa.key ]; then
         echo "Attention: cle MFA absente dans config/keys/"
       fi
 
-      echo "=== Attente Spring Boot ==="
-      for i in $(seq 1 60); do
-        curl -sf http://localhost:8080/actuator/health 2>/dev/null | grep -q '"status":"UP"' && echo "Application demarree" && break || true
-        echo "Attente application ($i/60)..."
-        sleep 3
-      done
+      echo "=== Bascule nginx vers slot ${IDLE_SLOT}:${IDLE_PORT} (reload atomique) ==="
+      echo "upstream docavocat_app { server 127.0.0.1:${IDLE_PORT}; }" > "$UPSTREAM_FILE"
+      nginx -t && nginx -s reload
+      echo "Nginx pointe maintenant sur ${IDLE_SLOT}:${IDLE_PORT}"
 
-      echo "=== Verification HTTP ==="
+      echo "=== Verification HTTP post-bascule ==="
+      sleep 2
       HTTP_CODE=$(curl -so /dev/null -w "%{http_code}" https://docavocat.fr/ || echo "000")
       if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "302" ]; then
         echo "Site accessible HTTP $HTTP_CODE"
       else
-        echo "ERREUR: Site inaccessible HTTP $HTTP_CODE"
+        echo "ERREUR: Site inaccessible apres bascule HTTP $HTTP_CODE — rollback nginx"
+        echo "upstream docavocat_app { server 127.0.0.1:${ACTIVE_PORT}; }" > "$UPSTREAM_FILE"
+        nginx -s reload
+        docker compose stop app-${IDLE_SLOT} || true
         exit 1
       fi
 
-      echo "=== Reload nginx ==="
-      docker compose exec -T nginx nginx -t 2>/dev/null && docker compose exec -T nginx nginx -s reload || true
-
       echo "=== Smoke tests ==="
-      curl -sf https://docavocat.fr/actuator/health | grep -q '"status":"UP"' && echo "Health check OK" || echo "Health check KO"
-      curl -sf https://docavocat.fr/login > /dev/null && echo "Page login OK" || echo "Page login KO"
+      curl -sf https://docavocat.fr/actuator/health | grep -q '"status":"UP"' && echo "Health check OK" || echo "WARN: Health check KO"
+      curl -sf https://docavocat.fr/login > /dev/null && echo "Page login OK" || echo "WARN: Page login KO"
 
-      echo "=== Deploiement termine ==="
+      echo "=== Arret propre de l ancien slot ${ACTIVE_SLOT} ==="
+      # Attendre 30s que les connexions en cours se terminent (keep-alive nginx)
+      sleep 30
+      docker compose stop app-${ACTIVE_SLOT} || true
+
+      echo "=== Nettoyage images obsoletes ==="
+      docker image prune -f || true
+
+      echo "=== Deploiement Blue/Green termine : ${IDLE_SLOT}:${IDLE_PORT} est actif ==="
       ENDSSH
   after_script:
     - *discord_deploy_notify
