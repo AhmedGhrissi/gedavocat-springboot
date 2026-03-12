@@ -37,10 +37,14 @@ LABEL version="1.0.0"
 RUN groupadd -r docavocat --gid=1001 \
     && useradd -r -g docavocat --uid=1001 -d /app -s /sbin/nologin docavocat
 
-# Installer curl pour le healthcheck, puis nettoyer
-RUN apt-get update \
+# Installer curl pour le healthcheck
+# Workaround QEMU ARM64 : ldconfig segfault sous émulation → dpkg-divert /bin/true le temps de l'install
+RUN dpkg-divert --local --rename --add /sbin/ldconfig \
+    && ln -s /bin/true /sbin/ldconfig \
+    && apt-get update \
     && apt-get install -y --no-install-recommends curl \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && dpkg-divert --local --rename --remove /sbin/ldconfig
 
 # Répertoire de l'application
 WORKDIR /app
