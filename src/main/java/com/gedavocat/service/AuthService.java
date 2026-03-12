@@ -46,7 +46,7 @@ public class AuthService {
                 // Supprimer le compte zombie pour permettre la réinscription
                 userRepository.delete(existing);
                 userRepository.flush();
-                log.info("Compte non vérifié supprimé pour réinscription : {}", emailNormalized);
+                log.info("Compte non vérifié supprimé pour réinscription (email masqué pour RGPD)");
             } else {
                 // SEC-08 FIX : Message spécifique mais sans révéler trop d'informations
                 throw new IllegalArgumentException("Cette adresse email est déjà utilisée");

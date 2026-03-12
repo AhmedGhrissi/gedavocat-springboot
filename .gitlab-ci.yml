@@ -32,6 +32,9 @@ variables:
   MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
   MAVEN_CLI_OPTS: "--batch-mode --no-transfer-progress"
   REMOTE_DIR: "/opt/docavocat"
+  # SEC FIX N-10 : définir DEPLOY_USER dans les variables CI/CD GitLab (utilisateur non-root)
+  # Créer un utilisateur 'deploy' sur le serveur avec accès sudo limité au docker compose
+  # DEPLOY_USER: "deploy"  # valeur par défaut dans les scripts : deploy
 
 stages:
   - security
@@ -389,7 +392,8 @@ package:
   stage: package
   image: docker:27-cli
   needs:
-    - test
+    - job: test
+      optional: true  # SEC FIX N-09 : test est skippé en FAST_DEPLOY, optional: true évite le blocage
   variables:
     DOCKER_BUILDKIT: "1"
     DOCKER_CLI_EXPERIMENTAL: "enabled"
@@ -439,12 +443,12 @@ deploy:
     - chmod 644 ~/.ssh/known_hosts
   script:
     - echo "=== DEPLOIEMENT PRODUCTION ==="
-    - scp docker/docker-compose.yml root@$SERVER_HOST:$REMOTE_DIR/docker-compose.yml
-    - scp docker/Dockerfile root@$SERVER_HOST:$REMOTE_DIR/Dockerfile
-    - scp docker/entrypoint.sh root@$SERVER_HOST:$REMOTE_DIR/entrypoint.sh
-    - scp docker/nginx/docavocat.conf root@$SERVER_HOST:$REMOTE_DIR/nginx/docavocat.conf 2>/dev/null || true
+    - scp docker/docker-compose.yml ${DEPLOY_USER:-deploy}@$SERVER_HOST:$REMOTE_DIR/docker-compose.yml
+    - scp docker/Dockerfile ${DEPLOY_USER:-deploy}@$SERVER_HOST:$REMOTE_DIR/Dockerfile
+    - scp docker/entrypoint.sh ${DEPLOY_USER:-deploy}@$SERVER_HOST:$REMOTE_DIR/entrypoint.sh
+    - scp docker/nginx/docavocat.conf ${DEPLOY_USER:-deploy}@$SERVER_HOST:$REMOTE_DIR/nginx/docavocat.conf 2>/dev/null || true
     - |
-      ssh root@$SERVER_HOST "
+      ssh ${DEPLOY_USER:-deploy}@$SERVER_HOST "
         cd $REMOTE_DIR
         rm -rf /var/lib/apt/lists/* /tmp/* 2>/dev/null || true
         sed -i -e '\$a\\' .env
@@ -452,7 +456,7 @@ deploy:
         echo 'APP_IMAGE=$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA' >> .env
       "
     - |
-      ssh root@$SERVER_HOST "
+      ssh ${DEPLOY_USER:-deploy}@$SERVER_HOST "
         cd $REMOTE_DIR
         for VAR in MAIL_HOST MAIL_PORT MAIL_USERNAME MAIL_PASSWORD; do
           sed -i \"/^\${VAR}=/d\" .env
@@ -463,7 +467,7 @@ deploy:
         echo 'MAIL_PASSWORD=${MAIL_PASSWORD}' >> .env
       "
     - |
-      ssh root@$SERVER_HOST "
+      ssh ${DEPLOY_USER:-deploy}@$SERVER_HOST "
         cd $REMOTE_DIR
         sed -i '/^DPO_NAME=/d' .env
         sed -i '/^DPO_EMAIL=/d' .env
@@ -480,22 +484,22 @@ deploy:
         echo 'PRA_CONTACT=IT Manager - A Configurer' >> .env
         echo 'PRA_BACKUP_SITE=' >> .env
       "
-    - ssh root@$SERVER_HOST "mkdir -p $REMOTE_DIR/loki $REMOTE_DIR/promtail $REMOTE_DIR/prometheus $REMOTE_DIR/alertmanager $REMOTE_DIR/grafana/provisioning/datasources $REMOTE_DIR/grafana/provisioning/dashboards"
-    - scp docker/loki/local-config.yaml root@$SERVER_HOST:$REMOTE_DIR/loki/local-config.yaml
-    - scp docker/promtail/config.yaml root@$SERVER_HOST:$REMOTE_DIR/promtail/config.yaml
-    - scp docker/prometheus/prometheus.yml root@$SERVER_HOST:$REMOTE_DIR/prometheus/prometheus.yml
-    - scp docker/prometheus/alerts.yml root@$SERVER_HOST:$REMOTE_DIR/prometheus/alerts.yml
-    - scp docker/alertmanager/alertmanager.yml root@$SERVER_HOST:$REMOTE_DIR/alertmanager/alertmanager.yml
-    - scp docker/grafana/provisioning/datasources/loki.yaml root@$SERVER_HOST:$REMOTE_DIR/grafana/provisioning/datasources/loki.yaml
-    - scp docker/grafana/provisioning/datasources/prometheus.yml root@$SERVER_HOST:$REMOTE_DIR/grafana/provisioning/datasources/prometheus.yml
-    - scp docker/grafana/provisioning/dashboards/dashboards.yaml root@$SERVER_HOST:$REMOTE_DIR/grafana/provisioning/dashboards/dashboards.yaml
-    - scp docker/grafana/provisioning/dashboards/docavocat.json root@$SERVER_HOST:$REMOTE_DIR/grafana/provisioning/dashboards/docavocat.json
-    - scp docker/grafana/provisioning/dashboards/docavocat-metrics.json root@$SERVER_HOST:$REMOTE_DIR/grafana/provisioning/dashboards/docavocat-metrics.json
-    - ssh root@$SERVER_HOST "mkdir -p $REMOTE_DIR/scripts"
-    - scp docker/scripts/backup.sh root@$SERVER_HOST:$REMOTE_DIR/scripts/backup.sh
-    - ssh root@$SERVER_HOST "sed -i 's/\r//' $REMOTE_DIR/scripts/backup.sh && chmod +x $REMOTE_DIR/scripts/backup.sh"
+    - ssh ${DEPLOY_USER:-deploy}@$SERVER_HOST "mkdir -p $REMOTE_DIR/loki $REMOTE_DIR/promtail $REMOTE_DIR/prometheus $REMOTE_DIR/alertmanager $REMOTE_DIR/grafana/provisioning/datasources $REMOTE_DIR/grafana/provisioning/dashboards"
+    - scp docker/loki/local-config.yaml ${DEPLOY_USER:-deploy}@$SERVER_HOST:$REMOTE_DIR/loki/local-config.yaml
+    - scp docker/promtail/config.yaml ${DEPLOY_USER:-deploy}@$SERVER_HOST:$REMOTE_DIR/promtail/config.yaml
+    - scp docker/prometheus/prometheus.yml ${DEPLOY_USER:-deploy}@$SERVER_HOST:$REMOTE_DIR/prometheus/prometheus.yml
+    - scp docker/prometheus/alerts.yml ${DEPLOY_USER:-deploy}@$SERVER_HOST:$REMOTE_DIR/prometheus/alerts.yml
+    - scp docker/alertmanager/alertmanager.yml ${DEPLOY_USER:-deploy}@$SERVER_HOST:$REMOTE_DIR/alertmanager/alertmanager.yml
+    - scp docker/grafana/provisioning/datasources/loki.yaml ${DEPLOY_USER:-deploy}@$SERVER_HOST:$REMOTE_DIR/grafana/provisioning/datasources/loki.yaml
+    - scp docker/grafana/provisioning/datasources/prometheus.yml ${DEPLOY_USER:-deploy}@$SERVER_HOST:$REMOTE_DIR/grafana/provisioning/datasources/prometheus.yml
+    - scp docker/grafana/provisioning/dashboards/dashboards.yaml ${DEPLOY_USER:-deploy}@$SERVER_HOST:$REMOTE_DIR/grafana/provisioning/dashboards/dashboards.yaml
+    - scp docker/grafana/provisioning/dashboards/docavocat.json ${DEPLOY_USER:-deploy}@$SERVER_HOST:$REMOTE_DIR/grafana/provisioning/dashboards/docavocat.json
+    - scp docker/grafana/provisioning/dashboards/docavocat-metrics.json ${DEPLOY_USER:-deploy}@$SERVER_HOST:$REMOTE_DIR/grafana/provisioning/dashboards/docavocat-metrics.json
+    - ssh ${DEPLOY_USER:-deploy}@$SERVER_HOST "mkdir -p $REMOTE_DIR/scripts"
+    - scp docker/scripts/backup.sh ${DEPLOY_USER:-deploy}@$SERVER_HOST:$REMOTE_DIR/scripts/backup.sh
+    - ssh ${DEPLOY_USER:-deploy}@$SERVER_HOST "sed -i 's/\r//' $REMOTE_DIR/scripts/backup.sh && chmod +x $REMOTE_DIR/scripts/backup.sh"
     - |
-      ssh root@$SERVER_HOST "
+      ssh ${DEPLOY_USER:-deploy}@$SERVER_HOST "
         set -e
         cd $REMOTE_DIR
         MAX_RETRIES=3
@@ -579,7 +583,7 @@ deploy:
         docker logs docavocat-app --tail=50 2>&1 || echo 'Impossible de lire les logs'
       "    - |
       echo "ETAPE 1: Verification etat du conteneur"
-      ssh root@$SERVER_HOST "
+      ssh ${DEPLOY_USER:-deploy}@$SERVER_HOST "
         docker ps --filter name=docavocat-app --format 'table {{.Names}}\t{{.Status}}\t{{.State}}'
         CONTAINER_STATUS=\$(docker inspect docavocat-app --format='{{.State.Status}}' 2>/dev/null || echo 'not found')
         echo \"Status: \$CONTAINER_STATUS\"
@@ -594,14 +598,14 @@ deploy:
       for i in 1 2 3 4 5 6; do
         sleep 10
         echo "[$((i*10))s] Verification en cours..."
-        ssh root@$SERVER_HOST "
+        ssh ${DEPLOY_USER:-deploy}@$SERVER_HOST "
           if ! docker ps --filter name=docavocat-app --filter status=running -q | grep -q .; then
             echo 'ERREUR: Le conteneur s est arrete pendant le demarrage'
             docker logs docavocat-app --tail=100 2>&1
             exit 1
           fi
         " || exit 1
-        STARTED=$(ssh root@$SERVER_HOST "docker logs docavocat-app 2>&1 | grep -i 'Started GedAvocatApplication' | wc -l" 2>/dev/null || echo "0")
+        STARTED=$(ssh ${DEPLOY_USER:-deploy}@$SERVER_HOST "docker logs docavocat-app 2>&1 | grep -i 'Started GedAvocatApplication' | wc -l" 2>/dev/null || echo "0")
         if [ "$STARTED" -gt "0" ]; then
           echo "Spring Boot a demarre avec succes!"
           break
@@ -613,7 +617,7 @@ deploy:
       HTTP_SUCCESS=false
       for attempt in $(seq 1 $MAX_HTTP_RETRIES); do
         echo "Tentative HTTP $attempt/$MAX_HTTP_RETRIES..."
-        HTTP_CODE=$(ssh root@$SERVER_HOST "curl -s -o /dev/null -w '%{http_code}' --max-time 10 http://127.0.0.1:8080/" 2>/dev/null || echo "000")
+        HTTP_CODE=$(ssh ${DEPLOY_USER:-deploy}@$SERVER_HOST "curl -s -o /dev/null -w '%{http_code}' --max-time 10 http://127.0.0.1:8080/" 2>/dev/null || echo "000")
         echo "  Code HTTP recu: $HTTP_CODE"
         if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "302" ]; then
           echo "Application repond correctement (HTTP $HTTP_CODE)"
@@ -625,12 +629,12 @@ deploy:
       done
       if [ "$HTTP_SUCCESS" = "false" ]; then
         echo "ERREUR: L application ne repond pas correctement"
-        ssh root@$SERVER_HOST "docker logs docavocat-app --tail=300 2>&1"
+        ssh ${DEPLOY_USER:-deploy}@$SERVER_HOST "docker logs docavocat-app --tail=300 2>&1"
         exit 1
       fi
     - |
       echo "ETAPE 4: Fix nginx"
-      ssh root@$SERVER_HOST "
+      ssh ${DEPLOY_USER:-deploy}@$SERVER_HOST "
         echo '=== 4a. Redirect www -> non-www ==='
         WWW_REDIRECT='/etc/nginx/conf.d/www-redirect-docavocat.conf'
         if [ ! -f \"\$WWW_REDIRECT\" ]; then
@@ -668,7 +672,7 @@ deploy:
       "
     - |
       echo "ETAPE 5: Verification finale"
-      ssh root@$SERVER_HOST "
+      ssh ${DEPLOY_USER:-deploy}@$SERVER_HOST "
         docker stats docavocat-app --no-stream --format 'table {{.Container}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.MemPerc}}' || true
         docker logs docavocat-app --tail=20 2>&1
         echo '=== VERIFICATION CSP HEADERS ==='
@@ -687,16 +691,16 @@ deploy:
     - |
       echo "ETAPE 6: Smoke tests"
       SMOKE_PASS=true
-      HTTP_LOGIN=$(ssh root@$SERVER_HOST "curl -s -o /dev/null -w '%{http_code}' --max-time 10 https://docavocat.fr/login" 2>/dev/null || echo "000")
+      HTTP_LOGIN=$(ssh ${DEPLOY_USER:-deploy}@$SERVER_HOST "curl -s -o /dev/null -w '%{http_code}' --max-time 10 https://docavocat.fr/login" 2>/dev/null || echo "000")
       echo "  [1] GET /login = HTTP $HTTP_LOGIN"
       [ "$HTTP_LOGIN" = "200" ] || SMOKE_PASS=false
-      HTTP_REDIRECT=$(ssh root@$SERVER_HOST "curl -s -o /dev/null -w '%{http_code}' --max-time 10 http://docavocat.fr/" 2>/dev/null || echo "000")
+      HTTP_REDIRECT=$(ssh ${DEPLOY_USER:-deploy}@$SERVER_HOST "curl -s -o /dev/null -w '%{http_code}' --max-time 10 http://docavocat.fr/" 2>/dev/null || echo "000")
       echo "  [2] HTTP redirect = HTTP $HTTP_REDIRECT"
       [ "$HTTP_REDIRECT" = "301" ] || [ "$HTTP_REDIRECT" = "302" ] || SMOKE_PASS=false
-      USER_COUNT=$(ssh root@$SERVER_HOST "docker exec docavocat-mysql mysql -u gedavocat -p\"\$(grep MYSQL_PASSWORD /opt/docavocat/.env | head -1 | cut -d= -f2-)\" gedavocat -N -e 'SELECT COUNT(*) FROM users' 2>/dev/null" || echo "ERR")
+      USER_COUNT=$(ssh ${DEPLOY_USER:-deploy}@$SERVER_HOST "docker exec docavocat-mysql mysql -u gedavocat -p\"\$(grep MYSQL_PASSWORD /opt/docavocat/.env | head -1 | cut -d= -f2-)\" gedavocat -N -e 'SELECT COUNT(*) FROM users' 2>/dev/null" || echo "ERR")
       echo "  [3] Users in DB = $USER_COUNT"
       [ "$USER_COUNT" != "ERR" ] && [ "$USER_COUNT" -gt 0 ] 2>/dev/null || SMOKE_PASS=false
-      HSTS=$(ssh root@$SERVER_HOST "curl -sI --max-time 10 https://docavocat.fr/login | grep -i strict-transport-security | wc -l" 2>/dev/null || echo "0")
+      HSTS=$(ssh ${DEPLOY_USER:-deploy}@$SERVER_HOST "curl -sI --max-time 10 https://docavocat.fr/login | grep -i strict-transport-security | wc -l" 2>/dev/null || echo "0")
       echo "  [4] HSTS header = $HSTS"
       if [ "$SMOKE_PASS" = "true" ]; then
         echo "Tous les smoke tests passes"

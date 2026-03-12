@@ -54,4 +54,18 @@ public class RgpdPurgeScheduler {
             log.info("[RGPD] Purge automatique : {} token(s) de réinitialisation expiré(s) supprimé(s)", cleared);
         }
     }
+
+    /**
+     * SEC FIX N-13 : Désactive les comptes inactifs depuis plus de 24 mois (Art. 5.1.e RGPD).
+     * Exécuté chaque nuit à 03h00 (heure serveur).
+     */
+    @Scheduled(cron = "0 0 3 * * *")
+    @Transactional
+    public void disableInactiveAccounts() {
+        LocalDateTime cutoff = LocalDateTime.now().minusDays(720); // 24 mois
+        int disabled = userRepository.disableInactiveAccounts(cutoff);
+        if (disabled > 0) {
+            log.warn("[RGPD] Comptes inactifs désactivés : {} compte(s) sans connexion depuis >24 mois", disabled);
+        }
+    }
 }

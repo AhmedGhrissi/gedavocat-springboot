@@ -245,7 +245,7 @@ public class AuthController {
                     org.springframework.security.web.context.HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
                     org.springframework.security.core.context.SecurityContextHolder.getContext());
 
-                log.info("Auto-login réussi pour {} — redirection vers /login", emailLower);
+                log.info("Auto-login réussi (email masqué pour RGPD) — redirection vers /login");
                 ra.addFlashAttribute("success", "Votre compte a été créé avec succès ! Vous pouvez maintenant vous connecter.");
                 return "redirect:/login";
             } catch (Exception e) {

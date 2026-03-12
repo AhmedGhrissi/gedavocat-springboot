@@ -3,6 +3,7 @@ package com.gedavocat.controller;
 import com.gedavocat.repository.UserRepository;
 import com.gedavocat.security.UserDetailsServiceImpl;
 import com.gedavocat.security.mfa.MultiFactorAuthenticationService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -45,6 +46,7 @@ public class MfaChallengeController {
     @PostMapping("/mfa-challenge")
     public String mfaChallengeSubmit(
             @RequestParam String code,
+            HttpServletRequest request,
             HttpSession session,
             Model model,
             RedirectAttributes ra
@@ -62,11 +64,17 @@ public class MfaChallengeController {
             return "redirect:/login";
         }
 
-        // Valider le code TOTP (ou un code de secours)
-        var result = mfaService.validateMFA(optUser.get(), code.trim());
-        if (!result.isValid()) {
-            log.warn("[MFA] Code invalide pour {} — méthode : {}", pendingEmail, result.getMethod());
-            model.addAttribute("error", "Code invalide. Vérifiez votre application d'authentification.");
+        // SEC FIX N-08 : protection contre les exceptions de validateMFA (TOTP clock skew, etc.)
+        try {
+            var result = mfaService.validateMFA(optUser.get(), code.trim());
+            if (!result.isValid()) {
+                log.warn("[MFA] Code invalide pour {} — méthode : {}", pendingEmail, result.getMethod());
+                model.addAttribute("error", "Code invalide. Vérifiez votre application d'authentification.");
+                return "auth/mfa-challenge";
+            }
+        } catch (Exception e) {
+            log.error("[MFA] Erreur interne lors de la validation pour {} : {}", pendingEmail, e.getMessage());
+            model.addAttribute("error", "Erreur lors de la validation. Veuillez réessayer.");
             return "auth/mfa-challenge";
         }
 
@@ -83,7 +91,10 @@ public class MfaChallengeController {
         session.removeAttribute("MFA_PENDING_EMAIL");
         session.removeAttribute("MFA_TARGET_URL");
 
-        log.info("[MFA] Validation réussie pour {} (méthode : {})", pendingEmail, result.getMethod());
+        // SEC FIX N-07 : régénérer l'ID de session pour prévenir la fixation de session post-MFA
+        request.changeSessionId();
+
+        log.info("[MFA] Validation réussie pour {} — accès admin accordé", pendingEmail);
         return "redirect:" + (targetUrl != null ? targetUrl : "/admin");
     }
 }

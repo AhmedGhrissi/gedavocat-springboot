@@ -174,9 +174,14 @@ public class SecurityConfig {
 											response.sendRedirect("/mfa-challenge");
 											return;
 										}
+										response.sendRedirect("/admin");
+										return;
+									} else {
+										// SEC FIX N-01 : admin introuvable en DB — invalider la session, bloquer l'accès
+										request.getSession().invalidate();
+										response.sendError(403);
+										return;
 									}
-									response.sendRedirect("/admin");
-									return;
 								}
 								if (roles.contains("ROLE_CLIENT")) {
 									response.sendRedirect("/my-cases");

@@ -130,4 +130,13 @@ public interface UserRepository extends JpaRepository<User, String> {
     @Transactional
     @Query("UPDATE User u SET u.resetToken = NULL, u.resetTokenExpiry = NULL WHERE u.resetTokenExpiry < :cutoff AND u.resetToken IS NOT NULL")
     int clearExpiredResetTokens(@Param("cutoff") LocalDateTime cutoff);
+
+    /**
+     * SEC RGPD N-13 : Désactive les comptes inactifs depuis plus de 24 mois (Art. 5.1.e RGPD).
+     * Exclut les comptes ADMIN et les comptes déjà désactivés.
+     */
+    @Modifying
+    @Transactional
+    @Query("UPDATE User u SET u.accountEnabled = false WHERE u.accountEnabled = true AND u.role != 'ADMIN' AND (u.lastLogin < :cutoff OR (u.lastLogin IS NULL AND u.createdAt < :cutoff))")
+    int disableInactiveAccounts(@Param("cutoff") LocalDateTime cutoff);
 }

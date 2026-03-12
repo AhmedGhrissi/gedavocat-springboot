@@ -123,7 +123,7 @@ services:
       SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/gedavocat?useSSL=true&requireSSL=true&serverTimezone=Europe/Paris&allowPublicKeyRetrieval=true&useUnicode=true&characterEncoding=UTF-8"
       SPRING_DATASOURCE_USERNAME: gedavocat
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
       # Variables référencées dans application.properties (pour éviter PlaceholderResolutionException)
       DB_USERNAME: gedavocat
       DB_PASSWORD: ${MYSQL_PASSWORD}

@@ -9,6 +9,7 @@
 #
 # Variables d'environnement requises :
 #   MYSQL_ROOT_PASSWORD — mot de passe root MySQL
+#   GPG_PASSPHRASE      — passphrase de chiffrement GPG (obligatoire en production)
 # ============================================================
 
 set -euo pipefail
@@ -47,20 +48,37 @@ run_backup() {
 
     mv "${TMP_FILEPATH}" "${FILEPATH}"
 
+    # SEC FIX N-11 : chiffrement symétrique GPG (AES-256) des backups au repos
+    if [ -n "${GPG_PASSPHRASE:-}" ]; then
+      local ENCRYPTED_FILEPATH="${FILEPATH}.gpg"
+      if gpg --batch --yes --passphrase "${GPG_PASSPHRASE}" \
+             --symmetric --cipher-algo AES256 \
+             -o "${ENCRYPTED_FILEPATH}" "${FILEPATH}" 2>/dev/null; then
+        rm -f "${FILEPATH}"
+        FILEPATH="${ENCRYPTED_FILEPATH}"
+        FILENAME="${FILENAME}.gpg"
+        log "Backup chiffré GPG → ${FILENAME}"
+      else
+        log "AVERTISSEMENT : Chiffrement GPG échoué — backup non chiffré conservé"
+      fi
+    else
+      log "AVERTISSEMENT : GPG_PASSPHRASE non défini — backup non chiffré (définir la variable pour activer le chiffrement)"
+    fi
+
     local SIZE
     SIZE=$(du -sh "${FILEPATH}" | cut -f1)
     log "Backup OK → ${FILENAME} (${SIZE})"
 
     # Nettoyage des backups plus vieux que RETENTION_DAYS jours
     local DELETED
-    DELETED=$(find "${BACKUP_DIR}" -name "*.sql.gz" -mtime "+${RETENTION_DAYS}" -print -delete | wc -l)
+    DELETED=$(find "${BACKUP_DIR}" \( -name "*.sql.gz" -o -name "*.sql.gz.gpg" \) -mtime "+${RETENTION_DAYS}" -print -delete | wc -l)
     if [ "${DELETED}" -gt 0 ]; then
       log "Nettoyage → ${DELETED} backup(s) supprimé(s) (>${RETENTION_DAYS}j)"
     fi
 
     # Résumé des backups disponibles
     local TOTAL
-    TOTAL=$(find "${BACKUP_DIR}" -name "*.sql.gz" | wc -l)
+    TOTAL=$(find "${BACKUP_DIR}" \( -name "*.sql.gz" -o -name "*.sql.gz.gpg" \) | wc -l)
     log "Backups disponibles : ${TOTAL} fichier(s)"
 
     # ──────────────────────────────────────────────────────

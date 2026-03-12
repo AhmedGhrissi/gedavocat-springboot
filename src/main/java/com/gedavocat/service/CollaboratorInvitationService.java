@@ -32,7 +32,7 @@ public class CollaboratorInvitationService {
         String token = link.getToken();
         LocalDateTime expiry = link.getInvitedAt().plusHours(TOKEN_EXPIRY_HOURS);
         pending.put(token, new InvitationEntry(link.getId(), link.getRecipientEmail(), expiry));
-        log.info("[CollaboratorInvitation] Registered token {} for link {}", token, link.getId());
+        log.info("[CollaboratorInvitation] Registered token for link {}", link.getId());
     }
 
     public Optional<InvitationEntry> validateToken(String token) {
@@ -67,7 +67,7 @@ public class CollaboratorInvitationService {
     public void removeToken(String token) {
         if (token == null) return;
         pending.remove(token);
-        log.info("[CollaboratorInvitation] Removed token {} from memory", token);
+        log.info("[CollaboratorInvitation] Removed token from memory");
     }
 
     public record InvitationEntry(String linkId, String email, LocalDateTime expiry) {}
