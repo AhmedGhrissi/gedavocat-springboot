@@ -8,7 +8,7 @@ import com.gedavocat.service.AuthService;
 import com.gedavocat.service.BarreauService;
 import com.gedavocat.service.EmailVerificationService;
 import com.gedavocat.security.JwtBlacklistService;
-import com.gedavocat.security.JwtService;
+import com.gedavocat.security.JwtServiceRS256;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,7 +37,7 @@ public class AuthController {
     private final EmailVerificationService emailVerificationService;
     private final UserRepository userRepository;
     private final JwtBlacklistService jwtBlacklistService;
-    private final JwtService jwtService;
+    private final JwtServiceRS256 jwtService;
 
     /**
      * Page de connexion

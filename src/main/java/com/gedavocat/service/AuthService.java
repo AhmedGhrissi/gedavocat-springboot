@@ -5,7 +5,7 @@ import com.gedavocat.dto.AuthResponse;
 import com.gedavocat.dto.RegisterRequest;
 import com.gedavocat.model.User;
 import com.gedavocat.repository.UserRepository;
-import com.gedavocat.security.JwtService;
+import com.gedavocat.security.JwtServiceRS256;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -26,7 +26,7 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final JwtService jwtService;
+    private final JwtServiceRS256 jwtService;
     private final AuthenticationManager authenticationManager;
     private final UserDetailsService userDetailsService;
     private final FirmService firmService;
@@ -193,7 +193,7 @@ public class AuthService {
         }
 
         UserDetails userDetails = userDetailsService.loadUserByUsername(user.getEmail());
-        String token = jwtService.generateToken(userDetails);
+        String token = jwtService.generateAccessToken(userDetails);
 
         return AuthResponse.builder()
                 .token(token)
@@ -214,7 +214,7 @@ public class AuthService {
         }
 
         if (jwtService.isTokenValid(oldToken, userDetails)) {
-            String newToken = jwtService.generateToken(userDetails);
+            String newToken = jwtService.generateAccessToken(userDetails);
             User user = userRepository.findByEmail(userEmail)
                     .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
 

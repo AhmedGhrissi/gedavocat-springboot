@@ -5,6 +5,7 @@ import com.gedavocat.security.SubscriptionEnforcementFilter;
 import com.gedavocat.security.UserDetailsServiceImpl;
 import com.gedavocat.security.AccountLockoutService;
 import com.gedavocat.repository.UserRepository;
+import com.gedavocat.security.mfa.MultiFactorAuthenticationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -38,6 +39,7 @@ public class SecurityConfig {
 	private final SubscriptionEnforcementFilter subscriptionFilter;
 	private final AccountLockoutService accountLockoutService;
 	private final UserRepository userRepository;
+	private final MultiFactorAuthenticationService mfaService;
 
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -60,6 +62,7 @@ public class SecurityConfig {
 						"/api/auth/**", "/css/**", "/js/**", "/images/**", "/img/**", "/favicon.ico", "/favicon.svg",
 						"/robots.txt", "/sitemap.xml", "/webjars/**", "/.well-known/**",
 							"/forgot-password", "/reset-password", "/verify-email", "/verify-email/resend",
+							"/mfa-challenge",
 							"/clients/accept-invitation",
 							"/collaborators/accept-invitation", "/collaborators/invitation-info",
 						"/huissiers/accept-invitation", "/huissiers/invitation-info",
@@ -158,6 +161,20 @@ public class SecurityConfig {
 								java.util.Set<String> roles = new java.util.HashSet<>();
 								authentication.getAuthorities().forEach(a -> roles.add(a.getAuthority()));
 								if (roles.contains("ROLE_ADMIN")) {
+									// SEC FIX F-06 : vérifier MFA avant accès admin
+									var optAdmin = userRepository.findByEmail(authentication.getName());
+									if (optAdmin.isPresent()) {
+										var adminUser = optAdmin.get();
+										if (mfaService.requiresMFA(adminUser) && adminUser.isMfaEnabled()) {
+											var mfaSession = request.getSession(true);
+											mfaSession.setAttribute("MFA_PENDING_EMAIL", authentication.getName());
+											mfaSession.setAttribute("MFA_TARGET_URL", "/admin");
+											org.springframework.security.core.context.SecurityContextHolder.clearContext();
+											mfaSession.removeAttribute(org.springframework.security.web.context.HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);
+											response.sendRedirect("/mfa-challenge");
+											return;
+										}
+									}
 									response.sendRedirect("/admin");
 									return;
 								}

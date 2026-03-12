@@ -6,7 +6,6 @@ import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PostConstruct;
 
@@ -17,10 +16,11 @@ import java.util.Map;
 import java.util.function.Function;
 
 /**
- * Service de gestion des tokens JWT
- * SEC-JWT FIX : ajout validation issuer/audience
+ * Service JWT HMAC-HS256 — DÉSACTIVÉ (SEC FIX F-02)
+ * Remplacé par JwtServiceRS256 (RSA-4096, ANSSI niveau bancaire).
+ * Conservé pour référence. Ne pas réactiver.
  */
-@Service
+// @Service — retiré : JwtServiceRS256 utilisé à la place dans tout le pipeline auth
 public class JwtService {
     
     private static final String JWT_ISSUER = "docavocat.fr";
