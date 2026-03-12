@@ -24,6 +24,8 @@ variables:
   DOCKER_IMAGE: "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA"
   DOCKER_IMAGE_LATEST: "$CI_REGISTRY_IMAGE:latest"
   REMOTE_DIR: "/opt/docavocat"
+  MINIO_ACCESS_KEY: ""  # Override in GitLab CI/CD Variables (Settings → CI/CD → Variables)
+  MINIO_SECRET_KEY: ""  # Override in GitLab CI/CD Variables (Settings → CI/CD → Variables)
 
 # ── Ancres Discord ────────────────────────────────────────────
 .discord_notify: &discord_notify |
@@ -334,6 +336,9 @@ deploy:
     - echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
     - chmod 644 ~/.ssh/known_hosts
     - echo "$ENV_PROD" | ssh root@"${SERVER_HOST}" "cat > /opt/docavocat/.env && chmod 600 /opt/docavocat/.env"
+    - |
+      # Injecter les variables MinIO si absentes de ENV_PROD
+      ssh root@"${SERVER_HOST}" "grep -q '^MINIO_ACCESS_KEY=' /opt/docavocat/.env || printf '\n# MinIO S3 (CX23 Hetzner)\nMINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}\nMINIO_SECRET_KEY=${MINIO_SECRET_KEY}\n' >> /opt/docavocat/.env"
     - |
       ssh root@"${SERVER_HOST}" bash -s << 'ENDSSH'
       set -e
