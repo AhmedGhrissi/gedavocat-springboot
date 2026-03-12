@@ -119,15 +119,17 @@ document.addEventListener('DOMContentLoaded', function() {
         toast.style.right = '20px';
         toast.style.zIndex = '9999';
         toast.style.minWidth = '300px';
-        toast.innerHTML = `
-            <span>${message}</span>
-            <button class="alert-close">&times;</button>
-        `;
+        const msgSpan = document.createElement('span');
+        msgSpan.textContent = message;
+        const closeButton = document.createElement('button');
+        closeButton.className = 'alert-close';
+        closeButton.textContent = '\u00D7';
+        toast.appendChild(msgSpan);
+        toast.appendChild(closeButton);
         
         document.body.appendChild(toast);
         
-        const closeBtn = toast.querySelector('.alert-close');
-        closeBtn.addEventListener('click', () => {
+        closeButton.addEventListener('click', () => {
             toast.remove();
         });
         
@@ -234,7 +236,14 @@ window.toggleNotifPanel = function() {
                     row.style.textDecoration = 'none';
                     row.style.color = '#0f172a';
                     row.style.background = n.read ? 'transparent' : '#f8fafc';
-                    row.innerHTML = `<div style="font-weight:600;font-size:14px">${n.title}</div><div style="font-size:13px;color:#64748B">${n.message}</div>`;
+                    const titleDiv = document.createElement('div');
+                    titleDiv.style.cssText = 'font-weight:600;font-size:14px';
+                    titleDiv.textContent = n.title;
+                    const msgDiv = document.createElement('div');
+                    msgDiv.style.cssText = 'font-size:13px;color:#64748B';
+                    msgDiv.textContent = n.message;
+                    row.appendChild(titleDiv);
+                    row.appendChild(msgDiv);
                     list.appendChild(row);
                 });
                 panel.innerHTML = '';

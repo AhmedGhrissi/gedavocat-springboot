@@ -209,14 +209,19 @@
       const toast = document.createElement('div');
       toast.className = `alert alert-${type}`;
       toast.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
-      toast.innerHTML = `
-        <div class="alert-icon">
-          <i class="fas fa-${this.getIconForType(type)}"></i>
-        </div>
-        <div class="alert-content">
-          <div class="alert-message">${message}</div>
-        </div>
-      `;
+      const iconDiv = document.createElement('div');
+      iconDiv.className = 'alert-icon';
+      const iconEl = document.createElement('i');
+      iconEl.className = 'fas fa-' + this.getIconForType(type);
+      iconDiv.appendChild(iconEl);
+      const contentDiv = document.createElement('div');
+      contentDiv.className = 'alert-content';
+      const msgDiv = document.createElement('div');
+      msgDiv.className = 'alert-message';
+      msgDiv.textContent = message;
+      contentDiv.appendChild(msgDiv);
+      toast.appendChild(iconDiv);
+      toast.appendChild(contentDiv);
       
       document.body.appendChild(toast);
       

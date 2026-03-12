@@ -318,7 +318,7 @@
                 importedFiles.push(file);
             }
         });
-        if (importedFiles.length === 0) { setFileStatus('<span class="text-warning">Aucun format supporté parmi les fichiers sélectionnés.</span>'); return; }
+        if (importedFiles.length === 0) { setFileStatus('Aucun format supporté parmi les fichiers sélectionnés.', 'text-warning'); return; }
 
         document.getElementById('ged-file-list').classList.remove('d-none');
         importedFiles.forEach((file, i) => {
@@ -326,15 +326,31 @@
             const item  = document.createElement('div');
             item.className = 'border rounded-2 px-3 py-2 d-flex align-items-center gap-2 bg-white';
             item.style.cssText = 'font-size:13px;max-width:260px';
-            item.innerHTML = `
-                <i class="fas ${isPdf ? 'fa-file-pdf text-danger' : 'fa-file-image text-primary'} fa-lg flex-shrink-0"></i>
-                <div class="overflow-hidden">
-                  <div class="text-truncate fw-semibold" title="${file.name}">${file.name}</div>
-                  <div class="text-muted">${fmtSize(file.size)}</div>
-                </div>
-                <button type="button" class="btn btn-sm btn-outline-danger ms-auto px-1 py-0" style="font-size:11px" data-idx="${i}">
-                  <i class="fas fa-times"></i></button>`;
-            item.querySelector('button').addEventListener('click', () => {
+            const fileIcon = document.createElement('i');
+            fileIcon.className = 'fas ' + (isPdf ? 'fa-file-pdf text-danger' : 'fa-file-image text-primary') + ' fa-lg flex-shrink-0';
+            item.appendChild(fileIcon);
+            const infoDiv = document.createElement('div');
+            infoDiv.className = 'overflow-hidden';
+            const nameDiv = document.createElement('div');
+            nameDiv.className = 'text-truncate fw-semibold';
+            nameDiv.title = file.name;
+            nameDiv.textContent = file.name;
+            const sizeDiv = document.createElement('div');
+            sizeDiv.className = 'text-muted';
+            sizeDiv.textContent = fmtSize(file.size);
+            infoDiv.appendChild(nameDiv);
+            infoDiv.appendChild(sizeDiv);
+            item.appendChild(infoDiv);
+            const delBtn = document.createElement('button');
+            delBtn.type = 'button';
+            delBtn.className = 'btn btn-sm btn-outline-danger ms-auto px-1 py-0';
+            delBtn.style.fontSize = '11px';
+            delBtn.dataset.idx = i;
+            const delIcon = document.createElement('i');
+            delIcon.className = 'fas fa-times';
+            delBtn.appendChild(delIcon);
+            item.appendChild(delBtn);
+            delBtn.addEventListener('click', () => {
                 importedFiles.splice(i, 1);
                 const dt = new DataTransfer();
                 importedFiles.forEach(f => dt.items.add(f));
@@ -367,8 +383,18 @@
         sendBtn.disabled = false;
     }
 
-    function setFileStatus(html) { const el = document.getElementById('ged-file-status'); if (el) el.innerHTML = html; }
-    function setStatus(html)     { const el = document.getElementById('ged-scan-status'); if (el) el.innerHTML = html; }
+    function setFileStatus(text, cls) {
+        const el = document.getElementById('ged-file-status');
+        if (!el) return;
+        el.textContent = text || '';
+        el.className = cls || '';
+    }
+    function setStatus(text, cls) {
+        const el = document.getElementById('ged-scan-status');
+        if (!el) return;
+        el.textContent = text || '';
+        el.className = cls || '';
+    }
     function today() { return new Date().toISOString().slice(0,10) + '-' + Math.floor(Math.random()*9999); }
 
     // ── jsPDF ─────────────────────────────────────────────────────────────────
@@ -377,7 +403,7 @@
         const s = document.createElement('script');
         s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
         s.onload = cb;
-        s.onerror = () => setStatus('<span class="text-danger">Impossible de charger jsPDF (connexion internet requise)</span>');
+        s.onerror = () => setStatus('Impossible de charger jsPDF (connexion internet requise)', 'text-danger');
         document.head.appendChild(s);
     }
 
@@ -402,7 +428,7 @@
                 doUpload(new File([pdf.output('blob')], 'scan-'+today()+'.pdf', {type:'application/pdf'}),
                     setStatus, sendBtn, spinner);
             } catch (e) {
-                setStatus('<span class="text-danger">Erreur PDF : ' + e.message + '</span>');
+                setStatus('Erreur PDF : ' + e.message, 'text-danger');
                 sendBtn.disabled = false; spinner.classList.add('d-none');
             }
         });
@@ -427,7 +453,7 @@
             setFileStatus('Compilation des images en PDF…');
             loadJsPDF(() => imagesToPdf(importedFiles, result => {
                 if (typeof result === 'string') {
-                    setFileStatus('<span class="text-danger">' + result + '</span>');
+                    setFileStatus(result, 'text-danger');
                     sendBtn.disabled = false; spinner.classList.add('d-none');
                 } else {
                     doUpload(result, setFileStatus, sendBtn, spinner);
@@ -439,7 +465,7 @@
                 setFileStatus('Plusieurs types détectés — envoi du PDF.');
                 doUpload(new File([pdfs[0]], 'import-'+today()+'.pdf', {type:'application/pdf'}), setFileStatus, sendBtn, spinner);
             } else {
-                setFileStatus('<span class="text-warning">Formats mixtes non supportés ensemble. Sélectionnez uniquement des images ou un PDF.</span>');
+                setFileStatus('Formats mixtes non supportés ensemble. Sélectionnez uniquement des images ou un PDF.', 'text-warning');
                 sendBtn.disabled = false; spinner.classList.add('d-none');
             }
         }
@@ -480,7 +506,7 @@
             .then(r => { if (!r.ok) return r.text().then(t => { throw new Error(t || 'Erreur serveur ' + r.status); }); return r.json(); })
             .then(data => {
                 if (data.success === false) throw new Error(data.message || 'Erreur lors de l\'envoi');
-                statusFn('<span class="text-success fw-semibold"><i class="fas fa-check-circle me-1"></i>Document enregistré !</span>');
+                statusFn('Document enregistré !', 'text-success fw-semibold');
                 capturedImages = []; importedFiles = [];
                 setTimeout(() => {
                     bootstrap.Modal.getInstance(document.getElementById('gedScannerModal')).hide();
@@ -488,7 +514,7 @@
                 }, 1400);
             })
             .catch(err => {
-                statusFn('<span class="text-danger"><i class="fas fa-exclamation-circle me-1"></i>' + err.message + '</span>');
+                statusFn(err.message, 'text-danger');
                 sendBtn.disabled = false; spinner.classList.add('d-none');
             });
     }
