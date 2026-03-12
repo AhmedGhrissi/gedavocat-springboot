@@ -86,6 +86,7 @@ services:
     restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      GPG_PASSPHRASE: ${GPG_PASSPHRASE}
     volumes:
       - /opt/docavocat/backups:/backups
       - ./scripts/backup.sh:/backup.sh:ro
@@ -154,12 +155,20 @@ services:
       SPRING_MAIL_PROPERTIES_MAIL_SMTP_SSL_TRUST: ${MAIL_HOST}
       MAIL_FROM: ${MAIL_USERNAME:-noreply@docavocat.fr}
 
-      # Application  
+      # Application
       APP_UPLOAD_DIR: /opt/docavocat/uploads/documents
       APP_SIGNATURE_DIR: /opt/docavocat/uploads/signatures
       APP_TEMP_DIR: /opt/docavocat/temp
       SPRING_PROFILES_ACTIVE: prod
       MAINTENANCE_ENABLED: ${MAINTENANCE_ENABLED:-false}
+      # Clés de chiffrement AES/RSA — chemin writable (volume) même avec read_only container
+      # CRYPTO_KEYS_PATH : lu par application.properties des nouvelles images (${CRYPTO_KEYS_PATH:./config/keys})
+      # SECURITY_CRYPTO_KEYS_PATH : lu directement via Spring relaxed binding par les images antérieures à ce fix
+      CRYPTO_KEYS_PATH: /opt/docavocat/crypto-keys
+      SECURITY_CRYPTO_KEYS_PATH: /opt/docavocat/crypto-keys
+      # Clés JWT RS256 (PEM) — même volume writable /opt/docavocat/crypto-keys
+      JWT_KEYS_PRIVATE_KEY_PATH: /opt/docavocat/crypto-keys/private_key.pem
+      JWT_KEYS_PUBLIC_KEY_PATH: /opt/docavocat/crypto-keys/public_key.pem
 
       # Ressources statiques externes (prioritaires sur celles du JAR)
       SPRING_WEB_RESOURCES_STATIC_LOCATIONS: "file:/opt/docavocat/static-override/,classpath:/static/"
@@ -200,6 +209,7 @@ services:
       - /opt/docavocat/temp:/opt/docavocat/temp
       - /opt/docavocat/backups:/opt/docavocat/backups
       - /opt/docavocat/static-override:/opt/docavocat/static-override:ro
+      - /opt/docavocat/crypto-keys:/opt/docavocat/crypto-keys
       # Docker socket removed for security — DO NOT mount docker.sock in app container
     networks:
       - docavocat-net
@@ -249,6 +259,7 @@ services:
     ports:
       # Slot GREEN — port alternatif, invisible depuis l'extérieur tant que nginx ne pointe pas dessus
       - "127.0.0.1:8081:8080"
+    # Note: health check uses internal port 8080 (not the HOST-mapped port 8081)
     environment:
       SERVER_PORT: 8080
       # Base de données — même config que blue
@@ -280,6 +291,10 @@ services:
       APP_TEMP_DIR: /opt/docavocat/temp
       SPRING_PROFILES_ACTIVE: prod
       MAINTENANCE_ENABLED: ${MAINTENANCE_ENABLED:-false}
+      CRYPTO_KEYS_PATH: /opt/docavocat/crypto-keys
+      SECURITY_CRYPTO_KEYS_PATH: /opt/docavocat/crypto-keys
+      JWT_KEYS_PRIVATE_KEY_PATH: /opt/docavocat/crypto-keys/private_key.pem
+      JWT_KEYS_PUBLIC_KEY_PATH: /opt/docavocat/crypto-keys/public_key.pem
       SPRING_WEB_RESOURCES_STATIC_LOCATIONS: "file:/opt/docavocat/static-override/,classpath:/static/"
       YOUSIGN_API_KEY: ${YOUSIGN_API_KEY} # gitleaks:allow
       STRIPE_API_KEY: ${STRIPE_API_KEY:-} # gitleaks:allow
@@ -306,6 +321,7 @@ services:
       - /opt/docavocat/temp:/opt/docavocat/temp
       - /opt/docavocat/backups:/opt/docavocat/backups
       - /opt/docavocat/static-override:/opt/docavocat/static-override:ro
+      - /opt/docavocat/crypto-keys:/opt/docavocat/crypto-keys
     networks:
       - docavocat-net
     logging:
@@ -332,7 +348,7 @@ services:
           memory: 384M
           cpus: '0.25'
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -484,7 +500,7 @@ services:
     networks:
       - docavocat-net
     ports:
-      - "127.0.0.1:8081:8080"
+      - "127.0.0.1:8082:8080"
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/healthz"]
       interval: 30s

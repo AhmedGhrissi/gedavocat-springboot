@@ -327,21 +327,27 @@ package:
   rules:
     - if: '$CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "web"'
   services:
-    - docker:27-dind
+    - name: docker:27-dind
+      command: ["--experimental"]
   variables:
     DOCKER_TLS_CERTDIR: "/certs"
   script:
     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
+    # Setup QEMU pour cross-compilation arm64 (serveur CAX11 Hetzner est arm64/v8)
+    - docker run --rm --privileged tonistiigi/binfmt --install arm64
+    # Créer un builder buildx capable de construire pour arm64
+    - docker buildx create --use --name ci-builder --driver docker-container
     - |
       ATTEMPT=0
-      until docker build -f docker/Dockerfile -t "$DOCKER_IMAGE" -t "$DOCKER_IMAGE_LATEST" .; do
+      until docker buildx build --platform linux/arm64 \
+        -f docker/Dockerfile \
+        -t "$DOCKER_IMAGE" -t "$DOCKER_IMAGE_LATEST" \
+        --push .; do
         ATTEMPT=$((ATTEMPT + 1))
         if [ $ATTEMPT -ge 3 ]; then echo "Echec build Docker apres 3 tentatives"; exit 1; fi
         echo "Tentative $ATTEMPT echouee, attente 10s..."
         sleep 10
       done
-    - docker push "$DOCKER_IMAGE"
-    - docker push "$DOCKER_IMAGE_LATEST"
   after_script:
     - *discord_notify
 
@@ -395,6 +401,13 @@ deploy:
     - |
       # Injecter APP_IMAGE (image Docker buildée par la CI pour ce commit)
       ssh root@"${SERVER_HOST}" "sed -i '/^APP_IMAGE=/d' /opt/docavocat/.env && echo 'APP_IMAGE=${DOCKER_IMAGE_LATEST}' >> /opt/docavocat/.env"
+    - |
+      # Injecter GPG_PASSPHRASE pour le chiffrement des backups MySQL
+      if [ -n "${GPG_PASSPHRASE}" ]; then
+        ssh root@"${SERVER_HOST}" "sed -i '/^GPG_PASSPHRASE=/d' /opt/docavocat/.env && echo 'GPG_PASSPHRASE=${GPG_PASSPHRASE}' >> /opt/docavocat/.env"
+      else
+        echo "WARN: GPG_PASSPHRASE non défini — backups non chiffrés. Ajouter dans GitLab Settings > CI/CD > Variables"
+      fi
     - |
       # Authentification au GitLab Container Registry sur le serveur
       ssh root@"${SERVER_HOST}" "docker login -u '${CI_REGISTRY_USER}' -p '${CI_REGISTRY_PASSWORD}' '${CI_REGISTRY}'"

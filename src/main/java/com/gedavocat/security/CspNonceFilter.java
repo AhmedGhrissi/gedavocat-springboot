@@ -16,14 +16,8 @@ import java.util.Base64;
  * Generates a per-request CSP nonce and sets the Content-Security-Policy header.
  * Templates access the nonce via ${cspNonce} to add nonce="..." to inline scripts/styles.
  *
- * Migration path (incremental — CSP Level 3):
- *   When both 'unsafe-inline' AND a nonce are present in script-src/style-src,
- *   CSP Level 3 browsers IGNORE 'unsafe-inline' and only allow nonced resources.
- *   Older browsers that don't understand nonces still allow 'unsafe-inline'.
- *
- *   1. Add th:attr="nonce=${cspNonce}" to inline script/style blocks one-by-one
- *   2. Once ALL inline scripts use nonces, remove 'unsafe-inline' from script-src
- *   3. Once ALL inline styles use nonces, remove 'unsafe-inline' from style-src
+ * All inline scripts and styles must carry the nonce attribute: th:attr="nonce=${cspNonce}"
+ * 'unsafe-inline' is intentionally absent — nonces provide strict CSP enforcement.
  */
 @Component
 @Order(1)
@@ -52,10 +46,10 @@ public class CspNonceFilter extends OncePerRequestFilter {
         request.setAttribute("cspNonce", nonce);
 
         // Build CSP with per-request nonce
-        // 'unsafe-inline' kept for backward compatibility — CSP L3 browsers ignore it when nonce present
+        // 'unsafe-inline' is removed — nonces enforce strict inline policy on CSP L3 browsers
         String csp = "default-src 'self'; " +
-                "script-src 'self' 'unsafe-inline' 'nonce-" + nonce + "' https://js.stripe.com " + CDN_JSDELIVR + "; " +
-                "style-src 'self' 'unsafe-inline' 'nonce-" + nonce + "' " + CDN_JSDELIVR + " " + CDN_CDNJS + " " + GOOGLE_FONTS_CSS + "; " +
+                "script-src 'self' 'nonce-" + nonce + "' https://js.stripe.com " + CDN_JSDELIVR + "; " +
+                "style-src 'self' 'nonce-" + nonce + "' " + CDN_JSDELIVR + " " + CDN_CDNJS + " " + GOOGLE_FONTS_CSS + "; " +
                 "font-src 'self' data: " + CDN_CDNJS + " " + GOOGLE_FONTS_FILES + "; " +
                 "img-src 'self' data:; " +
                 "connect-src 'self' https://api.stripe.com https://api.payplug.com " + CDN_JSDELIVR + "; " +

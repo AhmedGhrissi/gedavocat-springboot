@@ -97,7 +97,7 @@ services:
       --appendonly yes
       --appendfsync everysec
     ports:
-      - "127.0.0.1:6379:6379"
+      - "10.0.0.3:6379:6379"
     volumes:
       - /opt/services/redis/data:/data
     networks:
