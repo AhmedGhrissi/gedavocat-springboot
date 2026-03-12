@@ -433,12 +433,78 @@ build:
 # ============================================================
 # DocAvocat — Pipeline CI/CD sécurisé et conforme (prod)
 # ============================================================
+
+# ──────────────────────────────────────────────
+# PIPELINE STAGES
+# ──────────────────────────────────────────────
 stages:
   - security
+  - lint
   - build
   - test
+  - e2e
   - package
+  - compliance
   - deploy
+# ──────────────── LINTING (Checkstyle/Spotless) ────────────────
+lint:
+  stage: lint
+  image: maven:3.9-eclipse-temurin-17
+  script:
+    - mvn $MAVEN_CLI_OPTS spotless:check || mvn $MAVEN_CLI_OPTS checkstyle:check
+  allow_failure: false
+  after_script:
+    - |
+      if [ "$CI_JOB_STATUS" != "success" ] && [ -n "${DISCORD_WEBHOOK:-}" ]; then
+        curl -s -X POST "$DISCORD_WEBHOOK" \
+          -H "Content-Type: application/json" \
+          -d "{\"content\":\"❌ [CI/CD] Lint failed ($CI_JOB_NAME) sur $CI_COMMIT_REF_NAME. $CI_PIPELINE_URL\"}"
+      fi
+# ──────────────── GITLEAKS (Secrets scanning) ────────────────
+gitleaks-secrets:
+  stage: security
+  image: zricethezav/gitleaks:latest
+  script:
+    - gitleaks detect --source . --report-format json --report-path security-reports/gitleaks.json || true
+  artifacts:
+    paths:
+      - security-reports/gitleaks.json
+    when: always
+  allow_failure: true
+# ──────────────── E2E TESTS (Playwright) ────────────────
+e2e-playwright:
+  stage: e2e
+  image: mcr.microsoft.com/playwright:v1.43.1-focal
+  needs: [build]
+  script:
+    - cd e2e
+    - npm ci
+    - npx playwright install --with-deps
+    - npx playwright test
+  artifacts:
+    paths:
+      - e2e/playwright-report/
+      - e2e/test-results/
+    when: always
+  allow_failure: false
+  after_script:
+    - |
+      if [ "$CI_JOB_STATUS" != "success" ] && [ -n "${DISCORD_WEBHOOK:-}" ]; then
+        curl -s -X POST "$DISCORD_WEBHOOK" \
+          -H "Content-Type: application/json" \
+          -d "{\"content\":\"❌ [CI/CD] E2E Playwright failed ($CI_JOB_NAME) sur $CI_COMMIT_REF_NAME. $CI_PIPELINE_URL\"}"
+      fi
+# ──────────────── LICENSE COMPLIANCE ────────────────
+license-compliance:
+  stage: compliance
+  image: maven:3.9-eclipse-temurin-17
+  script:
+    - mvn $MAVEN_CLI_OPTS license:check || echo "License check failed"
+  allow_failure: true
+  artifacts:
+    when: always
+    paths:
+      - target/site/
 
 variables:
   MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
@@ -487,17 +553,79 @@ owasp-dependency-check:
     when: always
   allow_failure: false
 
-# ──────────────── BUILD & TEST ────────────────
+# ──────────────── BUILD ────────────────
 build:
   stage: build
   image: maven:3.9-eclipse-temurin-17
+  needs:
+    - job: audit-code-security
+      optional: true
+    - job: owasp-dependency-check
+      optional: true
+    - job: snyk-security-scan
+      optional: true
+    - job: trivy-security-scan
+      optional: true
+    - job: gitleaks-secrets
+      optional: true
+    - job: lint
+      optional: true
+  before_script:
+    - apt-get update -qq && apt-get install -yqq curl > /dev/null 2>&1 || true
+    - |
+      WEBHOOK="${DISCORD_WEBHOOK:-${DISCORD_COMMIT_WEBHOOK:-}}"
+      [ -z "$WEBHOOK" ] && true || {
+        BRANCH="${CI_COMMIT_BRANCH:-MR}"
+        AUTHOR="${GITLAB_USER_NAME:-CI}"
+        SHA="${CI_COMMIT_SHORT_SHA:-????}"
+        TITLE="${CI_COMMIT_TITLE:-}"
+        COMMIT_MSG=$(printf '%s' "$TITLE" | head -c 80 | sed 's/\\/\\\\/g; s/"/\\"/g; s/\t/ /g')
+        if [ "$BRANCH" = "main" ]; then
+          SCOPE="branche main - pipeline complet (security -> build -> test -> package -> deploy)"
+        else
+          SCOPE="branche feature - security + build + test uniquement"
+        fi
+        PAYLOAD=$(printf '{"embeds":[{"title":"[START] Pipeline demarre","description":"**Branche :** `%s`\n**Commit :** [`%s`](%s)\n**Par :** %s\n**Message :** %s\n**Scope :** %s","color":16776960,"footer":{"text":"DocAvocat CI/CD"},"timestamp":"%s"}]}' \
+          "$BRANCH" "$SHA" "$CI_PIPELINE_URL" "$AUTHOR" "$COMMIT_MSG" "$SCOPE" "$(date -u '+%Y-%m-%dT%H:%M:%SZ')")
+        RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$WEBHOOK" \
+             -H "Content-Type: application/json" \
+             -d "$PAYLOAD")
+        echo "Discord pipeline-start: HTTP $RESPONSE"
+      }
   script:
-    - mvn $MAVEN_CLI_OPTS clean compile
-  allow_failure: false
+    - echo "========================================="
+    - echo "COMPILATION MAVEN"
+    - echo "========================================="
+    - |
+      if ! mvn $MAVEN_CLI_OPTS compile; then
+        echo ""
+        echo "ERREUR: La compilation Maven a echoue!"
+        echo ""
+        echo "--- Derniers messages d'erreur ---"
+        tail -100 target/*.log 2>/dev/null || echo "Pas de fichier log trouve"
+        exit 1
+      fi
+      echo ""
+      echo "✓ Compilation reussie"
+  after_script:
+    - |
+      if [ "$CI_JOB_STATUS" = "success" ]; then
+        EMOJI="[OK]"; STATUS="Build compile avec succes"; COLOR=3066993
+      else
+        EMOJI="[FAIL]"; STATUS="ECHEC de compilation - voir logs"; COLOR=15158332
+      fi
+      JOB_NAME="Build Maven"
+    - *discord_commit_notify
+  cache:
+    key: "maven-$CI_COMMIT_REF_SLUG"
+    paths:
+      - .m2/repository/
 
+# ──────────────── TEST ────────────────
 test:
   stage: test
   image: maven:3.9-eclipse-temurin-17
+  needs: [build]
   script:
     - mvn $MAVEN_CLI_OPTS test
   artifacts:
@@ -512,18 +640,6 @@ test:
           -H "Content-Type: application/json" \
           -d "{\"content\":\"❌ [CI/CD] Tests failed ($CI_JOB_NAME) sur $CI_COMMIT_REF_NAME. $CI_PIPELINE_URL\"}"
       fi
-
-# ──────────────── PACKAGE ────────────────
-package:
-  stage: package
-  image: maven:3.9-eclipse-temurin-17
-  script:
-    - mvn $MAVEN_CLI_OPTS package -DskipTests
-  artifacts:
-    paths:
-      - target/*.jar
-    when: always
-  allow_failure: false
 
 # ──────────────── DEPLOY (manuel, prod) ────────────────
 deploy:
@@ -687,18 +803,11 @@ workflow:
       - target/surefire-reports/
     expire_in: 2 weeks
 
-# ──────────────────────────────────────────────────────────────────
-# STAGE 3 : PACKAGE (inchangé)
-# ──────────────────────────────────────────────────────────────────
-
+# ──────────────── PACKAGE ────────────────
 package:
   stage: package
   image: docker:27-cli
-  needs:
-    - job: test
-      optional: true
-    - job: build
-      optional: true
+  needs: [test]
   variables:
     DOCKER_BUILDKIT: "1"
     DOCKER_CLI_EXPERIMENTAL: "enabled"
@@ -1238,15 +1347,13 @@ deploy:
     - if: $CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE == "web"
       when: manual
 
-# ──────────────────────────────────────────────────────────────────
-# DAST — OWASP ZAP Baseline Scan (post-deploy)
-# ──────────────────────────────────────────────────────────────────
+# ──────────────── DAST — OWASP ZAP Baseline Scan (post-deploy) ────────────────
 dast-zap-baseline:
   stage: deploy
   image:
     name: ghcr.io/zaproxy/zaproxy:stable
     entrypoint: [""]
-  needs: ["deploy"]
+  needs: [deploy]
   variables:
     GIT_STRATEGY: none
   script:
