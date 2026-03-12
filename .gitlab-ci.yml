@@ -276,6 +276,8 @@ sbom-generate:
   stage: build
   image: maven:3.9-eclipse-temurin-17
   rules:
+    - if: '$FAST_DEPLOY == "true"'
+      when: never
     - if: $CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE == "web"
   script:
     - echo "SBOM CycloneDX"
