@@ -97,6 +97,10 @@ stages:
 audit-code-security:
   stage: security
   image: maven:3.9-eclipse-temurin-17
+  rules:
+    - if: '$SKIP_SECURITY == "true" || $FAST_DEPLOY == "true"'
+      when: never
+    - when: always
   script:
     - echo "=== Audit securite du code ==="
     - ls -l .
@@ -114,6 +118,10 @@ owasp-dependency-check:
   image:
     name: owasp/dependency-check:latest
     entrypoint: [""]
+  rules:
+    - if: '$SKIP_SECURITY == "true" || $FAST_DEPLOY == "true"'
+      when: never
+    - when: always
   script:
     - mkdir -p security-reports
     - /usr/share/dependency-check/bin/dependency-check.sh --project "gedavocat" --scan . --format "JSON" --out security-reports/ || true
@@ -234,6 +242,10 @@ gitleaks-secrets:
   image:
     name: zricethezav/gitleaks:latest
     entrypoint: [""]
+  rules:
+    - if: '$SKIP_SECURITY == "true" || $FAST_DEPLOY == "true"'
+      when: never
+    - when: always
   script:
     - mkdir -p security-reports
     - gitleaks detect --source . --report-format json --report-path security-reports/gitleaks.json || true
@@ -246,6 +258,10 @@ gitleaks-secrets:
 rgpd-check:
   stage: security
   image: alpine:3.19
+  rules:
+    - if: '$SKIP_SECURITY == "true" || $FAST_DEPLOY == "true"'
+      when: never
+    - when: always
   script:
     - mkdir -p security-reports
     - grep -i -r 'dpo\|rgpd\|cnil\|retention\|effacement' . > security-reports/rgpd-grep.txt || true
