@@ -127,8 +127,8 @@
     <nav class="landing-navbar">
         <div class="landing-nav-container">
             <a href="/" class="logo">
-                <i class="fas fa-scale-balanced" style="font-size:1.25rem; color:#C6A75E; margin-right:8px; vertical-align: middle;"></i>
-                <span style="vertical-align: middle;">DocAvocat</span>
+                <i class="fas fa-scale-balanced lp-logo-icon"></i>
+                <span class="lp-logo-text">DocAvocat</span>
             </a>
             <div class="landing-nav-buttons">
                 <a th:href="@{/login}" class="btn btn-outline">Se connecter</a>
@@ -159,7 +159,7 @@
                         Mensuel
                     </button>
                     <button id="btn-yearly" onclick="setLandingPeriod('yearly')">
-                        Annuel <span style="background:#10b981;color:white;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:700;margin-left:4px;">-20%</span>
+                        Annuel <span class="lp-badge-discount">-20%</span>
                     </button>
                 </div>
             </div>
@@ -171,7 +171,7 @@
                     <div class="plan-name">Essentiel</div>
                     <div class="plan-price">
                         <span class="lp-monthly">49€<small>/mois</small></span>
-                        <span class="lp-yearly" style="display:none;">39€<small>/mois</small> <small style="text-decoration:line-through;color:#94A3B8;font-size:1rem;">49€</small></span>
+                        <span class="lp-yearly">39€<small>/mois</small> <small class="lp-price-strikethrough">49€</small></span>
                     </div>
                     <ul class="plan-features">
                         <li>Jusqu'à 10 clients</li>
@@ -189,7 +189,7 @@
                     <div class="plan-name">Professionnel</div>
                     <div class="plan-price">
                         <span class="lp-monthly">99€<small>/mois</small></span>
-                        <span class="lp-yearly" style="display:none;">79€<small>/mois</small> <small style="text-decoration:line-through;color:#94A3B8;font-size:1rem;">99€</small></span>
+                        <span class="lp-yearly">79€<small>/mois</small> <small class="lp-price-strikethrough">99€</small></span>
                     </div>
                     <ul class="plan-features">
                         <li>Jusqu'à 75 clients</li>
@@ -207,7 +207,7 @@
                     <div class="plan-name">Cabinet+</div>
                     <div class="plan-price">
                         <span class="lp-monthly">199€<small>/mois</small></span>
-                        <span class="lp-yearly" style="display:none;">159€<small>/mois</small> <small style="text-decoration:line-through;color:#94A3B8;font-size:1rem;">199€</small></span>
+                        <span class="lp-yearly">159€<small>/mois</small> <small class="lp-price-strikethrough">199€</small></span>
                     </div>
                     <ul class="plan-features">
                         <li>Clients illimités</li>
@@ -224,7 +224,7 @@
         </div>
     </section>
 
-    <script>
+    <script th:attr="nonce=${cspNonce}">
     function setLandingPeriod(period) {
         document.querySelectorAll('.lp-monthly').forEach(el => el.style.display = period === 'monthly' ? '' : 'none');
         document.querySelectorAll('.lp-yearly').forEach(el => el.style.display = period === 'yearly' ? '' : 'none');
@@ -245,18 +245,18 @@
 
     <!-- Footer -->
     <footer>
-        <div style="max-width:1200px;margin:0 auto;padding:0 1rem">
+        <div class="lp-footer-inner">
             <p>&copy; 2026 DocAvocat &mdash; Solution de gestion documentaire pour avocats</p>
-            <nav aria-label="Liens légaux" style="margin-top:1rem;font-size:0.9rem;opacity:0.75">
-                <a th:href="@{/legal/terms}"   style="color:white;text-decoration:none;margin:0 0.6rem">Conditions d'utilisation</a>
+            <nav aria-label="Liens légaux" class="lp-footer-links">
+                <a th:href="@{/legal/terms}"   class="lp-footer-link">Conditions d'utilisation</a>
                 <span aria-hidden="true">&middot;</span>
-                <a th:href="@{/legal/privacy}" style="color:white;text-decoration:none;margin:0 0.6rem">Politique de confidentialité</a>
+                <a th:href="@{/legal/privacy}" class="lp-footer-link">Politique de confidentialité</a>
                 <span aria-hidden="true">&middot;</span>
-                <a th:href="@{/login}"         style="color:white;text-decoration:none;margin:0 0.6rem">Connexion</a>
+                <a th:href="@{/login}"         class="lp-footer-link">Connexion</a>
                 <span aria-hidden="true">&middot;</span>
-                <a href="/sitemap.xml" rel="noopener" target="_blank" style="color:white;text-decoration:none;margin:0 0.6rem">Plan du site</a>
+                <a href="/sitemap.xml" rel="noopener" target="_blank" class="lp-footer-link">Plan du site</a>
             </nav>
-            <p style="margin-top:0.5rem;font-size:0.8rem;opacity:0.45">
+            <p class="lp-footer-note">
                 Hébergé en France &middot; Conforme RGPD &middot; Application SaaS pour cabinets d'avocats
             </p>
         </div>
