@@ -141,7 +141,7 @@
                     <i class="fas fa-envelope"></i>
                     <span>RPVA</span>
                 </a>
-                <a th:href="@{/firm/members}" class="nav-link">
+                <a th:href="@{/firm/members}" class="nav-link" th:if="${userPlan == 'CABINET_PLUS'}">
                     <i class="fas fa-user-friends"></i>
                     <span>Mon cabinet</span>
                 </a>
