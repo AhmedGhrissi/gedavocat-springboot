@@ -60,6 +60,7 @@ RUN mkdir -p /opt/docavocat/uploads/documents \
              /opt/docavocat/logs \
              /opt/docavocat/backups \
              /app/config/keys \
+    && sed -i 's/\r//' /app/entrypoint.sh \
     && chown -R docavocat:docavocat /opt/docavocat /app \
     && chmod +x /app/entrypoint.sh \
     && chmod 600 /app/app.jar
