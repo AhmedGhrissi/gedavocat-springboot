@@ -104,12 +104,23 @@ public class MultiTenantFilter extends OncePerRequestFilter {
                             
                             log.debug("Multi-tenant filter activated for firmId: {} (user: {})", 
                                      firmId, email);
-                        } else {
+        } else {
                             // CRIT-02 FIX : Utilisateur sans cabinet — BLOQUER la requête
-                            log.error("SEC-CRITICAL: User {} has no firm but is not ADMIN — ACCESS DENIED", email);
-                            response.sendError(HttpServletResponse.SC_FORBIDDEN, 
-                                "Accès refusé — aucun cabinet associé à votre compte.");
-                            return;
+                            // Exception : routes de paiement/abonnement (ne requièrent pas l'isolation tenant)
+                            String path = request.getRequestURI();
+                            boolean isPaymentPath = path.startsWith("/subscription")
+                                || path.startsWith("/payment")
+                                || path.startsWith("/subscription/")
+                                || path.startsWith("/payment/");
+                            if (isPaymentPath) {
+                                log.debug("Multi-tenant filter skipped for payment path {} (no firm yet): {}", path, email);
+                                // pas de filtre Hibernate activé — ces endpoints n'accèdent pas aux données tenant
+                            } else {
+                                log.error("SEC-CRITICAL: User {} has no firm but is not ADMIN — ACCESS DENIED", email);
+                                response.sendError(HttpServletResponse.SC_FORBIDDEN,
+                                    "Accès refusé — aucun cabinet associé à votre compte.");
+                                return;
+                            }
                         }
                     } else {
                         log.warn("SEC-ALERT: Authenticated user {} not found in DB", email);

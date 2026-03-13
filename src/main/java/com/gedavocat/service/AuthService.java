@@ -126,9 +126,16 @@ public class AuthService {
         user = userRepository.save(user);
 
         // Si des informations de cabinet ont été fournies, créer le cabinet et l'associer
-        if (request.getFirmName() != null && !request.getFirmName().trim().isEmpty()) {
+        // Garantir qu'un cabinet existe TOUJOURS (requis par MultiTenantFilter et isolation tenant)
+        String firmNameToUse = request.getFirmName();
+        if (firmNameToUse == null || firmNameToUse.trim().isEmpty()) {
+            firmNameToUse = user.getName() != null && !user.getName().isBlank()
+                ? "Cabinet " + user.getName()
+                : "Cabinet " + user.getEmail();
+        }
+        {
             Firm firm = new Firm();
-            firm.setName(request.getFirmName().trim());
+            firm.setName(firmNameToUse.trim());
             String siren = request.getFirmSiren();
             if (siren != null) {
                 siren = siren.replaceAll("[\\s\\-\\.]", "").trim();
