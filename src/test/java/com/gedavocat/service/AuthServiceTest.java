@@ -5,7 +5,7 @@ import com.gedavocat.dto.AuthResponse;
 import com.gedavocat.dto.RegisterRequest;
 import com.gedavocat.model.User;
 import com.gedavocat.repository.UserRepository;
-import com.gedavocat.security.JwtService;
+import com.gedavocat.security.JwtServiceRS256;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -33,7 +33,7 @@ class AuthServiceTest {
 
     @Mock private UserRepository userRepository;
     @Mock private PasswordEncoder passwordEncoder;
-    @Mock private JwtService jwtService;
+    @Mock private JwtServiceRS256 jwtService;
     @Mock private AuthenticationManager authenticationManager;
     @Mock private UserDetailsService userDetailsService;
     @Mock private UserDetails userDetails;
@@ -74,7 +74,7 @@ class AuthServiceTest {
             .thenReturn(Optional.of(testUser));
         when(userDetailsService.loadUserByUsername("jean.dupont@gedavocat.com"))
             .thenReturn(userDetails);
-        when(jwtService.generateToken(userDetails))
+        when(jwtService.generateAccessToken(userDetails))
             .thenReturn("jwt.token.valide");
 
         // When
@@ -155,7 +155,7 @@ class AuthServiceTest {
         verify(userRepository).save(any(User.class));
         verify(passwordEncoder).encode("password123");
         // Le JWT ne doit PAS être généré à l'inscription
-        verify(jwtService, never()).generateToken(any());
+        verify(jwtService, never()).generateAccessToken(any());
     }
 
     @Test

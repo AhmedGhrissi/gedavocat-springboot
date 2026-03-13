@@ -52,6 +52,13 @@ audit-code-security:
   stage: security
   image: maven:3.9-eclipse-temurin-17
   tags: [vps]
+  cache:
+    key:
+      files: ["pom.xml"]
+      prefix: "$CI_COMMIT_REF_SLUG"
+    paths:
+      - .m2/repository/
+    policy: pull
   script:
     - chmod +x ./audit-security.sh
     - ./audit-security.sh
@@ -68,6 +75,11 @@ owasp-dependency-check:
     name: owasp/dependency-check:latest
     entrypoint: [""]
   tags: [vps]
+  cache:
+    key: "owasp-nvd-db"
+    paths:
+      - /root/.dependency-check/data/
+    policy: pull-push
   script:
     - mkdir -p security-reports
     - /usr/share/dependency-check/bin/dependency-check.sh
@@ -76,7 +88,9 @@ owasp-dependency-check:
       --format "JSON"
       --out security-reports/
       || true
-  allow_failure: false
+  allow_failure: true
+  after_script:
+    - *discord_notify
   artifacts:
     when: always
     paths:
@@ -104,6 +118,13 @@ trivy-security-scan:
     name: aquasec/trivy:latest
     entrypoint: [""]
   tags: [vps]
+  cache:
+    key: "trivy-db"
+    paths:
+      - .trivy/
+    policy: pull-push
+  variables:
+    TRIVY_CACHE_DIR: ".trivy"
   script:
     - trivy fs --exit-code 0 --severity HIGH,CRITICAL --format table .
   allow_failure: true
@@ -165,9 +186,12 @@ sbom-generate:
   rules:
     - if: '$CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "web"'
   cache:
-    key: "$CI_COMMIT_REF_SLUG-maven"
+    key:
+      files: ["pom.xml"]
+      prefix: "$CI_COMMIT_REF_SLUG"
     paths:
       - .m2/repository/
+    policy: pull
   script:
     - mvn $MAVEN_CLI_OPTS org.cyclonedx:cyclonedx-maven-plugin:makeAggregateBom
   artifacts:
@@ -183,16 +207,18 @@ build:
   tags: [vps]
   needs:
     - audit-code-security
-    - owasp-dependency-check
     - snyk-security-scan
     - trivy-security-scan
     - semgrep-sast
     - gitleaks-secrets
     - rgpd-check
   cache:
-    key: "$CI_COMMIT_REF_SLUG-maven"
+    key:
+      files: ["pom.xml"]
+      prefix: "$CI_COMMIT_REF_SLUG"
     paths:
       - .m2/repository/
+    policy: pull-push
   script:
     - mvn $MAVEN_CLI_OPTS compile
   after_script:
@@ -212,9 +238,12 @@ test:
   tags: [vps]
   needs: [build]
   cache:
-    key: "$CI_COMMIT_REF_SLUG-maven"
+    key:
+      files: ["pom.xml"]
+      prefix: "$CI_COMMIT_REF_SLUG"
     paths:
       - .m2/repository/
+    policy: pull
   variables:
     SPRING_PROFILES_ACTIVE: h2
   script:

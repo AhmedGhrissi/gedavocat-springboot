@@ -60,28 +60,22 @@ public class MultiTenantIsolationTest {
     private EntityManager entityManager;
 
     // Données de test
-    private static Firm firmA;
-    private static Firm firmB;
-    private static User lawyerA;
-    private static User lawyerB;
-    private static Case caseA1;
-    private static Case caseB1;
-    private static Client clientA1;
-    private static Client clientB1;
-    private static Document documentA1;
-    private static Document documentB1;
+    private Firm firmA;
+    private Firm firmB;
+    private User lawyerA;
+    private User lawyerB;
+    private Case caseA1;
+    private Case caseB1;
+    private Client clientA1;
+    private Client clientB1;
+    private Document documentA1;
+    private Document documentB1;
 
     @BeforeEach
     void setUp() {
-        // Nettoyer le contexte de sécurité
         SecurityContextHolder.clearContext();
-    }
 
-    @Test
-    @Order(1)
-    @DisplayName("01 - Créer 2 cabinets séparés")
-    void testCreateTwoFirms() {
-        // Cabinet A
+        // --- Cabinet A ---
         firmA = new Firm();
         firmA.setId(UUID.randomUUID().toString());
         firmA.setName("Cabinet Dupont & Associés");
@@ -91,7 +85,7 @@ public class MultiTenantIsolationTest {
         firmA.setMaxClients(75);
         firmA = firmRepository.save(firmA);
 
-        // Cabinet B
+        // --- Cabinet B ---
         firmB = new Firm();
         firmB.setId(UUID.randomUUID().toString());
         firmB.setName("Cabinet Martin & Partners");
@@ -101,16 +95,7 @@ public class MultiTenantIsolationTest {
         firmB.setMaxClients(75);
         firmB = firmRepository.save(firmB);
 
-        assertNotNull(firmA.getId());
-        assertNotNull(firmB.getId());
-        assertNotEquals(firmA.getId(), firmB.getId());
-    }
-
-    @Test
-    @Order(2)
-    @DisplayName("02 - Créer avocats dans chaque cabinet")
-    void testCreateLawyersInEachFirm() {
-        // Avocat Cabinet A
+        // --- Avocat A ---
         lawyerA = new User();
         lawyerA.setId(UUID.randomUUID().toString());
         lawyerA.setEmail("avocat.a@cabinet-dupont.fr");
@@ -124,7 +109,7 @@ public class MultiTenantIsolationTest {
         lawyerA.setEmailVerified(true);
         lawyerA = userRepository.save(lawyerA);
 
-        // Avocat Cabinet B
+        // --- Avocat B ---
         lawyerB = new User();
         lawyerB.setId(UUID.randomUUID().toString());
         lawyerB.setEmail("avocat.b@cabinet-martin.fr");
@@ -138,15 +123,7 @@ public class MultiTenantIsolationTest {
         lawyerB.setEmailVerified(true);
         lawyerB = userRepository.save(lawyerB);
 
-        assertEquals(firmA.getId(), lawyerA.getFirm().getId());
-        assertEquals(firmB.getId(), lawyerB.getFirm().getId());
-    }
-
-    @Test
-    @Order(3)
-    @DisplayName("03 - Créer clients dans chaque cabinet")
-    void testCreateClientsInEachFirm() {
-        // Client Cabinet A
+        // --- Client A ---
         clientA1 = new Client();
         clientA1.setId(UUID.randomUUID().toString());
         clientA1.setFirm(firmA);
@@ -158,7 +135,7 @@ public class MultiTenantIsolationTest {
         clientA1.setPhone("0601020304");
         clientA1 = clientRepository.save(clientA1);
 
-        // Client Cabinet B
+        // --- Client B ---
         clientB1 = new Client();
         clientB1.setId(UUID.randomUUID().toString());
         clientB1.setFirm(firmB);
@@ -170,15 +147,7 @@ public class MultiTenantIsolationTest {
         clientB1.setPhone("0607080910");
         clientB1 = clientRepository.save(clientB1);
 
-        assertEquals(firmA.getId(), clientA1.getFirm().getId());
-        assertEquals(firmB.getId(), clientB1.getFirm().getId());
-    }
-
-    @Test
-    @Order(4)
-    @DisplayName("04 - Créer dossiers dans chaque cabinet")
-    void testCreateCasesInEachFirm() {
-        // Dossier Cabinet A
+        // --- Dossier A ---
         caseA1 = new Case();
         caseA1.setId(UUID.randomUUID().toString());
         caseA1.setFirm(firmA);
@@ -190,7 +159,7 @@ public class MultiTenantIsolationTest {
         caseA1.setStatus(Case.CaseStatus.OPEN);
         caseA1 = caseRepository.save(caseA1);
 
-        // Dossier Cabinet B
+        // --- Dossier B ---
         caseB1 = new Case();
         caseB1.setId(UUID.randomUUID().toString());
         caseB1.setFirm(firmB);
@@ -202,15 +171,7 @@ public class MultiTenantIsolationTest {
         caseB1.setStatus(Case.CaseStatus.IN_PROGRESS);
         caseB1 = caseRepository.save(caseB1);
 
-        assertEquals(firmA.getId(), caseA1.getFirm().getId());
-        assertEquals(firmB.getId(), caseB1.getFirm().getId());
-    }
-
-    @Test
-    @Order(5)
-    @DisplayName("05 - Créer documents dans chaque cabinet")
-    void testCreateDocumentsInEachFirm() {
-        // Document Cabinet A
+        // --- Document A ---
         documentA1 = new Document();
         documentA1.setId(UUID.randomUUID().toString());
         documentA1.setFirm(firmA);
@@ -224,7 +185,7 @@ public class MultiTenantIsolationTest {
         documentA1.setFileSize(1024L);
         documentA1 = documentRepository.save(documentA1);
 
-        // Document Cabinet B
+        // --- Document B ---
         documentB1 = new Document();
         documentB1.setId(UUID.randomUUID().toString());
         documentB1.setFirm(firmB);
@@ -237,7 +198,45 @@ public class MultiTenantIsolationTest {
         documentB1.setPath("/uploads/firmB/testament_durand.pdf");
         documentB1.setFileSize(2048L);
         documentB1 = documentRepository.save(documentB1);
+    }
 
+    @Test
+    @Order(1)
+    @DisplayName("01 - Créer 2 cabinets séparés")
+    void testCreateTwoFirms() {
+        assertNotNull(firmA.getId());
+        assertNotNull(firmB.getId());
+        assertNotEquals(firmA.getId(), firmB.getId());
+    }
+
+    @Test
+    @Order(2)
+    @DisplayName("02 - Créer avocats dans chaque cabinet")
+    void testCreateLawyersInEachFirm() {
+        assertEquals(firmA.getId(), lawyerA.getFirm().getId());
+        assertEquals(firmB.getId(), lawyerB.getFirm().getId());
+    }
+
+    @Test
+    @Order(3)
+    @DisplayName("03 - Créer clients dans chaque cabinet")
+    void testCreateClientsInEachFirm() {
+        assertEquals(firmA.getId(), clientA1.getFirm().getId());
+        assertEquals(firmB.getId(), clientB1.getFirm().getId());
+    }
+
+    @Test
+    @Order(4)
+    @DisplayName("04 - Créer dossiers dans chaque cabinet")
+    void testCreateCasesInEachFirm() {
+        assertEquals(firmA.getId(), caseA1.getFirm().getId());
+        assertEquals(firmB.getId(), caseB1.getFirm().getId());
+    }
+
+    @Test
+    @Order(5)
+    @DisplayName("05 - Créer documents dans chaque cabinet")
+    void testCreateDocumentsInEachFirm() {
         assertEquals(firmA.getId(), documentA1.getFirm().getId());
         assertEquals(firmB.getId(), documentB1.getFirm().getId());
     }
