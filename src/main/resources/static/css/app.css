@@ -1,7 +1,5 @@
 /* Lightweight app.css that aggregates existing css files to satisfy templates requesting /css/app.css */
-@import url("/css/global-unified-theme.css");
-
-/* Project specific small overrides (empty for now) */
+/* Project specific small overrides */
 
 /* ========== Utility: spacing between adjacent buttons ========== */
 .btn + .btn,

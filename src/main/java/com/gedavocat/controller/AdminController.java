@@ -290,11 +290,11 @@ public class AdminController {
                 model.addAttribute("status", report.getOverallStatus());
                 model.addAttribute("timestamp", report.getTimestamp());
             }
-            return "admin/security";
+            return "admin/security-monitoring";
         } catch (Exception e) {
             log.error("Erreur chargement monitoring sécurité", e);
             model.addAttribute("error", "Erreur lors du chargement du monitoring de sécurité");
-            return "admin/security";
+            return "admin/security-monitoring";
         }
     }
 

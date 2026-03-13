@@ -83,6 +83,37 @@
     --spacing-4: 32px;
     --spacing-5: 40px;
     --spacing-6: 48px;
+
+    /* === SURFACE (aliases pour pages cases/pricing) === */
+    --surface: #FFFFFF;
+    --surface-hover: #F8FAFC;
+    --bg-tertiary: #E2E8F0;
+
+    /* === BORDERS (aliases étendus) === */
+    --border-light: #F1F5F9;
+
+    /* === RADIUS (aliases étendus) === */
+    --radius-xl: 20px;
+    --radius-2xl: 24px;
+    --radius-full: 9999px;
+
+    /* === BRAND (palette étendue) === */
+    --brand-300: #CBD5E1;
+    --brand-400: #94A3B8;
+    --brand-600: #1E3A5F;
+
+    /* === ACCENT (alias) === */
+    --accent-500: #C6A75E;
+
+    /* === TRANSITIONS (aliases étendus) === */
+    --duration-normal: 0.2s;
+    --ease-out: ease-out;
+
+    /* === SHADOWS (alias étendu) === */
+    --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.05);
+
+    /* === STATUS (alias) === */
+    --warning: #D97706;
 }
 
 /* ══════════════════════════════════════════════════════════
