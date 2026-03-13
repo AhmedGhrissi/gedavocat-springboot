@@ -1,6 +1,5 @@
 package com.gedavocat.controller;
 
-import com.gedavocat.model.User;
 import com.gedavocat.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;

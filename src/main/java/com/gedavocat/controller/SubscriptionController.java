@@ -426,37 +426,67 @@ public class SubscriptionController {
                 return "redirect:/subscription/change-plan";
             }
 
-            // Si l'utilisateur a déjà un abonnement Stripe, modifier le plan directement
+            // ── Upgrade : paiement immédiat obligatoire ──────────────────────────
+            // ── Downgrade : pas de prorata, facturation réduite au renouvellement ─
             String existingSubId = user.getStripeSubscriptionId();
             if (existingSubId != null && !existingSubId.isBlank()) {
                 try {
-                    com.stripe.model.Subscription updatedSub = stripeService.updateSubscriptionPlan(
-                            existingSubId, plan, period);
-                    if (updatedSub != null) {
-                        // Mettre à jour le plan en base
+                    com.stripe.model.Subscription updatedSub =
+                            stripeService.updateSubscriptionPlan(existingSubId, plan, period, isUpgrade);
+
+                    if (isUpgrade) {
+                        // Upgrade : vérifier que la facture Stripe a bien été payée
+                        String invoiceStatus = updatedSub.getLatestInvoice() != null
+                                ? stripeService.getInvoiceStatus(updatedSub.getLatestInvoice())
+                                : null;
+                        if ("paid".equals(invoiceStatus)) {
+                            user.setSubscriptionPlan(newPlan);
+                            user.setMaxClients(newPlan.getMaxClients());
+                            userRepository.save(user);
+                            log.info("Upgrade confirmé (facture payée) {} → {} pour {}", currentPlan, newPlan, user.getEmail());
+                            redirectAttributes.addFlashAttribute("message",
+                                "Upgrade effectué ! Votre plan " + newPlan.getDisplayName() + " est actif.");
+                        } else {
+                            // Paiement en attente/échoué — ne pas débloquer le plan
+                            log.warn("Upgrade {} → {} pour {} : facture non payée (status={})",
+                                currentPlan, newPlan, user.getEmail(), invoiceStatus);
+                            redirectAttributes.addFlashAttribute("error",
+                                "Le paiement est en cours de traitement. Votre plan sera mis à jour dès confirmation.");
+                        }
+                    } else {
+                        // Downgrade : accès réduit immédiatement, facturation au prochain renouvellement
                         user.setSubscriptionPlan(newPlan);
                         user.setMaxClients(newPlan.getMaxClients());
                         userRepository.save(user);
-                        log.info("Plan modifié via Stripe {} → {} pour {}", currentPlan, newPlan, user.getEmail());
+                        log.info("Downgrade {} → {} pour {}", currentPlan, newPlan, user.getEmail());
                         redirectAttributes.addFlashAttribute("message",
-                            "Votre plan a été changé avec succès vers " + newPlan.getDisplayName() + " !");
-                        return "redirect:/subscription/change-plan";
+                            "Plan rétrogradé vers " + newPlan.getDisplayName()
+                            + ". Le nouveau tarif s'applique à partir de votre prochain renouvellement.");
                     }
+                    return "redirect:/subscription/change-plan";
                 } catch (StripeException se) {
                     log.warn("Impossible de mettre à jour l'abonnement Stripe {} : {}", existingSubId, se.getMessage());
                     // L'abonnement est peut-être annulé/expiré — on crée un nouveau checkout
                 }
             }
 
-            // Pas d'abonnement existant ou mise à jour échouée → nouveau checkout
-            String checkoutUrl = stripeService.createCheckoutSession(user, plan, period);
-            if (checkoutUrl != null) {
-                log.info("Changement de plan {} → {} pour {} (nouveau checkout)", currentPlan, newPlan, user.getEmail());
-                return "redirect:" + checkoutUrl;
+            // Pas d'abonnement existant (ou mise à jour Stripe échouée) → nouveau checkout
+            if (isUpgrade) {
+                String checkoutUrl = stripeService.createCheckoutSession(user, plan, period);
+                if (checkoutUrl != null) {
+                    log.info("Upgrade {} → {} pour {} (nouveau checkout)", currentPlan, newPlan, user.getEmail());
+                    return "redirect:" + checkoutUrl;
+                }
+                redirectAttributes.addFlashAttribute("error", "Erreur lors de la création du paiement.");
             } else {
-                redirectAttributes.addFlashAttribute("error", "Erreur lors de la création du paiement");
-                return "redirect:/subscription/change-plan";
+                // Downgrade sans abonnement Stripe actif : appliquer directement en DB
+                user.setSubscriptionPlan(newPlan);
+                user.setMaxClients(newPlan.getMaxClients());
+                userRepository.save(user);
+                redirectAttributes.addFlashAttribute("message",
+                    "Plan rétrogradé vers " + newPlan.getDisplayName() + ".");
             }
+            return "redirect:/subscription/change-plan";
 
         } catch (Exception e) {
             log.error("Erreur lors du changement de plan: {}", e.getMessage());

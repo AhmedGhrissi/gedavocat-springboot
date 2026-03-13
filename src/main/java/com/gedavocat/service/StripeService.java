@@ -238,10 +238,11 @@ public class StripeService {
     }
 
     /**
-     * Met à jour le plan d'un abonnement Stripe existant (upgrade/downgrade)
-     * au lieu de créer un nouveau checkout. Proratisation automatique.
+     * Met à jour le plan d'un abonnement Stripe existant.
+     * - immediate=true  (upgrade)   → ALWAYS_INVOICE : facture créée et collectée immédiatement
+     * - immediate=false (downgrade) → NONE            : pas de prorata, nouveau tarif au prochain renouvellement
      */
-    public Subscription updateSubscriptionPlan(String subscriptionId, String plan, String period) throws StripeException {
+    public Subscription updateSubscriptionPlan(String subscriptionId, String plan, String period, boolean immediate) throws StripeException {
         String newPriceId = getPriceId(plan, period);
         if (newPriceId == null) {
             throw new IllegalArgumentException("Plan ou période invalide: " + plan + " / " + period);
@@ -259,13 +260,28 @@ public class StripeService {
                 .setId(currentItem.getId())
                 .setPrice(newPriceId)
                 .build())
-            .setProrationBehavior(SubscriptionUpdateParams.ProrationBehavior.CREATE_PRORATIONS)
+            .setProrationBehavior(immediate
+                ? SubscriptionUpdateParams.ProrationBehavior.ALWAYS_INVOICE
+                : SubscriptionUpdateParams.ProrationBehavior.NONE)
             .build();
 
         Subscription updated = subscription.update(params);
-        log.info("Abonnement {} mis à jour vers plan={} period={} (priceId={})",
-                subscriptionId, plan, period, newPriceId);
+        log.info("Abonnement {} mis à jour vers plan={} period={} (priceId={}, mode={})",
+                subscriptionId, plan, period, newPriceId, immediate ? "ALWAYS_INVOICE" : "NONE");
         return updated;
+    }
+
+    /**
+     * Retourne le statut d'une facture Stripe par son ID ("paid", "open", "void", etc.)
+     */
+    public String getInvoiceStatus(String invoiceId) {
+        try {
+            com.stripe.model.Invoice invoice = com.stripe.model.Invoice.retrieve(invoiceId);
+            return invoice.getStatus();
+        } catch (StripeException e) {
+            log.warn("Impossible de récupérer la facture {} : {}", invoiceId, e.getMessage());
+            return null;
+        }
     }
 
     /**
