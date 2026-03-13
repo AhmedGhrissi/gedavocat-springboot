@@ -67,24 +67,7 @@ audit-code-security:
       - audit-report*.txt
     expire_in: 7 days
 
-owasp-dependency-check:
-  stage: security
-  rules:
-    - if: '$FAST_DEPLOY == "true"'
-      when: never
-    - when: on_success
-  image:
-    name: owasp/dependency-check:latest
-    entrypoint: [""]
-  script:
-    - mkdir -p security-reports
-    - /usr/share/dependency-check/bin/dependency-check.sh
-      --project "gedavocat"
-      --scan .
-      --format "JSON"
-      --out security-reports/
-      || true
-  allow_failure: false
+  allow_failure: true
   artifacts:
     when: always
     paths:

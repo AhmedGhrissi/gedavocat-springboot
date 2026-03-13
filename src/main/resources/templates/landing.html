@@ -226,8 +226,8 @@
 
     <script th:attr="nonce=${cspNonce}">
     function setLandingPeriod(period) {
-        document.querySelectorAll('.lp-monthly').forEach(el => el.style.display = period === 'monthly' ? '' : 'none');
-        document.querySelectorAll('.lp-yearly').forEach(el => el.style.display = period === 'yearly' ? '' : 'none');
+        document.querySelectorAll('.lp-monthly').forEach(el => el.style.display = period === 'monthly' ? 'inline' : 'none');
+        document.querySelectorAll('.lp-yearly').forEach(el => el.style.display = period === 'yearly' ? 'inline' : 'none');
         document.getElementById('btn-monthly').style.background = period === 'monthly' ? 'white' : 'transparent';
         document.getElementById('btn-monthly').style.color = period === 'monthly' ? '#1E3A5F' : '#718096';
         document.getElementById('btn-monthly').style.boxShadow = period === 'monthly' ? '0 2px 6px rgba(0,0,0,.1)' : 'none';
