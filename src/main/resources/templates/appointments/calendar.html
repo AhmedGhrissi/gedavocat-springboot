@@ -645,7 +645,7 @@
     <!-- Scripts spécifiques pour le calendrier -->
     <!-- FullCalendar JS (v6 : CSS + locales inclus dans le bundle global) -->
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
-    <script th:inline="javascript">
+    <script th:inline="javascript" th:attr="nonce=${cspNonce}">
     document.addEventListener('DOMContentLoaded', function() {
         var calendarEl = document.getElementById('calendar');
         

@@ -276,7 +276,7 @@
                 </div>
             </div>
         </div>
-        <script>
+        <script th:attr="nonce=${cspNonce}">
             function switchTab(tabName, btn) {
                 document.querySelectorAll('[id$="-tab"]').forEach(tab => {
                     tab.style.display = 'none';

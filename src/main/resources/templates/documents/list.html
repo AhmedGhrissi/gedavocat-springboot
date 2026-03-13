@@ -159,7 +159,7 @@
             </div>
         </div>
 
-        <script th:inline="javascript">
+        <script th:inline="javascript" th:attr="nonce=${cspNonce}">
             const uploadZone = document.getElementById('uploadZone');
             const fileInput = document.getElementById('fileInput');
 

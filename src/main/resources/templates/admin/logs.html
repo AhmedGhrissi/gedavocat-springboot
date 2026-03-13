@@ -215,7 +215,7 @@
         </div>
     </div>
 
-    <script>
+    <script th:attr="nonce=${cspNonce}">
         // Auto-refresh toutes les 30 secondes
         setTimeout(function() {
             window.location.reload();

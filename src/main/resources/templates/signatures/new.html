@@ -316,7 +316,7 @@
             </div>
         </div>
 
-        <script th:inline="javascript">
+        <script th:inline="javascript" th:attr="nonce=${cspNonce}">
         /*<![CDATA[*/
         var csrfToken = document.querySelector('meta[name="_csrf"]');
         var selectedCaseId = /*[[${selectedCaseId}]]*/ null;

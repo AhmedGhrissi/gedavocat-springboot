@@ -138,7 +138,7 @@
                             </div>
                         </div>
                         
-                        <script>
+                        <script th:attr="nonce=${cspNonce}">
                         function navigateToCase(element) {
                             const caseId = element.getAttribute('data-case-id');
                             window.location.href = '/documents/case/' + caseId;

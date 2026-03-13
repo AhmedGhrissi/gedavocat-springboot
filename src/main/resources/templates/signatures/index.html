@@ -183,7 +183,7 @@
             </a>
         </div>
 
-        <script>
+        <script th:attr="nonce=${cspNonce}">
             function switchTab(tab) {
                 // Cacher tous les contenus
                 document.getElementById('pending-content').style.display = 'none';

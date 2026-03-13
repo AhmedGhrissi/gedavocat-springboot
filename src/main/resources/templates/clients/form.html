@@ -155,7 +155,7 @@
             </div>
         </div>
 
-    <script th:inline="javascript">
+    <script th:inline="javascript" th:attr="nonce=${cspNonce}">
         const existingType = /*[[${client.clientType}]]*/ 'INDIVIDUAL';
 
         function selectClientType(type) {

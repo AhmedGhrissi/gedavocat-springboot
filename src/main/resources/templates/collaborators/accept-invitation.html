@@ -159,7 +159,7 @@
         </form>
     </div>
 
-    <script>
+    <script th:attr="nonce=${cspNonce}">
         // Client-side password match check: prevents submit and shows inline error
         (function() {
             const form = document.getElementById('inviteForm');

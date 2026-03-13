@@ -148,7 +148,7 @@
         </div>
     </div>
 
-    <script>
+    <script th:attr="nonce=${cspNonce}">
         function copyLink() {
             const input = document.getElementById('generatedLink');
             input.select();

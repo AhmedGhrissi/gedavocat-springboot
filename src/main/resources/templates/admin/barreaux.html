@@ -541,7 +541,7 @@
         </div>
     </div>
 
-    <script>
+    <script th:attr="nonce=${cspNonce}">
         /* ===================== Fonctions globales (appelées via onclick) ===================== */
         function toggleSubscriptionFields() {
             var isLawyer = document.getElementById('roleLawyer').checked;

@@ -234,7 +234,7 @@
         </div>
     </div>
 
-    <script>
+    <script th:attr="nonce=${cspNonce}">
     function showToast(msg, success) {
         const wrap = document.getElementById('action-toast');
         const inner = document.getElementById('action-toast-inner');

@@ -251,7 +251,7 @@
 
 <!-- JavaScript pour actualisation automatique -->
 <th:block layout:fragment="scripts">
-    <script>
+    <script th:attr="nonce=${cspNonce}">
         function refreshMetrics() {
             fetch('/admin/security-monitoring/api/metrics')
                 .then(response => response.json())

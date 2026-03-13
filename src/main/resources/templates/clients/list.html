@@ -265,7 +265,7 @@
         </div>
     </div>
 
-    <script>
+    <script th:attr="nonce=${cspNonce}">
     function filterClients() {
         const input = document.getElementById('searchClients');
         const filter = input.value.toLowerCase();

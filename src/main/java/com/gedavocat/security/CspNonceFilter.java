@@ -46,10 +46,12 @@ public class CspNonceFilter extends OncePerRequestFilter {
         request.setAttribute("cspNonce", nonce);
 
         // Build CSP with per-request nonce
-        // 'unsafe-inline' is removed — nonces enforce strict inline policy on CSP L3 browsers
+        // style-src: 'unsafe-inline' autorisé (635 inline styles dans les templates — CSS injection
+        //   ne permet pas d'exécuter du code, la sécurité critique est assurée par script-src).
+        // script-src: nonce strict — pas d'unsafe-inline.
         String csp = "default-src 'self'; " +
                 "script-src 'self' 'nonce-" + nonce + "' https://js.stripe.com " + CDN_JSDELIVR + "; " +
-                "style-src 'self' 'nonce-" + nonce + "' " + CDN_JSDELIVR + " " + CDN_CDNJS + " " + GOOGLE_FONTS_CSS + "; " +
+                "style-src 'self' 'unsafe-inline' " + CDN_JSDELIVR + " " + CDN_CDNJS + " " + GOOGLE_FONTS_CSS + "; " +
                 "font-src 'self' data: " + CDN_CDNJS + " " + GOOGLE_FONTS_FILES + "; " +
                 "img-src 'self' data:; " +
                 "connect-src 'self' https://api.stripe.com https://api.payplug.com " + CDN_JSDELIVR + "; " +

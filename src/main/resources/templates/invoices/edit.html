@@ -241,7 +241,7 @@
   </div>
   </form>
 
-  <script th:inline="javascript">
+  <script th:inline="javascript" th:attr="nonce=${cspNonce}">
     const invoiceId   = /*[[${invoice.id}]]*/ '';
     const csrf        = document.querySelector('meta[name="_csrf"]') ? document.querySelector('meta[name="_csrf"]').content : '';
     const initItems   = /*[[${invoice.items}]]*/ [];

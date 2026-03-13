@@ -271,7 +271,7 @@
             </div>
         </div>
 
-        <script>
+        <script th:attr="nonce=${cspNonce}">
             function togglePeriod(period) {
                 // Toggle buttons — use currentTarget to handle clicks on child elements
                 document.querySelectorAll('.period-btn').forEach(btn => btn.classList.remove('active'));

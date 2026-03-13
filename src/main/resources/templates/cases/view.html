@@ -520,7 +520,7 @@
         </div>
 
         <!-- JavaScript pour le partage de documents -->
-        <script th:inline="javascript" sec:authorize="hasRole('LAWYER')">
+        <script th:inline="javascript" sec:authorize="hasRole('LAWYER')" th:attr="nonce=${cspNonce}">
         (function() {
             const caseId = /*[[${case.id}]]*/ '';
 
@@ -608,7 +608,7 @@
         })();
         </script>
 
-        <script>
+        <script th:attr="nonce=${cspNonce}">
         function switchSection(event, sectionId) {
             event.preventDefault();
             // Update button styles

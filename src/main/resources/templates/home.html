@@ -485,7 +485,7 @@
     </div>
 </footer>
 
-<script>
+<script th:attr="nonce=${cspNonce}">
 let isAnnual = false;
 const prices = { ESSENTIEL:{monthly:49,annual:39}, PROFESSIONNEL:{monthly:99,annual:79}, CABINET_PLUS:{monthly:199,annual:159} };
 const planIds = {ESSENTIEL:'Essentiel',PROFESSIONNEL:'Professionnel',CABINET_PLUS:'CabinetPlus'};

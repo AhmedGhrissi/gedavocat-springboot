@@ -114,7 +114,7 @@
         </div>
     </div>
 
-    <script>
+    <script th:attr="nonce=${cspNonce}">
         let itemCounter = 0;
 
         function addInvoiceItem() {

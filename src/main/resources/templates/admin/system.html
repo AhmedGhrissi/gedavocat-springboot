@@ -303,7 +303,7 @@
     </div>
 </div>
 
-    <script>
+    <script th:attr="nonce=${cspNonce}">
     function showToastSys(msg, success) {
         const div = document.getElementById('sys-toast');
         if (!div) {

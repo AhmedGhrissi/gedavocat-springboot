@@ -266,7 +266,7 @@
         </div>
     </div>
 
-    <script>
+    <script th:attr="nonce=${cspNonce}">
         function deleteInvoice(invoiceId) {
             appConfirm('Êtes-vous sûr de vouloir supprimer cette facture ?', { type: 'danger', confirmText: 'Supprimer' }).then(function(ok) {
             if (!ok) return;

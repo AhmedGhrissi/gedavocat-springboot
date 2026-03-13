@@ -550,7 +550,7 @@
         </div>
     </div>
 
-    <script>
+    <script th:attr="nonce=${cspNonce}">
         /* ===================== Fonctions globales (appelées via onclick) ===================== */
         function toggleSubscriptionFields() {
             var isAdmin = document.getElementById('roleAdmin') && document.getElementById('roleAdmin').checked;
