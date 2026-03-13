@@ -40,6 +40,8 @@
             <input type="hidden" name="email" th:value="${email}">
             <!-- Six champs visuels + champ caché qui reçoit le code concaténé -->
             <input type="hidden" name="code" id="hiddenCode">
+            <input th:if="${plan != null}" type="hidden" name="plan" th:value="${plan}">
+            <input th:if="${billing != null}" type="hidden" name="billing" th:value="${billing}">
 
             <div class="code-inputs mb-4" id="codeBoxes">
                 <input type="text" inputmode="numeric" maxlength="1" class="digit" autofocus>

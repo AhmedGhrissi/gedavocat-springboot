@@ -134,7 +134,15 @@ public class AuthController {
             redirectAttributes.addFlashAttribute("info",
                 "Un code de vérification à 6 chiffres a été envoyé à " + email + ". Veuillez le saisir ci-dessous.");
             log.info("🎉 Inscription réussie - Redirection vers /verify-email");
-            return "redirect:/verify-email?email=" + URLEncoder.encode(email, StandardCharsets.UTF_8);
+            String verifyUrl = "/verify-email?email=" + URLEncoder.encode(email, StandardCharsets.UTF_8);
+            String chosenPlan = request.getSubscriptionPlan();
+            if (chosenPlan != null && !chosenPlan.isBlank()) {
+                verifyUrl += "&plan=" + URLEncoder.encode(chosenPlan, StandardCharsets.UTF_8);
+                if (billing != null && !billing.isBlank()) {
+                    verifyUrl += "&billing=" + URLEncoder.encode(billing, StandardCharsets.UTF_8);
+                }
+            }
+            return "redirect:" + verifyUrl;
         } catch (IllegalArgumentException e) {
             // Erreur de validation métier - analyser le message pour identifier le champ
             String message = e.getMessage();
@@ -200,9 +208,13 @@ public class AuthController {
     @GetMapping("/verify-email")
     public String verifyEmailPage(
             @RequestParam(required = false) String email,
+            @RequestParam(required = false) String plan,
+            @RequestParam(required = false) String billing,
             Model model
     ) {
         model.addAttribute("email", email != null ? email : "");
+        model.addAttribute("plan", plan);
+        model.addAttribute("billing", billing);
         return "auth/verify-email";
     }
 
@@ -211,6 +223,8 @@ public class AuthController {
     public String verifyEmailSubmit(
             @RequestParam String email,
             @RequestParam String code,
+            @RequestParam(required = false) String plan,
+            @RequestParam(required = false) String billing,
             Model model,
             RedirectAttributes ra,
             jakarta.servlet.http.HttpServletRequest request
@@ -219,6 +233,8 @@ public class AuthController {
         boolean ok = emailVerificationService.verifyCode(emailLower, code.trim());
         if (!ok) {
             model.addAttribute("email", emailLower);
+            model.addAttribute("plan", plan);
+            model.addAttribute("billing", billing);
             model.addAttribute("error", "Code incorrect ou expiré. Vérifiez votre email ou demandez un nouveau code.");
             return "auth/verify-email";
         }
@@ -245,8 +261,14 @@ public class AuthController {
                     org.springframework.security.web.context.HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
                     org.springframework.security.core.context.SecurityContextHolder.getContext());
 
-                log.info("Auto-login réussi (email masqué pour RGPD) — redirection vers /subscription/pricing");
-                ra.addFlashAttribute("success", "Votre compte a été créé avec succès ! Choisissez votre formule pour commencer.");
+                log.info("Auto-login réussi (email masqué pour RGPD) — redirection vers checkout/pricing");
+                ra.addFlashAttribute("success", "Votre compte a été créé avec succès ! Finalisez votre abonnement pour commencer.");
+                if (plan != null && !plan.isBlank()) {
+                    String period = (billing != null && !billing.isBlank()) ? billing : "monthly";
+                    return "redirect:/subscription/checkout?plan="
+                        + URLEncoder.encode(plan, StandardCharsets.UTF_8)
+                        + "&period=" + URLEncoder.encode(period, StandardCharsets.UTF_8);
+                }
                 return "redirect:/subscription/pricing";
             } catch (Exception e) {
                 log.error("Erreur auto-login après vérification email: {}", e.getMessage());
