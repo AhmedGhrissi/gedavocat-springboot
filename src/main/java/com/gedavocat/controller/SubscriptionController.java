@@ -9,8 +9,11 @@ import com.stripe.model.Event;
 import com.stripe.model.checkout.Session;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -130,7 +133,8 @@ public class SubscriptionController {
     public String paymentSuccess(
             @RequestParam(required = false) String session_id,
             Model model,
-            Authentication authentication
+            Authentication authentication,
+            HttpServletRequest httpRequest
     ) {
         log.info("🎯 Accès à /subscription/success - session_id={}, authenticated={}", 
                 session_id, authentication != null);
@@ -152,6 +156,7 @@ public class SubscriptionController {
                 }
                 model.addAttribute("success", true);
                 model.addAttribute("message", "Votre abonnement est déjà actif !");
+                logoutUser(httpRequest);
                 return "payment/success";
             }
 
@@ -183,6 +188,7 @@ public class SubscriptionController {
                     model.addAttribute("success", true);
                     model.addAttribute("message", "Votre abonnement est déjà actif !");
                     processedSessionIds.add(session_id);
+                    logoutUser(httpRequest);
                     return "payment/success";
                 }
                 
@@ -207,8 +213,9 @@ public class SubscriptionController {
                 model.addAttribute("plan", user.getSubscriptionPlan());
                 model.addAttribute("success", true);
                 model.addAttribute("message", "Votre abonnement a été activé avec succès !");
-                log.info("✅ Abonnement activé via success page pour: {} (auth={})", 
+                log.info("✅ Abonnement activé via success page pour: {} (auth={})",
                     user.getEmail(), authentication != null);
+                logoutUser(httpRequest);
             } else {
                 log.warn("⚠️ Statut de session non complete: {} (payment_status={})", 
                         session.getStatus(), session.getPaymentStatus());
@@ -223,6 +230,16 @@ public class SubscriptionController {
         }
         
         return "payment/success";
+    }
+
+    /**
+     * Déconnecte l'utilisateur (supprime session + contexte Spring Security).
+     * Appelé après affichage de la page success pour forcer un login conscient.
+     */
+    private void logoutUser(HttpServletRequest request) {
+        SecurityContextHolder.clearContext();
+        HttpSession session = request.getSession(false);
+        if (session != null) session.invalidate();
     }
 
     /**
