@@ -627,3 +627,12 @@ input:focus {
 [data-theme="dark"] {
     /* Désactivé pour éviter les mélanges */
 }
+
+/* ── Layout Standalone (pages légales, CGU, etc.) ── */
+.standalone-body { background: var(--bg-surface, #f8fafc); min-height: 100vh; }
+.standalone-header { background: #1E3A5F; padding: 1rem 2rem; display: flex; align-items: center; gap: 1rem; }
+.standalone-logo-link { display: flex; align-items: center; gap: 0.75rem; text-decoration: none; color: #fff; }
+.standalone-logo-icon { font-size: 1.4rem; }
+.standalone-logo-text { font-weight: 700; font-size: 1.2rem; letter-spacing: 0.02em; }
+.standalone-footer { text-align: center; padding: 2rem; color: #64748b; font-size: 0.85rem; border-top: 1px solid #e2e8f0; margin-top: 3rem; }
+.standalone-footer-link { color: #1E3A5F; }
