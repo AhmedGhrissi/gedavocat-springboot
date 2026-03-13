@@ -123,7 +123,10 @@ public class CspNonceFilter extends OncePerRequestFilter {
         "'sha256-i6mc/EckCMf65C39ZY69JwcrmmyMtc3Nsmja4Q5N/28=' " +
         "'sha256-pcfR3TUS8UZgeKKl4z0xDkkBNmp4XxjJntXZKaJJGCs=' " +
         "'sha256-4TpZ3Tx5SLybDXPQaSHGuP1RU4D+pzck+02JLVY61BY=' " +
-        "'sha256-MguIPR6qNR8D3B+eAlK+bIRTZe8t3wkOY4B/56Me9FU='";
+        "'sha256-MguIPR6qNR8D3B+eAlK+bIRTZe8t3wkOY4B/56Me9FU=' " +
+        // landing.html — toggle mensuel/annuel
+        "'sha256-tfUwzczqQHhoesmlvynsnZ/2F3dh/9CMOWGQydM8CZk=' " +
+        "'sha256-xnCcAoNyyylevwRSuotYkOGP9v88YCDbIzmvgL3mhjw='";
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
