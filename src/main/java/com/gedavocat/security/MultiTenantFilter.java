@@ -106,14 +106,18 @@ public class MultiTenantFilter extends OncePerRequestFilter {
                                      firmId, email);
         } else {
                             // CRIT-02 FIX : Utilisateur sans cabinet — BLOQUER la requête
-                            // Exception : routes de paiement/abonnement (ne requièrent pas l'isolation tenant)
+                            // Exception : routes ne nécessitant pas l'isolation tenant
                             String path = request.getRequestURI();
-                            boolean isPaymentPath = path.startsWith("/subscription")
+                            boolean isExemptPath = path.startsWith("/subscription")
                                 || path.startsWith("/payment")
-                                || path.startsWith("/subscription/")
-                                || path.startsWith("/payment/");
-                            if (isPaymentPath) {
-                                log.debug("Multi-tenant filter skipped for payment path {} (no firm yet): {}", path, email);
+                                || path.startsWith("/profile")
+                                || path.startsWith("/settings")
+                                || path.startsWith("/legal")
+                                || path.startsWith("/logout")
+                                || path.startsWith("/error")
+                                || path.equals("/");
+                            if (isExemptPath) {
+                                log.debug("Multi-tenant filter skipped for exempt path {} (no firm yet): {}", path, email);
                                 // pas de filtre Hibernate activé — ces endpoints n'accèdent pas aux données tenant
                             } else {
                                 log.error("SEC-CRITICAL: User {} has no firm but is not ADMIN — ACCESS DENIED", email);

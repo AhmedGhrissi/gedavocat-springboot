@@ -284,6 +284,8 @@ public class AuthController {
     @PostMapping("/verify-email/resend")
     public String resendVerificationCode(
             @RequestParam String email,
+            @RequestParam(required = false) String plan,
+            @RequestParam(required = false) String billing,
             RedirectAttributes ra
     ) {
         String emailLower = email.trim().toLowerCase();
@@ -294,7 +296,14 @@ public class AuthController {
             }
         });
         ra.addFlashAttribute("info", "Un nouveau code a été envoyé à " + emailLower + " (si le compte existe).");
-        return "redirect:/verify-email?email=" + URLEncoder.encode(emailLower, StandardCharsets.UTF_8);
+        String redirectUrl = "/verify-email?email=" + URLEncoder.encode(emailLower, StandardCharsets.UTF_8);
+        if (plan != null && !plan.isBlank()) {
+            redirectUrl += "&plan=" + URLEncoder.encode(plan, StandardCharsets.UTF_8);
+            if (billing != null && !billing.isBlank()) {
+                redirectUrl += "&billing=" + URLEncoder.encode(billing, StandardCharsets.UTF_8);
+            }
+        }
+        return "redirect:" + redirectUrl;
     }
 
     // ----------------------------------------------------------------

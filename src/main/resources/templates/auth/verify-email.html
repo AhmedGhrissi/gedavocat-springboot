@@ -64,6 +64,8 @@
             <span class="text-muted small">Vous n'avez pas reçu le code ?</span><br>
             <form th:action="@{/verify-email/resend}" method="post" class="d-inline">
                 <input type="hidden" name="email" th:value="${email}">
+                <input th:if="${plan != null}" type="hidden" name="plan" th:value="${plan}">
+                <input th:if="${billing != null}" type="hidden" name="billing" th:value="${billing}">
                 <button type="submit" class="btn btn-link btn-sm p-0">Renvoyer un code</button>
             </form>
         </div>
