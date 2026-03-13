@@ -245,9 +245,9 @@ public class AuthController {
                     org.springframework.security.web.context.HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
                     org.springframework.security.core.context.SecurityContextHolder.getContext());
 
-                log.info("Auto-login réussi (email masqué pour RGPD) — redirection vers /login");
-                ra.addFlashAttribute("success", "Votre compte a été créé avec succès ! Vous pouvez maintenant vous connecter.");
-                return "redirect:/login";
+                log.info("Auto-login réussi (email masqué pour RGPD) — redirection vers /subscription/pricing");
+                ra.addFlashAttribute("success", "Votre compte a été créé avec succès ! Choisissez votre formule pour commencer.");
+                return "redirect:/subscription/pricing";
             } catch (Exception e) {
                 log.error("Erreur auto-login après vérification email: {}", e.getMessage());
                 ra.addFlashAttribute("success", "Email vérifié ! Connectez-vous pour accéder à votre compte.");
