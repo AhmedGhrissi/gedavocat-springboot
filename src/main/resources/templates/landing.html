@@ -137,7 +137,7 @@
             </div>
             <div class="landing-nav-buttons">
                 <a th:href="@{/login}" class="btn btn-outline">Se connecter</a>
-                <a th:href="@{/subscription/pricing}" class="btn btn-primary">Démarrer l'essai</a>
+                <a th:href="@{/register(plan=ESSENTIEL,billing=monthly)}" class="btn btn-primary">Démarrer l'essai</a>
             </div>
         </div>
     </nav>
@@ -154,7 +154,7 @@
             <h1 class="animate-fade-in-up">Votre cabinet d'avocat,<br>géré en un seul endroit.</h1>
             <p>DocAvocat centralise vos dossiers, vos documents juridiques, vos signatures électroniques et vos communications e-Barreau. Gagnez des heures chaque semaine sur l'administratif.</p>
             <div class="hero-cta">
-                <a th:href="@{/subscription/pricing}" class="btn btn-primary btn-hero"><i class="fas fa-rocket"></i> Démarrer l'essai — 14 jours</a>
+                <a th:href="@{/register(plan=ESSENTIEL,billing=monthly)}" class="btn btn-primary btn-hero"><i class="fas fa-rocket"></i> Démarrer l'essai — 14 jours</a>
                 <a href="#comment-ca-marche" class="btn btn-outline btn-hero">Voir comment ça marche <i class="fas fa-arrow-down"></i></a>
             </div>
             <div class="lp-hero-tags">
@@ -226,7 +226,7 @@
                 <h2 class="lp-section-title lp-text-white">Un seul outil.<br>Tous vos dossiers.<br>Toute votre sérénité.</h2>
                 <p class="lp-solution-body">DocAvocat réunit dans une seule interface tout ce dont un avocat a besoin au quotidien — gestion des dossiers, GED, signatures électroniques certifiées, communications RPVA et portail client sécurisé.</p>
                 <p class="lp-solution-body">Plus besoin de jongler entre 5 outils différents. Tout est là, pensé pour le droit français, hébergé en France.</p>
-                <a th:href="@{/subscription/pricing}" class="btn btn-gold lp-mt-2">Démarrer l'essai <i class="fas fa-arrow-right"></i></a>
+                <a th:href="@{/register(plan=ESSENTIEL,billing=monthly)}" class="btn btn-gold lp-mt-2">Démarrer l'essai <i class="fas fa-arrow-right"></i></a>
             </div>
             <div class="lp-solution-visual-col">
                 <div class="lp-solution-card">
@@ -572,7 +572,7 @@
             <h2>Prêt à moderniser votre cabinet ?</h2>
             <p>Rejoignez les avocats qui ont choisi de travailler autrement.<br>14 jours d'essai complet — annulez avant J+14, rien ne vous est débité.</p>
             <div class="lp-cta-final-buttons">
-                <a th:href="@{/subscription/pricing}" class="btn btn-gold btn-hero"><i class="fas fa-rocket"></i> Démarrer l'essai</a>
+                <a th:href="@{/register(plan=ESSENTIEL,billing=monthly)}" class="btn btn-gold btn-hero"><i class="fas fa-rocket"></i> Démarrer l'essai</a>
                 <a href="mailto:support@docavocat.fr" class="btn btn-outline-white btn-hero">Contacter l'équipe</a>
             </div>
             <p class="lp-cta-final-tags">

@@ -269,7 +269,8 @@ public class AuthController {
                         + URLEncoder.encode(plan, StandardCharsets.UTF_8)
                         + "&period=" + URLEncoder.encode(period, StandardCharsets.UTF_8);
                 }
-                return "redirect:/subscription/pricing";
+                // Fallback : plan par défaut ESSENTIEL si aucun plan transmis
+                return "redirect:/subscription/checkout?plan=ESSENTIEL&period=monthly";
             } catch (Exception e) {
                 log.error("Erreur auto-login après vérification email: {}", e.getMessage());
                 ra.addFlashAttribute("success", "Email vérifié ! Connectez-vous pour accéder à votre compte.");
