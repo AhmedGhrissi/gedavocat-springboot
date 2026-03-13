@@ -63,7 +63,7 @@
 </head>
 <body>
     <!-- UX-04 FIX : lien d'accessibilité skip-to-content -->
-    <a href="#main-content" class="visually-hidden-focusable position-absolute top-0 start-0 p-2 bg-primary text-white" style="z-index:10000">Aller au contenu principal</a>
+    <a href="#main-content" class="visually-hidden-focusable position-absolute top-0 start-0 p-2 bg-primary text-white skip-nav-link">Aller au contenu principal</a>
 
     <!-- Overlay pour mobile -->
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
@@ -219,7 +219,7 @@
         <div class="sidebar-footer">
             <div class="user-info">
                 <div class="user-avatar" th:text="${#authentication != null && #authentication.principal != 'anonymousUser' ? #authentication.principal.username.substring(0,2).toUpperCase() : 'US'}">US</div>
-                <div style="flex: 1; min-width: 0;">
+                <div class="sidebar-user-text">
                     <div class="user-name" th:text="${#authentication != null && #authentication.principal != 'anonymousUser' ? #authentication.principal.username : 'Utilisateur'}">Utilisateur</div>
                     <div class="user-status">Connecté</div>
                 </div>
@@ -241,8 +241,8 @@
                         </li>
                         <li><hr class="dropdown-divider"></li>
                         <li>
-                            <form th:action="@{/logout}" method="post" style="margin: 0;">
-                                <button type="submit" class="dropdown-item text-danger" style="border: none; background: none; width: 100%; text-align: left; cursor: pointer;">
+                            <form th:action="@{/logout}" method="post" class="form-margin-0">
+                                <button type="submit" class="dropdown-item text-danger btn-dropdown-reset">
                                     <i class="fas fa-sign-out-alt me-2"></i> Déconnexion
                                 </button>
                             </form>
@@ -261,7 +261,7 @@
             </button>
             
             <!-- Barre de recherche de documents -->
-            <form class="topbar-search" action="/documents" method="get" sec:authorize="!hasRole('ADMIN')" style="order:1;">
+            <form class="topbar-search order-1" action="/documents" method="get" sec:authorize="!hasRole('ADMIN')">
                 <i class="fas fa-search"></i>
                 <input type="text" placeholder="Rechercher des documents..." name="q">
             </form>
@@ -273,21 +273,21 @@
                 </button>
                 <button class="icon-btn position-relative" sec:authorize="!hasRole('ADMIN')" type="button" id="notifBell" onclick="if(window.toggleNotifPanel)toggleNotifPanel()" aria-label="Notifications">
                     <i class="fas fa-bell"></i>
-                    <span id="notifBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size:10px;display:none">0</span>
+                    <span id="notifBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">0</span>
                 </button>
                 <!-- Notification dropdown panel -->
-                <div id="notifPanel" style="display:none;position:absolute;top:52px;right:80px;width:380px;max-height:480px;background:#fff;border-radius:10px;box-shadow:0 8px 32px rgba(15,23,42,.15);z-index:9999;overflow:hidden;border:1px solid #e2e8f0">
-                    <div style="padding:12px 16px;border-bottom:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;background:#F8FAFC">
-                        <h6 style="margin:0;font-weight:700;font-size:14px"><i class="fas fa-bell me-1" style="color:#1E3A5F"></i> Notifications</h6>
-                        <button onclick="markAllRead()" style="border:none;background:none;color:#1E3A5F;font-size:12px;font-weight:600;cursor:pointer">Tout marquer lu</button>
+                <div id="notifPanel">
+                    <div class="notif-header">
+                        <h6 class="notif-header-title"><i class="fas fa-bell me-1 notif-header-icon"></i> Notifications</h6>
+                        <button onclick="markAllRead()" class="notif-mark-all-btn">Tout marquer lu</button>
                     </div>
-                    <div id="notifList" style="max-height:380px;overflow-y:auto;padding:0"></div>
-                    <div id="notifEmpty" style="display:none;text-align:center;padding:2rem 1rem;color:#94a3b8">
-                        <i class="fas fa-bell-slash fa-2x mb-2" style="opacity:.4"></i>
-                        <p style="margin:0;font-size:14px">Aucune notification</p>
+                    <div id="notifList"></div>
+                    <div id="notifEmpty">
+                        <i class="fas fa-bell-slash fa-2x mb-2 notif-empty-icon"></i>
+                        <p class="notif-empty-msg">Aucune notification</p>
                     </div>
                 </div>
-                <form th:action="@{/logout}" method="post" style="margin: 0; display: inline;">
+                <form th:action="@{/logout}" method="post" class="form-inline-block">
                     <button type="submit" class="icon-btn" title="Déconnexion">
                         <i class="fas fa-sign-out-alt"></i>
                     </button>
@@ -304,9 +304,9 @@
     <div class="modal fade" id="settingsModal" tabindex="-1" aria-labelledby="settingsModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content">
-                <div class="modal-header" style="background: rgba(30,58,95,0.05); border-bottom: 1px solid var(--border-default);">
+                <div class="modal-header settings-modal-header">
                     <h5 class="modal-title" id="settingsModalLabel">
-                        <i class="fas fa-cog me-2" style="color: var(--brand-500);"></i> Paramètres
+                        <i class="fas fa-cog me-2 settings-modal-icon"></i> Paramètres
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
                 </div>
@@ -377,7 +377,7 @@
                                     <!-- Email signature field -->
                                     <div class="col-12">
                                         <div class="form-floating">
-                                            <textarea id="modalEmailSignature" name="emailSignature" class="form-control" placeholder="Signature email" rows="3" style="height:84px;"></textarea>
+                                            <textarea id="modalEmailSignature" name="emailSignature" class="form-control email-signature-textarea" placeholder="Signature email" rows="3"></textarea>
                                             <label for="modalEmailSignature">Signature email (utilisée pour les emails envoyés)</label>
                                             <div class="form-text">HTML basique autorisé (ligne, prénom, titre). Ne pas inclure informations sensibles.</div>
                                         </div>
@@ -439,7 +439,7 @@
                             <h6><i class="fas fa-lock"></i> Modifier le mot de passe</h6>
                             
                             <form id="changePasswordForm">
-                                <input type="text" name="username" autocomplete="username" th:value="${#authentication?.name}" style="display:none" aria-hidden="true" tabindex="-1">
+                                <input type="text" name="username" autocomplete="username" th:value="${#authentication?.name}" class="autocomplete-hidden" aria-hidden="true" tabindex="-1">
                                 <div class="form-floating mb-3">
                                     <input type="password" id="currentPassword" name="currentPassword" class="form-control" placeholder="Mot de passe actuel" required autocomplete="current-password">
                                     <label for="currentPassword">Mot de passe actuel</label>
@@ -851,12 +851,12 @@
     </script>
 
     <!-- RGPD Cookie Consent Banner -->
-    <div id="cookieConsentBanner" style="display:none; position:fixed; bottom:0; left:0; right:0; z-index:9999; font-size:14px; background: #FFFFFF; border-top: 2px solid #e2e8f0; box-shadow: 0 -4px 24px rgba(0,0,0,0.12);">
-        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2" style="padding: 16px 24px;">
-            <div class="flex-grow-1" style="max-width:700px;">
-                <strong style="color: var(--text-primary);">Cookies & Confidentialité</strong>
-                <p class="mb-0 mt-1" style="font-size:13px; color: var(--text-secondary);">Ce site utilise uniquement des cookies essentiels au fonctionnement du service (session, sécurité CSRF). Aucun cookie publicitaire ou de traçage n'est utilisé.
-                    <a th:href="@{/legal/privacy}" style="color: var(--brand-500);">Politique de confidentialité</a>
+    <div id="cookieConsentBanner">
+        <div class="cookie-banner-inner d-flex flex-wrap align-items-center justify-content-between gap-2">
+            <div class="flex-grow-1 cookie-banner-text-col">
+                <strong class="cookie-banner-title">Cookies & Confidentialité</strong>
+                <p class="cookie-banner-desc mb-0 mt-1">Ce site utilise uniquement des cookies essentiels au fonctionnement du service (session, sécurité CSRF). Aucun cookie publicitaire ou de traçage n'est utilisé.
+                    <a th:href="@{/legal/privacy}" class="cookie-banner-link">Politique de confidentialité</a>
                 </p>
             </div>
             <div class="d-flex gap-2">
@@ -879,17 +879,17 @@
     </script>
 
     <!-- ═══════════ Global Custom Modal (replaces native confirm/alert) ═══════════ -->
-    <div id="appModalOverlay" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(15,23,42,0.5);backdrop-filter:blur(6px);transition:opacity .2s ease;opacity:0;">
-        <div style="display:flex;align-items:center;justify-content:center;min-height:100vh;padding:1rem;">
-            <div id="appModalBox" style="background:var(--surface,#fff);border:1px solid var(--border-default,#e2e8f0);border-radius:var(--radius-2xl,18px);box-shadow:var(--shadow-xl,0 24px 60px rgba(0,0,0,.12));max-width:440px;width:100%;overflow:hidden;transform:scale(.92) translateY(10px);transition:transform .25s cubic-bezier(.16,1,.3,1),opacity .25s ease;opacity:0;position:relative;">
+    <div id="appModalOverlay">
+        <div class="app-modal-centering">
+            <div id="appModalBox">
                 <!-- Gradient top bar -->
-                <div style="height:3px;background:linear-gradient(90deg,var(--brand-500,#1E3A5F),var(--accent-500,#C6A75E));"></div>
-                <div style="padding:28px 28px 0 28px;text-align:center;">
-                    <div id="appModalIcon" style="width:52px;height:52px;border-radius:var(--radius-lg,14px);display:inline-flex;align-items:center;justify-content:center;margin-bottom:16px;font-size:22px;"></div>
-                    <h5 id="appModalTitle" style="font-weight:700;color:var(--text-primary,#0f172a);margin-bottom:8px;font-size:1.05rem;"></h5>
-                    <p id="appModalMessage" style="color:var(--text-secondary,#475569);font-size:.9rem;line-height:1.5;margin-bottom:0;white-space:pre-line;"></p>
+                <div class="app-modal-accent"></div>
+                <div class="app-modal-body">
+                    <div id="appModalIcon"></div>
+                    <h5 id="appModalTitle"></h5>
+                    <p id="appModalMessage"></p>
                 </div>
-                <div id="appModalFooter" style="padding:20px 28px 24px 28px;display:flex;justify-content:center;gap:10px;"></div>
+                <div id="appModalFooter"></div>
             </div>
         </div>
     </div>
@@ -949,8 +949,8 @@
 
             var btnClass = type === 'danger' ? 'btn btn-danger' : 'btn btn-primary';
             footer.innerHTML =
-                '<button type="button" class="btn btn-secondary" id="appModalCancel" style="min-width:100px;">' + (options.cancelText || 'Annuler') + '</button>' +
-                '<button type="button" class="' + btnClass + '" id="appModalOk" style="min-width:100px;">' + (options.confirmText || 'Confirmer') + '</button>';
+                '<button type="button" class="btn btn-secondary app-modal-btn" id="appModalCancel">' + (options.cancelText || 'Annuler') + '</button>' +
+                '<button type="button" class="' + btnClass + ' app-modal-btn" id="appModalOk">' + (options.confirmText || 'Confirmer') + '</button>';
 
             document.getElementById('appModalOk').addEventListener('click', function() { hideModal(true); });
             document.getElementById('appModalCancel').addEventListener('click', function() { hideModal(false); });
@@ -980,7 +980,7 @@
             msg.textContent = message;
 
             var btnClass = type === 'danger' ? 'btn btn-danger' : (type === 'success' ? 'btn btn-success' : 'btn btn-primary');
-            footer.innerHTML = '<button type="button" class="' + btnClass + '" id="appModalOk" style="min-width:120px;">OK</button>';
+            footer.innerHTML = '<button type="button" class="' + btnClass + ' app-modal-btn-ok" id="appModalOk">OK</button>';
             document.getElementById('appModalOk').addEventListener('click', function() { hideModal(true); });
 
             showModal();
@@ -1107,15 +1107,15 @@
                             const safeLink = (n.link && !n.link.toLowerCase().trim().startsWith('javascript:')) ? encodeURI(n.link) : '#';
                             const safeIcon = escN(n.icon || 'fa-bell');
                             return '<a href="' + safeLink + '" onclick="markNotifRead(\'' + escN(n.id) + '\')" '
-                                + 'style="display:flex;gap:12px;padding:12px 18px;text-decoration:none;color:inherit;border-bottom:1px solid #f1f5f9;' + unreadStyle + '">'
-                                + '<div style="width:36px;height:36px;border-radius:8px;background:' + bg + ';display:flex;align-items:center;justify-content:center;flex-shrink:0">'
-                                + '<i class="fas ' + safeIcon + '" style="color:' + c + ';font-size:14px"></i></div>'
-                                + '<div style="flex:1;min-width:0">'
-                                + '<div style="font-weight:600;font-size:13px;margin-bottom:2px">' + escN(n.title) + '</div>'
-                                + '<div style="font-size:12px;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escN(n.message) + '</div>'
-                                + '<div style="font-size:11px;color:#94a3b8;margin-top:2px">' + escN(n.time) + '</div>'
+                                + 'class="notif-item' + (n.read ? '' : ' unread') + '">'
+                                + '<div class="notif-icon-wrap color-' + escN(n.color || 'primary') + '">'
+                                + '<i class="fas ' + safeIcon + ' notif-icon color-' + escN(n.color || 'primary') + '"></i></div>'
+                                + '<div class="notif-body">'
+                                + '<div class="notif-title">' + escN(n.title) + '</div>'
+                                + '<div class="notif-msg">' + escN(n.message) + '</div>'
+                                + '<div class="notif-time">' + escN(n.time) + '</div>'
                                 + '</div>'
-                                + (n.read ? '' : '<div style="width:8px;height:8px;border-radius:50%;background:var(--brand-500);flex-shrink:0;margin-top:6px"></div>')
+                                + (n.read ? '' : '<div class="notif-unread-dot"></div>')
                                 + '</a>';
                         }).join('');
                     } else {

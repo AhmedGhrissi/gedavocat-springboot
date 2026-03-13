@@ -79,8 +79,8 @@
                     </div>
                 </th:block>
                 <th:block th:if="${recentActivities == null or recentActivities.isEmpty()}">
-                    <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">
-                        <i class="fas fa-clock" style="font-size: 2rem; margin-bottom: 0.5rem;"></i>
+                    <div class="empty-state-centered">
+                        <i class="fas fa-clock empty-state-icon-sm"></i>
                         <p>Aucune activité récente</p>
                     </div>
                 </th:block>
