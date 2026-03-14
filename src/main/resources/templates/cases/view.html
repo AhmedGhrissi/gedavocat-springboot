@@ -633,10 +633,11 @@
         <script th:attr="nonce=${cspNonce}">
         document.addEventListener('DOMContentLoaded', function() {
             var uploadBtn = document.getElementById('openUploadModalBtn');
-            var uploadModal = document.getElementById('uploadModal');
-            if (uploadBtn && uploadModal) {
+            var uploadModalEl = document.getElementById('uploadModal');
+            if (uploadBtn && uploadModalEl) {
+                var bsUploadModal = new bootstrap.Modal(uploadModalEl);
                 uploadBtn.addEventListener('click', function() {
-                    new bootstrap.Modal(uploadModal).show();
+                    bsUploadModal.show();
                 });
             }
         });
