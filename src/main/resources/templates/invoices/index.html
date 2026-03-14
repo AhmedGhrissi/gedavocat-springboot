@@ -17,7 +17,7 @@
                     <p style="color: rgba(255,255,255,0.9) !important; font-size: 1rem !important; margin: 0 !important;">Gérez vos factures clients</p>
                 </div>
                 <div class="d-flex gap-2 flex-wrap">
-                    <button type="button" class="btn btn-light" data-bs-toggle="modal" data-bs-target="#importModal" style="background: #FFFFFF !important; color: #0F172A !important; border: 2px solid #FFFFFF !important; font-weight: 600 !important;">
+                    <button type="button" class="btn btn-light" id="openImportModalBtn" style="background: #FFFFFF !important; color: #0F172A !important; border: 2px solid #FFFFFF !important; font-weight: 600 !important;">
                         <i class="fas fa-file-import"></i> Importer une facture
                     </button>
                     <a href="/invoices/new" class="btn btn-primary" style="background: #C6A75E !important; color: #0F172A !important; border: 2px solid #C6A75E !important; font-weight: 600 !important;">
@@ -291,6 +291,18 @@
                 });
             });
         }
+    </script>
+
+    <script th:attr="nonce=${cspNonce}">
+    document.addEventListener('DOMContentLoaded', function() {
+        var importBtn = document.getElementById('openImportModalBtn');
+        var importModal = document.getElementById('importModal');
+        if (importBtn && importModal) {
+            importBtn.addEventListener('click', function() {
+                new bootstrap.Modal(importModal).show();
+            });
+        }
+    });
     </script>
 </div>
 </body>

@@ -93,7 +93,7 @@
                         <i class="fas fa-arrow-up"></i> Changer de plan
                     </a>
                     
-                    <form th:if="${status != null && status.name() == 'ACTIVE'}" 
+                    <form th:if="${status != null && (status.name() == 'ACTIVE' || status.name() == 'TRIAL')}"
                           th:action="@{/subscription/cancel-subscription}" 
                           method="post" 
                           style="display: inline;"

@@ -234,8 +234,9 @@ public class InvoiceWebController {
             model.addAttribute("invoice", invoice);
             return "invoices/show";
         } catch (Exception e) {
-            model.addAttribute("error", "Facture non trouvée");
-            return "redirect:/invoices";
+            boolean isClient = authentication.getAuthorities().stream()
+                .anyMatch(a -> "ROLE_CLIENT".equals(a.getAuthority()));
+            return "redirect:" + (isClient ? "/invoices/my-invoices" : "/invoices");
         }
     }
 

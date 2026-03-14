@@ -109,6 +109,10 @@
                     <i class="fas fa-cogs"></i>
                     <span>Paramètres</span>
                 </a>
+                <a th:href="@{/admin/security-monitoring}" class="nav-link">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>Sécurité</span>
+                </a>
             </div>
 
             <!-- Avocat principal / Avocat Admin : accès complet -->
@@ -141,7 +145,7 @@
                     <i class="fas fa-envelope"></i>
                     <span>RPVA</span>
                 </a>
-                <a th:href="@{/firm/members}" class="nav-link" th:if="${userPlan == 'CABINET_PLUS'}">
+                <a th:href="@{/firm/members}" class="nav-link" th:if="${userPlan == 'CABINET' or userPlan == 'ENTERPRISE' or userPlan == 'CABINET_PLUS' or userPlan == 'PROFESSIONNEL'}">
                     <i class="fas fa-user-friends"></i>
                     <span>Mon cabinet</span>
                 </a>
@@ -261,7 +265,7 @@
             </button>
             
             <!-- Barre de recherche de documents -->
-            <form class="topbar-search order-1" action="/documents" method="get" sec:authorize="!hasRole('ADMIN')">
+            <form class="topbar-search order-1" action="/documents" method="get" sec:authorize="hasAnyRole('LAWYER', 'AVOCAT_ADMIN')">
                 <i class="fas fa-search"></i>
                 <input type="text" placeholder="Rechercher des documents..." name="q">
             </form>

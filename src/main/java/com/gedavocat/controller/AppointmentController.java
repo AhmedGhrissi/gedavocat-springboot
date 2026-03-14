@@ -135,19 +135,22 @@ public class AppointmentController {
                                 @RequestParam(required = false) String caseId,
                                 @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime date) {
         User user = getCurrentUser(authentication);
-        
+
         Appointment appointment = new Appointment();
         appointment.setAppointmentDate(date != null ? date : LocalDateTime.now().plusHours(1));
         appointment.setType(Appointment.AppointmentType.CLIENT_MEETING);
         appointment.setStatus(Appointment.AppointmentStatus.SCHEDULED);
-        
+
         model.addAttribute("user", user);
         model.addAttribute("appointment", appointment);
         model.addAttribute("clients", clientRepository.findByLawyerId(user.getId()));
         model.addAttribute("cases", caseRepository.findByLawyerId(user.getId()));
         model.addAttribute("appointmentTypes", Appointment.AppointmentType.values());
         model.addAttribute("appointmentStatuses", Appointment.AppointmentStatus.values());
-        
+        if (caseId != null) {
+            model.addAttribute("selectedCaseId", caseId);
+        }
+
         return "appointments/form";
     }
 
@@ -583,6 +586,32 @@ public class AppointmentController {
         } catch (Exception e) {
             log.error("Erreur proposition de date", e);
             redirectAttributes.addFlashAttribute("error", "Une erreur est survenue lors de la proposition de date.");
+        }
+        return "redirect:/appointments";
+    }
+
+    /**
+     * Marquer un rendez-vous comme terminé
+     */
+    @PostMapping("/{id}/complete")
+    @Transactional
+    public String completeAppointment(@PathVariable String id, Authentication authentication,
+                                      RedirectAttributes redirectAttributes) {
+        try {
+            User user = getCurrentUser(authentication);
+            Appointment appointment = appointmentService.getAppointmentById(id)
+                .orElseThrow(() -> new RuntimeException("Rendez-vous non trouvé"));
+
+            if (!appointment.getLawyer().getId().equals(user.getId())) {
+                redirectAttributes.addFlashAttribute("error", "Accès non autorisé");
+                return "redirect:/appointments";
+            }
+
+            appointmentService.completeAppointment(id, user.getId());
+            redirectAttributes.addFlashAttribute("success", "Rendez-vous marqué comme terminé.");
+        } catch (Exception e) {
+            log.error("Erreur marquage rendez-vous terminé", e);
+            redirectAttributes.addFlashAttribute("error", "Une erreur est survenue.");
         }
         return "redirect:/appointments";
     }

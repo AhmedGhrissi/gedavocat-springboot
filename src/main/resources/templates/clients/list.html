@@ -154,6 +154,14 @@
                 <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Fermer"></button>
             </div>
         </div>
+        <div th:if="${error}" id="toastError" class="toast align-items-center text-bg-danger border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="fas fa-times-circle me-2"></i><span th:text="${error}"></span>
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Fermer"></button>
+            </div>
+        </div>
     </div>
 
     <!-- Page Header -->
@@ -282,7 +290,7 @@
 
     <script th:attr="nonce=${cspNonce}">
     document.addEventListener('DOMContentLoaded', function () {
-        ['toastSuccess', 'toastWarning'].forEach(function (id) {
+        ['toastSuccess', 'toastWarning', 'toastError'].forEach(function (id) {
             const el = document.getElementById(id);
             if (el) {
                 const toast = new bootstrap.Toast(el, { delay: 5000 });

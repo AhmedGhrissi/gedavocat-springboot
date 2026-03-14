@@ -41,7 +41,7 @@
                             <option value="">-- Sélectionner un dossier --</option>
                             <option th:each="c : ${cases}"
                                     th:value="${c.id}"
-                                    th:text="${c.title ?: c.reference}">Dossier</option>
+                                    th:text="${c.name ?: c.title ?: c.reference}">Dossier</option>
                         </select>
                         <div class="invalid-feedback" th:if="${#fields.hasErrors('caseId')}"
                              th:errors="*{caseId}">Erreur</div>

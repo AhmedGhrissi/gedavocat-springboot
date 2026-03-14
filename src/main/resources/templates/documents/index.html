@@ -17,7 +17,7 @@
                     </h1>
                     <p class="page-subtitle">Vue d'ensemble de vos documents par dossier</p>
                 </div>
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#selectCaseModal">
+                <button class="btn btn-primary" id="openSelectCaseBtn">
                     <i class="fas fa-plus"></i> Ajouter un document
                 </button>
             </div>
@@ -161,5 +161,17 @@
             </div>
         </div>
     </div>
+
+    <script th:attr="nonce=${cspNonce}">
+    document.addEventListener('DOMContentLoaded', function() {
+        var modalEl = document.getElementById('selectCaseModal');
+        var btn = document.getElementById('openSelectCaseBtn');
+        if (modalEl && btn) {
+            btn.addEventListener('click', function() {
+                new bootstrap.Modal(modalEl).show();
+            });
+        }
+    });
+    </script>
 </body>
 </html>

@@ -7,6 +7,11 @@
 <body>
 <div layout:fragment="content">
     <div class="container-fluid">
+        <!-- Messages flash -->
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-triangle"></i> <span th:text="${error}">Erreur</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
         <!-- En-tête -->
         <div class="mb-4 page-header">
             <h2 class="mb-1 animate-fade-in-up"><i class="fas fa-file-invoice me-2"></i>Mes factures</h2>
@@ -54,12 +59,13 @@
                                     <strong th:text="${#numbers.formatDecimal(invoice.totalTTC, 0, 2) + ' €'}">1 200,00 €</strong>
                                 </td>
                                 <td>
-                                    <span th:switch="${invoice.status}" class="badge">
+                                    <span th:switch="${invoice.status?.name()}" class="badge">
                                         <span th:case="'DRAFT'" class="badge bg-secondary">Brouillon</span>
                                         <span th:case="'SENT'" class="badge bg-warning">En attente de paiement</span>
                                         <span th:case="'PAID'" class="badge bg-success">Payée</span>
                                         <span th:case="'OVERDUE'" class="badge bg-danger">En retard</span>
                                         <span th:case="'CANCELLED'" class="badge bg-dark">Annulée</span>
+                                        <span th:case="*" class="badge bg-secondary" th:text="${invoice.status?.name()}">Inconnu</span>
                                     </span>
                                 </td>
                                 <td>

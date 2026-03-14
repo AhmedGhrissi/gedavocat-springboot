@@ -78,7 +78,9 @@ public class ClientPortalController {
 
     @GetMapping
     @Transactional(readOnly = true)
-    public Object listMyCases(Model model, Authentication authentication, HttpServletResponse response) {
+    public Object listMyCases(Model model, Authentication authentication, HttpServletResponse response,
+                              @org.springframework.web.bind.annotation.RequestParam(required = false) String q,
+                              @org.springframework.web.bind.annotation.RequestParam(required = false) String status) {
         try {
             User user = getCurrentUser(authentication);
 
@@ -112,6 +114,21 @@ public class ClientPortalController {
                 myCases = Collections.emptyList();
             }
 
+            // Filtrage côté client : recherche et statut
+            if (q != null && !q.isBlank()) {
+                String lq = q.toLowerCase();
+                myCases = myCases.stream()
+                    .filter(c -> (c.getName() != null && c.getName().toLowerCase().contains(lq))
+                              || (c.getReference() != null && c.getReference().toLowerCase().contains(lq))
+                              || (c.getDescription() != null && c.getDescription().toLowerCase().contains(lq)))
+                    .collect(java.util.stream.Collectors.toList());
+            }
+            if (status != null && !status.isBlank()) {
+                myCases = myCases.stream()
+                    .filter(c -> c.getStatus() != null && c.getStatus().name().equals(status))
+                    .collect(java.util.stream.Collectors.toList());
+            }
+
             // Log diagnostic: how many cases were returned for this client
             log.info("Client portal: user={} clientId={} returned {} cases", user.getEmail(), client.getId(), myCases.size());
             
@@ -128,6 +145,8 @@ public class ClientPortalController {
             model.addAttribute("cases", myCases);
             model.addAttribute("user", user);
             model.addAttribute("client", client);
+            model.addAttribute("q", q);
+            model.addAttribute("status", status);
 
             // Compute case statistics for KPIs
             long openCases = myCases.stream()

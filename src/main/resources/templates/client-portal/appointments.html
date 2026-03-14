@@ -120,8 +120,8 @@
                         </form>
                         <!-- Bouton Demander report (sauf si déjà CANCELLED/COMPLETED/RESCHEDULED) -->
                         <button th:if="${apt.status?.name() != 'CANCELLED' and apt.status?.name() != 'COMPLETED' and apt.status?.name() != 'RESCHEDULED'}"
-                                type="button" class="btn btn-sm btn-outline-warning"
-                                data-bs-toggle="modal" th:data-bs-target="'#rescheduleModal-' + ${apt.id}">
+                                type="button" class="btn btn-sm btn-outline-warning open-modal-btn"
+                                th:data-modal-id="'rescheduleModal-' + ${apt.id}">
                             <i class="fas fa-calendar-times"></i> Demander un report
                         </button>
                         <!-- Info si report demandé -->
@@ -147,8 +147,8 @@
                                     <i class="fas fa-check"></i> Accepter
                                 </button>
                             </form>
-                            <button type="button" class="btn btn-sm btn-outline-warning"
-                                    data-bs-toggle="modal" th:data-bs-target="'#rescheduleModal-' + ${apt.id}">
+                            <button type="button" class="btn btn-sm btn-outline-warning open-modal-btn"
+                                    th:data-modal-id="'rescheduleModal-' + ${apt.id}">
                                 <i class="fas fa-calendar-times"></i> Proposer une autre date
                             </button>
                         </div>
@@ -240,5 +240,20 @@
 
     </div>
 </div>
+
+<script th:inline="javascript" th:attr="nonce=${cspNonce}">
+    document.addEventListener('DOMContentLoaded', function() {
+        // Bootstrap modal initialization manuelle (évite le TypeError backdrop avec Thymeleaf Layout Dialect)
+        document.querySelectorAll('.open-modal-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var modalId = btn.getAttribute('data-modal-id');
+                var modalEl = document.getElementById(modalId);
+                if (modalEl) {
+                    new bootstrap.Modal(modalEl).show();
+                }
+            });
+        });
+    });
+</script>
 </body>
 </html>

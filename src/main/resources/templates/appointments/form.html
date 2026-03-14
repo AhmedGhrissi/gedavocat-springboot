@@ -92,10 +92,10 @@
                                     <label class="form-label">Dossier associé</label>
                                     <select name="caseId" class="form-select">
                                         <option value="">Aucun dossier</option>
-                                        <option th:each="case : ${cases}" 
-                                                th:value="${case.id}" 
+                                        <option th:each="case : ${cases}"
+                                                th:value="${case.id}"
                                                 th:text="${case.name}"
-                                                th:selected="${appointment.relatedCase != null and appointment.relatedCase.id == case.id}">Dossier</option>
+                                                th:selected="${(appointment.relatedCase != null and appointment.relatedCase.id == case.id) or (appointment.relatedCase == null and selectedCaseId != null and selectedCaseId == case.id)}">Dossier</option>
                                     </select>
                                 </div>
                             </div>

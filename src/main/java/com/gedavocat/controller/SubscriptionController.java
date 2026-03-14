@@ -518,8 +518,9 @@ public class SubscriptionController {
                         // Essai → annulation immédiate sur Stripe
                         if (user.getStripeSubscriptionId() != null) {
                             cancelled = stripeService.cancelSubscription(user.getStripeSubscriptionId());
-                        } else if (user.getStripeCustomerId() != null) {
-                            cancelled = stripeService.cancelSubscriptionAtPeriodEnd(user.getStripeCustomerId());
+                        } else {
+                            // Pas de subscriptionId : pas d'abonnement actif Stripe à annuler
+                            log.info("Annulation d'essai sans subscriptionId Stripe pour: {}", user.getEmail());
                         }
                         log.info("Abonnement d'essai Stripe annulé immédiatement pour: {}", user.getEmail());
                     } else {

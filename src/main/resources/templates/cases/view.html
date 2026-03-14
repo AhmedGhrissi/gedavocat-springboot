@@ -246,7 +246,7 @@
                                         <i class="fas fa-gavel"></i> Tout Huissier
                                     </button>
                                 </div>
-                                <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#uploadModal" sec:authorize="hasRole('LAWYER')">
+                                <button type="button" class="btn btn-primary btn-sm" id="openUploadModalBtn" sec:authorize="hasRole('LAWYER')">
                                     <i class="fas fa-upload"></i> Uploader
                                 </button>
                                 <button type="button" class="btn btn-secondary btn-sm" sec:authorize="hasRole('LAWYER')"
@@ -327,7 +327,7 @@
                                 <i class="fas fa-file-alt empty-state-icon"></i>
                                 <h3 class="empty-state-title">Aucun document</h3>
                                 <p class="empty-state-message">Aucun document n'a été ajouté à ce dossier</p>
-                                <a th:href="@{/documents/upload?caseId={id}(id=${case.id})}" class="btn btn-primary" sec:authorize="hasRole('LAWYER')">
+                                <a th:href="@{/documents/case/{id}(id=${case.id})}" class="btn btn-primary" sec:authorize="hasRole('LAWYER')">
                                     <i class="fas fa-cloud-upload-alt"></i> Ajouter un document
                                 </a>
                             </div>
@@ -343,7 +343,7 @@
                                 <i class="fas fa-calendar-check" style="color: #0F172A; margin-right: 0.5rem;"></i>
                                 Rendez-vous
                             </h3>
-                            <a th:href="@{/appointments}" class="btn btn-primary btn-sm">
+                            <a th:href="@{/appointments/new(caseId=${case.id})}" class="btn btn-primary btn-sm">
                                 <i class="fas fa-plus"></i> Nouveau
                             </a>
                         </div>
@@ -441,7 +441,7 @@
                             <i class="fas fa-calendar-alt" style="margin-right: 0.5rem;"></i>
                             Rendez-vous
                         </h3>
-                        <a th:href="@{/appointments}" class="btn btn-ghost btn-sm">
+                        <a th:href="@{/appointments/new(caseId=${case.id})}" class="btn btn-ghost btn-sm">
                             <i class="fas fa-plus"></i>
                         </a>
                     </div>
@@ -628,6 +628,18 @@
                 targetSection.style.display = 'block';
             }
         }
+        </script>
+
+        <script th:attr="nonce=${cspNonce}">
+        document.addEventListener('DOMContentLoaded', function() {
+            var uploadBtn = document.getElementById('openUploadModalBtn');
+            var uploadModal = document.getElementById('uploadModal');
+            if (uploadBtn && uploadModal) {
+                uploadBtn.addEventListener('click', function() {
+                    new bootstrap.Modal(uploadModal).show();
+                });
+            }
+        });
         </script>
 
     </div>
