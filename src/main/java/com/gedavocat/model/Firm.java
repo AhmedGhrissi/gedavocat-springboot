@@ -8,6 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.FilterDef;
@@ -36,6 +37,7 @@ import java.util.UUID;
 })
 @FilterDef(name = "firmFilter", parameters = @ParamDef(name = "firmId", type = String.class))
 @Data
+@ToString(exclude = {"users", "cases", "documents", "clients"})
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
