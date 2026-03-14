@@ -114,7 +114,8 @@ public class DocumentService {
 
         // SEC-IDOR FIX : vérifier que l'utilisateur a accès au dossier
         // Clients: access already verified in ClientPortalController; skip lawyer check
-        if (!"CLIENT".equals(userRole)) {
+        // Collaborators (LAWYER_SECONDARY) and Huissiers: access already verified in their portal controllers
+        if (!"CLIENT".equals(userRole) && !"COLLABORATOR".equals(userRole) && !"HUISSIER".equals(userRole)) {
             if (caseEntity.getLawyer() == null || !caseEntity.getLawyer().getId().equals(userId)) {
                 throw new SecurityException("Accès non autorisé à ce dossier");
             }

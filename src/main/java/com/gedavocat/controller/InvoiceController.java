@@ -2,7 +2,9 @@ package com.gedavocat.controller;
 
 import com.gedavocat.dto.InvoiceRequest;
 import com.gedavocat.dto.InvoiceResponse;
+import com.gedavocat.model.Client;
 import com.gedavocat.model.User;
+import com.gedavocat.repository.ClientRepository;
 import com.gedavocat.repository.UserRepository;
 import com.gedavocat.service.InvoiceService;
 import jakarta.validation.Valid;
@@ -28,6 +30,7 @@ public class InvoiceController {
     
     private final InvoiceService invoiceService;
     private final UserRepository userRepository;
+    private final ClientRepository clientRepository;
 
     private User getCurrentUser(Authentication authentication) {
         return userRepository.findByEmail(authentication.getName())
@@ -109,8 +112,14 @@ public class InvoiceController {
             User user = getCurrentUser(authentication);
             boolean isClient = authentication.getAuthorities().stream()
                     .anyMatch(a -> a.getAuthority().equals("ROLE_CLIENT"));
-            if (isClient && !user.getId().equals(clientId)) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            if (isClient) {
+                // User.id != Client.id — must compare via Client.clientUser FK
+                Client c = clientRepository.findById(clientId).orElse(null);
+                if (c == null || c.getClientUser() == null || !c.getClientUser().getId().equals(user.getId())) {
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+                }
+                List<InvoiceResponse> invoices = invoiceService.getInvoicesByClient(clientId);
+                return ResponseEntity.ok(invoices);
             }
             // Pour LAWYER / AVOCAT_ADMIN : utiliser la version avec vérification ownership
             boolean isLawyer = authentication.getAuthorities().stream()

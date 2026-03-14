@@ -63,6 +63,11 @@ public class DocumentShareController {
             User.UserRole targetRole = User.UserRole.valueOf(role);
             Document document = documentService.getDocumentById(documentId);
 
+            // IDOR FIX : vérifier que le document appartient bien au dossier demandé
+            if (document.getCaseEntity() == null || !document.getCaseEntity().getId().equals(caseId)) {
+                return ResponseEntity.status(403).body(Map.of("error", "Ce document n'appartient pas à ce dossier"));
+            }
+
             if (shared) {
                 documentShareService.shareDocument(document, caseEntity, targetRole, false, user.getId());
             } else {

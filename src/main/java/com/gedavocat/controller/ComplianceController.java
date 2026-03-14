@@ -355,11 +355,10 @@ public class ComplianceController {
     
     /**
      * Health check pour le système de conformité
-     * 
+     * Accessible aux rôles ADMIN/COMPLIANCE_OFFICER uniquement (restreint par la classe)
      * GET /api/compliance/health
      */
     @GetMapping("/health")
-    @PreAuthorize("permitAll()")
     public ResponseEntity<Map<String, Object>> getComplianceHealth() {
         
         Map<String, Object> health = new HashMap<>();

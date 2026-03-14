@@ -162,7 +162,8 @@ public class ClientService {
         client.setEmail(updatedClient.getEmail());
         client.setPhone(updatedClient.getPhone());
         client.setAddress(updatedClient.getAddress());
-        client.setAccessEndsAt(updatedClient.getAccessEndsAt());
+        // Note: accessEndsAt n'est pas mis à jour ici (non exposé dans le formulaire d'édition)
+        // Utiliser un endpoint dédié pour modifier l'accès temporaire
         client.setUpdatedAt(LocalDateTime.now());
         
         Client saved = clientRepository.save(client);

@@ -178,7 +178,7 @@ public class SubscriptionEnforcementFilter extends OncePerRequestFilter {
                 String path = request.getRequestURI();
                 
                 // Autoriser les téléchargements (GET /documents/.../download)
-                if ("GET".equals(method) && path.contains("/download")) {
+                if ("GET".equals(method) && path.endsWith("/download")) {
                     request.setAttribute("readOnlyMode", true);
                     filterChain.doFilter(request, response);
                     return;

@@ -229,7 +229,9 @@ window.toggleNotifPanel = function() {
                 list.style.gap = '6px';
                 items.forEach(n => {
                     const row = document.createElement('a');
-                    row.href = n.link || '#';
+                    // Sécurité: valider le protocole pour prévenir les URIs javascript:
+                    const safeLink = (n.link && /^https?:\/\/|^\//.test(n.link)) ? n.link : '#';
+                    row.href = safeLink;
                     row.style.display = 'block';
                     row.style.padding = '10px';
                     row.style.borderRadius = '6px';

@@ -119,7 +119,7 @@
                        style="font-size:15px;font-weight:700;color:var(--text-primary);letter-spacing:-0.01em"
                        th:text="${case.name}">Nom du dossier</a>
 
-                    <span th:switch="${case.status}">
+                    <span th:switch="${case.status?.name()}">
                         <span th:case="'OPEN'"        class="status-badge status-OPEN"><i class="fas fa-circle" style="font-size:7px"></i> Actif</span>
                         <span th:case="'IN_PROGRESS'" class="status-badge status-IN_PROGRESS"><i class="fas fa-circle" style="font-size:7px"></i> En cours</span>
                         <span th:case="'CLOSED'"      class="status-badge status-CLOSED"><i class="fas fa-circle" style="font-size:7px"></i> Clôturé</span>

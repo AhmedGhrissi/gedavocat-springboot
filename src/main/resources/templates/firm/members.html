@@ -22,15 +22,27 @@
 
     <div class="content-wrapper">
         <!-- Messages de notification -->
+        <div th:if="${message}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>
+            <span th:text="${message}">Succès</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
         <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
             <i class="fas fa-check-circle me-2"></i>
             <span th:text="${success}">Succès</span>
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
-        
+
         <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
             <i class="fas fa-exclamation-triangle me-2"></i>
             <span th:text="${error}">Erreur</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <div th:if="${warning}" class="alert alert-warning alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <span th:text="${warning}">Attention</span>
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
 
@@ -123,10 +135,8 @@
             </div>
         </div>
     </div>
-</div>
 
-<!-- Modal pour ajouter un membre (à compléter selon vos besoins) -->
-<div layout:fragment="extra-content">
+    <!-- Modal pour ajouter un membre -->
     <div class="modal fade" id="addMemberModal" tabindex="-1" aria-labelledby="addMemberModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -141,7 +151,7 @@
                     <div class="modal-body">
                         <div class="mb-3">
                             <label for="userEmail" class="form-label">Email du membre</label>
-                            <input type="email" class="form-control" id="userEmail" name="userEmail" required 
+                            <input type="email" class="form-control" id="userEmail" name="userEmail" required
                                    placeholder="email@example.com">
                             <div class="form-text">L'utilisateur doit déjà avoir un compte DocAvocat</div>
                         </div>

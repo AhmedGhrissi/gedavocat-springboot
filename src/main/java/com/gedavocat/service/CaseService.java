@@ -159,7 +159,7 @@ public class CaseService {
                 .orElseThrow(() -> new RuntimeException("Client non trouvé"));
         
         // Vérifier que le client appartient à l'avocat
-        if (!client.getLawyer().getId().equals(lawyerId)) {
+        if (client.getLawyer() == null || !client.getLawyer().getId().equals(lawyerId)) {
             throw new RuntimeException("Ce client ne vous appartient pas");
         }
         
@@ -221,7 +221,7 @@ public class CaseService {
         if (updatedCase.getClient() != null) {
             Client newClient = clientRepository.findById(updatedCase.getClient().getId())
                     .orElseThrow(() -> new RuntimeException("Client non trouvé"));
-            if (!newClient.getLawyer().getId().equals(lawyerId)) {
+            if (newClient.getLawyer() == null || !newClient.getLawyer().getId().equals(lawyerId)) {
                 throw new RuntimeException("Ce client ne vous appartient pas");
             }
             caseEntity.setClient(newClient);

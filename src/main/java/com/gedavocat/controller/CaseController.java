@@ -237,25 +237,38 @@ public class CaseController {
     @PostMapping("/{id}/close")
     public String closeCase(@PathVariable String id, Authentication authentication, RedirectAttributes redirectAttributes) {
         User user = getCurrentUser(authentication);
-        caseService.closeCase(id, user.getId());
-        redirectAttributes.addFlashAttribute("message", "Dossier ferme avec succes");
+        try {
+            caseService.closeCase(id, user.getId());
+            redirectAttributes.addFlashAttribute("message", "Dossier fermé avec succès");
+        } catch (RuntimeException e) {
+            redirectAttributes.addFlashAttribute("error", "Accès non autorisé à ce dossier");
+        }
         return "redirect:/cases/" + id;
     }
 
     @PostMapping("/{id}/archive")
     public String archiveCase(@PathVariable String id, Authentication authentication, RedirectAttributes redirectAttributes) {
         User user = getCurrentUser(authentication);
-        caseService.archiveCase(id, user.getId());
-        redirectAttributes.addFlashAttribute("message", "Dossier archive avec succes");
+        try {
+            caseService.archiveCase(id, user.getId());
+            redirectAttributes.addFlashAttribute("message", "Dossier archivé avec succès");
+        } catch (RuntimeException e) {
+            redirectAttributes.addFlashAttribute("error", "Accès non autorisé à ce dossier");
+        }
         return "redirect:/cases/" + id;
     }
 
     @PostMapping("/{id}/delete")
     public String deleteCase(@PathVariable String id, Authentication authentication, RedirectAttributes redirectAttributes) {
         User user = getCurrentUser(authentication);
-        caseService.deleteCase(id, user.getId());
-        redirectAttributes.addFlashAttribute("message", "Dossier supprime avec succes");
-        return "redirect:/cases";
+        try {
+            caseService.deleteCase(id, user.getId());
+            redirectAttributes.addFlashAttribute("message", "Dossier supprimé avec succès");
+            return "redirect:/cases";
+        } catch (RuntimeException e) {
+            redirectAttributes.addFlashAttribute("error", "Accès non autorisé à ce dossier");
+            return "redirect:/cases/" + id;
+        }
     }
 
     @PostMapping("/{caseId}/permissions/{permissionId}/revoke")

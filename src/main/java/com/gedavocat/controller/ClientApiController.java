@@ -5,6 +5,10 @@ import com.gedavocat.model.User;
 import com.gedavocat.repository.UserRepository;
 import com.gedavocat.service.ClientInvitationService;
 import com.gedavocat.service.ClientService;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -23,7 +27,7 @@ import java.util.Map;
 @RequestMapping("/api/clients")
 @RequiredArgsConstructor
 @Slf4j
-@PreAuthorize("hasAnyRole('LAWYER', 'ADMIN', 'LAWYER_SECONDARY', 'AVOCAT_ADMIN')")
+@PreAuthorize("hasAnyRole('LAWYER', 'ADMIN', 'AVOCAT_ADMIN')")
 public class ClientApiController {
 
     private final ClientService clientService;
@@ -36,7 +40,7 @@ public class ClientApiController {
      */
     @PostMapping("/quick-create")
     public ResponseEntity<Map<String, Object>> quickCreate(
-            @RequestBody QuickCreateRequest req,
+            @Valid @RequestBody QuickCreateRequest req,
             Authentication authentication
     ) {
         User user = userRepository.findByEmail(authentication.getName())
@@ -75,11 +79,11 @@ public class ClientApiController {
     }
 
     public record QuickCreateRequest(
-            String firstName,
-            String lastName,
-            String email,
+            @NotBlank @Size(max = 100) String firstName,
+            @NotBlank @Size(max = 100) String lastName,
+            @NotBlank @Email @Size(max = 255) String email,
             Client.ClientType clientType,
-            String phone,
+            @Size(max = 50) String phone,
             boolean sendInvitation
     ) {}
 }

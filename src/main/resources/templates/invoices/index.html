@@ -164,7 +164,7 @@
                                     <strong th:text="${#numbers.formatDecimal(invoice.totalTTC, 0, 2) + ' €'}">1 200,00 €</strong>
                                 </td>
                                 <td>
-                                    <span th:switch="${invoice.status}" class="badge">
+                                    <span th:switch="${invoice.status?.name()}" class="badge">
                                         <span th:case="'DRAFT'" class="badge bg-secondary">Brouillon</span>
                                         <span th:case="'SENT'" class="badge bg-info">Envoyée</span>
                                         <span th:case="'PAID'" class="badge bg-success">Payée</span>

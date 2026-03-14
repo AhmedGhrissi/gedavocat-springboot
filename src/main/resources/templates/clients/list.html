@@ -226,7 +226,7 @@
             </h3>
         </div>
         <div class="card-body p-0">
-            <div th:if="${!clients.empty}">
+            <div th:if="${clients != null and !clients.empty}">
                 <table class="table-modern" id="clientsTable">
                     <thead>
                         <tr>
@@ -277,7 +277,7 @@
                     </tbody>
                 </table>
             </div>
-            <div th:if="${clients.empty}" class="empty-state">
+            <div th:if="${clients == null or clients.empty}" class="empty-state">
                 <i class="fas fa-users empty-state-icon"></i>
                 <h3 class="empty-state-title">Aucun client</h3>
                 <p class="empty-state-message">Commencez par ajouter votre premier client</p>

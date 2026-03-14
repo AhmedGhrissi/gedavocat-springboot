@@ -466,7 +466,13 @@ public class SubscriptionController {
                     return "redirect:/subscription/change-plan";
                 } catch (StripeException se) {
                     log.warn("Impossible de mettre à jour l'abonnement Stripe {} : {}", existingSubId, se.getMessage());
-                    // L'abonnement est peut-être annulé/expiré — on crée un nouveau checkout
+                    if (!isUpgrade) {
+                        // Downgrade échoué côté Stripe : ne pas mettre à jour la DB (incohérence plan/facturation)
+                        redirectAttributes.addFlashAttribute("error",
+                            "Impossible de modifier l'abonnement Stripe. Veuillez réessayer ou contacter le support.");
+                        return "redirect:/subscription/change-plan";
+                    }
+                    // Upgrade échoué : tomber sur le nouveau checkout ci-dessous
                 }
             }
 
@@ -643,7 +649,12 @@ public class SubscriptionController {
             Session session = (Session) event.getDataObjectDeserializer()
                 .getObject()
                 .orElseThrow();
-            
+
+            if (session.getMetadata() == null || !session.getMetadata().containsKey("user_id")) {
+                log.error("Webhook checkout.session.completed: metadata manquante ou user_id absent — événement ignoré");
+                return;
+            }
+
             String userId = session.getMetadata().get("user_id");
             String plan = session.getMetadata().get("plan");
             String period = session.getMetadata().get("period");

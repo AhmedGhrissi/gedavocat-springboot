@@ -100,7 +100,7 @@ public class SecurityConfig {
 						.requestMatchers("/my-cases-huissier/**").hasRole("HUISSIER")
 
 						// Pages client
-.requestMatchers("/my-cases/**", "/my-documents/**", "/my-appointments", "/my-appointments/**", "/my-signatures").hasAnyRole("CLIENT", "LAWYER", "ADMIN", "LAWYER_SECONDARY")
+.requestMatchers("/my-cases/**", "/my-documents/**", "/my-appointments", "/my-appointments/**", "/my-signatures").hasRole("CLIENT")
 
 					.anyRequest().authenticated())
 				// En-têtes de sécurité ANSSI/OWASP/RGPD — niveau bancaire

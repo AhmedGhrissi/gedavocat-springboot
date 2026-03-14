@@ -46,7 +46,10 @@ public class AppointmentController {
      */
     @org.springframework.web.bind.annotation.InitBinder("appointment")
     public void initBinder(org.springframework.web.bind.WebDataBinder binder) {
-        binder.setDisallowedFields("id", "lawyer", "createdAt", "updatedAt", "entityVersion");
+        // Whitelist (plus sécurisé que blacklist) : seuls ces champs sont bindés depuis le formulaire
+        binder.setAllowedFields("title", "description", "appointmentDate", "endDate", "type",
+                "status", "location", "courtName", "courtRoom", "judgeName", "notes",
+                "videoConferenceLink", "color");
     }
 
     /**

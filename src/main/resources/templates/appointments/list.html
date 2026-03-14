@@ -43,6 +43,11 @@
         </div>
 
         <!-- Messages -->
+        <div th:if="${message}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>
+            <span th:text="${message}">Succès</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
         <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
             <i class="fas fa-check-circle"></i> <span th:text="${success}">Succès</span>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
@@ -50,6 +55,11 @@
         <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
             <i class="fas fa-exclamation-circle"></i> <span th:text="${error}">Erreur</span>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${warning}" class="alert alert-warning alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <span th:text="${warning}">Attention</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
 
         <!-- Tabs : Vue Tableau / Vue Kanban -->
@@ -114,7 +124,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr th:if="${appointments.empty}">
+                                    <tr th:if="${appointments == null or appointments.empty}">
                                         <td colspan="7" class="text-center py-5">
                                             <div style="width:64px;height:64px;border-radius:var(--radius-xl);background:var(--bg-tertiary);display:inline-flex;align-items:center;justify-content:center;margin-bottom:1rem">
                                                 <i class="fas fa-calendar fa-3x text-muted"></i>
@@ -122,7 +132,7 @@
                                             <p class="text-muted mb-0">Aucun rendez-vous trouvé</p>
                                         </td>
                                     </tr>
-                                    <tr th:each="appointment : ${appointments}" 
+                                    <tr th:each="appointment : ${appointments ?: #lists.emptyList()}" 
                                         class="appointment-row"
                                         th:data-href="@{/appointments/{id}/edit(id=${appointment.id})}"
                                         onclick="window.location.href=this.dataset.href"
@@ -211,7 +221,7 @@
                         <div class="card status-column">
                             <div class="card-header bg-info text-white"><i class="fas fa-calendar-plus"></i> Planifiés</div>
                             <div class="card-body p-2">
-                                <div th:each="apt : ${appointments}" th:if="${apt.status.name() == 'SCHEDULED'}">
+                                <div th:each="apt : ${appointments ?: #lists.emptyList()}" th:if="${apt.status.name() == 'SCHEDULED'}">
                                     <div class="apt-kanban-card card bl-scheduled">
                                         <div class="card-body p-2">
                                             <h6 class="mb-1 fw-bold" th:text="${apt.title}">Titre</h6>
@@ -232,7 +242,7 @@
                         <div class="card status-column">
                             <div class="card-header bg-success text-white"><i class="fas fa-calendar-check"></i> Confirmés</div>
                             <div class="card-body p-2">
-                                <div th:each="apt : ${appointments}" th:if="${apt.status.name() == 'CONFIRMED'}">
+                                <div th:each="apt : ${appointments ?: #lists.emptyList()}" th:if="${apt.status.name() == 'CONFIRMED'}">
                                     <div class="apt-kanban-card card bl-confirmed">
                                         <div class="card-body p-2">
                                             <h6 class="mb-1 fw-bold" th:text="${apt.title}">Titre</h6>
@@ -256,7 +266,7 @@
                         <div class="card status-column">
                             <div class="card-header bg-warning text-dark"><i class="fas fa-exchange-alt"></i> Reportés</div>
                             <div class="card-body p-2">
-                                <div th:each="apt : ${appointments}" th:if="${apt.status.name() == 'RESCHEDULED'}">
+                                <div th:each="apt : ${appointments ?: #lists.emptyList()}" th:if="${apt.status.name() == 'RESCHEDULED'}">
                                     <div class="apt-kanban-card card bl-rescheduled">
                                         <div class="card-body p-2">
                                             <h6 class="mb-1 fw-bold" th:text="${apt.title}">Titre</h6>
@@ -335,7 +345,7 @@
                         <div class="card status-column">
                             <div class="card-header bg-secondary text-white"><i class="fas fa-check-circle"></i> Terminés</div>
                             <div class="card-body p-2">
-                                <div th:each="apt : ${appointments}" th:if="${apt.status.name() == 'COMPLETED'}">
+                                <div th:each="apt : ${appointments ?: #lists.emptyList()}" th:if="${apt.status.name() == 'COMPLETED'}">
                                     <div class="apt-kanban-card card bl-completed">
                                         <div class="card-body p-2">
                                             <h6 class="mb-1 fw-bold" th:text="${apt.title}">Titre</h6>
@@ -353,7 +363,7 @@
                         <div class="card status-column">
                             <div class="card-header bg-danger text-white"><i class="fas fa-calendar-times"></i> Annulés</div>
                             <div class="card-body p-2">
-                                <div th:each="apt : ${appointments}" th:if="${apt.status.name() == 'CANCELLED'}">
+                                <div th:each="apt : ${appointments ?: #lists.emptyList()}" th:if="${apt.status.name() == 'CANCELLED'}">
                                     <div class="apt-kanban-card card bl-cancelled">
                                         <div class="card-body p-2">
                                             <h6 class="mb-1 fw-bold" th:text="${apt.title}">Titre</h6>

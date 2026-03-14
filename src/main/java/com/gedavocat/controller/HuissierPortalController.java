@@ -193,6 +193,7 @@ public class HuissierPortalController {
     }
 
     @PostMapping("/profile")
+    @Transactional
     public String updateProfile(@RequestParam(value = "phone", required = false) String phone,
                                 @RequestParam(value = "officeNumber", required = false) String officeNumber,
                                 Authentication authentication,

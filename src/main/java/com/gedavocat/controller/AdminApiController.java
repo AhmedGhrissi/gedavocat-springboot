@@ -154,7 +154,7 @@ public class AdminApiController {
             log.info("Sauvegarde JDBC créée : {} ({})", backupFile, formatBytes(size));
             return ResponseEntity.ok(Map.of(
                 "success", true,
-                "message", "Sauvegarde créée : " + backupFile + " (" + formatBytes(size) + ")"
+                "message", "Sauvegarde créée avec succès (" + formatBytes(size) + ")"
             ));
 
         } catch (Exception e) {

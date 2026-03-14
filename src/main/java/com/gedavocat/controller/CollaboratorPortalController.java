@@ -305,6 +305,7 @@ public class CollaboratorPortalController {
     }
 
     @PostMapping("/profile")
+    @Transactional
     public String updateProfile(@RequestParam(value = "phone", required = false) String phone,
                                 @RequestParam(value = "barNumber", required = false) String barNumber,
                                 Authentication authentication,

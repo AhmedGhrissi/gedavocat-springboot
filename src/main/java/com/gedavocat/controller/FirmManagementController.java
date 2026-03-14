@@ -65,6 +65,10 @@ public class FirmManagementController {
 
         User currentUser = userRepository.findByEmail(auth.getName())
                 .orElseThrow(() -> new IllegalStateException("Utilisateur non trouvé"));
+        if (currentUser.getFirm() == null) {
+            redirectAttrs.addFlashAttribute("error", "Vous devez avoir un cabinet pour gérer les membres");
+            return "redirect:/firm/members";
+        }
         String firmId = currentUser.getFirm().getId();
 
         try {
@@ -84,6 +88,10 @@ public class FirmManagementController {
                               RedirectAttributes redirectAttrs) {
         User currentUser = userRepository.findByEmail(auth.getName())
                 .orElseThrow(() -> new IllegalStateException("Utilisateur non trouvé"));
+        if (currentUser.getFirm() == null) {
+            redirectAttrs.addFlashAttribute("error", "Vous devez avoir un cabinet pour gérer les membres");
+            return "redirect:/firm/members";
+        }
         String firmId = currentUser.getFirm().getId();
 
         try {
@@ -129,6 +137,10 @@ public class FirmManagementController {
 
         User currentUser = userRepository.findByEmail(auth.getName())
                 .orElseThrow(() -> new IllegalStateException("Utilisateur non trouvé"));
+        if (currentUser.getFirm() == null) {
+            redirectAttrs.addFlashAttribute("error", "Vous devez avoir un cabinet pour affecter des dossiers");
+            return "redirect:/firm/cases/assign";
+        }
         String firmId = currentUser.getFirm().getId();
 
         try {
@@ -148,6 +160,10 @@ public class FirmManagementController {
                               RedirectAttributes redirectAttrs) {
         User currentUser = userRepository.findByEmail(auth.getName())
                 .orElseThrow(() -> new IllegalStateException("Utilisateur non trouvé"));
+        if (currentUser.getFirm() == null) {
+            redirectAttrs.addFlashAttribute("error", "Vous devez avoir un cabinet pour gérer les affectations");
+            return "redirect:/firm/cases/assign";
+        }
         String firmId = currentUser.getFirm().getId();
 
         try {

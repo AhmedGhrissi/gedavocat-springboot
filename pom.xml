@@ -161,11 +161,11 @@
 		<version>8.0.5</version>
 		</dependency>
 
-		<!-- Spring Boot DevTools -->
+		<!-- Spring Boot DevTools (test/development uniquement — ne doit pas être dans le JAR de prod) -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-devtools</artifactId>
-			<scope>runtime</scope>
+			<scope>test</scope>
 			<optional>true</optional>
 		</dependency>
 
@@ -199,7 +199,7 @@
 		<dependency>
 			<groupId>com.h2database</groupId>
 			<artifactId>h2</artifactId>
-			<scope>runtime</scope>
+			<scope>test</scope>
 		</dependency>
 
 

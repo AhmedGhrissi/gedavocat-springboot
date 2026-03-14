@@ -291,6 +291,11 @@ public class InvoiceWebController {
             Authentication authentication) {
         try {
             User user = getCurrentUser(authentication);
+            // Valider le format de la clé pour prévenir le path traversal
+            if (!key.matches("^invoices/[a-zA-Z0-9_\\-\\.]+$")) {
+                log.warn("Clé de pièce jointe invalide demandée par {}: {}", user.getEmail(), key);
+                return ResponseEntity.badRequest().build();
+            }
             // Vérifier qu'une facture accessible par cet utilisateur référence cette clé
             boolean authorized = invoiceRepository.existsByDocumentUrlAndUserId(
                     "/invoices/attachment?key=" + key, user.getId());

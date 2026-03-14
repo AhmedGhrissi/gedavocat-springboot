@@ -93,14 +93,14 @@ public class ClientPortalController {
                 java.util.Optional<Client> byEmail = clientRepository.findByEmail(user.getEmail());
                 if (byEmail.isPresent()) {
                     Client candidate = byEmail.get();
-                    // Vérification : le client doit avoir un lawyer, et l'email doit matcher exactement
-                    if (candidate.getClientUser() != null && !candidate.getClientUser().getId().equals(user.getId())) {
-                        log.warn("Fallback email match pour {} mais clientUser mismatch — accès refusé", user.getEmail());
+                    // Vérification : le client doit être lié à cet utilisateur (by clientUser FK)
+                    // Si clientUser==null, l'invitation n'a pas encore été acceptée → accès refusé
+                    if (candidate.getClientUser() == null
+                            || !candidate.getClientUser().getId().equals(user.getId())) {
+                        log.warn("Fallback email match pour {} — clientUser null ou mismatch — accès refusé", user.getEmail());
                         return notLinked(model);
                     }
-                    log.warn("Utilisateur {} non lié via clientUserId mais trouvé par email -> displaying cases (consider linking)", user.getEmail());
                     client = candidate;
-                    model.addAttribute("linkWarning", "Votre compte n'est pas encore lié techniquement. Affichage basé sur votre adresse email.");
                 } else {
                     return notLinked(model);
                 }

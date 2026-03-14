@@ -1,6 +1,7 @@
 package com.gedavocat.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -129,6 +130,7 @@ public class SecurityAdminController {
      * @return Résultat validation
      */
     @PostMapping("/mfa/{userId}/validate")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<MFAValidationResponse> validateUserMFA(
             @PathVariable String userId, 
             @RequestBody MFAValidationRequest request) {
@@ -176,7 +178,7 @@ public class SecurityAdminController {
             
             Map<String, String> response = new HashMap<>();
             response.put("status", "success");
-            response.put("message", "MFA désactivé pour utilisateur " + userId);
+            response.put("message", "MFA désactivé avec succès");
             
             return ResponseEntity.ok(response);
             
@@ -194,13 +196,14 @@ public class SecurityAdminController {
      * @return Status MFA par utilisateur
      */
     @GetMapping("/mfa/status")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, MFAUserStatus>> getAllMFAStatus() {
         
         try {
             
             Map<String, MFAUserStatus> mfaStatusMap = new HashMap<>();
             
-            userRepository.findAll().forEach(user -> {
+            userRepository.findAll(PageRequest.of(0, 100)).forEach(user -> {
                 
                 MultiFactorAuthenticationService.MFAStatus status = mfaService.getMFAStatus(user);
                 
@@ -312,6 +315,7 @@ public class SecurityAdminController {
      * @return Rapport sécurité détaillé
      */
     @GetMapping("/report/export")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<SecurityReport> exportSecurityReport() {
         
         try {
@@ -321,7 +325,7 @@ public class SecurityAdminController {
             
             // Compter utilisateurs MFA
             long totalUsers = userRepository.count();
-            long mfaEnabledUsers = userRepository.findAll().stream()
+            long mfaEnabledUsers = userRepository.findAll(PageRequest.of(0, 100)).stream()
                 .mapToLong(user -> {
                     MultiFactorAuthenticationService.MFAStatus status = mfaService.getMFAStatus(user);
                     return status.isEnabled() ? 1 : 0;

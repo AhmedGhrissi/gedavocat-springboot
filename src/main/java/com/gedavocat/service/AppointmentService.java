@@ -161,7 +161,10 @@ public class AppointmentService {
         existing.setType(updatedAppointment.getType() != null 
             ? updatedAppointment.getType() 
             : existing.getType());
-        existing.setStatus(updatedAppointment.getStatus());
+        // Ensure status is never null (keep existing if not provided)
+        existing.setStatus(updatedAppointment.getStatus() != null
+                ? updatedAppointment.getStatus()
+                : existing.getStatus());
         existing.setLocation(updatedAppointment.getLocation());
         existing.setCourtName(updatedAppointment.getCourtName());
         existing.setCourtRoom(updatedAppointment.getCourtRoom());

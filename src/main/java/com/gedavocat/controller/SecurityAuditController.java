@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
  */
 @RestController
 @RequestMapping("/api/security")
-@PreAuthorize("hasRole('ADMIN') or hasRole('DPO')")
+@PreAuthorize("hasRole('ADMIN')")
 public class SecurityAuditController {
 
     private static final Logger log = LoggerFactory.getLogger(SecurityAuditController.class);

@@ -214,7 +214,7 @@
                                 </td>
                                 <td th:text="${user.email}">john@example.com</td>
                                 <td>
-                                    <span th:switch="${user.role}" class="badge">
+                                    <span th:switch="${user.role?.name()}" class="badge">
                                         <span th:case="'ADMIN'" class="badge bg-danger">Admin</span>
                                         <span th:case="'LAWYER'" class="badge bg-primary">Avocat</span>
                                         <span th:case="'AVOCAT_ADMIN'" class="badge bg-warning text-dark">Avocat Admin</span>

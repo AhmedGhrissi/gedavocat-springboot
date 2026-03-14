@@ -1,6 +1,7 @@
 package com.gedavocat.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -18,6 +19,7 @@ import org.slf4j.LoggerFactory;
 @RestController
 @RequestMapping("/api/admin/migration")
 @PreAuthorize("hasRole('ADMIN')")
+@Profile("dev")
 public class DatabaseMigrationController {
 
     private static final Logger log = LoggerFactory.getLogger(DatabaseMigrationController.class);

@@ -27,7 +27,7 @@ import java.util.List;
 @RequestMapping("/clients")
 @RequiredArgsConstructor
 @Slf4j
-@PreAuthorize("hasAnyRole('LAWYER', 'ADMIN', 'LAWYER_SECONDARY', 'AVOCAT_ADMIN')")
+@PreAuthorize("hasAnyRole('LAWYER', 'ADMIN', 'AVOCAT_ADMIN')")
 public class ClientController {
 
     private final ClientService clientService;

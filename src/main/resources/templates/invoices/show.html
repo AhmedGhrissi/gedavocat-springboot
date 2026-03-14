@@ -179,7 +179,7 @@
     <div class="status-bar">
       <div class="status-item">
         <span class="status-label">Statut</span>
-        <span th:switch="${invoice.status}">
+        <span th:switch="${invoice.status?.name()}">
           <span th:case="'DRAFT'"      class="badge-pill badge-draft">    <i class="fas fa-circle" style="font-size:.45em"></i> Brouillon</span>
           <span th:case="'SENT'"       class="badge-pill badge-sent">     <i class="fas fa-circle" style="font-size:.45em"></i> Envoyée</span>
           <span th:case="'PAID'"       class="badge-pill badge-paid">     <i class="fas fa-circle" style="font-size:.45em"></i> Payée</span>
@@ -301,7 +301,7 @@
             <a th:href="@{/invoices/{id}/edit(id=${invoice.id})}" class="action-btn"><i class="fas fa-pen"></i> Modifier la facture</a>
             <a th:href="@{/invoices/{id}/pdf(id=${invoice.id})}" class="action-btn" target="_blank"><i class="fas fa-download"></i> Télécharger PDF</a>
             <button class="action-btn success"
-                    th:if="${invoice.status != 'PAID' and invoice.status != 'CANCELLED'}"
+                    th:if="${invoice.status?.name() != 'PAID' and invoice.status?.name() != 'CANCELLED'}"
                     onclick="openPaidModal()">
               <i class="fas fa-check-circle"></i> Marquer comme payée
             </button>

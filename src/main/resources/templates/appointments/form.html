@@ -264,9 +264,8 @@
         </div>
 
     </div>
-</div>
 
-<script th:attr="nonce=${cspNonce}">
+    <script th:attr="nonce=${cspNonce}">
 // Afficher/masquer les champs tribunal selon le type
 document.querySelector('select[name="type"]').addEventListener('change', function() {
     const courtInfo = document.getElementById('courtInfo');
@@ -284,7 +283,8 @@ window.addEventListener('DOMContentLoaded', function() {
         document.getElementById('courtInfo').style.display = 'block';
     }
 });
-</script>
+    </script>
+</div>
 
 </body>
 </html>
