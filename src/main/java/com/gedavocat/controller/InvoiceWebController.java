@@ -337,6 +337,8 @@ public class InvoiceWebController {
 
  // InvoiceWebController.java — ajouter cet endpoint
     @GetMapping("/attachment")
+    @PreAuthorize("hasAnyRole('LAWYER', 'CLIENT', 'ADMIN', 'AVOCAT_ADMIN')")
+    public ResponseEntity<byte[]> downloadAttachment(
             @RequestParam String key,
             Authentication authentication) {
         try {
