@@ -112,9 +112,12 @@ public class DocumentService {
         Case caseEntity = caseRepository.findById(caseId)
                 .orElseThrow(() -> new RuntimeException("Dossier non trouvé"));
 
-        // SEC-IDOR FIX : vérifier que l'utilisateur est propriétaire du dossier
-        if (caseEntity.getLawyer() == null || !caseEntity.getLawyer().getId().equals(userId)) {
-            throw new SecurityException("Accès non autorisé à ce dossier");
+        // SEC-IDOR FIX : vérifier que l'utilisateur a accès au dossier
+        // Clients: access already verified in ClientPortalController; skip lawyer check
+        if (!"CLIENT".equals(userRole)) {
+            if (caseEntity.getLawyer() == null || !caseEntity.getLawyer().getId().equals(userId)) {
+                throw new SecurityException("Accès non autorisé à ce dossier");
+            }
         }
 
         User user = userRepository.findById(userId)

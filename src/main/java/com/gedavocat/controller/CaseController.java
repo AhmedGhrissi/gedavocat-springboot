@@ -192,6 +192,10 @@ public class CaseController {
         model.addAttribute("case", caseEntity);
         model.addAttribute("clients", clients);
         model.addAttribute("selectedClientId", caseEntity.getClient() != null ? caseEntity.getClient().getId() : "");
+        // Force-initialize lazy client proxy while session is open (open-in-view=false)
+        if (caseEntity.getClient() != null) {
+            caseEntity.getClient().getName();
+        }
         model.addAttribute("isEdit", true);
         model.addAttribute("caseStatuses", CaseStatus.values());
         return "cases/form";
