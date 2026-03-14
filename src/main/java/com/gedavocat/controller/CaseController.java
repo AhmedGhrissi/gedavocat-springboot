@@ -154,7 +154,7 @@ public class CaseController {
         }
 
         try {
-            List<Permission> permissions = permissionRepository.findByCaseEntityId(id);
+            List<Permission> permissions = permissionRepository.findActiveWithLawyerByCaseId(id);
             model.addAttribute("permissions", permissions != null ? permissions : java.util.Collections.emptyList());
         } catch (Exception e) {
             model.addAttribute("permissions", java.util.Collections.emptyList());

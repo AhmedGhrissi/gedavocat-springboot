@@ -353,7 +353,7 @@
                                     <div style="font-size: 0.9375rem; font-weight: 600; color: #0F172A; margin-bottom: 0.5rem;" th:text="${apt.title}">RDV</div>
                                     <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; color: #64748B;">
                                         <i class="fas fa-calendar"></i>
-                                        <span th:text="${#temporals.format(apt.appointmentDate, 'dd/MM/yyyy HH:mm')}">Date</span>
+                                        <span th:text="${apt.appointmentDate != null ? #temporals.format(apt.appointmentDate, 'dd/MM/yyyy HH:mm') : 'Date inconnue'}">Date</span>
                                     </div>
                                 </div>
                             </div>
@@ -384,7 +384,7 @@
                                         Créé le <strong th:text="${#temporals.format(case.createdAt, 'dd/MM/yyyy')}">date</strong>
                                     </span>
                                 </div>
-                                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <div th:if="${case.updatedAt != null}" style="display: flex; align-items: center; gap: 0.75rem;">
                                     <div style="width: 0.5rem; height: 0.5rem; border-radius: 50%; background: #0F172A;"></div>
                                     <span style="font-size: 0.9375rem; color: #475569;">
                                         Modifié le <strong th:text="${#temporals.format(case.updatedAt, 'dd/MM/yyyy')}">date</strong>
@@ -451,7 +451,7 @@
                                 <div style="font-size: 0.875rem; font-weight: 600; color: #0F172A; margin-bottom: 0.25rem;" th:text="${apt.title}">RDV</div>
                                 <div style="font-size: 0.75rem; color: #64748B;">
                                     <i class="fas fa-clock" style="margin-right: 0.25rem;"></i>
-                                    <span th:text="${#temporals.format(apt.appointmentDate, 'dd/MM/yyyy HH:mm')}">Date</span>
+                                    <span th:text="${apt.appointmentDate != null ? #temporals.format(apt.appointmentDate, 'dd/MM/yyyy HH:mm') : 'Date inconnue'}">Date</span>
                                 </div>
                             </div>
                         </div>
@@ -479,7 +479,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <div style="display: flex; align-items: start; gap: 0.5rem;">
+                            <div th:if="${case.updatedAt != null}" style="display: flex; align-items: start; gap: 0.5rem;">
                                 <div style="width: 0.5rem; height: 0.5rem; border-radius: 50%; background: #3B82F6; margin-top: 0.5rem;"></div>
                                 <div style="flex: 1;">
                                     <div style="font-size: 0.8125rem; color: #64748B;">
