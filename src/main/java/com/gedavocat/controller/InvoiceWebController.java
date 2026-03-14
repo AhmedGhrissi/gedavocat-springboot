@@ -296,7 +296,7 @@ public class InvoiceWebController {
             User user = getCurrentUser(authentication);
             var invoice = invoiceService.getInvoiceById(id, user.getId());
 
-            if (invoice.getClient() == null || invoice.getClient().getEmail() == null) {
+            if (invoice.getClientEmail() == null || invoice.getClientEmail().isBlank()) {
                 redirectAttributes.addFlashAttribute("error", "Ce client n'a pas d'adresse email.");
                 return "redirect:/invoices/" + id;
             }
@@ -314,7 +314,7 @@ public class InvoiceWebController {
                 + "</td></tr></table>";
 
             emailService.sendEmailFromLawyerWithAttachment(
-                invoice.getClient().getEmail(),
+                invoice.getClientEmail(),
                 "Facture " + invoice.getInvoiceNumber(),
                 contentHtml,
                 user,
@@ -322,7 +322,7 @@ public class InvoiceWebController {
                 filename
             );
 
-            redirectAttributes.addFlashAttribute("message", "Facture envoyée par email à " + invoice.getClient().getEmail());
+            redirectAttributes.addFlashAttribute("message", "Facture envoyée par email à " + invoice.getClientEmail());
         } catch (Exception e) {
             log.error("Erreur envoi facture par email {}", id, e);
             redirectAttributes.addFlashAttribute("error", "Erreur lors de l'envoi de la facture par email.");
