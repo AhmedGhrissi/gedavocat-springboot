@@ -21,6 +21,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * Service de Gestion Cryptographique Sécurisée
  * 
@@ -40,6 +44,7 @@ import java.nio.file.Paths;
  * - PBKDF2-SHA3 pour dérivation clés
  * - SecureRandom DRBG pour entropie
  */
+@Slf4j
 @Service
 public class SecureCryptographyService {
 
@@ -496,21 +501,31 @@ public class SecureCryptographyService {
     }
 
     private void loadExistingKeys() throws Exception {
-        
         Path keysDir = Paths.get(keysPath);
-        
+        ObjectMapper mapper = new ObjectMapper();
+
         Files.list(keysDir)
             .filter(path -> path.toString().endsWith(".key"))
             .forEach(path -> {
                 try {
-                    // Charger clé depuis fichier sécurisé
-                    // Implémentation simplifiée - en production utiliser HSM
-                    Files.readString(path);
-                    // Parse et ajouter au keyStore
-                } catch (IOException e) {
-                    // Log erreur
+                    String content = Files.readString(path);
+                    JsonNode node = mapper.readTree(content.trim());
+
+                    String keyId = node.get("keyId").asText();
+                    String algorithm = node.get("algorithm").asText();
+                    byte[] keyBytes = Base64.getDecoder().decode(node.get("keyBytes").asText());
+                    LocalDateTime createdDate = LocalDateTime.parse(node.get("createdDate").asText());
+                    LocalDateTime expiryDate = LocalDateTime.parse(node.get("expiryDate").asText());
+
+                    CryptoKey cryptoKey = new CryptoKey(keyId, algorithm, keyBytes, createdDate, expiryDate);
+                    keyStore.put(keyId, cryptoKey);
+                    log.info("Clé cryptographique chargée depuis le disque: {}", keyId);
+                } catch (Exception e) {
+                    log.warn("Impossible de charger la clé {}: {}", path.getFileName(), e.getMessage());
                 }
             });
+
+        log.info("{} clé(s) cryptographique(s) chargée(s) depuis {}", keyStore.size(), keysPath);
     }
 
     private void generateDefaultKeys() throws Exception {
