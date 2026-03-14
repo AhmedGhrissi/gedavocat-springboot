@@ -399,10 +399,21 @@ public class DocumentService {
     }
 
     private void verifyDocumentOwnership(Document document, String userId) {
-        if (document.getCaseEntity() == null || document.getCaseEntity().getLawyer() == null
-                || !document.getCaseEntity().getLawyer().getId().equals(userId)) {
+        if (document.getCaseEntity() == null) {
             throw new SecurityException("Accès non autorisé à ce document");
         }
+        // Autoriser l'avocat du dossier
+        if (document.getCaseEntity().getLawyer() != null
+                && document.getCaseEntity().getLawyer().getId().equals(userId)) {
+            return;
+        }
+        // Autoriser le client du dossier (accès lecture via portail client)
+        if (document.getCaseEntity().getClient() != null
+                && document.getCaseEntity().getClient().getClientUser() != null
+                && document.getCaseEntity().getClient().getClientUser().getId().equals(userId)) {
+            return;
+        }
+        throw new SecurityException("Accès non autorisé à ce document");
     }
 
     /**
