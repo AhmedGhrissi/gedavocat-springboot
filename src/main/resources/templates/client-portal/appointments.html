@@ -239,21 +239,21 @@
         </div>
 
     </div>
-</div>
 
-<script th:inline="javascript" th:attr="nonce=${cspNonce}">
-    document.addEventListener('DOMContentLoaded', function() {
-        // Bootstrap modal initialization manuelle (évite le TypeError backdrop avec Thymeleaf Layout Dialect)
-        document.querySelectorAll('.open-modal-btn').forEach(function(btn) {
-            btn.addEventListener('click', function() {
-                var modalId = btn.getAttribute('data-modal-id');
-                var modalEl = document.getElementById(modalId);
-                if (modalEl) {
-                    new bootstrap.Modal(modalEl).show();
-                }
+    <script th:inline="javascript" th:attr="nonce=${cspNonce}">
+        document.addEventListener('DOMContentLoaded', function() {
+            // Bootstrap modal initialization manuelle (évite le TypeError backdrop avec Thymeleaf Layout Dialect)
+            document.querySelectorAll('.open-modal-btn').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    var modalId = btn.getAttribute('data-modal-id');
+                    var modalEl = document.getElementById(modalId);
+                    if (modalEl) {
+                        new bootstrap.Modal(modalEl).show();
+                    }
+                });
             });
         });
-    });
-</script>
+    </script>
+</div>
 </body>
 </html>
