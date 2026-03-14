@@ -532,7 +532,7 @@ public class AppointmentController {
     @PostMapping("/{id}/propose-date")
     @Transactional
     public String proposeDate(@PathVariable String id,
-                              @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime proposedDate,
+                              @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm") LocalDateTime proposedDate,
                               @RequestParam(required = false) String rescheduleMessage,
                               Authentication authentication,
                               RedirectAttributes redirectAttributes) {

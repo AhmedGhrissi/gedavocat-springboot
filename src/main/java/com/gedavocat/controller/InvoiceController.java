@@ -41,7 +41,7 @@ public class InvoiceController {
      * Crée une nouvelle facture
      */
     @PostMapping
-    @PreAuthorize("hasRole('LAWYER')")
+    @PreAuthorize("hasAnyRole('LAWYER', 'AVOCAT_ADMIN')")
     public ResponseEntity<?> createInvoice(@Valid @RequestBody InvoiceRequest request,
                                            Authentication authentication) {
         try {
@@ -64,7 +64,7 @@ public class InvoiceController {
      * Met à jour une facture existante
      */
     @PutMapping("/{invoiceId}")
-    @PreAuthorize("hasRole('LAWYER')")
+    @PreAuthorize("hasAnyRole('LAWYER', 'AVOCAT_ADMIN')")
     public ResponseEntity<InvoiceResponse> updateInvoice(
             @PathVariable String invoiceId,
             @Valid @RequestBody InvoiceRequest request,
@@ -83,7 +83,7 @@ public class InvoiceController {
      * Récupère une facture par son ID
      */
     @GetMapping("/{invoiceId}")
-    @PreAuthorize("hasAnyRole('LAWYER', 'CLIENT', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('LAWYER', 'CLIENT', 'ADMIN', 'AVOCAT_ADMIN')")
     public ResponseEntity<InvoiceResponse> getInvoiceById(@PathVariable String invoiceId,
                                                            Authentication authentication) {
         try {
@@ -139,7 +139,7 @@ public class InvoiceController {
      * Récupère toutes les factures d'un avocat
      */
     @GetMapping("/lawyer/{lawyerId}")
-    @PreAuthorize("hasRole('LAWYER')")
+    @PreAuthorize("hasAnyRole('LAWYER', 'AVOCAT_ADMIN')")
     public ResponseEntity<List<InvoiceResponse>> getInvoicesByLawyer(@PathVariable String lawyerId,
                                                                       Authentication authentication) {
         try {
@@ -159,7 +159,7 @@ public class InvoiceController {
      * Récupère les factures en retard d'un avocat
      */
     @GetMapping("/lawyer/{lawyerId}/overdue")
-    @PreAuthorize("hasRole('LAWYER')")
+    @PreAuthorize("hasAnyRole('LAWYER', 'AVOCAT_ADMIN')")
     public ResponseEntity<List<InvoiceResponse>> getOverdueInvoicesByLawyer(@PathVariable String lawyerId,
                                                                              Authentication authentication) {
         try {
@@ -178,7 +178,7 @@ public class InvoiceController {
      * Marque une facture comme payée
      */
     @PatchMapping("/{invoiceId}/mark-as-paid")
-    @PreAuthorize("hasRole('LAWYER')")
+    @PreAuthorize("hasAnyRole('LAWYER', 'AVOCAT_ADMIN')")
     public ResponseEntity<InvoiceResponse> markAsPaid(
             @PathVariable String invoiceId,
             @RequestBody(required = false) Map<String, String> body,
@@ -198,7 +198,7 @@ public class InvoiceController {
      * Supprime une facture
      */
     @DeleteMapping("/{invoiceId}")
-    @PreAuthorize("hasRole('LAWYER')")
+    @PreAuthorize("hasAnyRole('LAWYER', 'AVOCAT_ADMIN')")
     public ResponseEntity<Void> deleteInvoice(@PathVariable String invoiceId,
                                                Authentication authentication) {
         try {
@@ -215,7 +215,7 @@ public class InvoiceController {
      * Génère un numéro de facture automatique
      */
     @GetMapping("/generate-number")
-    @PreAuthorize("hasRole('LAWYER')")
+    @PreAuthorize("hasAnyRole('LAWYER', 'AVOCAT_ADMIN')")
     public ResponseEntity<Map<String, String>> generateInvoiceNumber() {
         String invoiceNumber = invoiceService.generateInvoiceNumber();
         return ResponseEntity.ok(Map.of("invoiceNumber", invoiceNumber));

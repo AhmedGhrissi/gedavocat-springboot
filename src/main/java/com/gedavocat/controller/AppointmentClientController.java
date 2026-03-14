@@ -155,8 +155,8 @@ public class AppointmentClientController {
     @PostMapping("/{id}/propose-date")
     @Transactional
     public String proposeDate(@PathVariable String id,
-                              @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime proposedDate,
-                              @RequestParam(required = false) String message,
+                              @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm") LocalDateTime proposedDate,
+                              @RequestParam(required = false) String rescheduleMessage,
                               Authentication authentication,
                               RedirectAttributes redirectAttributes) {
         try {
@@ -179,7 +179,7 @@ public class AppointmentClientController {
             appointment.setStatus(Appointment.AppointmentStatus.RESCHEDULED);
             appointment.setRescheduleRequestedBy("CLIENT");
             appointment.setProposedDate(proposedDate);
-            appointment.setRescheduleMessage(message);
+            appointment.setRescheduleMessage(rescheduleMessage);
             appointmentService.saveAppointment(appointment);
 
             if (appointment.getLawyer() != null) {
@@ -193,7 +193,7 @@ public class AppointmentClientController {
                             "Proposition de report du client",
                             "Le client propose une nouvelle date pour le rendez-vous : " + appointment.getTitle()
                                     + "\nDate proposée: " + dateStr
-                                    + (message != null ? "\nMessage: " + message : ""));
+                                    + (rescheduleMessage != null ? "\nMessage: " + rescheduleMessage : ""));
                 }
             }
 

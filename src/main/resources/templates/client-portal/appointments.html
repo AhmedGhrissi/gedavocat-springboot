@@ -113,7 +113,7 @@
                     <div class="mt-2 d-flex gap-2 flex-wrap">
                         <!-- Bouton Confirmer (uniquement si SCHEDULED) -->
                         <form th:if="${apt.status?.name() == 'SCHEDULED'}"
-                              th:action="@{/my-appointments/{id}/confirm(id=${apt.id})}" method="post" class="d-inline">
+                              th:action="@{/client/appointments/{id}/confirm(id=${apt.id})}" method="post" class="d-inline">
                             <button type="submit" class="btn btn-sm btn-success">
                                 <i class="fas fa-check"></i> Confirmer
                             </button>
@@ -142,7 +142,7 @@
                         <strong th:text="${#temporals.format(apt.proposedDate, 'dd/MM/yyyy HH:mm')}">01/01 10:00</strong>
                         <div th:if="${apt.rescheduleMessage}" class="text-muted small mt-1" th:text="${apt.rescheduleMessage}">Message</div>
                         <div class="mt-1 d-flex gap-2">
-                            <form th:action="@{/my-appointments/{id}/confirm(id=${apt.id})}" method="post" class="d-inline">
+                            <form th:action="@{/client/appointments/{id}/confirm(id=${apt.id})}" method="post" class="d-inline">
                                 <button type="submit" class="btn btn-sm btn-success">
                                     <i class="fas fa-check"></i> Accepter
                                 </button>
@@ -173,7 +173,7 @@
                                 <h5 class="modal-title"><i class="fas fa-calendar-times"></i> Demander un report</h5>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                             </div>
-                            <form th:action="@{/my-appointments/{id}/request-reschedule(id=${apt.id})}" method="post">
+                            <form th:action="@{/client/appointments/{id}/propose-date(id=${apt.id})}" method="post">
                                 <div class="modal-body">
                                     <div class="mb-3">
                                         <label class="form-label">Date souhaitée (optionnel)</label>
