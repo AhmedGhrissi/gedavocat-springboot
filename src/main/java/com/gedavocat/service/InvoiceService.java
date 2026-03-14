@@ -98,6 +98,7 @@ public class InvoiceService {
             item.setUnitPriceHT(itemRequest.getUnitPriceHT());
             item.setTvaRate(itemRequest.getTvaRate());
             item.setDisplayOrder(itemRequest.getDisplayOrder());
+            item.calculateTotals();
             invoice.addItem(item);
         }
 
@@ -151,6 +152,7 @@ public class InvoiceService {
             item.setUnitPriceHT(itemRequest.getUnitPriceHT());
             item.setTvaRate(itemRequest.getTvaRate());
             item.setDisplayOrder(itemRequest.getDisplayOrder());
+            item.calculateTotals();
             invoice.addItem(item);
         }
 

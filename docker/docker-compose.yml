@@ -175,6 +175,7 @@ services:
 
       # Services externes (APIs)
       YOUSIGN_API_KEY: ${YOUSIGN_API_KEY} # gitleaks:allow - env var reference
+      YOUSIGN_API_URL: ${YOUSIGN_API_URL:-https://api.yousign.app}
       STRIPE_API_KEY: ${STRIPE_API_KEY:-} # gitleaks:allow - env var reference
       STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY:-}
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
@@ -297,6 +298,7 @@ services:
       JWT_KEYS_PUBLIC_KEY_PATH: /opt/docavocat/crypto-keys/public_key.pem
       SPRING_WEB_RESOURCES_STATIC_LOCATIONS: "file:/opt/docavocat/static-override/,classpath:/static/"
       YOUSIGN_API_KEY: ${YOUSIGN_API_KEY} # gitleaks:allow
+      YOUSIGN_API_URL: ${YOUSIGN_API_URL:-https://api.yousign.app}
       STRIPE_API_KEY: ${STRIPE_API_KEY:-} # gitleaks:allow
       STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY:-}
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
