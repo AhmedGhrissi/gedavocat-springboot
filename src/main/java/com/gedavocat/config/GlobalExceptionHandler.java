@@ -9,6 +9,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
@@ -31,6 +34,18 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(AccessDeniedException.class)
     public Object handleAccessDenied(AccessDeniedException ex, HttpServletRequest request, HttpServletResponse response) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        boolean isAnonymous = (auth == null || auth instanceof AnonymousAuthenticationToken);
+
+        if (isAnonymous) {
+            // Utilisateur non connecté : rediriger vers /login plutôt que d'afficher une erreur 403
+            if (isApiRequest(request)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("error", "Authentification requise", "status", 401));
+            }
+            return new ModelAndView("redirect:/login");
+        }
+
         log.warn("Accès refusé: {} - IP: {}", request.getRequestURI(), getClientIp(request));
         if (isApiRequest(request)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
