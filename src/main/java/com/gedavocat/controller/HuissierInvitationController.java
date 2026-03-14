@@ -70,7 +70,7 @@ public class HuissierInvitationController {
         link = caseShareService.getLinkByToken(token);
         model.addAttribute("token", token);
         model.addAttribute("email", entry.get().email());
-        model.addAttribute("caseName", link.getSharedCase() != null ? link.getSharedCase().getName() : null);
+        model.addAttribute("caseName", link != null && link.getSharedCase() != null ? link.getSharedCase().getName() : null);
         return "huissier-portal/accept-invitation";
     }
 
@@ -166,31 +166,35 @@ public class HuissierInvitationController {
             if (link == null) {
                 link = caseShareService.getLinkByToken(token);
             }
-            Permission p = new Permission();
-            p.setCaseEntity(link.getSharedCase());
-            p.setLawyer(saved);
-            p.setGrantedBy(link.getOwner());
-            p.setCanRead(true);
-            p.setCanWrite(false);
-            p.setCanUpload(false);
-            p.setIsActive(true);
-            p.setExpiresAt(null);
-            Permission savedPerm = permissionRepository.save(p);
+            if (link != null && link.getSharedCase() != null) {
+                Permission p = new Permission();
+                p.setCaseEntity(link.getSharedCase());
+                p.setLawyer(saved);
+                p.setGrantedBy(link.getOwner());
+                p.setCanRead(true);
+                p.setCanWrite(false);
+                p.setCanUpload(false);
+                p.setIsActive(true);
+                p.setExpiresAt(null);
+                Permission savedPerm = permissionRepository.save(p);
 
-            try {
-                log.info("[HuissierInvite] Permission saved id={} caseId={} huissierId={} grantedById={}",
-                        savedPerm.getId(),
-                        savedPerm.getCaseEntity() != null ? savedPerm.getCaseEntity().getId() : null,
-                        savedPerm.getLawyer() != null ? savedPerm.getLawyer().getId() : null,
-                        savedPerm.getGrantedBy() != null ? savedPerm.getGrantedBy().getId() : null);
-            } catch (Exception e) {
-                log.warn("[HuissierInvite] Permission saved but failed to log fields: {}", e.getMessage());
+                try {
+                    log.info("[HuissierInvite] Permission saved id={} caseId={} huissierId={} grantedById={}",
+                            savedPerm.getId(),
+                            savedPerm.getCaseEntity() != null ? savedPerm.getCaseEntity().getId() : null,
+                            savedPerm.getLawyer() != null ? savedPerm.getLawyer().getId() : null,
+                            savedPerm.getGrantedBy() != null ? savedPerm.getGrantedBy().getId() : null);
+                } catch (Exception e) {
+                    log.warn("[HuissierInvite] Permission saved but failed to log fields: {}", e.getMessage());
+                }
+
+                try {
+                    caseShareService.revokeByToken(token);
+                    collaboratorInvitationService.removeToken(token);
+                } catch (Exception ignored) {}
+            } else {
+                log.warn("[HuissierInvite] Link not found or no shared case for token — permission not granted, user created: {}", saved.getEmail());
             }
-
-            try {
-                caseShareService.revokeByToken(token);
-                collaboratorInvitationService.removeToken(token);
-            } catch (Exception ignored) {}
 
             redirectAttributes.addFlashAttribute("message", "Compte huissier créé avec succès ! Connectez-vous.");
             return "redirect:/login";

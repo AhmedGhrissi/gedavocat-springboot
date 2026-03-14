@@ -15,6 +15,15 @@
     <div layout:fragment="content">
         <div class="collab-page">
          <div class="container-fluid">
+            <!-- Messages flash -->
+            <div th:if="${message}" class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fas fa-check-circle"></i> <span th:text="${message}">Succès</span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-circle"></i> <span th:text="${error}">Erreur</span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
             <!-- En-tête -->
             <div class="client-header">
                 <h1><i class="fas fa-folder-open"></i> Mes Dossiers</h1>

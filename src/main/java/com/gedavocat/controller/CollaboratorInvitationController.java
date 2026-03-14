@@ -68,7 +68,7 @@ public class CollaboratorInvitationController {
         link = caseShareService.getLinkByToken(token);
         model.addAttribute("token", token);
         model.addAttribute("email", entry.get().email());
-        model.addAttribute("caseName", link.getSharedCase() != null ? link.getSharedCase().getName() : null);
+        model.addAttribute("caseName", link != null && link.getSharedCase() != null ? link.getSharedCase().getName() : null);
         return "collaborators/accept-invitation";
     }
 
@@ -194,36 +194,40 @@ public class CollaboratorInvitationController {
             if (link == null) {
                 link = caseShareService.getLinkByToken(token);
             }
-            Permission p = new Permission();
-            p.setCaseEntity(link.getSharedCase());
-            p.setLawyer(saved);
-            p.setGrantedBy(link.getOwner());
-            p.setCanRead(true);
-            p.setCanWrite(false);
-            p.setCanUpload(false);
-            p.setIsActive(true);
-            // Ne PAS copier la date d'expiration du lien de partage vers la permission.
-            // La permission du collaborateur doit rester active indéfiniment (ou jusqu'à révocation manuelle).
-            // L'expiration du lien de partage ne concerne que l'invitation, pas l'accès au dossier.
-            p.setExpiresAt(null);
-            Permission savedPerm = permissionRepository.save(p);
-            // Diagnostic logging: ensure permission persisted and IDs recorded
-            try {
-                log.info("[Invite] Permission saved id={} caseId={} lawyerId={} grantedById={}",
-                        savedPerm.getId(),
-                        savedPerm.getCaseEntity() != null ? savedPerm.getCaseEntity().getId() : null,
-                        savedPerm.getLawyer() != null ? savedPerm.getLawyer().getId() : null,
-                        savedPerm.getGrantedBy() != null ? savedPerm.getGrantedBy().getId() : null);
-            } catch (Exception e) {
-                log.warn("[Invite] Permission saved but failed to log fields: {}", e.getMessage());
-            }
+            if (link != null && link.getSharedCase() != null) {
+                Permission p = new Permission();
+                p.setCaseEntity(link.getSharedCase());
+                p.setLawyer(saved);
+                p.setGrantedBy(link.getOwner());
+                p.setCanRead(true);
+                p.setCanWrite(false);
+                p.setCanUpload(false);
+                p.setIsActive(true);
+                // Ne PAS copier la date d'expiration du lien de partage vers la permission.
+                // La permission du collaborateur doit rester active indéfiniment (ou jusqu'à révocation manuelle).
+                // L'expiration du lien de partage ne concerne que l'invitation, pas l'accès au dossier.
+                p.setExpiresAt(null);
+                Permission savedPerm = permissionRepository.save(p);
+                // Diagnostic logging: ensure permission persisted and IDs recorded
+                try {
+                    log.info("[Invite] Permission saved id={} caseId={} lawyerId={} grantedById={}",
+                            savedPerm.getId(),
+                            savedPerm.getCaseEntity() != null ? savedPerm.getCaseEntity().getId() : null,
+                            savedPerm.getLawyer() != null ? savedPerm.getLawyer().getId() : null,
+                            savedPerm.getGrantedBy() != null ? savedPerm.getGrantedBy().getId() : null);
+                } catch (Exception e) {
+                    log.warn("[Invite] Permission saved but failed to log fields: {}", e.getMessage());
+                }
 
-            // Optionally revoke the link to prevent reuse
-            try {
-                // persist revocation and remove in-memory token
-                caseShareService.revokeByToken(token);
-                collaboratorInvitationService.removeToken(token);
-            } catch (Exception ignored) {}
+                // Optionally revoke the link to prevent reuse
+                try {
+                    // persist revocation and remove in-memory token
+                    caseShareService.revokeByToken(token);
+                    collaboratorInvitationService.removeToken(token);
+                } catch (Exception ignored) {}
+            } else {
+                log.warn("[Invite] Link not found or no shared case for token — permission not granted, user created: {}", saved.getEmail());
+            }
 
             redirectAttributes.addFlashAttribute("message", "Compte collaborateur créé avec succès ! Connectez-vous.");
             return "redirect:/login";

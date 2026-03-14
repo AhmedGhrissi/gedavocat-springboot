@@ -86,14 +86,21 @@ public class MultiTenantFilter extends OncePerRequestFilter {
                 // Vérifier si c'est un ADMIN système (pas de filtre tenant)
                 boolean isAdmin = userDetails.getAuthorities().stream()
                     .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
-                
+
                 // CLIENTs never have a firm — their data isolation is by clientUser FK, not firm_id
                 boolean isClient = userDetails.getAuthorities().stream()
                     .anyMatch(a -> "ROLE_CLIENT".equals(a.getAuthority()));
 
-                if (isAdmin || isClient) {
-                    log.debug("Multi-tenant filter skipped for {} user: {}",
-                             isAdmin ? "ADMIN" : "CLIENT", email);
+                // LAWYER_SECONDARY and HUISSIER are invited externally without a firm assignment
+                // Their data isolation is handled by CaseShareLink/Permission, not firm_id
+                boolean isLawyerSecondary = userDetails.getAuthorities().stream()
+                    .anyMatch(a -> "ROLE_LAWYER_SECONDARY".equals(a.getAuthority()));
+                boolean isHuissier = userDetails.getAuthorities().stream()
+                    .anyMatch(a -> "ROLE_HUISSIER".equals(a.getAuthority()));
+
+                if (isAdmin || isClient || isLawyerSecondary || isHuissier) {
+                    String role = isAdmin ? "ADMIN" : isClient ? "CLIENT" : isLawyerSecondary ? "LAWYER_SECONDARY" : "HUISSIER";
+                    log.debug("Multi-tenant filter skipped for {} user: {}", role, email);
                 } else {
                     // Résoudre l'entité User pour obtenir le firmId
                     var optUser = userRepository.findByEmail(email);

@@ -96,10 +96,11 @@ public class SecurityConfig {
 						.requestMatchers("/firm/**").hasAnyRole("LAWYER", "ADMIN", "AVOCAT_ADMIN")
 
 						// Portail huissier
+						.requestMatchers("/my-cases-collab/**").hasRole("LAWYER_SECONDARY")
 						.requestMatchers("/my-cases-huissier/**").hasRole("HUISSIER")
 
 						// Pages client
-.requestMatchers("/my-cases/**", "/my-documents/**", "/my-appointments", "/my-appointments/**", "/my-signatures").hasAnyRole("CLIENT", "LAWYER", "ADMIN")
+.requestMatchers("/my-cases/**", "/my-documents/**", "/my-appointments", "/my-appointments/**", "/my-signatures").hasAnyRole("CLIENT", "LAWYER", "ADMIN", "LAWYER_SECONDARY")
 
 					.anyRequest().authenticated())
 				// En-têtes de sécurité ANSSI/OWASP/RGPD — niveau bancaire
