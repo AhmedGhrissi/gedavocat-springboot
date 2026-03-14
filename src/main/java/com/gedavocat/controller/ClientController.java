@@ -92,7 +92,7 @@ public class ClientController {
     public String createClient(
             @Valid @ModelAttribute Client client,
             BindingResult result,
-            @RequestParam(value = "sendInvitation", required = false) boolean sendInvitation,
+            @RequestParam(value = "sendInvitation", required = false, defaultValue = "true") boolean sendInvitation,
             Authentication authentication,
             RedirectAttributes redirectAttributes,
             Model model

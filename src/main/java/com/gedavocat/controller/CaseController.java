@@ -49,7 +49,7 @@ public class CaseController {
      */
     @InitBinder
     public void initBinder(WebDataBinder binder) {
-        binder.setAllowedFields("title", "description", "reference", "status",
+        binder.setAllowedFields("name", "title", "description", "reference", "status",
                 "type", "jurisdiction", "opposingParty", "opposingLawyer",
                 "notes", "priority", "dueDate");
     }
