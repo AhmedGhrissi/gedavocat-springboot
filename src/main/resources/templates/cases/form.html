@@ -65,7 +65,7 @@
                                         Veuillez sélectionner un client
                                     </div>
                                     <div class="form-text">
-                                        <button type="button" class="btn btn-link p-0 text-decoration-none" data-bs-toggle="modal" data-bs-target="#quickCreateClientModal">
+                                        <button type="button" id="openQuickCreateModal" class="btn btn-link p-0 text-decoration-none">
                                             <i class="fas fa-plus-circle"></i> Créer un nouveau client
                                         </button>
                                     </div>
@@ -110,7 +110,6 @@
                 </div>
             </div>
         </div>
-    </div>
 
     <!-- Modal création rapide de client -->
     <div class="modal fade" id="quickCreateClientModal" tabindex="-1" aria-labelledby="quickCreateClientModalLabel" aria-hidden="true">
@@ -169,9 +168,18 @@
     </div>
 
     <script th:attr="nonce=${cspNonce}">
-    (function () {
+    document.addEventListener('DOMContentLoaded', function () {
+        const modalEl   = document.getElementById('quickCreateClientModal');
         const submitBtn = document.getElementById('quickCreateSubmitBtn');
-        if (!submitBtn) return;
+        const openBtn   = document.getElementById('openQuickCreateModal');
+        if (!modalEl || !submitBtn || !openBtn) return;
+
+        // Initialisation manuelle de la modale (évite le bug data-API Bootstrap)
+        const bsModal = new bootstrap.Modal(modalEl);
+
+        openBtn.addEventListener('click', function () {
+            bsModal.show();
+        });
 
         submitBtn.addEventListener('click', function () {
             const firstName = document.getElementById('qcFirstName').value.trim();
@@ -215,7 +223,7 @@
                     select.add(option);
                     select.value = data.id;
 
-                    bootstrap.Modal.getInstance(document.getElementById('quickCreateClientModal')).hide();
+                    bsModal.hide();
 
                     // Reset modal
                     ['qcFirstName','qcLastName','qcEmail','qcPhone'].forEach(function(id) {
@@ -255,7 +263,7 @@
             document.body.appendChild(div);
             setTimeout(function() { div.remove(); }, 5000);
         }
-    })();
+    });
     </script>
 </div>
 </body>
