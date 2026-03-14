@@ -113,9 +113,16 @@ public class CaseService {
                 c.getLawyer().getName();
                 c.getLawyer().getEmail();
             }
+            if (c.getFirm() != null) {
+                c.getFirm().getId();
+                c.getFirm().getName();
+            }
             if (c.getClient() != null) {
                 c.getClient().getId();
                 c.getClient().getName();
+                if (c.getClient().getFirm() != null) {
+                    c.getClient().getFirm().getId();
+                }
             }
         } catch (Exception ignore) {}
         return c;
