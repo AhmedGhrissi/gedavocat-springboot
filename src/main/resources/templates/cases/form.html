@@ -65,9 +65,9 @@
                                         Veuillez sélectionner un client
                                     </div>
                                     <div class="form-text">
-                                        <a th:href="@{/clients/new}" target="_blank">
+                                        <button type="button" class="btn btn-link p-0 text-decoration-none" data-bs-toggle="modal" data-bs-target="#quickCreateClientModal">
                                             <i class="fas fa-plus-circle"></i> Créer un nouveau client
-                                        </a>
+                                        </button>
                                     </div>
                                 </div>
 
@@ -111,5 +111,152 @@
             </div>
         </div>
     </div>
+
+    <!-- Modal création rapide de client -->
+    <div class="modal fade" id="quickCreateClientModal" tabindex="-1" aria-labelledby="quickCreateClientModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="quickCreateClientModalLabel">
+                        <i class="fas fa-user-plus me-2"></i>Créer un nouveau client
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="quickCreateAlert" class="alert d-none" role="alert"></div>
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <label for="qcFirstName" class="form-label">Prénom <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="qcFirstName" placeholder="Jean" required>
+                        </div>
+                        <div class="col-6">
+                            <label for="qcLastName" class="form-label">Nom <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="qcLastName" placeholder="Dupont" required>
+                        </div>
+                        <div class="col-12">
+                            <label for="qcEmail" class="form-label">Email <span class="text-danger">*</span></label>
+                            <input type="email" class="form-control" id="qcEmail" placeholder="jean.dupont@exemple.fr" required>
+                        </div>
+                        <div class="col-6">
+                            <label for="qcClientType" class="form-label">Type</label>
+                            <select class="form-select" id="qcClientType">
+                                <option value="INDIVIDUAL">Particulier</option>
+                                <option value="COMPANY">Société</option>
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label for="qcPhone" class="form-label">Téléphone</label>
+                            <input type="tel" class="form-control" id="qcPhone" placeholder="06 00 00 00 00">
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="qcSendInvitation" checked>
+                                <label class="form-check-label" for="qcSendInvitation">
+                                    Envoyer une invitation par email
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="button" class="btn btn-primary" id="quickCreateSubmitBtn">
+                        <i class="fas fa-save me-1"></i>Créer le client
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script th:attr="nonce=${cspNonce}">
+    (function () {
+        const submitBtn = document.getElementById('quickCreateSubmitBtn');
+        if (!submitBtn) return;
+
+        submitBtn.addEventListener('click', function () {
+            const firstName = document.getElementById('qcFirstName').value.trim();
+            const lastName  = document.getElementById('qcLastName').value.trim();
+            const email     = document.getElementById('qcEmail').value.trim();
+            const clientType = document.getElementById('qcClientType').value;
+            const phone     = document.getElementById('qcPhone').value.trim();
+            const sendInv   = document.getElementById('qcSendInvitation').checked;
+            const alertBox  = document.getElementById('quickCreateAlert');
+
+            if (!firstName || !lastName || !email) {
+                alertBox.className = 'alert alert-danger';
+                alertBox.textContent = 'Prénom, nom et email sont obligatoires.';
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Création…';
+
+            const csrfToken  = document.querySelector('meta[name="_csrf"]')?.content;
+            const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content || 'X-CSRF-TOKEN';
+
+            fetch('/api/clients/quick-create', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    'Content-Type': 'application/json',
+                    [csrfHeader]: csrfToken
+                },
+                body: JSON.stringify({ firstName, lastName, email, clientType, phone, sendInvitation: sendInv })
+            })
+            .then(function (res) {
+                return res.json().then(function (data) {
+                    return { status: res.status, data };
+                });
+            })
+            .then(function ({ status, data }) {
+                if (status === 201) {
+                    const select = document.getElementById('clientId');
+                    const option = new Option(data.name + ' (' + data.email + ')', data.id, true, true);
+                    select.add(option);
+                    select.value = data.id;
+
+                    bootstrap.Modal.getInstance(document.getElementById('quickCreateClientModal')).hide();
+
+                    // Reset modal
+                    ['qcFirstName','qcLastName','qcEmail','qcPhone'].forEach(function(id) {
+                        document.getElementById(id).value = '';
+                    });
+                    document.getElementById('qcClientType').value = 'INDIVIDUAL';
+                    document.getElementById('qcSendInvitation').checked = true;
+                    alertBox.className = 'alert d-none';
+
+                    if (data.emailWarning) {
+                        showAlert('Client créé mais l\'email d\'invitation n\'a pas pu être envoyé.', 'warning');
+                    } else if (sendInv) {
+                        showAlert('Client créé et invitation envoyée à ' + data.email + '.', 'success');
+                    } else {
+                        showAlert('Client créé avec succès.', 'success');
+                    }
+                } else {
+                    alertBox.className = 'alert alert-danger';
+                    alertBox.textContent = data.message || data.error || 'Erreur lors de la création du client.';
+                }
+            })
+            .catch(function (err) {
+                alertBox.className = 'alert alert-danger';
+                alertBox.textContent = 'Erreur réseau. Veuillez réessayer.';
+            })
+            .finally(function () {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-save me-1"></i>Créer le client';
+            });
+        });
+
+        function showAlert(msg, type) {
+            const div = document.createElement('div');
+            div.className = 'alert alert-' + type + ' alert-dismissible fade show position-fixed bottom-0 end-0 m-3';
+            div.style.zIndex = '1100';
+            div.innerHTML = msg + '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>';
+            document.body.appendChild(div);
+            setTimeout(function() { div.remove(); }, 5000);
+        }
+    })();
+    </script>
+</div>
 </body>
 </html>

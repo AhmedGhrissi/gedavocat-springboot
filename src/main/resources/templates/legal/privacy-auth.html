@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head><title>Politique de confidentialité et RGPD</title></head>
+<body>
+<div layout:fragment="content">
+    <div th:replace="~{legal/privacy :: legal-content}"></div>
+</div>
+</body>
+</html>

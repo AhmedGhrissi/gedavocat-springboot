@@ -7,6 +7,7 @@ import com.gedavocat.service.ClientInvitationService;
 import com.gedavocat.service.ClientService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -25,6 +26,7 @@ import java.util.List;
 @Controller
 @RequestMapping("/clients")
 @RequiredArgsConstructor
+@Slf4j
 @PreAuthorize("hasAnyRole('LAWYER', 'ADMIN', 'LAWYER_SECONDARY', 'AVOCAT_ADMIN')")
 public class ClientController {
 
@@ -38,7 +40,7 @@ public class ClientController {
      */
     @InitBinder
     public void initBinder(WebDataBinder binder) {
-        binder.setAllowedFields("name", "email", "phone", "address",
+        binder.setAllowedFields("firstName", "lastName", "name", "email", "phone", "address",
                 "clientType", "companyName", "siret");
     }
 
@@ -102,13 +104,18 @@ public class ClientController {
 
         try {
             User user = getCurrentUser(authentication);
-            
+
             Client savedClient = clientService.createClient(client, user.getId());
 
             if (sendInvitation) {
                 String lawyerFullName = user.getFirstName() + " " + user.getLastName();
-                invitationService.sendInvitation(savedClient, lawyerFullName);
-                redirectAttributes.addFlashAttribute("message", "Client créé avec succès. Une invitation a été envoyée à " + savedClient.getEmail() + ".");
+                try {
+                    invitationService.sendInvitation(savedClient, lawyerFullName);
+                    redirectAttributes.addFlashAttribute("message", "Client créé avec succès. Une invitation a été envoyée à " + savedClient.getEmail() + ".");
+                } catch (Exception emailEx) {
+                    log.warn("[ClientController] Client créé mais email non envoyé pour {} : {}", savedClient.getEmail(), emailEx.getMessage());
+                    redirectAttributes.addFlashAttribute("warning", "Client créé, mais l'envoi de l'email d'invitation a échoué. Vérifiez la configuration SMTP.");
+                }
             } else {
                 redirectAttributes.addFlashAttribute("message", "Client créé avec succès");
             }

@@ -136,9 +136,24 @@
         </style>
     </th:block>
 
-    <!-- Messages -->
-    <div th:if="${message}" class="alert alert-success" style="margin-bottom: 1.5rem;">
-        <i class="fas fa-check-circle"></i> <span th:text="${message}"></span>
+    <!-- Toast notifications -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1100;">
+        <div th:if="${message}" id="toastSuccess" class="toast align-items-center text-bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="fas fa-check-circle me-2"></i><span th:text="${message}"></span>
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Fermer"></button>
+            </div>
+        </div>
+        <div th:if="${warning}" id="toastWarning" class="toast align-items-center text-bg-warning border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="fas fa-exclamation-triangle me-2"></i><span th:text="${warning}"></span>
+                </div>
+                <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Fermer"></button>
+            </div>
+        </div>
     </div>
 
     <!-- Page Header -->
@@ -266,6 +281,16 @@
     </div>
 
     <script th:attr="nonce=${cspNonce}">
+    document.addEventListener('DOMContentLoaded', function () {
+        ['toastSuccess', 'toastWarning'].forEach(function (id) {
+            const el = document.getElementById(id);
+            if (el) {
+                const toast = new bootstrap.Toast(el, { delay: 5000 });
+                toast.show();
+            }
+        });
+    });
+
     function filterClients() {
         const input = document.getElementById('searchClients');
         const filter = input.value.toLowerCase();

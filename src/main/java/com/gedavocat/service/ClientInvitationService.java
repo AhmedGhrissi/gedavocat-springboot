@@ -165,26 +165,22 @@ public class ClientInvitationService {
     // =========================================================================
 
     private void sendInvitationEmail(String to, String clientName, String lawyerName, String token) {
-        try {
-            String link = baseUrl + "/clients/accept-invitation?token=" + token;
+        String link = baseUrl + "/clients/accept-invitation?token=" + token;
 
-            SimpleMailMessage msg = new SimpleMailMessage();
-            msg.setFrom(fromEmail);
-            msg.setTo(to);
-            msg.setSubject("Votre invitation au portail DocAvocat");
-            msg.setText(
-                "Bonjour " + clientName + ",\n\n" +
-                "Votre avocat " + lawyerName + " vous invite à accéder au portail client DocAvocat " +
-                "pour consulter vos dossiers et documents.\n\n" +
-                "Cliquez sur le lien ci-dessous pour créer votre mot de passe :\n\n" +
-                link + "\n\n" +
-                "Ce lien est valable " + TOKEN_EXPIRY_HOURS + " heures.\n\n" +
-                "L'équipe DocAvocat\n" + baseUrl
-            );
-            mailSender.send(msg);
-        } catch (Exception e) {
-            log.warn("[ClientInvitation] Impossible d'envoyer l'invitation à {} : {}", to, e.getMessage());
-        }
+        SimpleMailMessage msg = new SimpleMailMessage();
+        msg.setFrom(fromEmail);
+        msg.setTo(to);
+        msg.setSubject("Votre invitation au portail DocAvocat");
+        msg.setText(
+            "Bonjour " + clientName + ",\n\n" +
+            "Votre avocat " + lawyerName + " vous invite à accéder au portail client DocAvocat " +
+            "pour consulter vos dossiers et documents.\n\n" +
+            "Cliquez sur le lien ci-dessous pour créer votre mot de passe :\n\n" +
+            link + "\n\n" +
+            "Ce lien est valable " + TOKEN_EXPIRY_HOURS + " heures.\n\n" +
+            "L'équipe DocAvocat\n" + baseUrl
+        );
+        mailSender.send(msg);
     }
 
     // =========================================================================
