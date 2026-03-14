@@ -87,8 +87,13 @@ public class MultiTenantFilter extends OncePerRequestFilter {
                 boolean isAdmin = userDetails.getAuthorities().stream()
                     .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
                 
-                if (isAdmin) {
-                    log.debug("Multi-tenant filter skipped for ADMIN user: {}", email);
+                // CLIENTs never have a firm — their data isolation is by clientUser FK, not firm_id
+                boolean isClient = userDetails.getAuthorities().stream()
+                    .anyMatch(a -> "ROLE_CLIENT".equals(a.getAuthority()));
+
+                if (isAdmin || isClient) {
+                    log.debug("Multi-tenant filter skipped for {} user: {}",
+                             isAdmin ? "ADMIN" : "CLIENT", email);
                 } else {
                     // Résoudre l'entité User pour obtenir le firmId
                     var optUser = userRepository.findByEmail(email);
@@ -115,6 +120,12 @@ public class MultiTenantFilter extends OncePerRequestFilter {
                                 || path.startsWith("/legal")
                                 || path.startsWith("/logout")
                                 || path.startsWith("/error")
+                                || path.startsWith("/css")
+                                || path.startsWith("/js")
+                                || path.startsWith("/images")
+                                || path.startsWith("/img")
+                                || path.startsWith("/webjars")
+                                || path.startsWith("/favicon")
                                 || path.equals("/");
                             if (isExemptPath) {
                                 log.debug("Multi-tenant filter skipped for exempt path {} (no firm yet): {}", path, email);
