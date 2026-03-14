@@ -164,6 +164,13 @@
 <body>
 <div layout:fragment="content">
 
+  <div th:if="${message}" class="alert alert-success" style="margin-bottom:1rem;">
+    <i class="fas fa-check-circle"></i> <span th:text="${message}"></span>
+  </div>
+  <div th:if="${error}" class="alert alert-danger" style="margin-bottom:1rem;">
+    <i class="fas fa-exclamation-circle"></i> <span th:text="${error}"></span>
+  </div>
+
   <div class="inv-header fade-in page-header">
     <div class="inv-header-inner">
       <div>
@@ -173,6 +180,12 @@
       <div class="inv-header-actions">
         <a th:href="@{/invoices/{id}/edit(id=${invoice.id})}" class="btn-gold"><i class="fas fa-pen"></i> Modifier</a>
         <a th:href="@{/invoices/{id}/pdf(id=${invoice.id})}" class="btn-gold-solid rounded-md fw-600" target="_blank"><i class="fas fa-file-pdf"></i> PDF</a>
+        <form th:action="@{/invoices/{id}/send(id=${invoice.id})}" method="post" style="display:inline;"
+              sec:authorize="hasAnyRole('LAWYER','ADMIN','AVOCAT_ADMIN')">
+          <button type="submit" class="btn-gold" onclick="return confirm('Envoyer cette facture par email au client ?')">
+            <i class="fas fa-envelope"></i> Envoyer
+          </button>
+        </form>
         <a href="/invoices" class="btn-ghost"><i class="fas fa-arrow-left"></i> Retour</a>
       </div>
     </div>
@@ -300,6 +313,13 @@
           <div class="action-list">
             <a th:href="@{/invoices/{id}/edit(id=${invoice.id})}" class="action-btn"><i class="fas fa-pen"></i> Modifier la facture</a>
             <a th:href="@{/invoices/{id}/pdf(id=${invoice.id})}" class="action-btn" target="_blank"><i class="fas fa-download"></i> Télécharger PDF</a>
+            <form th:action="@{/invoices/{id}/send(id=${invoice.id})}" method="post" style="display:block;width:100%"
+                  sec:authorize="hasAnyRole('LAWYER','ADMIN','AVOCAT_ADMIN')">
+              <button type="submit" class="action-btn" style="width:100%;text-align:left;"
+                      onclick="return confirm('Envoyer cette facture par email au client ?')">
+                <i class="fas fa-envelope"></i> Envoyer par email
+              </button>
+            </form>
             <button class="action-btn success"
                     th:if="${invoice.status?.name() != 'PAID' and invoice.status?.name() != 'CANCELLED'}"
                     onclick="openPaidModal()">

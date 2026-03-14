@@ -9,6 +9,7 @@ import com.gedavocat.repository.InvoiceRepository;
 import com.gedavocat.repository.UserRepository;
 import com.gedavocat.service.InvoiceService;
 import com.gedavocat.service.ClientService;
+import com.gedavocat.service.EmailService;
 import com.gedavocat.storage.StorageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -47,6 +48,7 @@ public class InvoiceWebController {
     private final InvoiceRepository invoiceRepository;
     private final UserRepository userRepository;
     private final StorageService storageService;
+    private final EmailService emailService;
 
     private static final String BUCKET = "docavocat-documents";
 
@@ -283,10 +285,58 @@ public class InvoiceWebController {
         }
     }
 
+    /**
+     * Envoyer une facture par email au client avec le PDF en pièce jointe
+     */
+    @PostMapping("/{id}/send")
+    @PreAuthorize("hasAnyRole('LAWYER', 'ADMIN', 'AVOCAT_ADMIN')")
+    public String sendInvoiceByEmail(@PathVariable String id, Authentication authentication,
+                                     RedirectAttributes redirectAttributes) {
+        try {
+            User user = getCurrentUser(authentication);
+            var invoice = invoiceService.getInvoiceById(id, user.getId());
+
+            if (invoice.getClient() == null || invoice.getClient().getEmail() == null) {
+                redirectAttributes.addFlashAttribute("error", "Ce client n'a pas d'adresse email.");
+                return "redirect:/invoices/" + id;
+            }
+
+            byte[] pdfBytes = invoiceService.generatePdf(id, user.getId());
+            String safeNumber = invoice.getInvoiceNumber().replaceAll("[^a-zA-Z0-9_.-]", "_");
+            String filename = "facture-" + safeNumber + ".pdf";
+
+            String contentHtml = "<p style='color:#374151;font-size:15px;line-height:1.7'>Bonjour,</p>"
+                + "<p style='color:#374151;font-size:15px;line-height:1.7'>Veuillez trouver en pièce jointe votre facture.</p>"
+                + "<table style='border-collapse:collapse;margin:20px 0' cellpadding='0' cellspacing='0'>"
+                + "<tr><td style='padding:10px 16px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:6px;color:#0F172A;font-size:14px'>"
+                + "<strong>N° de facture :</strong> " + escapeHtml(invoice.getInvoiceNumber())
+                + "<br><strong>Montant TTC :</strong> " + invoice.getTotalTTC() + " €"
+                + "</td></tr></table>";
+
+            emailService.sendEmailFromLawyerWithAttachment(
+                invoice.getClient().getEmail(),
+                "Facture " + invoice.getInvoiceNumber(),
+                contentHtml,
+                user,
+                pdfBytes,
+                filename
+            );
+
+            redirectAttributes.addFlashAttribute("message", "Facture envoyée par email à " + invoice.getClient().getEmail());
+        } catch (Exception e) {
+            log.error("Erreur envoi facture par email {}", id, e);
+            redirectAttributes.addFlashAttribute("error", "Erreur lors de l'envoi de la facture par email.");
+        }
+        return "redirect:/invoices/" + id;
+    }
+
+    private static String escapeHtml(String s) {
+        if (s == null) return "";
+        return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
+    }
+
  // InvoiceWebController.java — ajouter cet endpoint
     @GetMapping("/attachment")
-    @PreAuthorize("hasAnyRole('LAWYER', 'CLIENT', 'ADMIN', 'AVOCAT_ADMIN')")
-    public ResponseEntity<byte[]> downloadAttachment(
             @RequestParam String key,
             Authentication authentication) {
         try {

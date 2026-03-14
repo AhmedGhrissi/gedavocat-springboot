@@ -84,6 +84,26 @@ public class EmailService {
         sendHtmlEmail(to, subject, html);
     }
 
+    public void sendEmailFromLawyerWithAttachment(String to, String subject, String contentHtml,
+                                                   User lawyer, byte[] attachment, String attachmentFilename) {
+        String html = buildLawyerEmail(subject, contentHtml, lawyer);
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(
+                    message, true, StandardCharsets.UTF_8.name());
+            helper.setFrom(new InternetAddress(fromEmail, fromName, StandardCharsets.UTF_8.name()));
+            helper.setReplyTo(replyTo);
+            helper.setTo(to);
+            helper.setSubject(subject);
+            helper.setText(htmlToPlainText(html), html);
+            helper.addAttachment(attachmentFilename, new org.springframework.core.io.ByteArrayResource(attachment));
+            mailSender.send(message);
+            log.info("Email avec PJ [{}] envoyé à {}***", subject, maskEmail(to));
+        } catch (Exception e) {
+            log.error("Erreur envoi email avec PJ [{}] à {}*** : {}", subject, maskEmail(to), e.getMessage());
+        }
+    }
+
     // ────────────────────────────────────────────────────────────────────────
     // BUILDERS HTML
     // ────────────────────────────────────────────────────────────────────────

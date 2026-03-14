@@ -251,6 +251,9 @@
                                 <i class="fas fa-check-circle"></i> Marquer terminé
                             </button>
                         </form>
+                        <button type="button" class="btn btn-sm btn-outline-primary w-100 mb-2" id="openReporterBtn">
+                            <i class="fas fa-calendar-alt"></i> Reporter
+                        </button>
                         <hr>
                         <form th:action="@{/appointments/{id}/delete(id=${appointment.id})}" method="post" class="d-inline w-100">
                             <button type="submit" class="btn btn-sm btn-danger w-100"
@@ -283,6 +286,48 @@ window.addEventListener('DOMContentLoaded', function() {
         document.getElementById('courtInfo').style.display = 'block';
     }
 });
+    </script>
+
+    <!-- Modal Reporter -->
+    <div class="modal fade" id="reporterModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-calendar-alt me-2"></i>Reporter le rendez-vous</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form th:action="@{/appointments/{id}/propose-date(id=${appointment.id})}" method="post">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Nouvelle date proposée <span class="text-danger">*</span></label>
+                            <input type="datetime-local" name="proposedDate" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Message au client</label>
+                            <textarea name="rescheduleMessage" class="form-control" rows="3"
+                                      placeholder="Expliquez la raison du report..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane"></i> Proposer cette date
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script th:attr="nonce=${cspNonce}">
+    document.addEventListener('DOMContentLoaded', function() {
+        var btn = document.getElementById('openReporterBtn');
+        var modalEl = document.getElementById('reporterModal');
+        if (btn && modalEl) {
+            var bsModal = new bootstrap.Modal(modalEl);
+            btn.addEventListener('click', function() { bsModal.show(); });
+        }
+    });
     </script>
 </div>
 
