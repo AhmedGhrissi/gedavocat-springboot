@@ -6,10 +6,6 @@
 
 workflow:
   rules:
-    # Commit contenant [fast] → pipeline rapide (skip sécurité, tests, e2e + deploy auto)
-    - if: '$CI_COMMIT_MESSAGE =~ /\[fast\]/'
-      variables:
-        FAST_DEPLOY: "true"
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     - if: '$CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "web"'
     - if: '$CI_PIPELINE_SOURCE == "schedule"'
@@ -61,7 +57,7 @@ variables:
 audit-code-security:
   stage: security
   rules:
-    - if: '$FAST_DEPLOY == "true"'
+    - if: '$CI_COMMIT_MESSAGE =~ /\[fast\]/'
       when: never
     - when: on_success
   image: maven:3.9-eclipse-temurin-17
@@ -78,7 +74,7 @@ audit-code-security:
 owasp-dependency-check:
   stage: security
   rules:
-    - if: '$FAST_DEPLOY == "true"'
+    - if: '$CI_COMMIT_MESSAGE =~ /\[fast\]/'
       when: never
     - when: on_success
   image:
@@ -102,7 +98,7 @@ owasp-dependency-check:
 snyk-security-scan:
   stage: security
   rules:
-    - if: '$FAST_DEPLOY == "true"'
+    - if: '$CI_COMMIT_MESSAGE =~ /\[fast\]/'
       when: never
     - when: on_success
   image: maven:3.9-eclipse-temurin-17
@@ -120,7 +116,7 @@ snyk-security-scan:
 trivy-security-scan:
   stage: security
   rules:
-    - if: '$FAST_DEPLOY == "true"'
+    - if: '$CI_COMMIT_MESSAGE =~ /\[fast\]/'
       when: never
     - when: on_success
   image:
@@ -133,7 +129,7 @@ trivy-security-scan:
 semgrep-sast:
   stage: security
   rules:
-    - if: '$FAST_DEPLOY == "true"'
+    - if: '$CI_COMMIT_MESSAGE =~ /\[fast\]/'
       when: never
     - when: on_success
   image: semgrep/semgrep:latest
@@ -149,7 +145,7 @@ semgrep-sast:
 gitleaks-secrets:
   stage: security
   rules:
-    - if: '$FAST_DEPLOY == "true"'
+    - if: '$CI_COMMIT_MESSAGE =~ /\[fast\]/'
       when: never
     - when: on_success
   image:
@@ -167,7 +163,7 @@ gitleaks-secrets:
 rgpd-check:
   stage: security
   rules:
-    - if: '$FAST_DEPLOY == "true"'
+    - if: '$CI_COMMIT_MESSAGE =~ /\[fast\]/'
       when: never
     - when: on_success
   image: alpine:3.19
@@ -193,7 +189,7 @@ sbom-generate:
   stage: build
   image: maven:3.9-eclipse-temurin-17
   rules:
-    - if: '$FAST_DEPLOY == "true"'
+    - if: '$CI_COMMIT_MESSAGE =~ /\[fast\]/'
       when: never
     - if: '$CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "web"'
   cache:
@@ -249,7 +245,7 @@ test:
   image: maven:3.9-eclipse-temurin-17
   needs: [build]
   rules:
-    - if: '$FAST_DEPLOY == "true"'
+    - if: '$CI_COMMIT_MESSAGE =~ /\[fast\]/'
       when: never
     - when: on_success
   cache:
@@ -296,7 +292,7 @@ e2e-playwright:
   image: mcr.microsoft.com/playwright:v1.43.1-focal
   needs: [build]
   rules:
-    - if: '$FAST_DEPLOY == "true"'
+    - if: '$CI_COMMIT_MESSAGE =~ /\[fast\]/'
       when: never
     - when: on_success
   script:
@@ -364,7 +360,7 @@ trivy-image-scan:
     entrypoint: [""]
   needs: [package]
   rules:
-    - if: '$FAST_DEPLOY == "true"'
+    - if: '$CI_COMMIT_MESSAGE =~ /\[fast\]/'
       when: never
     - if: '$CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "web"'
   script:
@@ -380,7 +376,7 @@ deploy:
   image: alpine:3.19
   needs: [package]
   rules:
-    - if: '$FAST_DEPLOY == "true" && ($CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "web")'
+    - if: '$CI_COMMIT_MESSAGE =~ /\[fast\]/ && ($CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "web")'
       when: on_success
     - if: '$CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "web"'
       when: manual
