@@ -1260,10 +1260,10 @@
     <!-- NOUVEAU JavaScript Moderne 2026 -->
     <script th:src="@{/js/app.js}"></script>
 
-    <!-- RESPONSIVE MOBILE: auto-fix bare tables + inline grid/flex layouts -->
+    <!-- RESPONSIVE MOBILE: auto-wrap bare tables for horizontal scrolling -->
     <script th:attr="nonce=${cspNonce}">
     document.addEventListener('DOMContentLoaded', function() {
-        // 1. Wrap any table not already inside .table-responsive
+        // Wrap any table not already inside .table-responsive
         document.querySelectorAll('table').forEach(function(t) {
             if (!t.closest('.table-responsive')) {
                 var w = document.createElement('div');
@@ -1272,24 +1272,6 @@
                 w.appendChild(t);
             }
         });
-        // 2. On mobile: normalize inline grid/flex layouts
-        if (window.innerWidth <= 768) {
-            document.querySelectorAll('[style]').forEach(function(el) {
-                var s = el.getAttribute('style') || '';
-                // Fix multi-column grids → single column (skip auto-fit/auto-fill which are already responsive)
-                if (s.indexOf('grid-template-columns') !== -1 &&
-                    s.indexOf('auto-fit') === -1 &&
-                    s.indexOf('auto-fill') === -1) {
-                    el.style.gridTemplateColumns = '1fr';
-                }
-                // Add flex-wrap to elements using space-between so buttons don't overflow
-                if (s.indexOf('justify-content') !== -1 &&
-                    (s.indexOf('space-between') !== -1 || s.indexOf('space-around') !== -1)) {
-                    el.style.flexWrap = 'wrap';
-                    if (!el.style.gap) el.style.gap = '0.75rem';
-                }
-            });
-        }
     });
     </script>
 
