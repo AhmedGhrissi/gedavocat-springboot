@@ -1,11 +1,9 @@
-# ============================================================
-# GitHub Actions — DocAvocat CI/CD
-# Runner : ubuntu-latest (amd64, GitHub-hosted)
-# Build  : Docker multi-stage, cross-compile ARM64 via QEMU
-# Deploy : Blue/Green Zero-Downtime sur Hetzner CAX11
+﻿# ============================================================
+# DocAvocat — GitHub Actions CI/CD
+# Push main → Build Docker ARM64 → Deploy SSH (Blue/Green)
 # ============================================================
 
-name: CI/CD Deploy to Production
+name: Deploy to Production
 
 on:
   push:
@@ -13,43 +11,30 @@ on:
   workflow_dispatch:
     inputs:
       fast:
-        description: 'Mode rapide — saute les tests Maven'
+        description: 'Sauter les tests Maven'
         type: boolean
-        default: false
+        default: true
+
+permissions:
+  contents: read
+  packages: write   # Push vers GHCR
 
 env:
-  IMAGE_NAME: ghcr.io/ahmedghrissi/gedavocat-springboot
+  IMAGE: ghcr.io/ahmedghrissi/gedavocat-springboot
 
 jobs:
   deploy:
     name: Build & Deploy
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write   # Requis pour pousser sur GHCR via GITHUB_TOKEN
 
     steps:
 
-      # ── Checkout ───────────────────────────────────────────────────────
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
-      # ── Détecter mode [fast] ───────────────────────────────────────────
-      - name: Detect [fast] mode
-        id: mode
-        run: |
-          MSG="${{ github.event.head_commit.message }} ${{ github.event.inputs.fast }}"
-          if echo "$MSG" | grep -qE '\[fast\]|true'; then
-            echo "fast=true" >> $GITHUB_OUTPUT
-            echo "Mode FAST active — tests Maven sautes"
-          else
-            echo "fast=false" >> $GITHUB_OUTPUT
-            echo "Mode complet — tests Maven inclus"
-          fi
-
-      # ── Tests Maven (mode complet uniquement) ───────────────────────────
-      - name: Set up JDK 17
-        if: steps.mode.outputs.fast != 'true'
+      # ── Tests Maven (sautes si [fast] dans le message) ──────────────────
+      - name: Setup Java 17
+        if: ${{ !contains(github.event.head_commit.message, '[fast]') && github.event.inputs.fast != 'true' }}
         uses: actions/setup-java@v4
         with:
           java-version: '17'
@@ -57,26 +42,26 @@ jobs:
           cache: 'maven'
 
       - name: Run unit tests
-        if: steps.mode.outputs.fast != 'true'
-        run: mvn test -B --no-transfer-progress
+        if: ${{ !contains(github.event.head_commit.message, '[fast]') && github.event.inputs.fast != 'true' }}
+        run: mvn test -q
         env:
           SPRING_PROFILES_ACTIVE: h2
 
-      # ── Docker Build & Push ─────────────────────────────────────────────
-      - name: Set up QEMU (ARM64 emulation)
+      # ── Build & Push image Docker ARM64 vers GHCR ───────────────────────
+      - name: Setup QEMU (ARM64)
         uses: docker/setup-qemu-action@v3
 
-      - name: Set up Docker Buildx
+      - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Log in to GHCR
+      - name: Login GHCR
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push Docker image (linux/arm64)
+      - name: Build & Push (linux/arm64)
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -84,149 +69,108 @@ jobs:
           platforms: linux/arm64
           push: true
           tags: |
-            ${{ env.IMAGE_NAME }}:${{ github.sha }}
-            ${{ env.IMAGE_NAME }}:latest
+            ${{ env.IMAGE }}:latest
+            ${{ env.IMAGE }}:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      # ── Deploy Blue/Green sur Hetzner ───────────────────────────────────
-      - name: Deploy to production (Blue/Green)
+      # ── Copier docker-compose.yml sur le serveur ─────────────────────────
+      - name: Copier docker-compose.yml
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: docker/docker-compose.yml
+          target: /opt/docavocat/
+          strip_components: 1
+
+      # ── Deploy Blue/Green Zero-Downtime ──────────────────────────────────
+      - name: Deploy Blue/Green
+        uses: appleboy/ssh-action@v1.0.3
         env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
-          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          APP_IMAGE: ${{ env.IMAGE }}:latest
           ENV_PROD: ${{ secrets.ENV_PROD }}
           GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
-          IMAGE_LATEST: ${{ env.IMAGE_NAME }}:latest
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }}
-        run: |
-          # ── SSH Setup ─────────────────────────────────────────────────
-          mkdir -p ~/.ssh && chmod 700 ~/.ssh
-          echo "$SSH_PRIVATE_KEY" | base64 -d > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
-          chmod 644 ~/.ssh/known_hosts
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          envs: APP_IMAGE,ENV_PROD,GHCR_TOKEN,CLOUDFLARE_API_TOKEN,CLOUDFLARE_ZONE_ID
+          command_timeout: 10m
+          script: |
+            set -e
+            cd /opt/docavocat
 
-          # ── Upload .env de production ─────────────────────────────────
-          echo "$ENV_PROD" | ssh -i ~/.ssh/deploy_key \
-            -o StrictHostKeyChecking=yes \
-            root@"$SERVER_HOST" \
-            "cat > /opt/docavocat/.env && chmod 600 /opt/docavocat/.env"
+            echo "$ENV_PROD" > .env && chmod 600 .env
+            sed -i '/^APP_IMAGE=/d' .env && echo "APP_IMAGE=$APP_IMAGE" >> .env
 
-          # ── Injecter APP_IMAGE (GHCR) dans .env ──────────────────────
-          ssh -i ~/.ssh/deploy_key root@"$SERVER_HOST" \
-            "sed -i '/^APP_IMAGE=/d' /opt/docavocat/.env \
-             && echo 'APP_IMAGE=$IMAGE_LATEST' >> /opt/docavocat/.env"
+            echo "$GHCR_TOKEN" | docker login ghcr.io -u AhmedGhrissi --password-stdin
 
-          # ── Synchroniser docker-compose.yml ───────────────────────────
-          scp -i ~/.ssh/deploy_key \
-            docker/docker-compose.yml \
-            root@"$SERVER_HOST":/opt/docavocat/docker-compose.yml
+            UPSTREAM_FILE="/etc/nginx/conf.d/upstream-app.conf"
+            [ -f "$UPSTREAM_FILE" ] || echo "upstream docavocat_app { server 127.0.0.1:8080; }" > "$UPSTREAM_FILE"
 
-          # ── Authentification GHCR sur le serveur ─────────────────────
-          # On passe le token via stdin (jamais dans les args CLI)
-          ssh -i ~/.ssh/deploy_key root@"$SERVER_HOST" \
-            "docker login ghcr.io -u AhmedGhrissi --password-stdin" <<< "$GHCR_TOKEN"
-
-          # ── Blue/Green Zero-Downtime Deploy ───────────────────────────
-          ssh -i ~/.ssh/deploy_key root@"$SERVER_HOST" bash << 'ENDSSH'
-          set -e
-          cd /opt/docavocat
-
-          UPSTREAM_FILE="/etc/nginx/conf.d/upstream-app.conf"
-
-          # Créer upstream si absent (première install)
-          if [ ! -f "$UPSTREAM_FILE" ]; then
-            echo "upstream docavocat_app { server 127.0.0.1:8080; }" > "$UPSTREAM_FILE"
-          fi
-
-          # Déterminer slots actif / inactif
-          CURRENT_PORT=$(grep -oP '127\.0\.0\.1:\K\d+' "$UPSTREAM_FILE" | head -1)
-          if [ "$CURRENT_PORT" = "8080" ]; then
-            ACTIVE_SLOT="blue";  IDLE_SLOT="green"; IDLE_PORT="8081"; ACTIVE_PORT="8080"
-          else
-            ACTIVE_SLOT="green"; IDLE_SLOT="blue";  IDLE_PORT="8080"; ACTIVE_PORT="8081"
-          fi
-          ACTIVE_SERVICE=$([ "$ACTIVE_SLOT" = "blue" ] && echo "app" || echo "app-green")
-          IDLE_SERVICE=$([ "$IDLE_SLOT"   = "blue" ] && echo "app" || echo "app-green")
-
-          echo "=== Blue/Green : actif=${ACTIVE_SLOT}:${ACTIVE_PORT} → deploy sur ${IDLE_SLOT}:${IDLE_PORT} ==="
-
-          # Nettoyage disque
-          docker image prune -f || true
-
-          # Vérification MySQL
-          for i in $(seq 1 30); do
-            docker compose exec -T mysql mysqladmin ping -h localhost --silent 2>/dev/null \
-              && echo "MySQL pret" && break || true
-            echo "Attente MySQL ($i/30)..."
-            sleep 2
-          done
-
-          # Pull + démarrage slot inactif
-          docker compose pull ${IDLE_SERVICE}
-          docker compose up -d --no-deps --force-recreate ${IDLE_SERVICE}
-
-          # Attente health check (3 min max)
-          READY=0
-          for i in $(seq 1 60); do
-            if curl -sf "http://localhost:${IDLE_PORT}/actuator/health" 2>/dev/null | grep -q '"status":"UP"'; then
-              echo "Slot ${IDLE_SLOT} pret apres $((i*3))s"
-              READY=1
-              break
+            CURRENT_PORT=$(grep -oP '127\.0\.0\.1:\K\d+' "$UPSTREAM_FILE" | head -1)
+            if [ "$CURRENT_PORT" = "8080" ]; then
+              ACTIVE_SLOT="blue";  IDLE_SLOT="green"; IDLE_PORT="8081"; ACTIVE_PORT="8080"
+            else
+              ACTIVE_SLOT="green"; IDLE_SLOT="blue";  IDLE_PORT="8080"; ACTIVE_PORT="8081"
             fi
-            echo "Attente ($i/60)..."
-            sleep 3
-          done
+            ACTIVE_SERVICE=$([ "$ACTIVE_SLOT" = "blue" ] && echo "app" || echo "app-green")
+            IDLE_SERVICE=$([ "$IDLE_SLOT"   = "blue" ] && echo "app" || echo "app-green")
+            echo ">> Deploy sur $IDLE_SLOT:$IDLE_PORT (actif=$ACTIVE_SLOT:$ACTIVE_PORT)"
 
-          if [ "$READY" != "1" ]; then
-            echo "ERREUR: Slot ${IDLE_SLOT} non pret — rollback (slot ${ACTIVE_SLOT} reste actif)"
-            docker compose stop ${IDLE_SERVICE} || true
-            exit 1
-          fi
+            docker image prune -f || true
+            docker compose pull $IDLE_SERVICE
 
-          # Bascule nginx (reload atomique)
-          echo "upstream docavocat_app { server 127.0.0.1:${IDLE_PORT}; }" > "$UPSTREAM_FILE"
-          nginx -t && nginx -s reload
-          echo "Nginx -> ${IDLE_SLOT}:${IDLE_PORT}"
+            for i in $(seq 1 30); do
+              docker compose exec -T mysql mysqladmin ping -h localhost --silent 2>/dev/null && break || true
+              sleep 2
+            done
 
-          # Vérification HTTP post-bascule
-          sleep 2
-          HTTP_CODE=$(curl -so /dev/null -w "%{http_code}" https://docavocat.fr/ || echo "000")
-          if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "302" ]; then
-            echo "Site accessible HTTP $HTTP_CODE"
-          else
-            echo "ERREUR: Site HTTP $HTTP_CODE — rollback nginx"
-            echo "upstream docavocat_app { server 127.0.0.1:${ACTIVE_PORT}; }" > "$UPSTREAM_FILE"
-            nginx -s reload
-            docker compose stop ${IDLE_SERVICE} || true
-            exit 1
-          fi
+            docker compose up -d --no-deps --force-recreate $IDLE_SERVICE
 
-          # Smoke tests
-          curl -sf https://docavocat.fr/actuator/health | grep -q '"status":"UP"' \
-            && echo "Health check OK" || echo "WARN: Health check KO"
-          curl -sf https://docavocat.fr/login > /dev/null \
-            && echo "Page login OK" || echo "WARN: Page login KO"
+            READY=0
+            for i in $(seq 1 60); do
+              curl -sf "http://localhost:$IDLE_PORT/actuator/health" 2>/dev/null | grep -q '"status":"UP"' && READY=1 && break || true
+              echo "Attente $((i*3))s..."
+              sleep 3
+            done
 
-          # Arrêt propre ancien slot
-          sleep 30
-          docker compose stop ${ACTIVE_SERVICE} || true
+            if [ "$READY" != "1" ]; then
+              echo "ERREUR: $IDLE_SLOT non pret — rollback"
+              docker compose stop $IDLE_SERVICE || true
+              exit 1
+            fi
 
-          # Nettoyage images
-          docker image prune -f || true
-          echo "=== Deploy Blue/Green termine : ${IDLE_SLOT}:${IDLE_PORT} actif ==="
-          ENDSSH
+            echo "upstream docavocat_app { server 127.0.0.1:$IDLE_PORT; }" > "$UPSTREAM_FILE"
+            nginx -t && nginx -s reload
+            echo ">> Nginx -> $IDLE_SLOT:$IDLE_PORT"
 
-          # ── Purge cache Cloudflare ────────────────────────────────────
-          if [ -n "${CLOUDFLARE_API_TOKEN}" ] && [ -n "${CLOUDFLARE_ZONE_ID}" ]; then
-            echo "Purge cache Cloudflare..."
-            HTTP=$(curl -sf -o /dev/null -w "%{http_code}" -X POST \
-              "https://api.cloudflare.com/client/v4/zones/${CLOUDFLARE_ZONE_ID}/purge_cache" \
-              -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
-              -H "Content-Type: application/json" \
-              -d '{"purge_everything":true}' || echo "000")
-            [ "$HTTP" = "200" ] && echo "Cache Cloudflare purge" \
-              || echo "WARN: Purge Cloudflare HTTP $HTTP (non bloquant)"
-          fi
+            sleep 2
+            HTTP=$(curl -so /dev/null -w "%{http_code}" https://docavocat.fr/ || echo "000")
+            if [ "$HTTP" != "200" ] && [ "$HTTP" != "302" ]; then
+              echo "ERREUR: HTTP $HTTP — rollback nginx"
+              echo "upstream docavocat_app { server 127.0.0.1:$ACTIVE_PORT; }" > "$UPSTREAM_FILE"
+              nginx -s reload
+              docker compose stop $IDLE_SERVICE || true
+              exit 1
+            fi
+            echo ">> Site OK HTTP $HTTP"
+
+            curl -sf https://docavocat.fr/actuator/health | grep -q '"status":"UP"' && echo "Health OK" || true
+            curl -sf https://docavocat.fr/login > /dev/null && echo "Login OK" || true
+
+            sleep 30
+            docker compose stop $ACTIVE_SERVICE || true
+            docker image prune -f || true
+            echo ">> Deploy OK : $IDLE_SLOT actif"
+
+            if [ -n "$CLOUDFLARE_API_TOKEN" ] && [ -n "$CLOUDFLARE_ZONE_ID" ]; then
+              curl -sf -X POST "https://api.cloudflare.com/client/v4/zones/$CLOUDFLARE_ZONE_ID/purge_cache" \
+                -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+                -H "Content-Type: application/json" \
+                -d '{"purge_everything":true}' && echo "Cloudflare purge OK" || echo "Cloudflare purge KO (non bloquant)"
+            fi
