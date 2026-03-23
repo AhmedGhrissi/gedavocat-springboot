@@ -26,17 +26,16 @@ RUN mvn package -DskipTests -B --no-transfer-progress \
     && mv target/*.jar target/app.jar
 
 # ── Stage 2 : Runtime ───────────────────────────────────────
-FROM amazoncorretto:17-alpine3.21
+FROM eclipse-temurin:17-jre-jammy
 
 # Métadonnées
 LABEL maintainer="DocAvocat <contact@docavocat.fr>"
 LABEL description="GED Avocat - Système de Gestion Électronique de Documents pour Avocats"
 LABEL version="1.0.0"
 
-# Créer l'utilisateur applicatif (non-root) + installer curl pour healthcheck
-RUN addgroup -S -g 1001 docavocat \
-    && adduser -S -G docavocat -u 1001 -h /app -s /sbin/nologin docavocat \
-    && apk add --no-cache curl
+# Créer l'utilisateur applicatif (non-root) — aucun apt-get requis
+RUN groupadd -r docavocat --gid=1001 \
+    && useradd -r -g docavocat --uid=1001 -d /app -s /sbin/nologin docavocat
 
 # Répertoire de l'application
 WORKDIR /app
@@ -64,8 +63,8 @@ EXPOSE 8080
 # Basculer vers l'utilisateur non-root
 USER docavocat
 
-# Healthcheck intégré
+# Healthcheck via bash /dev/tcp — pas besoin de curl ni d'apt-get
 HEALTHCHECK --interval=30s --timeout=10s --start-period=90s --retries=3 \
-    CMD curl -f http://localhost:8080/actuator/health || exit 1
+    CMD bash -c 'exec 3<>/dev/tcp/127.0.0.1/8080 && echo -e "GET /actuator/health HTTP/1.0\r\nHost: 127.0.0.1\r\n\r\n" >&3 && cat <&3 | grep -q UP' || exit 1
 
 ENTRYPOINT ["/app/entrypoint.sh"]
