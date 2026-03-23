@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -53,7 +54,10 @@ public class ClientInvitationService {
 
     /**
      * Génère un token d'invitation pour un client et envoie l'email.
+     * Exécuté de façon asynchrone pour ne pas bloquer la requête HTTP.
      */
+    @Async("taskExecutor")
+    @Transactional
     public void sendInvitation(Client client, String lawyerFullName) {
         String token = UUID.randomUUID().toString();
         LocalDateTime expiry = LocalDateTime.now().plusHours(TOKEN_EXPIRY_HOURS);
