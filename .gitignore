@@ -170,8 +170,6 @@ test-owasp-scan.*
 ersel_chgitgedavocat-springboot
 guide-email-docavocat.pdf
 
-# GitHub Actions (using GitLab CI)
-.github/workflows/
 
 # Application configs (non-prod)
 src/main/resources/application-backup.properties
