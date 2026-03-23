@@ -226,12 +226,8 @@ public class ClientController {
         }
         try {
             User user = getCurrentUser(authentication);
-            Client client = clientService.getClientById(id, user.getId());
-            // Générer l'archive MinIO + envoyer les emails AVANT la suppression
-            clientArchiveService.archiveBeforeDeletion(client, user);
             clientService.deleteClient(id, user.getId());
-            redirectAttributes.addFlashAttribute("message",
-                "Client supprimé. Un email de confirmation avec le lien d'archive a été envoyé.");
+            redirectAttributes.addFlashAttribute("message", "Client supprimé avec succès.");
         } catch (IllegalStateException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
             return "redirect:/clients/" + id;
