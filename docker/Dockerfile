@@ -26,7 +26,7 @@ RUN mvn package -DskipTests -B --no-transfer-progress \
     && mv target/*.jar target/app.jar
 
 # ── Stage 2 : Runtime ───────────────────────────────────────
-FROM eclipse-temurin:17-jre-alpine
+FROM amazoncorretto:17-alpine3.21
 
 # Métadonnées
 LABEL maintainer="DocAvocat <contact@docavocat.fr>"
