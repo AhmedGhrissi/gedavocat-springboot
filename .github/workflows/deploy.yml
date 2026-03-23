@@ -24,7 +24,9 @@ jobs:
   deploy:
     name: Build & Deploy
     runs-on: ubuntu-latest
-    environment: production
+    permissions:
+      contents: read
+      packages: write   # Requis pour pousser sur GHCR via GITHUB_TOKEN
 
     steps:
 
@@ -72,7 +74,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GHCR_TOKEN }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push Docker image (linux/arm64)
         uses: docker/build-push-action@v6
