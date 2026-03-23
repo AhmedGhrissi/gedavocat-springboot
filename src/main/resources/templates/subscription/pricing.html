@@ -6,6 +6,9 @@
     <title>Tarifs et abonnements — DocAvocat</title>
     <meta name="robots" content="index, follow">
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/img/icons/apple-touch-icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     
     <!-- Bootstrap & Font Awesome -->
     <link th:href="@{/webjars/bootstrap/5.3.3/css/bootstrap.min.css}" rel="stylesheet">
@@ -322,6 +325,7 @@
             .pricing-grid { grid-template-columns: 1fr; max-width: 400px; }
         }
     </style>
+    <link th:href="@{/css/responsive-mobile.css}" rel="stylesheet">
 </head>
 <body>
 <nav class="navbar">

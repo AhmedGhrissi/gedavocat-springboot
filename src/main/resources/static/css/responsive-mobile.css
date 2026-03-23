@@ -1,0 +1,385 @@
+/* ══════════════════════════════════════════════════════════
+    RESPONSIVE MOBILE — DocAvocat
+    100% responsive pour smartphones et tablettes
+══════════════════════════════════════════════════════════ */
+
+/* ═══════ SMALL TABLETS (max-width: 992px) ═══════ */
+@media (max-width: 992px) {
+    .sidebar {
+        transform: translateX(-100%);
+    }
+    .sidebar.open {
+        transform: translateX(0);
+    }
+    .sidebar-overlay.active {
+        display: block;
+    }
+    .main-content {
+        margin-left: 0 !important;
+    }
+    .mobile-menu-btn {
+        display: flex !important;
+    }
+    .page-content {
+        padding: 1.25rem;
+    }
+    .topbar {
+        padding: 0.75rem 1rem;
+    }
+    .topbar-search {
+        min-width: 160px;
+        flex: 1 1 180px;
+    }
+    /* Tables scroll horizontal */
+    .table-responsive,
+    .table-modern-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    /* Grid stat cards */
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+    /* Modals */
+    .modal-dialog.modal-lg {
+        max-width: 95vw;
+        margin: 0.5rem auto;
+    }
+}
+
+/* ═══════ MOBILE (max-width: 768px) ═══════ */
+@media (max-width: 768px) {
+    /* Page content */
+    .page-content {
+        padding: 1rem 0.75rem;
+    }
+
+    /* Topbar */
+    .topbar {
+        padding: 0.5rem 0.75rem;
+        height: 56px;
+        gap: 0.5rem;
+    }
+    .topbar-search {
+        display: none !important;
+    }
+    .topbar-actions {
+        gap: 0.25rem;
+    }
+    .icon-btn {
+        width: 36px;
+        height: 36px;
+        font-size: 1rem;
+    }
+
+    /* Notification panel */
+    #notifPanel {
+        position: fixed;
+        top: 56px;
+        left: 0;
+        right: 0;
+        width: 100% !important;
+        max-height: calc(100vh - 56px);
+        border-radius: 0;
+    }
+
+    /* Stats grid full width */
+    .stats-grid {
+        grid-template-columns: 1fr !important;
+        gap: 0.75rem;
+    }
+    .stat-card {
+        padding: 1rem;
+    }
+    .stat-value {
+        font-size: 1.5rem;
+    }
+    .stat-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1.25rem;
+    }
+
+    /* Cards */
+    .card {
+        padding: 1rem;
+        border-radius: 10px;
+    }
+    .card-header {
+        font-size: 1rem;
+    }
+
+    /* Hero banner */
+    .hero-banner {
+        padding: 1.25rem !important;
+        border-radius: 10px !important;
+    }
+    .hero-banner h1 {
+        font-size: 1.25rem !important;
+    }
+
+    /* Tables */
+    .table thead {
+        display: none;
+    }
+    .table tbody tr {
+        display: block;
+        margin-bottom: 0.75rem;
+        border: 1px solid var(--border-default, #e2e8f0);
+        border-radius: 10px;
+        padding: 0.75rem;
+        background: var(--bg-surface, #fff);
+    }
+    .table tbody td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem 0;
+        border: none;
+        border-bottom: 1px solid #f1f5f9;
+        font-size: 0.875rem;
+    }
+    .table tbody td:last-child {
+        border-bottom: none;
+    }
+    .table tbody td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-right: 0.5rem;
+        flex-shrink: 0;
+    }
+
+    /* Buttons responsive */
+    .btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+    }
+    .btn-lg {
+        padding: 0.625rem 1.25rem;
+        font-size: 0.9375rem;
+    }
+
+    /* Forms */
+    .form-floating > .form-control {
+        font-size: 16px; /* Prevent zoom on iOS */
+    }
+    .form-group input,
+    .form-group select,
+    .form-group textarea,
+    .form-control {
+        font-size: 16px; /* Prevent zoom on iOS */
+    }
+    .row.g-3 > [class*="col-md-"] {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+
+    /* Dashboard header */
+    .dashboard-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 0.75rem;
+    }
+    .dashboard-header h1,
+    .page-title {
+        font-size: 1.25rem;
+    }
+
+    /* Quick actions grid */
+    .quick-actions-grid,
+    .quick-actions-row {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        gap: 0.75rem;
+    }
+    .quick-action {
+        padding: 1rem;
+    }
+
+    /* Modals full screen on mobile */
+    .modal-dialog {
+        margin: 0 !important;
+        max-width: 100% !important;
+        min-height: 100vh;
+    }
+    .modal-content {
+        border-radius: 0 !important;
+        min-height: 100vh;
+    }
+    .modal-dialog-centered {
+        min-height: 100vh;
+        align-items: stretch;
+    }
+
+    /* Settings modal tabs */
+    #settingsTabs {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    #settingsTabs .nav-item {
+        flex-shrink: 0;
+    }
+
+    /* Cookie banner */
+    .cookie-banner-inner {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    /* App modal */
+    #appModalBox {
+        max-width: 95vw;
+        margin: 0 auto;
+    }
+    .app-modal-body {
+        padding: 20px 16px 0;
+    }
+    #appModalFooter {
+        padding: 16px;
+        flex-direction: column-reverse;
+    }
+    .app-modal-btn,
+    .app-modal-btn-ok {
+        width: 100%;
+    }
+
+    /* Flex layouts stack on mobile */
+    .d-flex.flex-wrap-mobile,
+    .header-actions {
+        flex-wrap: wrap;
+    }
+    .d-md-flex {
+        display: block !important;
+    }
+
+    /* Badge responsive */
+    .badge {
+        font-size: 0.7rem;
+        padding: 0.25rem 0.5rem;
+    }
+
+    /* Dropdown menus */
+    .dropdown-menu {
+        min-width: auto;
+        width: 100%;
+    }
+}
+
+/* ═══════ SMALL PHONES (max-width: 480px) ═══════ */
+@media (max-width: 480px) {
+    .page-content {
+        padding: 0.75rem 0.5rem;
+    }
+    .topbar {
+        padding: 0.5rem;
+    }
+
+    /* Typography */
+    h1, .h1 { font-size: 1.25rem; }
+    h2, .h2 { font-size: 1.125rem; }
+    h3, .h3 { font-size: 1rem; }
+
+    /* Cards extra compact */
+    .card {
+        padding: 0.75rem;
+    }
+
+    /* Buttons compact */
+    .btn-group {
+        flex-direction: column;
+        width: 100%;
+    }
+    .btn-group .btn {
+        width: 100%;
+        border-radius: 8px !important;
+        margin-bottom: 0.25rem;
+    }
+
+    /* Action buttons stack */
+    .action-buttons,
+    .btn-toolbar {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    .action-buttons .btn,
+    .btn-toolbar .btn {
+        width: 100%;
+    }
+}
+
+/* ═══════ LANDSCAPE PHONE ═══════ */
+@media (max-height: 500px) and (orientation: landscape) {
+    .sidebar {
+        overflow-y: auto;
+    }
+    .sidebar-header {
+        padding: 0.75rem 1rem;
+    }
+    .sidebar-nav {
+        padding: 0.5rem 0.75rem;
+    }
+    .nav-link {
+        padding: 0.5rem 0.75rem;
+    }
+}
+
+/* ═══════ TOUCH TARGETS (accessibility) ═══════ */
+@media (pointer: coarse) {
+    .nav-link {
+        min-height: 44px;
+    }
+    .btn {
+        min-height: 44px;
+    }
+    .icon-btn {
+        min-width: 44px;
+        min-height: 44px;
+    }
+    .form-check-input {
+        width: 1.25rem;
+        height: 1.25rem;
+    }
+    .dropdown-item {
+        padding: 0.625rem 1rem;
+    }
+}
+
+/* ═══════ SAFE AREA (iPhone notch) ═══════ */
+@supports (padding: env(safe-area-inset-bottom)) {
+    .sidebar {
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+    .page-content {
+        padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+    }
+    #cookieConsentBanner {
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+}
+
+/* ═══════ PWA STANDALONE MODE ═══════ */
+@media (display-mode: standalone) {
+    .topbar {
+        padding-top: env(safe-area-inset-top, 0.75rem);
+    }
+}
+
+/* ═══════ PRINT ═══════ */
+@media print {
+    .sidebar,
+    .topbar,
+    .mobile-menu-btn,
+    #cookieConsentBanner,
+    #notifPanel {
+        display: none !important;
+    }
+    .main-content {
+        margin-left: 0 !important;
+    }
+    .page-content {
+        padding: 0;
+    }
+}

@@ -38,9 +38,14 @@
     <meta name="twitter:image:alt" content="DocAvocat — Interface de gestion">
 
     <!-- ═══ TECHNIQUE ═════════════════════════════════════════════════════════ -->
-    <meta name="theme-color" content="#1E3A5F">
+    <meta name="theme-color" content="#0F172A">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="DocAvocat">
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <link rel="shortcut icon" href="/favicon.svg">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/img/icons/apple-touch-icon.png">
     <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
     <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
@@ -118,6 +123,7 @@
     <link rel="stylesheet" th:href="@{/webjars/font-awesome/6.4.0/css/all.min.css}">
     <link rel="stylesheet" th:href="@{/css/global-unified-theme.css}">
     <link rel="stylesheet" href="/css/pages/landing.css">
+    <link rel="stylesheet" th:href="@{/css/responsive-mobile.css}">
 </head>
 <body class="landing-page">
 
@@ -610,6 +616,17 @@
             const url = new URL(btn.href, window.location.origin);
             url.searchParams.set('billing', period);
             btn.href = url.pathname + url.search;
+        });
+    }
+    </script>
+
+    <!-- SERVICE WORKER — PWA -->
+    <script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+            navigator.serviceWorker.register('/sw.js').catch(function(err) {
+                console.warn('SW registration failed:', err);
+            });
         });
     }
     </script>

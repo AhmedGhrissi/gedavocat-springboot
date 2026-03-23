@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>Choisir le mode de paiement</title>
+    <style>
+        .payment-option {
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 30px;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .payment-option:hover {
+            border-color: #667eea;
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.2);
+        }
+        .payment-logo {
+            height: 50px;
+            margin-bottom: 15px;
+        }
+        .recommended-badge {
+            background: #28a745;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            display: inline-block;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="container">
+            <h1 class="mt-4 mb-4">
+                <i class="fas fa-credit-card"></i> Choisir votre mode de paiement
+            </h1>
+
+            <div class="alert alert-info">
+                <strong>Plan sélectionné :</strong> <span th:text="${plan}">Cabinet</span><br>
+                <strong>Montant :</strong> <span th:text="${amount}">99.99</span>€/mois
+            </div>
+
+            <div class="row">
+                <!-- PayPlug - Solution française -->
+                <div class="col-md-6">
+                    <form th:action="@{/payment/payplug}" method="post">
+                        <input type="hidden" name="plan" th:value="${plan}">
+                        <div class="payment-option" onclick="this.closest('form').submit()">
+                            <h3>
+                                PayPlug 
+                                <span class="recommended-badge">🇫🇷 Français</span>
+                            </h3>
+                            <img src="https://www.payplug.com/img/logo-payplug.svg" 
+                                 alt="PayPlug" class="payment-logo">
+                            <p><strong>Solution 100% française</strong></p>
+                            <ul>
+                                <li>Entreprise française basée à Paris</li>
+                                <li>Carte bancaire (CB, Visa, Mastercard)</li>
+                                <li>Prélèvement SEPA</li>
+                                <li>Apple Pay & Google Pay</li>
+                                <li>Paiement sécurisé 3D Secure</li>
+                                <li>Support client en français</li>
+                            </ul>
+                            <button type="submit" class="btn btn-success btn-lg w-100">
+                                <i class="fas fa-check-circle"></i> Payer avec PayPlug
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Stripe - International -->
+                <div class="col-md-6">
+                    <form th:action="@{/payment/stripe}" method="post">
+                        <input type="hidden" name="plan" th:value="${plan}">
+                        <div class="payment-option" onclick="this.closest('form').submit()">
+                            <h3>Stripe</h3>
+                            <img src="https://stripe.com/img/v3/home/social.png" 
+                                 alt="Stripe" class="payment-logo">
+                            <p><strong>Leader mondial du paiement en ligne</strong></p>
+                            <ul>
+                                <li>Carte bancaire internationale</li>
+                                <li>Prélèvement SEPA (France)</li>
+                                <li>Apple Pay & Google Pay</li>
+                                <li>Bancontact (Belgique)</li>
+                                <li>iDEAL (Pays-Bas)</li>
+                                <li>Paiement sécurisé certifié PCI</li>
+                            </ul>
+                            <button type="submit" class="btn btn-primary btn-lg w-100">
+                                <i class="fas fa-credit-card"></i> Payer avec Stripe
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="text-center mt-4">
+                <a th:href="@{/subscription/pricing}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Retour aux tarifs
+                </a>
+            </div>
+
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h5><i class="fas fa-shield-alt"></i> Paiement 100% sécurisé</h5>
+                    <p>
+                        Vos informations bancaires sont cryptées et sécurisées. 
+                        Nous ne stockons aucune donnée de carte bancaire.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

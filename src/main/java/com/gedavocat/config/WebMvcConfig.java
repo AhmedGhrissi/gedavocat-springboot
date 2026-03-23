@@ -50,5 +50,15 @@ public class WebMvcConfig implements WebMvcConfigurer {
         registry.addResourceHandler("/.well-known/**")
                 .addResourceLocations("classpath:/static/.well-known/")
                 .resourceChain(false);
+
+        // PWA manifest and service worker
+        registry.addResourceHandler("/manifest.json")
+                .addResourceLocations("classpath:/static/")
+                .resourceChain(false);
+
+        registry.addResourceHandler("/sw.js")
+                .addResourceLocations("classpath:/static/")
+                .setCachePeriod(0)
+                .resourceChain(false);
     }
 }

@@ -64,6 +64,7 @@ public class SecurityConfig {
 						"/subscription/success", "/subscription/cancel",
 						"/api/auth/**", "/css/**", "/js/**", "/images/**", "/img/**", "/favicon.ico", "/favicon.svg",
 						"/robots.txt", "/sitemap.xml", "/webjars/**", "/.well-known/**",
+						"/manifest.json", "/sw.js",
 							"/forgot-password", "/reset-password", "/verify-email", "/verify-email/resend",
 							"/mfa-challenge",
 							"/clients/accept-invitation",

@@ -9,9 +9,14 @@
     <meta name="_csrf" th:content="${_csrf.token}"/>
     <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
     <meta name="robots" content="noindex, nofollow">
-    <meta name="theme-color" content="#1E3A5F">
+    <meta name="theme-color" content="#0F172A">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="DocAvocat">
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <link rel="shortcut icon" href="/favicon.svg">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/img/icons/apple-touch-icon.png">
     <title layout:title-pattern="$CONTENT_TITLE - $LAYOUT_TITLE">DocAvocat</title>
 
     <!-- Safety: early no-op stub to avoid ReferenceError when pages call toggleNotifPanel before main scripts load -->
@@ -42,6 +47,9 @@
     
     <!-- FIX CRITIQUE - Boutons toujours visibles (DERNIER CSS chargé = priorité max) -->
     <link th:href="@{/css/buttons-fix-critical.css}" rel="stylesheet">
+
+    <!-- RESPONSIVE MOBILE — adapte toutes les pages au téléphone -->
+    <link th:href="@{/css/responsive-mobile.css}" rel="stylesheet">
     
     <!-- Anciens CSS désactivés pour éviter les conflits
     <link th:href="@{/css/design-system.css}" rel="stylesheet">
@@ -1251,6 +1259,19 @@
 
     <!-- NOUVEAU JavaScript Moderne 2026 -->
     <script th:src="@{/js/app.js}"></script>
+
+    <!-- SERVICE WORKER — PWA installation sur téléphone -->
+    <script th:attr="nonce=${cspNonce}">
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+            navigator.serviceWorker.register('/sw.js').then(function(reg) {
+                console.log('SW registered, scope:', reg.scope);
+            }).catch(function(err) {
+                console.warn('SW registration failed:', err);
+            });
+        });
+    }
+    </script>
 
 </body>
 </html>
