@@ -74,17 +74,6 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      # ── Copier docker-compose.yml sur le serveur ─────────────────────────
-      - name: Copier docker-compose.yml
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: root
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: docker/docker-compose.yml
-          target: /opt/docavocat/
-          strip_components: 1
-
       # ── Deploy Blue/Green Zero-Downtime ──────────────────────────────────
       - name: Deploy Blue/Green
         uses: appleboy/ssh-action@v1.0.3
@@ -94,15 +83,20 @@ jobs:
           GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+          GIT_SHA: ${{ github.sha }}
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          envs: APP_IMAGE,ENV_PROD,GHCR_TOKEN,CLOUDFLARE_API_TOKEN,CLOUDFLARE_ZONE_ID
+          envs: APP_IMAGE,ENV_PROD,GHCR_TOKEN,CLOUDFLARE_API_TOKEN,CLOUDFLARE_ZONE_ID,GIT_SHA
           command_timeout: 10m
           script: |
             set -e
             cd /opt/docavocat
+
+            # Fetch latest docker-compose.yml from GitHub (repo public)
+            curl -sL "https://raw.githubusercontent.com/AhmedGhrissi/gedavocat-springboot/${GIT_SHA}/docker/docker-compose.yml" \
+              -o /opt/docavocat/docker-compose.yml
 
             echo "$ENV_PROD" > .env && chmod 600 .env
             sed -i '/^APP_IMAGE=/d' .env && echo "APP_IMAGE=$APP_IMAGE" >> .env
