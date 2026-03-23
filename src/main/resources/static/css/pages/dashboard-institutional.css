@@ -259,3 +259,26 @@
         grid-template-columns: 1fr;
     }
 }
+
+@media (max-width: 480px) {
+    .dashboard-container {
+        padding: var(--spacing-2);
+    }
+
+    .kpi-value {
+        font-size: 24px;
+    }
+
+    .action-card {
+        padding: var(--spacing-2);
+    }
+
+    .timeline-content {
+        flex-direction: column;
+        gap: var(--spacing-1);
+    }
+
+    .timeline-date {
+        white-space: normal;
+    }
+}
