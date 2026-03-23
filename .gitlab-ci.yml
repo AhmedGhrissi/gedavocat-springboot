@@ -120,7 +120,7 @@ trivy-security-scan:
       when: never
     - when: on_success
   image:
-    name: aquasec/trivy:latest
+    name: ghcr.io/aquasecurity/trivy:latest
     entrypoint: [""]
   script:
     - trivy fs --exit-code 0 --severity HIGH,CRITICAL --format table .
