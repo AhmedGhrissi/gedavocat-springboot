@@ -339,6 +339,7 @@ package:
     - |
       ATTEMPT=0
       until docker build \
+        --no-cache \
         -f docker/Dockerfile \
         -t "$DOCKER_IMAGE" -t "$DOCKER_IMAGE_LATEST" \
         .; do

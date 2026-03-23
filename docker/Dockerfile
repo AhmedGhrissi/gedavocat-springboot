@@ -40,8 +40,12 @@ RUN groupadd -r docavocat --gid=1001 \
 # Installer curl pour le healthcheck
 # Workaround QEMU ARM64 : ldconfig segfault sous émulation QEMU
 # → remplace ldconfig par /bin/true (no-op) avant l'install, suffisant pour l'image runtime JRE
+# --allow-releaseinfo-change + rm listes avant update : évite les erreurs GPG "invalid signature"
+# qui surviennent quand le cache Docker conserve des listes apt expirées (CI/QEMU ARM64)
 RUN ln -sf /bin/true /usr/sbin/ldconfig \
-    && apt-get update \
+    && rm -rf /var/lib/apt/lists/* /etc/apt/apt.conf.d/docker-clean \
+    && apt-get clean \
+    && apt-get update --allow-releaseinfo-change \
     && apt-get install -y --no-install-recommends curl \
     && rm -rf /var/lib/apt/lists/*
 
