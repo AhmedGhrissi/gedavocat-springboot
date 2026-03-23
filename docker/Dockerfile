@@ -26,28 +26,17 @@ RUN mvn package -DskipTests -B --no-transfer-progress \
     && mv target/*.jar target/app.jar
 
 # ── Stage 2 : Runtime ───────────────────────────────────────
-FROM eclipse-temurin:17-jre-jammy
+FROM eclipse-temurin:17-jre-alpine
 
 # Métadonnées
 LABEL maintainer="DocAvocat <contact@docavocat.fr>"
 LABEL description="GED Avocat - Système de Gestion Électronique de Documents pour Avocats"
 LABEL version="1.0.0"
 
-# Créer l'utilisateur applicatif (non-root)
-RUN groupadd -r docavocat --gid=1001 \
-    && useradd -r -g docavocat --uid=1001 -d /app -s /sbin/nologin docavocat
-
-# Installer curl pour le healthcheck
-# Workaround QEMU ARM64 : ldconfig segfault sous émulation QEMU
-# → remplace ldconfig par /bin/true (no-op) avant l'install, suffisant pour l'image runtime JRE
-# --allow-releaseinfo-change + rm listes avant update : évite les erreurs GPG "invalid signature"
-# qui surviennent quand le cache Docker conserve des listes apt expirées (CI/QEMU ARM64)
-RUN ln -sf /bin/true /usr/sbin/ldconfig \
-    && rm -rf /var/lib/apt/lists/* /etc/apt/apt.conf.d/docker-clean \
-    && apt-get clean \
-    && apt-get update --allow-releaseinfo-change \
-    && apt-get install -y --no-install-recommends curl \
-    && rm -rf /var/lib/apt/lists/*
+# Créer l'utilisateur applicatif (non-root) + installer curl pour healthcheck
+RUN addgroup -S -g 1001 docavocat \
+    && adduser -S -G docavocat -u 1001 -h /app -s /sbin/nologin docavocat \
+    && apk add --no-cache curl
 
 # Répertoire de l'application
 WORKDIR /app
