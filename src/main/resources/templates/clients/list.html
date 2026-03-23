@@ -227,6 +227,7 @@
         </div>
         <div class="card-body p-0">
             <div th:if="${clients != null and !clients.empty}">
+                <div class="table-responsive">
                 <table class="table-modern" id="clientsTable">
                     <thead>
                         <tr>
@@ -288,6 +289,7 @@
                         </tr>
                     </tbody>
                 </table>
+                </div>
             </div>
             <div th:if="${clients == null or clients.empty}" class="empty-state">
                 <i class="fas fa-users empty-state-icon"></i>

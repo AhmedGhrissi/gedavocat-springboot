@@ -192,15 +192,16 @@
             </div>
             <div class="card-body" style="padding: 0;">
                 <div th:if="${cases != null and !cases.empty}">
+                    <div class="table-responsive">
                     <table class="table-modern" id="casesTable" data-search-results>
                         <thead>
                             <tr>
-                                <th style="width: 30%;"><i class="fas fa-folder"></i> Dossier</th>
-                                <th style="width: 20%;"><i class="fas fa-user"></i> Client</th>
-                                <th style="width: 15%;"><i class="fas fa-tag"></i> Statut</th>
-                                <th style="width: 15%;"><i class="fas fa-file-alt"></i> Documents</th>
-                                <th style="width: 10%;"><i class="fas fa-calendar"></i> Créé le</th>
-                                <th style="width: 10%;">Actions</th>
+                                <th><i class="fas fa-folder"></i> Dossier</th>
+                                <th><i class="fas fa-user"></i> Client</th>
+                                <th><i class="fas fa-tag"></i> Statut</th>
+                                <th><i class="fas fa-file-alt"></i> Documents</th>
+                                <th><i class="fas fa-calendar"></i> Créé le</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -250,6 +251,7 @@
                             </tr>
                         </tbody>
                     </table>
+                    </div>
                 </div>
                 <div th:if="${cases == null or cases.empty}" class="empty-state">
                     <i class="fas fa-folder-open empty-state-icon"></i>

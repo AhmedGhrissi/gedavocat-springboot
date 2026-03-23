@@ -344,9 +344,10 @@ body {
 }
 
 /* ===== RESPONSIVE ===== */
-@media (max-width: 768px) {
+@media (max-width: 992px) {
     .sidebar {
         transform: translateX(-100%);
+        width: 260px;
     }
 
     .sidebar.open {
@@ -375,12 +376,6 @@ body {
 
     .page-content {
         padding: 1rem;
-    }
-}
-
-@media (max-width: 992px) {
-    .sidebar {
-        width: 260px;
     }
 }
 

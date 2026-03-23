@@ -259,6 +259,7 @@
                         </div>
                         <div class="card-body" style="padding: 0;">
                             <div th:if="${documents != null and !documents.empty}">
+                                <div class="table-responsive">
                                 <table class="table-modern">
                                     <thead>
                                         <tr>
@@ -322,6 +323,7 @@
                                         </tr>
                                     </tbody>
                                 </table>
+                                </div>
                             </div>
                             <div th:if="${documents == null or documents.empty}" class="empty-state">
                                 <i class="fas fa-file-alt empty-state-icon"></i>
