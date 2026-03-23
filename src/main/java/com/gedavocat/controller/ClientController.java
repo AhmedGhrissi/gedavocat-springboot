@@ -237,7 +237,9 @@ public class ClientController {
             return "redirect:/clients/" + id;
         } catch (Exception e) {
             log.error("[ClientController] Erreur suppression client {}", id, e);
-            redirectAttributes.addFlashAttribute("error", "Erreur lors de la suppression du client");
+            String msg = e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
+            redirectAttributes.addFlashAttribute("error",
+                "Erreur lors de la suppression du client\u00a0: " + msg);
             return "redirect:/clients/" + id;
         }
         return "redirect:/clients";

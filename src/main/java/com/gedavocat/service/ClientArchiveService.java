@@ -98,11 +98,21 @@ public class ClientArchiveService {
 
         ClientArchiveToken saved = archiveTokenRepository.save(archiveToken);
 
-        // Envoyer les emails
+        // Envoyer les emails — échec SMTP non bloquant (token+archive déjà persistés)
         String downloadUrl = baseUrl + "/clients/archive/" + token + "/download";
-        sendEmailToLawyer(lawyer, client.getName(), downloadUrl);
+        try {
+            sendEmailToLawyer(lawyer, client.getName(), downloadUrl);
+        } catch (Exception ex) {
+            log.warn("[ClientArchive] Email avocat non envoyé ({}) : {}",
+                lawyer.getEmail(), ex.getMessage());
+        }
         if (client.getEmail() != null && !client.getEmail().isBlank()) {
-            sendEmailToClient(client, lawyer, downloadUrl);
+            try {
+                sendEmailToClient(client, lawyer, downloadUrl);
+            } catch (Exception ex) {
+                log.warn("[ClientArchive] Email client non envoyé ({}) : {}",
+                    client.getEmail(), ex.getMessage());
+            }
         }
 
         auditService.log("CLIENT_ARCHIVE_CREATED", "ClientArchiveToken", saved.getId(),
