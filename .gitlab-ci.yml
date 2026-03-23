@@ -6,6 +6,10 @@
 
 workflow:
   rules:
+    # Commit contenant [fast] → pipeline rapide (skip sécurité, tests, e2e + deploy auto)
+    - if: '$CI_COMMIT_MESSAGE =~ /\[fast\]/'
+      variables:
+        FAST_DEPLOY: "true"
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     - if: '$CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "web"'
     - if: '$CI_PIPELINE_SOURCE == "schedule"'
@@ -356,7 +360,7 @@ package:
 trivy-image-scan:
   stage: package
   image:
-    name: aquasec/trivy:latest
+    name: ghcr.io/aquasecurity/trivy:latest
     entrypoint: [""]
   needs: [package]
   rules:
