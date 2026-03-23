@@ -152,7 +152,8 @@ class AuthServiceTest {
         assertThat(response.getToken()).isNull();
         assertThat(response.getMessage()).isEqualTo("Veuillez vérifier votre email avant de vous connecter");
         assertThat(response.getEmail()).isEqualTo("jean.dupont@gedavocat.com");
-        verify(userRepository).save(any(User.class));
+        // register() appelle save() deux fois : 1) avant création cabinet, 2) pour associer le cabinet
+        verify(userRepository, times(2)).save(any(User.class));
         verify(passwordEncoder).encode("password123");
         // Le JWT ne doit PAS être généré à l'inscription
         verify(jwtService, never()).generateAccessToken(any(UserDetails.class));
