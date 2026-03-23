@@ -67,6 +67,7 @@ public class SecurityConfig {
 							"/forgot-password", "/reset-password", "/verify-email", "/verify-email/resend",
 							"/mfa-challenge",
 							"/clients/accept-invitation",
+							"/clients/archive/*/download",
 							"/collaborators/accept-invitation", "/collaborators/invitation-info",
 						"/huissiers/accept-invitation", "/huissiers/invitation-info",
 							"/cases/shared", "/cases/shared-expired",

@@ -1,13 +1,24 @@
 package com.gedavocat.controller;
 
+import com.gedavocat.model.Case;
 import com.gedavocat.model.Client;
+import com.gedavocat.model.ClientArchiveToken;
+import com.gedavocat.model.Document;
 import com.gedavocat.model.User;
 import com.gedavocat.repository.UserRepository;
+import com.gedavocat.service.CaseService;
+import com.gedavocat.service.ClientArchiveService;
 import com.gedavocat.service.ClientInvitationService;
 import com.gedavocat.service.ClientService;
+import com.gedavocat.service.DocumentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -18,7 +29,10 @@ import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.io.ByteArrayOutputStream;
 import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 /**
  * Contrôleur de gestion des clients
@@ -33,6 +47,9 @@ public class ClientController {
     private final ClientService clientService;
     private final UserRepository userRepository;
     private final ClientInvitationService invitationService;
+    private final CaseService caseService;
+    private final DocumentService documentService;
+    private final ClientArchiveService clientArchiveService;
 
     /**
      * SEC-MASS-ASSIGN FIX CTL-01 : restreindre les champs bindables
@@ -191,22 +208,130 @@ public class ClientController {
     }
 
     /**
-     * Supprimer un client
+     * Supprimer un client.
+     * Requiert : (1) aucun dossier rattaché, (2) param confirmed=true (checkbox avocat).
+     * Génère une archive légale et envoie un email aux deux parties avant la suppression.
      */
     @PostMapping("/{id}/delete")
     public String deleteClient(
             @PathVariable String id,
+            @RequestParam(required = false, defaultValue = "false") boolean confirmed,
             Authentication authentication,
             RedirectAttributes redirectAttributes
     ) {
+        if (!confirmed) {
+            redirectAttributes.addFlashAttribute("error",
+                "Vous devez cocher la case de confirmation pour supprimer ce client.");
+            return "redirect:/clients/" + id;
+        }
         try {
             User user = getCurrentUser(authentication);
+            Client client = clientService.getClientById(id, user.getId());
+            // Générer l'archive MinIO + envoyer les emails AVANT la suppression
+            clientArchiveService.archiveBeforeDeletion(client, user);
             clientService.deleteClient(id, user.getId());
-            redirectAttributes.addFlashAttribute("message", "Client supprimé avec succès");
+            redirectAttributes.addFlashAttribute("message",
+                "Client supprimé. Un email de confirmation avec le lien d'archive a été envoyé.");
+        } catch (IllegalStateException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/clients/" + id;
         } catch (Exception e) {
+            log.error("[ClientController] Erreur suppression client {}", id, e);
             redirectAttributes.addFlashAttribute("error", "Erreur lors de la suppression du client");
+            return "redirect:/clients/" + id;
         }
         return "redirect:/clients";
+    }
+
+    /**
+     * Téléchargement de l'archive légale via token (accès public — client sans compte possible).
+     * Le token est envoyé par email lors de la suppression du client.
+     */
+    @GetMapping("/archive/{token}/download")
+    @PreAuthorize("permitAll()")
+    public ResponseEntity<Resource> downloadClientArchive(@PathVariable String token) {
+        try {
+            ClientArchiveToken tokenInfo = clientArchiveService.findValidToken(token);
+            byte[] bytes = clientArchiveService.downloadArchive(token);
+            String clientName = tokenInfo.getClientName() != null ? tokenInfo.getClientName() : "client";
+            String zipName = "Archive_" + sanitizeEntry(clientName) + ".zip";
+            return ResponseEntity.ok()
+                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + zipName + "\"")
+                    .body(new ByteArrayResource(bytes));
+        } catch (RuntimeException e) {
+            log.warn("[ClientController] Téléchargement archive invalide ou expirée : {}", e.getMessage());
+            return ResponseEntity.status(410).build(); // 410 Gone
+        } catch (Exception e) {
+            log.error("[ClientController] Erreur téléchargement archive", e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    /**
+     * Export ZIP de tous les documents des dossiers d'un client (pour l'avocat)
+     */
+    @GetMapping("/{id}/export-zip")
+    public ResponseEntity<Resource> exportClientZip(
+            @PathVariable String id,
+            Authentication authentication
+    ) {
+        try {
+            User user = getCurrentUser(authentication);
+            Client client = clientService.getClientById(id, user.getId());
+
+            List<Case> cases = caseService.getCasesByClient(id);
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            int docCount = 0;
+
+            try (ZipOutputStream zos = new ZipOutputStream(baos)) {
+                for (Case caseEntity : cases) {
+                    List<Document> documents = documentService.getLatestVersions(caseEntity.getId());
+                    String folderName = sanitizeEntry(caseEntity.getName() != null ? caseEntity.getName() : caseEntity.getId());
+
+                    for (Document doc : documents) {
+                        try {
+                            byte[] fileBytes = documentService.downloadDocument(doc.getId(), user.getId());
+                            String filename = sanitizeEntry(doc.getOriginalName() != null ? doc.getOriginalName() : doc.getId());
+                            ZipEntry entry = new ZipEntry(folderName + "/" + filename);
+                            zos.putNextEntry(entry);
+                            zos.write(fileBytes);
+                            zos.closeEntry();
+                            docCount++;
+                        } catch (Exception docEx) {
+                            log.warn("Impossible d'exporter le document {} du dossier {}: {}", doc.getId(), caseEntity.getId(), docEx.getMessage());
+                        }
+                    }
+                }
+            }
+
+            if (docCount == 0) {
+                return ResponseEntity.noContent().build();
+            }
+
+            String clientName = client.getName() != null ? client.getName() : id;
+            String zipName = "Client_" + sanitizeEntry(clientName) + ".zip";
+            return ResponseEntity.ok()
+                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + zipName + "\"")
+                    .body(new ByteArrayResource(baos.toByteArray()));
+
+        } catch (AccessDeniedException | SecurityException e) {
+            return ResponseEntity.status(403).build();
+        } catch (Exception e) {
+            log.error("Erreur export ZIP client {}", id, e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    /** Sécurise un nom d'entrée ZIP contre le path traversal et les caractères invalides. */
+    private String sanitizeEntry(String name) {
+        if (name == null || name.isBlank()) return "inconnu";
+        String sanitized = name.replace("\\", "/");
+        int lastSlash = sanitized.lastIndexOf('/');
+        if (lastSlash >= 0) sanitized = sanitized.substring(lastSlash + 1);
+        sanitized = sanitized.replaceAll("[\\r\\n\"<>|?*:/]", "_");
+        return sanitized.isBlank() ? "inconnu" : sanitized;
     }
 
     /**

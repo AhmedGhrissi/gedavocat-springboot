@@ -203,7 +203,7 @@ public class ClientService {
 
     /**
      * Supprimer un client avec vérification d'appartenance à l'avocat.
-     * Les dossiers liés sont archivés (pas supprimés).
+     * Bloqué si des dossiers sont encore rattachés au client.
      */
     @Transactional
     public void deleteClient(String clientId, String lawyerId) {
@@ -213,20 +213,20 @@ public class ClientService {
             throw new RuntimeException("Vous n'avez pas accès à ce client");
         }
 
-        String clientName = client.getName();
-        // Archiver les dossiers liés au lieu de les supprimer
+        // Bloquer la suppression si des dossiers sont rattachés
         List<Case> cases = caseRepository.findByClientId(clientId);
-        for (Case c : cases) {
-            c.setStatus(Case.CaseStatus.ARCHIVED);
-            c.setUpdatedAt(LocalDateTime.now());
-            caseRepository.save(c);
+        if (!cases.isEmpty()) {
+            throw new IllegalStateException(
+                "Ce client possède " + cases.size() + " dossier(s) rattaché(s). " +
+                "Téléchargez le ZIP du dossier client avant de procéder à la suppression.");
         }
-        // Supprimer les références restantes dans les rendez-vous
+
+        String clientName = client.getName();
         appointmentRepository.clearClientByClientId(clientId);
         clientRepository.delete(client);
 
         auditService.log("CLIENT_DELETED", "Client", clientId,
-            "Suppression du client: " + clientName + " (" + cases.size() + " dossier(s) archivé(s))", lawyerId);
+            "Suppression du client: " + clientName, lawyerId);
     }
     
     /**

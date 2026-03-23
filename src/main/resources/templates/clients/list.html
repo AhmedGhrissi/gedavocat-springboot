@@ -271,6 +271,18 @@
                                         <i class="fas fa-edit"></i>
                                         <span class="tooltip-text">Modifier</span>
                                     </a>
+                                    <button type="button"
+                                            class="btn btn-ghost btn-sm tooltip"
+                                            data-tooltip="Supprimer"
+                                            th:data-client-id="${client.id}"
+                                            th:data-client-name="${client.name}"
+                                            th:data-has-cases="${client.cases != null and !client.cases.isEmpty()}"
+                                            th:data-case-count="${client.cases != null ? client.cases.size() : 0}"
+                                            th:data-export-url="@{/clients/{id}/export-zip(id=${client.id})}"
+                                            onclick="listOpenDeleteModal(this)">
+                                        <i class="fas fa-trash" style="color: #ef4444;"></i>
+                                        <span class="tooltip-text">Supprimer</span>
+                                    </button>
                                 </div>
                             </td>
                         </tr>
@@ -288,6 +300,93 @@
         </div>
     </div>
 
+    <!-- Modale : client possède des dossiers → bloquer et proposer le ZIP -->
+    <div class="modal fade" id="listModalHasCases" tabindex="-1" aria-labelledby="listModalHasCasesLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-warning text-dark">
+                    <h5 class="modal-title" id="listModalHasCasesLabel">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Suppression impossible
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <div class="modal-body">
+                    <p>
+                        Le client <strong id="listHasCasesClientName"></strong> possède
+                        <strong id="listHasCasesCount"></strong> dossier(s) rattaché(s).
+                    </p>
+                    <p>
+                        Vous devez d'abord <strong>télécharger le ZIP complet du dossier client</strong>
+                        (tous les dossiers et documents), puis supprimer chaque dossier manuellement
+                        avant de pouvoir supprimer le client.
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <a id="listHasCasesZipLink" href="#" class="btn btn-primary">
+                        <i class="fas fa-download me-1"></i>Télécharger le ZIP
+                    </a>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modale : client sans dossier → confirmer la suppression -->
+    <div class="modal fade" id="listModalConfirmDelete" tabindex="-1" aria-labelledby="listModalConfirmDeleteLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="listModalConfirmDeleteLabel">
+                        <i class="fas fa-trash me-2"></i>Suppression définitive
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-danger border-0 mb-3" style="background:#FEF2F2;border-left:4px solid #DC2626 !important;">
+                        <i class="fas fa-exclamation-triangle me-2 text-danger"></i>
+                        <strong>Attention :</strong> Cette action est <strong>définitive et irréversible</strong>.
+                        Le dossier client <strong id="listDeleteClientName"></strong> sera
+                        définitivement supprimé.
+                    </div>
+                    <p class="fw-semibold mb-2">
+                        <i class="fas fa-download me-1 text-primary"></i>Étape 1 — Téléchargez la sauvegarde :
+                    </p>
+                    <a id="listDeleteZipLink" href="#" target="_blank"
+                       class="btn btn-outline-primary btn-sm mb-3 w-100">
+                        <i class="fas fa-file-archive me-2"></i>Télécharger l'archive ZIP du dossier client
+                    </a>
+                    <p class="text-muted small mb-3">
+                        Après la suppression, vous et votre client recevrez par email
+                        un lien de téléchargement valide pendant
+                        <strong>5 ans</strong> (durée légale de conservation, art. 11 RIN).
+                    </p>
+                    <div class="form-check mb-1">
+                        <input type="checkbox" class="form-check-input" id="listConfirmDeleteCheck"
+                               onchange="listToggleDeleteBtn()">
+                        <label class="form-check-label small" for="listConfirmDeleteCheck">
+                            J'ai téléchargé et conservé l'archive ZIP du dossier client.
+                            Je comprends que cette suppression est
+                            <strong>définitive et irréversible</strong>.
+                            Je prends l'entière responsabilité de la conservation des données
+                            conformément aux obligations légales applicables
+                            (délai de conservation minimum : <strong>5 ans</strong>).
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <form id="listDeleteForm" method="post">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                        <input type="hidden" name="confirmed" value="true">
+                        <button type="submit" class="btn btn-danger" id="listBtnConfirmDelete" disabled>
+                            <i class="fas fa-trash me-1"></i>Supprimer définitivement
+                        </button>
+                    </form>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script th:attr="nonce=${cspNonce}">
     document.addEventListener('DOMContentLoaded', function () {
         ['toastSuccess', 'toastWarning', 'toastError'].forEach(function (id) {
@@ -298,6 +397,37 @@
             }
         });
     });
+
+    function listOpenDeleteModal(btn) {
+        var hasCases = btn.dataset.hasCases === 'true';
+        var caseCount = btn.dataset.caseCount || '0';
+        var clientName = btn.dataset.clientName || '';
+        var clientId = btn.dataset.clientId || '';
+        var exportUrl = btn.dataset.exportUrl || '#';
+
+        if (hasCases) {
+            document.getElementById('listHasCasesClientName').textContent = clientName;
+            document.getElementById('listHasCasesCount').textContent = caseCount;
+            document.getElementById('listHasCasesZipLink').href = exportUrl;
+            new bootstrap.Modal(document.getElementById('listModalHasCases')).show();
+        } else {
+            document.getElementById('listDeleteClientName').textContent = clientName;
+            document.getElementById('listDeleteZipLink').href = exportUrl;
+            document.getElementById('listDeleteForm').action = '/clients/' + clientId + '/delete';
+            // Réinitialiser la case à chaque ouverture
+            var cb = document.getElementById('listConfirmDeleteCheck');
+            if (cb) cb.checked = false;
+            var submitBtn = document.getElementById('listBtnConfirmDelete');
+            if (submitBtn) submitBtn.disabled = true;
+            new bootstrap.Modal(document.getElementById('listModalConfirmDelete')).show();
+        }
+    }
+
+    function listToggleDeleteBtn() {
+        var cb = document.getElementById('listConfirmDeleteCheck');
+        var submitBtn = document.getElementById('listBtnConfirmDelete');
+        if (cb && submitBtn) submitBtn.disabled = !cb.checked;
+    }
 
     function filterClients() {
         const input = document.getElementById('searchClients');

@@ -15,12 +15,100 @@
                     <a th:href="@{/clients/{id}/edit(id=${client.id})}" class="btn btn-warning">
                         <i class="fas fa-edit"></i> Modifier
                     </a>
-                    <form th:action="@{/clients/{id}/delete(id=${client.id})}" method="post" style="display: inline;">
-                        <button type="submit" class="btn btn-danger" 
-                                data-confirm="Êtes-vous sûr de vouloir supprimer ce client ?" data-confirm-type="danger">
-                            <i class="fas fa-trash"></i> Supprimer
-                        </button>
-                    </form>
+                    <!-- Bouton Supprimer : ouvre la modale appropriée selon la présence de dossiers -->
+                    <button type="button" class="btn btn-danger"
+                            th:data-has-cases="${client.cases != null and !client.cases.isEmpty()}"
+                            th:data-case-count="${client.cases != null ? client.cases.size() : 0}"
+                            th:data-client-name="${client.name}"
+                            onclick="openDeleteModal(this)">
+                        <i class="fas fa-trash"></i> Supprimer
+                    </button>
+                </div>
+            </div>
+
+            <!-- Modale : client possède des dossiers → bloquer et proposer le ZIP -->
+            <div class="modal fade" id="modalHasCases" tabindex="-1" aria-labelledby="modalHasCasesLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header bg-warning text-dark">
+                            <h5 class="modal-title" id="modalHasCasesLabel">
+                                <i class="fas fa-exclamation-triangle me-2"></i>Suppression impossible
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>
+                                Le client <strong th:text="${client.name}">Client</strong> possède
+                                <strong id="hasCasesCount">0</strong> dossier(s) rattaché(s).
+                            </p>
+                            <p>
+                                Vous devez d'abord <strong>télécharger le ZIP complet du dossier client</strong>
+                                (tous les dossiers et documents), puis supprimer manuellement chacun des dossiers
+                                avant de pouvoir supprimer le client.
+                            </p>
+                        </div>
+                        <div class="modal-footer">
+                            <a th:href="@{/clients/{id}/export-zip(id=${client.id})}" class="btn btn-primary">
+                                <i class="fas fa-download me-1"></i>Télécharger le ZIP
+                            </a>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modale : client sans dossier → confirmer la suppression -->
+            <div class="modal fade" id="modalConfirmDelete" tabindex="-1" aria-labelledby="modalConfirmDeleteLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header bg-danger text-white">
+                            <h5 class="modal-title" id="modalConfirmDeleteLabel">
+                                <i class="fas fa-trash me-2"></i>Confirmer la suppression
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="alert alert-danger border-0 mb-3" style="background:#FEF2F2;border-left:4px solid #DC2626 !important;">
+                                <i class="fas fa-exclamation-triangle me-2 text-danger"></i>
+                                <strong>Attention :</strong> Cette action est <strong>définitive et irréversible</strong>.
+                                Le dossier client <strong id="deleteClientName"></strong> sera
+                                définitivement supprimé de votre espace.
+                            </div>
+                            <p class="fw-semibold mb-2">
+                                <i class="fas fa-download me-1 text-primary"></i>Étape 1 — Téléchargez la sauvegarde :
+                            </p>
+                            <a th:href="@{/clients/{id}/export-zip(id=${client.id})}" target="_blank"
+                               class="btn btn-outline-primary btn-sm mb-3 w-100">
+                                <i class="fas fa-file-archive me-2"></i>Télécharger l'archive ZIP du dossier client
+                            </a>
+                            <p class="text-muted small mb-3">
+                                Après la suppression, vous et votre client recevrez par email
+                                un lien de téléchargement valide pendant
+                                <strong>5 ans</strong> (durée légale de conservation, art. 11 RIN).
+                            </p>
+                            <div class="form-check mb-1">
+                                <input type="checkbox" class="form-check-input" id="confirmDeleteCheck"
+                                       onchange="toggleDeleteBtn()">
+                                <label class="form-check-label small" for="confirmDeleteCheck">
+                                    J'ai téléchargé et conservé l'archive ZIP du dossier client.
+                                    Je comprends que cette suppression est
+                                    <strong>définitive et irréversible</strong>.
+                                    Je prends l'entière responsabilité de la conservation des données
+                                    conformément aux obligations légales applicables
+                                    (délai de conservation minimum : <strong>5 ans</strong>).
+                                </label>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <form th:action="@{/clients/{id}/delete(id=${client.id})}" method="post">
+                                <input type="hidden" name="confirmed" value="true">
+                                <button type="submit" class="btn btn-danger" id="btnConfirmDelete" disabled>
+                                    <i class="fas fa-trash me-1"></i>Supprimer définitivement
+                                </button>
+                            </form>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                        </div>
+                    </div>
                 </div>
             </div>
             
@@ -112,6 +200,33 @@
                 </a>
             </div>
         </div>
+
+        <script th:attr="nonce=${cspNonce}">
+        function openDeleteModal(btn) {
+            var hasCases = btn.dataset.hasCases === 'true';
+            var caseCount = btn.dataset.caseCount || '0';
+            var clientName = btn.dataset.clientName || '';
+
+            if (hasCases) {
+                document.getElementById('hasCasesCount').textContent = caseCount;
+                new bootstrap.Modal(document.getElementById('modalHasCases')).show();
+            } else {
+                document.getElementById('deleteClientName').textContent = clientName;
+                // Réinitialiser la case à chaque ouverture de la modale
+                var cb = document.getElementById('confirmDeleteCheck');
+                if (cb) cb.checked = false;
+                var btn = document.getElementById('btnConfirmDelete');
+                if (btn) btn.disabled = true;
+                new bootstrap.Modal(document.getElementById('modalConfirmDelete')).show();
+            }
+        }
+
+        function toggleDeleteBtn() {
+            var cb = document.getElementById('confirmDeleteCheck');
+            var submitBtn = document.getElementById('btnConfirmDelete');
+            if (cb && submitBtn) submitBtn.disabled = !cb.checked;
+        }
+        </script>
     </div>
 </body>
 </html>
