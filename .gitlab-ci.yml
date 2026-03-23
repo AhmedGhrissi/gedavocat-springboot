@@ -208,6 +208,11 @@ sbom-generate:
 build:
   stage: build
   image: maven:3.9-eclipse-temurin-17
+  rules:
+    # [fast] : on saute Maven CI, le Dockerfile compile lui-meme
+    - if: '$CI_COMMIT_MESSAGE =~ /\[fast\]/'
+      when: never
+    - when: on_success
   needs:
     - job: audit-code-security
       optional: true
@@ -324,6 +329,7 @@ package:
   image: docker:27-cli
   needs:
     - job: build
+      optional: true
     - job: test
       optional: true
     - job: e2e-playwright
@@ -335,11 +341,11 @@ package:
     DOCKER_TLS_CERTDIR: ""
   script:
     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
-    # Build natif ARM64 via socket hôte (runner CAX11 — pas de QEMU ni DinD)
+    # Build natif ARM64 via socket hôte (runner CAX11)
+    # --no-cache supprimé : Docker réutilise le cache layers Maven -> beaucoup plus rapide
     - |
       ATTEMPT=0
       until docker build \
-        --no-cache \
         -f docker/Dockerfile \
         -t "$DOCKER_IMAGE" -t "$DOCKER_IMAGE_LATEST" \
         .; do
