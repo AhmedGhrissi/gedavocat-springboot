@@ -348,6 +348,33 @@ public class StripeService {
     }
 
     /**
+     * Infers the subscription plan from the session's line items (price IDs).
+     * Used as fallback when the 'plan' metadata key is missing.
+     */
+    public String inferPlanFromSession(String sessionId) {
+        try {
+            com.stripe.param.checkout.SessionRetrieveParams params =
+                com.stripe.param.checkout.SessionRetrieveParams.builder()
+                    .addExpand("line_items")
+                    .build();
+            Session expandedSession = Session.retrieve(sessionId, params, null);
+            if (expandedSession.getLineItems() != null
+                    && !expandedSession.getLineItems().getData().isEmpty()) {
+                String priceId = expandedSession.getLineItems().getData().get(0).getPrice().getId();
+                User.SubscriptionPlan plan = getPlanFromPriceId(priceId);
+                if (plan != null) {
+                    log.info("Plan inféré depuis line items (priceId={}): {}", priceId, plan);
+                    return plan.name();
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Impossible d'inférer le plan depuis les line items de session {}: {}",
+                    sessionId, e.getMessage());
+        }
+        return null;
+    }
+
+    /**
      * Retourne la clé publique Stripe (pour le frontend)
      */
     public String getPublishableKey() {

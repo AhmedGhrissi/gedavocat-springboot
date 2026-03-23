@@ -156,7 +156,9 @@ public class SubscriptionController {
                 }
                 model.addAttribute("success", true);
                 model.addAttribute("message", "Votre abonnement est déjà actif !");
-                logoutUser(httpRequest);
+                try { logoutUser(httpRequest); } catch (Exception le) {
+                    log.warn("logoutUser non-critique (idempotence): {}", le.getMessage());
+                }
                 return "payment/success";
             }
 
@@ -188,16 +190,32 @@ public class SubscriptionController {
                     model.addAttribute("success", true);
                     model.addAttribute("message", "Votre abonnement est déjà actif !");
                     processedSessionIds.add(session_id);
-                    logoutUser(httpRequest);
+                    try { logoutUser(httpRequest); } catch (Exception le) {
+                        log.warn("logoutUser non-critique (déjà actif): {}", le.getMessage());
+                    }
                     return "payment/success";
                 }
                 
                 // Récupérer les métadonnées
                 String plan = session.getMetadata() != null ? session.getMetadata().get("plan") : null;
                 String period = session.getMetadata() != null ? session.getMetadata().get("period") : null;
-                
+
+                // Fallback : inférer le plan depuis les line items si absent des métadonnées
+                if (plan == null || plan.isBlank()) {
+                    log.warn("⚠️ 'plan' absent des métadonnées pour session {}, inférence depuis line items", session_id);
+                    plan = stripeService.inferPlanFromSession(session_id);
+                }
+
                 log.info("💳 Activation de l'abonnement - plan={}, period={}", plan, period);
-                
+
+                if (plan == null || plan.isBlank()) {
+                    log.error("❌ Plan introuvable (métadonnées + line items) pour session: {}", session_id);
+                    model.addAttribute("error",
+                        "Votre paiement a été reçu. L'activation de votre abonnement est en cours — " +
+                        "veuillez vous connecter dans quelques instants ou contacter le support.");
+                    return "payment/success";
+                }
+
                 // Activer l'abonnement
                 activateSubscription(user, plan, period, session.getSubscription());
                 processedSessionIds.add(session_id);
@@ -215,7 +233,9 @@ public class SubscriptionController {
                 model.addAttribute("message", "Votre abonnement a été activé avec succès !");
                 log.info("✅ Abonnement activé via success page pour: {} (auth={})",
                     user.getEmail(), authentication != null);
-                logoutUser(httpRequest);
+                try { logoutUser(httpRequest); } catch (Exception le) {
+                    log.warn("logoutUser non-critique: {}", le.getMessage());
+                }
             } else {
                 log.warn("⚠️ Statut de session non complete: {} (payment_status={})", 
                         session.getStatus(), session.getPaymentStatus());
@@ -225,7 +245,8 @@ public class SubscriptionController {
             log.error("❌ Erreur Stripe lors de la récupération de la session: {}", e.getMessage(), e);
             model.addAttribute("error", "Erreur lors de la vérification du paiement. Veuillez contacter le support.");
         } catch (Exception e) {
-            log.error("❌ Erreur inattendue lors du traitement du succès de paiement: {}", e.getMessage(), e);
+            log.error("❌ Erreur inattendue [{}] lors du traitement du succès de paiement: {}",
+                    e.getClass().getSimpleName(), e.getMessage(), e);
             model.addAttribute("error", "Une erreur technique est survenue. Votre paiement a peut-être été traité. Veuillez vérifier votre espace abonné.");
         }
         
@@ -658,7 +679,18 @@ public class SubscriptionController {
             String userId = session.getMetadata().get("user_id");
             String plan = session.getMetadata().get("plan");
             String period = session.getMetadata().get("period");
-            
+
+            // Fallback : inférer le plan depuis les line items si absent des métadonnées
+            if (plan == null || plan.isBlank()) {
+                log.warn("Webhook: 'plan' absent des métadonnées pour session {}, inférence depuis line items",
+                        session.getId());
+                plan = stripeService.inferPlanFromSession(session.getId());
+            }
+            if (plan == null || plan.isBlank()) {
+                log.error("Webhook: plan introuvable pour session {} — activation ignorée (webhook futur relancera)", session.getId());
+                return;
+            }
+
             User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé: " + userId));
             
@@ -858,7 +890,15 @@ public class SubscriptionController {
      * Active l'abonnement d'un utilisateur
      */
     private void activateSubscription(User user, String plan, String period, String subscriptionId) {
-        User.SubscriptionPlan subscriptionPlan = User.SubscriptionPlan.valueOf(plan.toUpperCase());
+        if (plan == null || plan.isBlank()) {
+            throw new IllegalArgumentException("Plan d'abonnement manquant");
+        }
+        User.SubscriptionPlan subscriptionPlan;
+        try {
+            subscriptionPlan = User.SubscriptionPlan.valueOf(plan.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Plan d'abonnement invalide : " + plan);
+        }
         
         user.setSubscriptionPlan(subscriptionPlan);
         user.setSubscriptionStatus(User.SubscriptionStatus.ACTIVE);
