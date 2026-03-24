@@ -139,6 +139,7 @@
             <button class="landing-mobile-toggle" id="landingMobileMenuBtn" type="button" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="landingMobileMenu">
                 <i class="fas fa-bars"></i>
             </button>
+            <a th:href="@{/login}" class="landing-mobile-login">Se connecter</a>
             <div class="landing-nav-links">
                 <a href="#fonctionnalites" class="lp-nav-link">Fonctionnalités</a>
                 <a href="#tarifs" class="lp-nav-link">Tarifs</a>
@@ -645,52 +646,7 @@
         </div>
     </div>
 
-    <script>
-    (function() {
-        const mobileMenuBtn = document.getElementById('landingMobileMenuBtn');
-        const mobileMenu = document.getElementById('landingMobileMenu');
-
-        function closeMobileMenu() {
-            if (!mobileMenu || !mobileMenuBtn) return;
-            mobileMenu.classList.remove('open');
-            mobileMenu.hidden = true;
-            mobileMenuBtn.setAttribute('aria-expanded', 'false');
-            mobileMenuBtn.innerHTML = '<i class="fas fa-bars"></i>';
-        }
-
-        function openMobileMenu() {
-            if (!mobileMenu || !mobileMenuBtn) return;
-            mobileMenu.hidden = false;
-            mobileMenu.classList.add('open');
-            mobileMenuBtn.setAttribute('aria-expanded', 'true');
-            mobileMenuBtn.innerHTML = '<i class="fas fa-times"></i>';
-        }
-
-        if (mobileMenuBtn && mobileMenu) {
-            mobileMenuBtn.addEventListener('click', function() {
-                if (mobileMenu.classList.contains('open')) {
-                    closeMobileMenu();
-                } else {
-                    openMobileMenu();
-                }
-            });
-
-            mobileMenu.querySelectorAll('a, button').forEach(function(item) {
-                item.addEventListener('click', function() {
-                    if (window.innerWidth <= 768) {
-                        closeMobileMenu();
-                    }
-                });
-            });
-
-            window.addEventListener('resize', function() {
-                if (window.innerWidth > 768) {
-                    closeMobileMenu();
-                }
-            });
-        }
-    })();
-    </script>
+    <script th:src="@{/js/landing-public.js}"></script>
     <script th:src="@{/js/pwa-install.js}"></script>
     <script>
     window.initDocAvocatPwaInstall({
