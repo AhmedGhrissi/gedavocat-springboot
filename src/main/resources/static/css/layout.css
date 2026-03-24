@@ -180,9 +180,11 @@ body {
 .main-content {
     margin-left: 260px;
     flex: 1;
+    min-width: 0; /* CRITICAL: prevents flex child from expanding beyond viewport */
     display: flex;
     flex-direction: column;
     min-height: 100vh;
+    overflow-x: hidden; /* clip at this level — child overflow-x:auto still works */
 }
 
 /* ===== TOPBAR ===== */
