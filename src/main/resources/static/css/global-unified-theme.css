@@ -661,12 +661,132 @@ input:focus {
 
 /* ── Layout Standalone (pages légales, CGU, etc.) ── */
 .standalone-body { background: var(--bg-surface, #f8fafc); min-height: 100vh; }
-.standalone-header { background: #1E3A5F; padding: 1rem 2rem; display: flex; align-items: center; gap: 1rem; }
+.standalone-header { background: #1E3A5F; padding: 1rem 2rem; display: flex; flex-direction: column; gap: 1rem; position: sticky; top: 0; z-index: 110; }
+.standalone-header-inner { width: 100%; max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
 .standalone-logo-link { display: flex; align-items: center; gap: 0.75rem; text-decoration: none; color: #fff; }
 .standalone-logo-icon { font-size: 1.4rem; }
 .standalone-logo-text { font-weight: 700; font-size: 1.2rem; letter-spacing: 0.02em; }
+.standalone-nav { display: flex; align-items: center; gap: 1.25rem; flex-wrap: wrap; }
+.standalone-nav-link { color: rgba(255,255,255,0.82); text-decoration: none; font-size: 0.92rem; font-weight: 500; }
+.standalone-nav-link:hover { color: #fff; }
+.standalone-header-actions { display: flex; align-items: center; gap: 0.75rem; }
+.standalone-header-btn,
+.standalone-install-btn,
+.standalone-menu-btn {
+    border-radius: 10px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+}
+.standalone-header-btn,
+.standalone-install-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.65rem 1rem;
+    font-size: 0.875rem;
+    cursor: pointer;
+}
+.standalone-header-btn-primary { background: #fff; color: #1E3A5F; }
+.standalone-header-btn-primary:hover { background: #f8fafc; color: #0f172a; }
+.standalone-header-btn-secondary,
+.standalone-install-btn { background: transparent; color: #fff; border-color: rgba(255,255,255,0.32); }
+.standalone-header-btn-secondary:hover,
+.standalone-install-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+.standalone-menu-btn {
+    display: none;
+    width: 44px;
+    height: 44px;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    color: #fff;
+    border-color: rgba(255,255,255,0.32);
+    cursor: pointer;
+}
+.standalone-mobile-menu {
+    display: none;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    background: rgba(15, 23, 42, 0.28);
+    border-top: 1px solid rgba(255,255,255,0.12);
+    padding-top: 0.5rem;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+.standalone-mobile-menu.open { display: flex; }
+.standalone-mobile-link {
+    color: #fff;
+    text-decoration: none;
+    font-size: 0.95rem;
+    font-weight: 600;
+    padding: 0.85rem 0;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.standalone-mobile-actions { display: flex; flex-direction: column; gap: 0.75rem; padding: 0.75rem 0 0.25rem; }
 .standalone-footer { text-align: center; padding: 2rem; color: #64748b; font-size: 0.85rem; border-top: 1px solid #e2e8f0; margin-top: 3rem; }
 .standalone-footer-link { color: #1E3A5F; }
+
+/* ── PWA install banner ── */
+.pwa-install-banner {
+    position: fixed;
+    right: 1rem;
+    bottom: 1rem;
+    max-width: 420px;
+    width: calc(100% - 2rem);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 1.1rem;
+    background: rgba(15, 23, 42, 0.96);
+    color: #fff;
+    border-radius: 16px;
+    box-shadow: 0 18px 45px rgba(15, 23, 42, 0.32);
+    z-index: 2500;
+}
+.pwa-install-banner-copy { display: flex; flex-direction: column; gap: 0.2rem; }
+.pwa-install-banner-copy strong { font-size: 0.95rem; }
+.pwa-install-banner-copy span { font-size: 0.83rem; color: rgba(255,255,255,0.75); line-height: 1.45; }
+.pwa-install-banner-actions { display: flex; align-items: center; gap: 0.55rem; }
+.pwa-install-primary,
+.pwa-install-secondary {
+    border: none;
+    border-radius: 10px;
+    padding: 0.65rem 0.9rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+.pwa-install-primary { background: #C6A75E; color: #0f172a; }
+.pwa-install-secondary { background: rgba(255,255,255,0.1); color: #fff; }
+.pwa-install-banner[hidden],
+.standalone-mobile-menu[hidden],
+.standalone-install-btn[hidden] { display: none !important; }
+
+@media (max-width: 900px) {
+    .standalone-header { padding: 1rem 1rem 0.9rem; }
+    .standalone-nav,
+    .standalone-header-btn,
+    .standalone-install-btn { display: none; }
+    .standalone-menu-btn { display: inline-flex; }
+}
+
+@media (max-width: 640px) {
+    .pwa-install-banner {
+        left: 1rem;
+        right: 1rem;
+        bottom: 1rem;
+        width: auto;
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .pwa-install-banner-actions { justify-content: stretch; }
+    .pwa-install-primary,
+    .pwa-install-secondary { flex: 1; }
+}
 
 /* ── layout.html — inline styles → classes (fix CSP style-src) ── */
 .skip-nav-link { z-index: 10000; }

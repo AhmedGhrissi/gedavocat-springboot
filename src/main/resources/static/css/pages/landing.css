@@ -89,6 +89,19 @@ body {
     gap: 2rem;
     align-items: center;
 }
+.landing-mobile-toggle {
+    display: none;
+    width: 44px;
+    height: 44px;
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    background: #fff;
+    color: var(--color-primary);
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+}
 .lp-nav-link {
     font-size: 0.875rem;
     font-weight: 500;
@@ -97,7 +110,34 @@ body {
     transition: color 0.2s;
 }
 .lp-nav-link:hover { color: var(--color-primary) !important; }
-.landing-nav-buttons { display: flex; gap: 0.75rem; }
+.landing-nav-buttons {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    flex-wrap: nowrap;
+}
+.landing-nav-buttons .btn { white-space: nowrap; }
+.landing-mobile-menu {
+    display: none;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding-top: 1rem;
+}
+.landing-mobile-menu.open { display: flex; }
+.landing-mobile-link {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--color-primary) !important;
+    text-decoration: none;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+}
+.landing-mobile-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding-top: 0.5rem;
+}
 
 /* ── Boutons ── */
 .btn {
@@ -833,8 +873,16 @@ footer p { color: rgba(255,255,255,0.45) !important; }
     .lp-stat-divider { display: none; }
     .pricing-grid { grid-template-columns: 1fr; }
     .hero-cta { flex-direction: column; align-items: center; }
+    .landing-navbar { padding: 0.875rem 1rem; }
+    .landing-nav-container { gap: 0.75rem; }
     .landing-nav-links { display: none; }
-    .landing-nav-buttons { gap: 0.5rem; }
+    .landing-nav-buttons { display: none; }
+    .landing-mobile-toggle { display: inline-flex; }
+    .landing-mobile-menu {
+        background: rgba(255,255,255,0.98);
+        border-top: 1px solid rgba(148, 163, 184, 0.18);
+        margin-top: 1rem;
+    }
     .btn { padding: 0.5rem 1rem; font-size: 0.8125rem; }
     .lp-cta-final-buttons { flex-direction: column; align-items: center; }
     .lp-trust-inner { gap: 0.75rem; }
