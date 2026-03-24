@@ -765,6 +765,7 @@ input:focus {
 .pwa-install-banner[hidden],
 .standalone-mobile-menu[hidden],
 .standalone-install-btn[hidden] { display: none !important; }
+.pwa-install-primary[hidden] { display: none !important; }
 
 @media (max-width: 900px) {
     .standalone-header { padding: 1rem 1rem 0.9rem; }

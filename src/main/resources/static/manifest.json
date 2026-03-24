@@ -1,15 +1,18 @@
 {
+    "id": "/",
     "name": "DocAvocat",
     "short_name": "DocAvocat",
     "description": "Gestion Électronique de Documents pour Avocats — application de gestion documentaire et suivi de dossiers",
     "start_url": "/dashboard",
     "scope": "/",
     "display": "standalone",
+    "display_override": ["window-controls-overlay", "standalone", "browser"],
     "orientation": "any",
     "theme_color": "#0F172A",
     "background_color": "#F8FAFC",
     "lang": "fr-FR",
     "categories": ["business", "productivity"],
+    "prefer_related_applications": false,
     "icons": [
         {
             "src": "/img/icons/icon-72x72.png",

@@ -174,6 +174,34 @@ body.auth-page {
     box-shadow: 0 0 0 3px rgba(198, 167, 94, 0.2);
 }
 
+.auth-secondary-actions {
+    margin-top: var(--spacing-3);
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.auth-secondary-button {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 14px;
+    text-decoration: none;
+    cursor: pointer;
+    padding: 0;
+}
+
+.auth-secondary-button:hover {
+    color: var(--color-primary);
+}
+
+.auth-secondary-separator {
+    color: var(--text-tertiary);
+}
+
 /* ══════════════════════════════════════════════════════════
     ALERTS
 ══════════════════════════════════════════════════════════ */
@@ -218,6 +246,10 @@ body.auth-page {
     .auth-right {
         flex: 1;
         padding: var(--spacing-4);
+    }
+
+    .auth-secondary-actions {
+        gap: 0.75rem;
     }
     
     .auth-brand h1 {

@@ -1289,126 +1289,20 @@
     });
     </script>
 
+    <script th:src="@{/js/pwa-install.js}"></script>
+
     <!-- SERVICE WORKER — PWA installation sur téléphone -->
     <script th:attr="nonce=${cspNonce}">
-    (function() {
-        const installButtons = Array.from(document.querySelectorAll('[data-install-app]'));
-        const installBanner = document.getElementById('pwaInstallBanner');
-        const installBannerTitle = document.getElementById('pwaInstallBannerTitle');
-        const installBannerNote = document.getElementById('pwaInstallBannerNote');
-        const installBannerAction = document.getElementById('pwaInstallAction');
-        const installBannerDismiss = document.getElementById('pwaInstallDismiss');
-        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-        const isIos = /iphone|ipad|ipod/i.test(window.navigator.userAgent);
-        const isSafari = /^((?!chrome|android).)*safari/i.test(window.navigator.userAgent);
-        const dismissKey = 'docavocat-pwa-dismissed-until';
-        let deferredPrompt = null;
-
-        function setInstallButtonsVisible(visible) {
-            installButtons.forEach(function(button) {
-                button.hidden = !visible;
-            });
+    window.initDocAvocatPwaInstall({
+        contextKey: 'app',
+        autoShowDelayMs: 2600,
+        minimumVisitsBeforeAutoShow: 2,
+        copy: {
+            defaultNote: 'Installez l\'application pour accéder plus vite à vos dossiers, même depuis l\'écran d\'accueil.',
+            androidNote: 'Sur Android, ouvrez le menu ⋮ de Chrome ou Edge puis choisissez “Installer l\'application”.',
+            desktopNote: 'Dans Chrome ou Edge, cliquez sur l\'icône d\'installation dans la barre d\'adresse, ou utilisez le menu ⋮ puis “Installer DocAvocat”.'
         }
-
-        function hideInstallBanner() {
-            if (installBanner) {
-                installBanner.hidden = true;
-            }
-        }
-
-        function showInstallBanner(mode) {
-            if (!installBanner || isStandalone) return;
-
-            if (mode === 'ios') {
-                installBannerTitle.textContent = 'Installer DocAvocat sur iPhone';
-                installBannerNote.textContent = 'Touchez Partager puis “Sur l’écran d’accueil” pour l’ajouter comme une app.';
-                if (installBannerAction) installBannerAction.hidden = true;
-            } else {
-                installBannerTitle.textContent = 'Installer DocAvocat';
-                installBannerNote.textContent = 'Installez l\'application pour accéder plus vite à vos dossiers, même depuis l\'écran d\'accueil.';
-                if (installBannerAction) installBannerAction.hidden = false;
-            }
-
-            installBanner.hidden = false;
-        }
-
-        function dismissInstallBanner() {
-            hideInstallBanner();
-            try {
-                window.localStorage.setItem(dismissKey, String(Date.now() + (3 * 24 * 60 * 60 * 1000)));
-            } catch (error) {
-                console.warn('Unable to persist install banner dismissal:', error);
-            }
-        }
-
-        function canAutoShowBanner() {
-            try {
-                return Date.now() >= Number(window.localStorage.getItem(dismissKey) || '0');
-            } catch (error) {
-                return true;
-            }
-        }
-
-        async function handleInstallClick(event) {
-            event.preventDefault();
-
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                const choice = await deferredPrompt.userChoice;
-                if (choice.outcome === 'accepted') {
-                    setInstallButtonsVisible(false);
-                    hideInstallBanner();
-                }
-                deferredPrompt = null;
-                return;
-            }
-
-            if (isIos && isSafari) {
-                setInstallButtonsVisible(true);
-                showInstallBanner('ios');
-            }
-        }
-
-        installButtons.forEach(function(button) {
-            button.addEventListener('click', handleInstallClick);
-        });
-
-        if (installBannerDismiss) {
-            installBannerDismiss.addEventListener('click', dismissInstallBanner);
-        }
-
-        if (isStandalone) {
-            setInstallButtonsVisible(false);
-            hideInstallBanner();
-        } else if (isIos && isSafari) {
-            setInstallButtonsVisible(true);
-        }
-
-        window.addEventListener('beforeinstallprompt', function(event) {
-            event.preventDefault();
-            deferredPrompt = event;
-            setInstallButtonsVisible(true);
-            if (canAutoShowBanner()) {
-                showInstallBanner('default');
-            }
-        });
-
-        window.addEventListener('appinstalled', function() {
-            deferredPrompt = null;
-            setInstallButtonsVisible(false);
-            hideInstallBanner();
-        });
-
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', function() {
-                navigator.serviceWorker.register('/sw.js').then(function(reg) {
-                    console.log('SW registered, scope:', reg.scope);
-                }).catch(function(err) {
-                    console.warn('SW registration failed:', err);
-                });
-            });
-        }
-    })();
+    });
     </script>
 
 </body>

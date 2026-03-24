@@ -86,9 +86,11 @@
                     </button>
                 </form>
 
-                <div style="margin-top: var(--spacing-3); text-align: center;">
+                <div class="auth-secondary-actions">
                     <a href="/forgot-password" style="color: var(--text-secondary); font-size: 14px; text-decoration: none;">Mot de passe oublié ?</a>
-                    <span style="color: var(--text-tertiary); margin: 0 8px;">•</span>
+                    <span class="auth-secondary-separator">•</span>
+                    <button type="button" class="auth-secondary-button" data-install-app hidden>Installer l'app</button>
+                    <span class="auth-secondary-separator">•</span>
                     <a th:href="@{/}" style="color: var(--text-secondary); font-size: 14px; text-decoration: none;">
                         <i class="fas fa-home"></i> Retour à l'accueil
                     </a>
@@ -96,5 +98,32 @@
             </div>
         </div>
     </div>
+
+    <div class="pwa-install-banner" id="pwaInstallBanner" hidden>
+        <div class="pwa-install-banner-copy">
+            <strong id="pwaInstallBannerTitle">Installer DocAvocat</strong>
+            <span id="pwaInstallBannerNote">Installez l'application pour retrouver votre portail plus vite depuis l'écran d'accueil.</span>
+        </div>
+        <div class="pwa-install-banner-actions">
+            <button class="pwa-install-primary" id="pwaInstallAction" type="button" data-install-app>Installer</button>
+            <button class="pwa-install-secondary" id="pwaInstallDismiss" type="button">Plus tard</button>
+        </div>
+    </div>
+
+    <script th:src="@{/js/pwa-install.js}"></script>
+    <script>
+    window.initDocAvocatPwaInstall({
+        contextKey: 'login',
+        minimumVisitsBeforeAutoShow: 1,
+        autoShowDelayMs: 1500,
+        copy: {
+            defaultNote: 'Installez l\'application pour retrouver votre portail plus vite depuis l\'écran d\'accueil.',
+            androidTitle: 'Installer DocAvocat sur Android',
+            androidNote: 'Sur Android, ouvrez le menu ⋮ de Chrome ou Edge puis choisissez “Installer l\'application”.',
+            desktopTitle: 'Installer DocAvocat sur votre ordinateur',
+            desktopNote: 'Dans Chrome ou Edge, cliquez sur l\'icône d\'installation près de la barre d\'adresse, ou utilisez le menu ⋮ puis “Installer DocAvocat”.'
+        }
+    });
+    </script>
 </body>
 </html>
