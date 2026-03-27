@@ -1,225 +1,237 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout}">
 <head>
+    <title>RPVA — e-Barreau</title>
     <link rel="stylesheet" th:href="@{/css/pages/rpva.css}">
-<title>RPVA - e-Barreau</title>
 </head>
 <body>
-    <div layout:fragment="content">
-        <div class="container-fluid">
-            <!-- Hero -->
-            <div class="hero-banner mb-4">
-                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
-                    <div style="position:relative;z-index:1">
-                        <h1 style="font-size:1.5rem;font-weight:800;letter-spacing:-0.025em;margin-bottom:4px;color:#fff">
-                            <i class="fas fa-gavel me-2"></i>RPVA - e-Barreau
-                        </h1>
-                        <p style="font-size:0.875rem;margin:0;color:rgba(255,255,255,0.8)">
-                            Communications sécurisées avec les juridictions françaises
-                        </p>
-                    </div>
-                    <a th:href="@{/settings}" class="btn rounded-md fw-600 backdrop-blur" style="background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.25);">
-                        <i class="fas fa-cog me-1"></i> Configuration
-                    </a>
-                </div>
-            </div>
+<div layout:fragment="content">
 
-            <!-- Alert Config -->
-            <div th:if="${!isConfigured}" class="alert alert-warning" style="border-radius: 12px;">
-                <i class="fas fa-exclamation-triangle"></i>
-                <strong>Configuration requise :</strong>
-                Le RPVA n'est pas configuré.
-                <a th:href="@{/settings}" class="alert-link">Configurer maintenant</a>
-            </div>
+    <!-- En-tête de page -->
+    <div class="page-header">
+        <div>
+            <h1 class="page-title"><i class="fas fa-gavel"></i>RPVA — e-Barreau</h1>
+            <p class="page-subtitle">Communications sécurisées avec les juridictions françaises</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a th:href="@{/rpva/send}" class="btn btn-primary">
+                <i class="fas fa-paper-plane"></i> Envoyer
+            </a>
+            <a th:href="@{/settings}" class="btn btn-secondary">
+                <i class="fas fa-cog"></i> Configuration
+            </a>
+        </div>
+    </div>
 
-            <!-- Quick Actions -->
-            <div class="quick-actions">
-                <a th:href="@{/rpva/send}" class="action-btn">
-                    <div class="action-icon">
-                        <i class="fas fa-paper-plane"></i>
-                    </div>
-                    <div>
-                        <div style="font-weight: 700; font-size: 16px;">Envoyer</div>
-                        <div style="opacity: 0.9; font-size: 13px;">Nouvelle communication</div>
-                    </div>
+    <!-- Alerte RPVA non configuré -->
+    <div th:if="${!isConfigured}" class="alert alert-warning">
+        <i class="fas fa-exclamation-triangle"></i>
+        <div>
+            <strong>Configuration requise :</strong>
+            Votre clé RPVA n'est pas encore configurée.
+            <a th:href="@{/settings}" class="alert-link">Configurer maintenant →</a>
+        </div>
+    </div>
+
+    <!-- Stat cards -->
+    <div class="stats-grid mb-4">
+        <div class="stat-card">
+            <div class="stat-icon blue"><i class="fas fa-paper-plane"></i></div>
+            <div class="stat-value" th:text="${sentCommunications != null ? sentCommunications.size() : 0}">0</div>
+            <div class="stat-label">Envoyées</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon green"><i class="fas fa-inbox"></i></div>
+            <div class="stat-value" th:text="${receivedCommunications != null ? receivedCommunications.size() : 0}">0</div>
+            <div class="stat-label">Reçues</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon orange"><i class="fas fa-hourglass-half"></i></div>
+            <div class="stat-value">0</div>
+            <div class="stat-label">En attente</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon" style="background:rgba(201,169,110,.1);color:var(--color-accent)">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stat-value">0</div>
+            <div class="stat-label">Traitées ce mois</div>
+        </div>
+    </div>
+
+    <!-- Actions rapides -->
+    <div class="rpva-actions-grid mb-4">
+        <a th:href="@{/rpva/send}" class="rpva-action-card">
+            <div class="rpva-action-icon rpva-icon-primary">
+                <i class="fas fa-paper-plane"></i>
+            </div>
+            <div>
+                <div class="rpva-action-title">Envoyer une communication</div>
+                <div class="rpva-action-desc">Déposez un acte ou message vers une juridiction</div>
+            </div>
+            <i class="fas fa-chevron-right rpva-action-arrow"></i>
+        </a>
+        <a th:href="@{/rpva/received}" class="rpva-action-card">
+            <div class="rpva-action-icon rpva-icon-success">
+                <i class="fas fa-inbox"></i>
+            </div>
+            <div>
+                <div class="rpva-action-title">Communications reçues</div>
+                <div class="rpva-action-desc">Consultez les messages des greffes</div>
+            </div>
+            <i class="fas fa-chevron-right rpva-action-arrow"></i>
+        </a>
+        <a href="/cases" class="rpva-action-card">
+            <div class="rpva-action-icon" style="background:rgba(201,169,110,.1);color:var(--color-accent)">
+                <i class="fas fa-file-export"></i>
+            </div>
+            <div>
+                <div class="rpva-action-title">Export manuel e-Barreau</div>
+                <div class="rpva-action-desc">Générez fiche ou checklist depuis un dossier</div>
+            </div>
+            <i class="fas fa-chevron-right rpva-action-arrow"></i>
+        </a>
+    </div>
+
+    <!-- Fonctionnalités du réseau -->
+    <div class="feature-grid mb-4">
+        <div class="feature-card">
+            <div class="feature-icon blue"><i class="fas fa-shield-alt"></i></div>
+            <h4>Réseau sécurisé</h4>
+            <p>Chiffrement de bout en bout sur le VPN juridictionnel</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon green"><i class="fas fa-certificate"></i></div>
+            <h4>Certificat CNB</h4>
+            <p>Authentification forte par certificat électronique avocat</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon orange"><i class="fas fa-file-signature"></i></div>
+            <h4>Accusé de réception</h4>
+            <p>AR horodaté généré automatiquement à chaque envoi</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon purple"><i class="fas fa-university"></i></div>
+            <h4>Toutes juridictions</h4>
+            <p>TJ, Cours d'appel, Cour de Cassation</p>
+        </div>
+    </div>
+
+    <!-- Communications récentes -->
+    <div class="card card-elevated animate-fade-in">
+        <div class="card-header">
+            <i class="fas fa-history"></i> Communications récentes
+        </div>
+        <div class="card-body" style="padding:0">
+
+            <!-- Empty state -->
+            <div th:if="${(sentCommunications == null or sentCommunications.empty) and (receivedCommunications == null or receivedCommunications.empty)}"
+                 class="empty-state">
+                <i class="fas fa-gavel empty-state-icon"></i>
+                <h3 class="empty-state-title">Aucune communication</h3>
+                <p class="empty-state-message">Envoyez votre première communication vers une juridiction</p>
+                <a th:href="@{/rpva/send}" class="btn btn-primary" style="margin-top:1.25rem">
+                    <i class="fas fa-paper-plane"></i> Envoyer une communication
                 </a>
-                <a th:href="@{/rpva/received}" class="action-btn action-btn-success">
-                    <div class="action-icon">
-                        <i class="fas fa-inbox"></i>
-                    </div>
-                    <div>
-                        <div style="font-weight: 700; font-size: 16px;">Réception</div>
-                        <div style="opacity: 0.9; font-size: 13px;">Communications reçues</div>
-                    </div>
-                </a>
             </div>
 
-            <!-- Features -->
-            <div class="feature-grid">
-                <div class="feature-card">
-                    <div class="feature-icon blue">
-                        <i class="fas fa-shield-alt"></i>
-                    </div>
-                    <h4>Réseau sécurisé</h4>
-                    <p style="color: var(--text-secondary); font-size: 14px; margin: 0;">
-                        Communications chiffrées de bout en bout
-                    </p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon green">
-                        <i class="fas fa-certificate"></i>
-                    </div>
-                    <h4>Certificat CNB</h4>
-                    <p style="color: var(--text-secondary); font-size: 14px; margin: 0;">
-                        Authentification par certificat électronique
-                    </p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon yellow">
-                        <i class="fas fa-file-signature"></i>
-                    </div>
-                    <h4>Accusé réception</h4>
-                    <p style="color: var(--text-secondary); font-size: 14px; margin: 0;">
-                        AR automatique pour chaque envoi
-                    </p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon purple">
-                        <i class="fas fa-university"></i>
-                    </div>
-                    <h4>Toutes juridictions</h4>
-                    <p style="color: var(--text-secondary); font-size: 14px; margin: 0;">
-                        TJ, CA, Cour de Cassation
-                    </p>
-                </div>
-            </div>
+            <!-- Timeline -->
+            <div class="rpva-timeline" th:if="${(sentCommunications != null and !sentCommunications.empty) or (receivedCommunications != null and !receivedCommunications.empty)}">
 
-            <!-- Stats -->
-            <div class="stats-dashboard">
-                <div class="stat-card blue">
-                    <div class="stat-value" th:text="${sentCommunications != null ? sentCommunications.size() : 0}">0</div>
-                    <div class="stat-label">
-                        <i class="fas fa-paper-plane"></i> Communications envoyées
+                <!-- Envoyées -->
+                <div th:each="comm : ${sentCommunications}" class="rpva-comm-item">
+                    <div class="rpva-comm-direction sent">
+                        <i class="fas fa-arrow-up"></i>
                     </div>
-                </div>
-                <div class="stat-card green">
-                    <div class="stat-value" th:text="${receivedCommunications != null ? receivedCommunications.size() : 0}">0</div>
-                    <div class="stat-label">
-                        <i class="fas fa-inbox"></i> Communications reçues
-                    </div>
-                </div>
-                <div class="stat-card yellow">
-                    <div class="stat-value">0</div>
-                    <div class="stat-label">
-                        <i class="fas fa-hourglass-half"></i> En attente de réponse
-                    </div>
-                </div>
-                <div class="stat-card red">
-                    <div class="stat-value">0</div>
-                    <div class="stat-label">
-                        <i class="fas fa-check-circle"></i> Traitées ce mois
-                    </div>
-                </div>
-            </div>
-
-            <!-- Communications récentes -->
-            <div class="card" style="border-radius: 16px; border: 1px solid rgba(148,163,184,0.12);">
-                <div class="card-body">
-                    <h3 style="margin-bottom: 24px;">
-                        <i class="fas fa-history"></i> Communications récentes
-                    </h3>
-
-                    <div th:if="${sentCommunications.empty and receivedCommunications.empty}" class="rpva-empty">
-                        <div style="width:64px;height:64px;border-radius:50%;background:var(--bg-secondary);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
-                            <i class="fas fa-gavel" style="font-size:24px;color:var(--text-tertiary);"></i>
+                    <div class="rpva-comm-body">
+                        <div class="rpva-comm-title" th:text="${comm.type?.displayName ?: 'Communication'}">Conclusions</div>
+                        <div class="rpva-comm-meta">
+                            <span class="badge badge-info">Envoyée</span>
+                            <span class="rpva-meta-sep">·</span>
+                            <i class="fas fa-university"></i>
+                            <span th:text="${comm.jurisdiction ?: '—'}">TJ Paris</span>
+                            <span th:if="${comm.referenceNumber != null}" class="rpva-meta-sep">·</span>
+                            <span th:if="${comm.referenceNumber != null}">
+                                <i class="fas fa-hashtag"></i>
+                                <span th:text="${comm.referenceNumber}">RG 24/001</span>
+                            </span>
                         </div>
-                        <h3>Aucune communication</h3>
-                        <p>Envoyez votre première communication juridiction</p>
-                        <a th:href="@{/rpva/send}" class="btn btn-primary btn-lg rounded-md fw-600">
-                            <i class="fas fa-paper-plane"></i> Envoyer une communication
+                        <div class="rpva-comm-date"
+                             th:text="${#temporals.format(comm.createdAt, 'dd/MM/yyyy à HH:mm')}">01/01/2024</div>
+                    </div>
+                    <div class="rpva-comm-actions">
+                        <span th:switch="${comm.status?.name()}" class="badge">
+                            <span th:case="'SENT'"      class="badge badge-info">Envoyé</span>
+                            <span th:case="'DELIVERED'" class="badge badge-success">Délivré</span>
+                            <span th:case="'READ'"      class="badge badge-success">Lu</span>
+                            <span th:case="'FAILED'"    class="badge badge-danger">Échec</span>
+                            <span th:case="'DRAFT'"     class="badge" style="background:var(--bg-tertiary);color:var(--text-muted)">Brouillon</span>
+                        </span>
+                        <a th:href="@{/rpva/communications/{id}(id=${comm.id})}" class="btn btn-ghost btn-sm">
+                            <i class="fas fa-eye"></i>
                         </a>
                     </div>
+                </div>
 
-                    <div class="comm-timeline" th:if="${!sentCommunications.empty or !receivedCommunications.empty}">
-                        <!-- Communications envoyées -->
-                        <div th:each="comm : ${sentCommunications}" class="comm-item sent">
-                            <div class="comm-badge sent">
-                                <i class="fas fa-arrow-up"></i>
-                            </div>
-                            <div class="comm-content">
-                                <div class="comm-title" th:text="${comm.subject}">Dépôt de conclusions</div>
-                                <div class="comm-meta">
-                                    <span class="badge" style="background: rgba(59,130,246,0.15); color: #60a5fa;">Envoyée</span>
-                                    • <span th:text="${#temporals.format(comm.createdAt, 'dd/MM/yyyy à HH:mm')}">01/01/2024</span>
-                                </div>
-                                <div class="comm-details">
-                                    <div class="comm-detail">
-                                        <i class="fas fa-university"></i>
-                                        <span th:text="${comm.jurisdiction}">TJ Paris</span>
-                                    </div>
-                                    <div class="comm-detail">
-                                        <i class="fas fa-hashtag"></i>
-                                        <span th:text="${comm.reference}">RG 23/12345</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <a th:href="@{/rpva/communications/{id}(id=${comm.id})}" class="btn btn-sm btn-outline-primary">
-                                <i class="fas fa-eye"></i>
-                            </a>
+                <!-- Reçues -->
+                <div th:each="comm : ${receivedCommunications}" class="rpva-comm-item">
+                    <div class="rpva-comm-direction received">
+                        <i class="fas fa-arrow-down"></i>
+                    </div>
+                    <div class="rpva-comm-body">
+                        <div class="rpva-comm-title" th:text="${comm.type?.displayName ?: 'Notification'}">Notification</div>
+                        <div class="rpva-comm-meta">
+                            <span class="badge badge-success">Reçue</span>
+                            <span class="rpva-meta-sep">·</span>
+                            <i class="fas fa-university"></i>
+                            <span th:text="${comm.jurisdiction ?: '—'}">TJ Lyon</span>
+                            <span th:if="${comm.referenceNumber != null}" class="rpva-meta-sep">·</span>
+                            <span th:if="${comm.referenceNumber != null}">
+                                <i class="fas fa-hashtag"></i>
+                                <span th:text="${comm.referenceNumber}">RG 24/002</span>
+                            </span>
                         </div>
-
-                        <!-- Communications reçues -->
-                        <div th:each="comm : ${receivedCommunications}" class="comm-item received">
-                            <div class="comm-badge received">
-                                <i class="fas fa-arrow-down"></i>
-                            </div>
-                            <div class="comm-content">
-                                <div class="comm-title" th:text="${comm.subject}">Notification d'audience</div>
-                                <div class="comm-meta">
-                                    <span class="badge" style="background: rgba(16,185,129,0.15); color: #34d399;">Reçue</span>
-                                    • <span th:text="${#temporals.format(comm.createdAt, 'dd/MM/yyyy à HH:mm')}">01/01/2024</span>
-                                </div>
-                                <div class="comm-details">
-                                    <div class="comm-detail">
-                                        <i class="fas fa-university"></i>
-                                        <span th:text="${comm.jurisdiction}">TJ Lyon</span>
-                                    </div>
-                                    <div class="comm-detail">
-                                        <i class="fas fa-hashtag"></i>
-                                        <span th:text="${comm.reference}">RG 23/54321</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <a th:href="@{/rpva/communications/{id}(id=${comm.id})}" class="btn btn-sm btn-outline-success">
-                                <i class="fas fa-eye"></i>
-                            </a>
-                        </div>
+                        <div class="rpva-comm-date"
+                             th:text="${#temporals.format(comm.createdAt, 'dd/MM/yyyy à HH:mm')}">01/01/2024</div>
+                    </div>
+                    <div class="rpva-comm-actions">
+                        <span class="badge badge-success">Reçu</span>
+                        <a th:href="@{/rpva/communications/{id}(id=${comm.id})}" class="btn btn-ghost btn-sm">
+                            <i class="fas fa-eye"></i>
+                        </a>
                     </div>
                 </div>
+
             </div>
         </div>
-
-        <!-- ══ SECTION EXPORT RPVA (Option C — dépôt manuel) ══ -->
-        <div class="rpva-export-section">
-            <h5><i class="fas fa-file-export"></i> Export pour dépôt manuel sur e-Barreau</h5>
-            <p style="font-size:0.875rem;color:var(--text-secondary);margin-bottom:1rem;">
-                Générez une fiche de transmission ou une checklist de dépôt à partir d'un dossier DocAvocat,
-                puis déposez le document vous-même sur
-                <a href="https://ebarreau.avocat.fr" target="_blank" rel="noopener noreferrer">ebarreau.avocat.fr</a>.
-            </p>
-            <div class="rpva-export-actions">
-                <a href="/cases" class="btn btn-primary">
-                    <i class="fas fa-folder-open"></i> Choisir un dossier
-                </a>
-                <a href="https://ebarreau.avocat.fr" target="_blank" rel="noopener noreferrer" class="btn btn-outline-secondary">
-                    <i class="fas fa-external-link-alt"></i> Ouvrir e-Barreau
-                </a>
-            </div>
-        </div>
-
     </div>
+
+    <!-- Export RPVA manuel -->
+    <div class="rpva-export-banner mt-4">
+        <div class="rpva-export-icon">
+            <i class="fas fa-file-export"></i>
+        </div>
+        <div class="rpva-export-body">
+            <div class="rpva-export-title">Dépôt manuel sur e-Barreau</div>
+            <div class="rpva-export-desc">
+                En attente du référencement CNB, générez une fiche de transmission PDF pré-remplie
+                depuis un dossier DocAvocat et déposez-la sur
+                <a href="https://ebarreau.avocat.fr" target="_blank" rel="noopener noreferrer">ebarreau.avocat.fr</a>.
+            </div>
+        </div>
+        <div class="rpva-export-actions">
+            <a href="/cases" class="btn btn-primary btn-sm">
+                <i class="fas fa-folder-open"></i> Choisir un dossier
+            </a>
+            <a href="https://ebarreau.avocat.fr" target="_blank" rel="noopener noreferrer"
+               class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-external-link-alt"></i> e-Barreau
+            </a>
+        </div>
+    </div>
+
 </div>
 </body>
 </html>

@@ -1,61 +1,108 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout}">
-<head><title>RPVA – Communications reçues</title>
+<head>
+    <title>RPVA — Communications reçues</title>
+    <link rel="stylesheet" th:href="@{/css/pages/rpva.css}">
 </head>
 <body>
 <div layout:fragment="content">
-    <div class="container-fluid">
-        <div class="d-flex justify-content-between align-items-center mb-4 page-header">
-            <h2 class="animate-fade-in-up"><i class="fas fa-inbox"></i> Communications reçues (RPVA)</h2>
-            <a th:href="@{/rpva}" class="btn btn-outline-secondary">
-                <i class="fas fa-arrow-left"></i> Retour
-            </a>
-        </div>
 
-        <div class="alert alert-warning">
-            <i class="fas fa-exclamation-triangle"></i>
-            <strong>Service non disponible :</strong>
-            L'accès au réseau e-Barreau (RPVA) nécessite une infrastructure dédiée (token USB, middleware).
-            Cette fonctionnalité n'est pas disponible dans la version actuelle.
+    <div class="page-header">
+        <div>
+            <h1 class="page-title"><i class="fas fa-inbox"></i>Communications reçues</h1>
+            <p class="page-subtitle">Messages des juridictions via le réseau RPVA</p>
         </div>
+        <a th:href="@{/rpva}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Retour RPVA
+        </a>
+    </div>
 
-        <!-- Tableau vide (structure prête pour intégration future) -->
-        <div class="card shadow-sm">
-            <div class="card-header bg-white">
-                <h5 class="mb-0"><i class="fas fa-list"></i> Liste des communications</h5>
-            </div>
-            <div class="card-body">
-                <div th:if="${communications == null or communications.isEmpty()}" class="text-center text-muted py-5">
-                    <div style="width:64px;height:64px;border-radius:50%;background:var(--bg-secondary);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
-                        <i class="fas fa-inbox" style="font-size:24px;color:var(--text-tertiary);"></i>
-                    </div>
-                    <p>Aucune communication reçue.</p>
+    <!-- Info : service non disponible -->
+    <div class="alert alert-info mb-4">
+        <i class="fas fa-info-circle"></i>
+        <div>
+            <strong>Accès direct non disponible.</strong>
+            La réception en temps réel nécessite la clé USB RPVA + middleware CNB.
+            Les communications reçues apparaîtront ici après référencement.
+        </div>
+    </div>
+
+    <!-- Filtres statut -->
+    <div class="card mb-4">
+        <div class="card-body" style="padding:1rem 1.5rem">
+            <form method="get" th:action="@{/rpva/received}" class="d-flex gap-3 flex-wrap align-items-center">
+                <label class="form-label mb-0" style="white-space:nowrap">Filtrer :</label>
+                <div class="d-flex gap-2 flex-wrap">
+                    <a th:href="@{/rpva/received}" class="btn btn-sm"
+                       th:classappend="${selectedStatus == null ? 'btn-primary' : 'btn-secondary'}">
+                        Tout
+                    </a>
+                    <a th:href="@{/rpva/received(status='unread')}" class="btn btn-sm"
+                       th:classappend="${selectedStatus == 'unread' ? 'btn-primary' : 'btn-secondary'}">
+                        Non lus
+                    </a>
+                    <a th:href="@{/rpva/received(status='read')}" class="btn btn-sm"
+                       th:classappend="${selectedStatus == 'read' ? 'btn-primary' : 'btn-secondary'}">
+                        Lus
+                    </a>
                 </div>
-                <table th:if="${communications != null and !communications.isEmpty()}" class="table table-hover">
+            </form>
+        </div>
+    </div>
+
+    <!-- Liste des communications -->
+    <div class="card card-elevated animate-fade-in">
+        <div class="card-header">
+            <i class="fas fa-list"></i> Liste des communications
+        </div>
+        <div class="card-body" style="padding:0">
+
+            <!-- Vide -->
+            <div th:if="${communications == null or #maps.isEmpty(communications)}"
+                 class="empty-state">
+                <i class="fas fa-inbox empty-state-icon"></i>
+                <h3 class="empty-state-title">Aucune communication reçue</h3>
+                <p class="empty-state-message">Les messages des juridictions s'afficheront ici</p>
+            </div>
+
+            <!-- Tableau -->
+            <div th:if="${communications != null and !#maps.isEmpty(communications)}"
+                 class="table-responsive">
+                <table class="table-modern">
                     <thead>
                         <tr>
                             <th>Date</th>
                             <th>Expéditeur</th>
                             <th>Objet</th>
                             <th>Juridiction</th>
-                            <th>Actions</th>
+                            <th>Statut</th>
+                            <th style="text-align:right">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr th:each="comm : ${communications}">
-                            <td th:text="${#temporals.format(comm.receivedAt, 'dd/MM/yyyy HH:mm')}">-</td>
-                            <td th:text="${comm.sender}">-</td>
-                            <td th:text="${comm.subject}">-</td>
-                            <td th:text="${comm.jurisdiction}">-</td>
+                        <tr th:each="entry : ${communications}">
+                            <td style="font-size:.8125rem;color:var(--text-muted)">—</td>
+                            <td>—</td>
+                            <td>—</td>
+                            <td>—</td>
+                            <td><span class="badge badge-info">Reçu</span></td>
                             <td>
-                                <a th:href="@{/rpva/view/{id}(id=${comm.id})}" class="btn btn-sm btn-outline-primary">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-                                <a th:href="@{/rpva/download-receipt/{id}(id=${comm.id})}" class="btn btn-sm btn-outline-secondary">
-                                    <i class="fas fa-download"></i> AR
-                                </a>
+                                <div class="action-buttons" style="justify-content:flex-end">
+                                    <div class="tooltip">
+                                        <button class="btn btn-ghost btn-sm">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <span class="tooltip-text">Voir</span>
+                                    </div>
+                                    <div class="tooltip">
+                                        <button class="btn btn-ghost btn-sm">
+                                            <i class="fas fa-download" style="color:var(--color-accent)"></i>
+                                        </button>
+                                        <span class="tooltip-text">Télécharger AR</span>
+                                    </div>
+                                </div>
                             </td>
                         </tr>
                     </tbody>
@@ -63,6 +110,26 @@
             </div>
         </div>
     </div>
+
+    <!-- Accès e-Barreau direct -->
+    <div class="rpva-export-banner mt-4">
+        <div class="rpva-export-icon">
+            <i class="fas fa-external-link-alt"></i>
+        </div>
+        <div class="rpva-export-body">
+            <div class="rpva-export-title">Consulter e-Barreau directement</div>
+            <div class="rpva-export-desc">
+                Accédez à la boîte de réception e-Barreau avec votre clé USB avocat
+                pour consulter l'ensemble de vos communications.
+            </div>
+        </div>
+        <div class="rpva-export-actions">
+            <a href="https://ebarreau.avocat.fr" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm">
+                <i class="fas fa-external-link-alt"></i> Ouvrir e-Barreau
+            </a>
+        </div>
+    </div>
+
 </div>
 </body>
 </html>

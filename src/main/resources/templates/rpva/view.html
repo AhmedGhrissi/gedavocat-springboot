@@ -1,59 +1,120 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout}">
-<head><title>RPVA – Détail de la communication</title>
+<head>
+    <title>RPVA — Détail communication</title>
+    <link rel="stylesheet" th:href="@{/css/pages/rpva.css}">
 </head>
 <body>
 <div layout:fragment="content">
-    <div class="container-fluid">
-        <div class="d-flex justify-content-between align-items-center mb-4 page-header">
-            <h2 class="animate-fade-in-up"><i class="fas fa-envelope-open"></i> Détail de la communication</h2>
-            <div>
-                <a th:href="@{/rpva/download-receipt/{id}(id=${communication?.id})}" class="btn btn-outline-secondary me-2"
-                   th:if="${communication != null}">
-                    <i class="fas fa-download"></i> Télécharger l'AR
-                </a>
-                <a th:href="@{/rpva}" class="btn btn-outline-secondary">
-                    <i class="fas fa-arrow-left"></i> Retour
-                </a>
-            </div>
+
+    <div class="page-header">
+        <div>
+            <h1 class="page-title"><i class="fas fa-envelope-open"></i>Détail de la communication</h1>
+            <p class="page-subtitle" th:if="${communication != null}"
+               th:text="${communication.get('id') != null ? 'Réf. ' + communication.get('id') : 'Communication RPVA'}">Réf.</p>
         </div>
-
-        <div th:if="${communication == null}" class="alert alert-warning">
-            <i class="fas fa-exclamation-triangle"></i> Communication introuvable.
-        </div>
-
-        <div th:if="${communication != null}" class="card shadow-sm">
-            <div class="card-header bg-white">
-                <h5 class="mb-0" th:text="${communication.subject}">Objet</h5>
-            </div>
-            <div class="card-body">
-                <dl class="row">
-                    <dt class="col-sm-3">Date</dt>
-                    <dd class="col-sm-9" th:text="${#temporals.format(communication.sentAt, 'dd/MM/yyyy HH:mm')}">-</dd>
-
-                    <dt class="col-sm-3">Juridiction</dt>
-                    <dd class="col-sm-9" th:text="${communication.jurisdictionCode}">-</dd>
-
-                    <dt class="col-sm-3">Statut</dt>
-                    <dd class="col-sm-9">
-                        <span class="badge"
-                              th:classappend="${communication.status == 'SENT'} ? 'bg-success' : (${communication.status == 'FAILED'} ? 'bg-danger' : 'bg-secondary')"
-                              th:text="${communication.status}">-</span>
-                    </dd>
-
-                    <dt class="col-sm-3">Message RPVA ID</dt>
-                    <dd class="col-sm-9" th:text="${communication.rpvaMessageId ?: '-'}">-</dd>
-                </dl>
-
-                <hr>
-
-                <h6 class="fw-bold">Contenu du message</h6>
-                <div class="bg-light p-3 rounded" th:text="${communication.content ?: 'Aucun contenu disponible.'}">-</div>
-            </div>
+        <div class="d-flex gap-2">
+            <a th:if="${communication != null}"
+               th:href="@{/rpva/communications/{id}/receipt(id=${communication.get('id')})}"
+               class="btn btn-secondary">
+                <i class="fas fa-download"></i> Télécharger l'AR
+            </a>
+            <a th:href="@{/rpva}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Retour
+            </a>
         </div>
     </div>
+
+    <!-- Communication introuvable -->
+    <div th:if="${communication == null}" class="alert alert-warning">
+        <i class="fas fa-exclamation-triangle"></i>
+        Communication introuvable ou accès non autorisé.
+    </div>
+
+    <!-- Détail -->
+    <div th:if="${communication != null}" class="rpva-detail-grid">
+
+        <!-- Infos principales -->
+        <div class="card card-elevated">
+            <div class="card-header">
+                <i class="fas fa-info-circle"></i> Informations
+            </div>
+            <div class="card-body">
+                <div class="rpva-info-list">
+                    <div class="rpva-info-row">
+                        <span class="rpva-info-label">Objet</span>
+                        <span class="rpva-info-value" th:text="${communication.get('subject') ?: '—'}">—</span>
+                    </div>
+                    <div class="rpva-info-row">
+                        <span class="rpva-info-label">Juridiction</span>
+                        <span class="rpva-info-value" th:text="${communication.get('jurisdictionCode') ?: '—'}">—</span>
+                    </div>
+                    <div class="rpva-info-row">
+                        <span class="rpva-info-label">Date d'envoi</span>
+                        <span class="rpva-info-value" th:text="${communication.get('sentAt') != null ? #temporals.format(communication.get('sentAt'), 'dd/MM/yyyy à HH:mm') : '—'}">—</span>
+                    </div>
+                    <div class="rpva-info-row">
+                        <span class="rpva-info-label">Identifiant RPVA</span>
+                        <span class="rpva-info-value" style="font-family:monospace;font-size:.8125rem"
+                              th:text="${communication.get('rpvaMessageId') ?: '—'}">—</span>
+                    </div>
+                    <div class="rpva-info-row">
+                        <span class="rpva-info-label">Statut</span>
+                        <span>
+                            <span th:switch="${communication.get('status')?.toString()}" class="badge">
+                                <span th:case="'SENT'"      class="badge badge-info">Envoyé</span>
+                                <span th:case="'DELIVERED'" class="badge badge-success">Délivré</span>
+                                <span th:case="'READ'"      class="badge badge-success">Lu</span>
+                                <span th:case="'FAILED'"    class="badge badge-danger">Échec</span>
+                                <span th:case="*"           class="badge" style="background:var(--bg-tertiary);color:var(--text-muted)"
+                                      th:text="${communication.get('status') ?: '—'}">—</span>
+                            </span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contenu du message -->
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-comment-alt"></i> Contenu du message
+            </div>
+            <div class="card-body">
+                <div class="rpva-message-content"
+                     th:text="${communication.get('content') ?: 'Aucun contenu disponible.'}">
+                    Contenu du message
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Actions export -->
+    <div class="rpva-export-banner mt-4">
+        <div class="rpva-export-icon">
+            <i class="fas fa-file-pdf"></i>
+        </div>
+        <div class="rpva-export-body">
+            <div class="rpva-export-title">Accusé de réception</div>
+            <div class="rpva-export-desc">
+                Téléchargez l'accusé de réception officiel de cette communication pour votre dossier.
+            </div>
+        </div>
+        <div class="rpva-export-actions">
+            <a th:if="${communication != null}"
+               th:href="@{/rpva/communications/{id}/receipt(id=${communication.get('id')})}"
+               class="btn btn-primary btn-sm">
+                <i class="fas fa-download"></i> Télécharger AR
+            </a>
+            <a th:href="@{/rpva}" class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-list"></i> Toutes les communications
+            </a>
+        </div>
+    </div>
+
 </div>
 </body>
 </html>
