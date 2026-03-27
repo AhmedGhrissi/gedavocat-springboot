@@ -83,20 +83,19 @@ public class RPVAController {
             User user = userRepository.findByEmail(userDetails.getUsername())
                     .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
 
-            if (!rpvaService.isConfigured()) {
-                model.addAttribute("error", "RPVA n'est pas configuré");
-                return "redirect:/settings";
-            }
+            model.addAttribute("user", user);
+            model.addAttribute("isConfigured", rpvaService.isConfigured());
 
             // Récupérer les communications des 30 derniers jours
-            Map<String, Object> communications = rpvaService.getReceivedCommunications(
-                    LocalDateTime.now().minusDays(30),
-                    LocalDateTime.now(),
-                    status != null ? status : "all"
-            );
+            if (rpvaService.isConfigured()) {
+                Map<String, Object> communications = rpvaService.getReceivedCommunications(
+                        LocalDateTime.now().minusDays(30),
+                        LocalDateTime.now(),
+                        status != null ? status : "all"
+                );
+                model.addAttribute("communications", communications);
+            }
 
-            model.addAttribute("user", user);
-            model.addAttribute("communications", communications);
             model.addAttribute("selectedStatus", status);
 
             return "rpva/received";
@@ -120,12 +119,8 @@ public class RPVAController {
         User user = userRepository.findByEmail(userDetails.getUsername())
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
 
-        if (!rpvaService.isConfigured()) {
-            model.addAttribute("error", "RPVA n'est pas configuré");
-            return "redirect:/settings";
-        }
-
         model.addAttribute("user", user);
+        model.addAttribute("isConfigured", rpvaService.isConfigured());
 
         // Si un dossier est spécifié
         if (caseId != null) {
