@@ -135,17 +135,27 @@ public class RpvaExportController {
                 .build();
         }
 
+        // Barreau de l'avocat : c'est une entité Barreau avec champ .barreau (String)
+        String nomBarreau = "—";
+        if (avocat.getBarreau() != null && avocat.getBarreau().getBarreau() != null) {
+            nomBarreau = avocat.getBarreau().getBarreau();
+        }
+
         // Avocat rédacteur
         ActeProcedure.Avocat avocatRedacteur = ActeProcedure.Avocat.builder()
             .nom(avocat.getLastName() != null ? avocat.getLastName() : "—")
             .prenom(avocat.getFirstName() != null ? avocat.getFirstName() : "—")
-            .barreau(avocat.getBarreau() != null ? avocat.getBarreau() : "—")
+            .barreau(nomBarreau)
             .numeroOrdre(avocat.getBarNumber() != null ? avocat.getBarNumber() : "—")
             .build();
 
+        // Case n'a pas de jurisdiction ni caseNumber — on utilise reference et name
+        String numeroRole = dossier.getReference() != null ? dossier.getReference() : "—";
+        String juridiction = "À compléter";  // à enrichir si le champ est ajouté à Case
+
         return ActeProcedure.builder()
-            .numeroRole(dossier.getCaseNumber())
-            .juridiction(dossier.getJurisdiction() != null ? dossier.getJurisdiction() : "À compléter")
+            .numeroRole(numeroRole)
+            .juridiction(juridiction)
             .typeActe(ActeProcedure.TypeActe.CONCLUSIONS)
             .referenceInterne(dossier.getId())
             .dateGeneration(LocalDate.now())
