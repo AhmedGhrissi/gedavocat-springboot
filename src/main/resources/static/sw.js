@@ -3,7 +3,7 @@
 //   Cache-first pour les assets, network-first pour les pages
 // ════════════════════════════════════════════════
 
-const CACHE_NAME = 'docavocat-v1';
+const CACHE_NAME = 'docavocat-v2';
 const STATIC_ASSETS = [
     '/css/layout.css',
     '/css/global-unified-theme.css',
@@ -44,8 +44,11 @@ self.addEventListener('fetch', event => {
     // Skip non-GET requests
     if (request.method !== 'GET') return;
 
-    // Skip API calls and form submissions
+    // Skip cross-origin requests (Google Fonts, CDNs, extensions, etc.)
     const url = new URL(request.url);
+    if (url.origin !== self.location.origin) return;
+
+    // Skip API calls and form submissions
     if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/logout')) return;
 
     // Navigation requests: network-first with offline fallback

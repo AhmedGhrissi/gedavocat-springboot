@@ -152,7 +152,7 @@ public class CspNonceFilter extends OncePerRequestFilter {
                 "style-src 'self' 'unsafe-inline' " + CDN_JSDELIVR + " " + CDN_CDNJS + " " + GOOGLE_FONTS_CSS + "; " +
                 "font-src 'self' data: " + CDN_CDNJS + " " + GOOGLE_FONTS_FILES + "; " +
                 "img-src 'self' data:; " +
-                "connect-src 'self' https://api.stripe.com https://api.payplug.com " + CDN_JSDELIVR + "; " +
+                "connect-src 'self' https://api.stripe.com https://api.payplug.com " + CDN_JSDELIVR + " " + GOOGLE_FONTS_CSS + " " + GOOGLE_FONTS_FILES + "; " +
                 "frame-src 'self' https://js.stripe.com https://hooks.stripe.com; " +
                 "object-src 'none'; " +
                 "base-uri 'self'; " +

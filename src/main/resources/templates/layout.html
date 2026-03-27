@@ -19,6 +19,11 @@
     <link rel="apple-touch-icon" href="/img/icons/apple-touch-icon.png">
     <title layout:title-pattern="$CONTENT_TITLE - $LAYOUT_TITLE">DocAvocat</title>
 
+    <!-- Early dark mode — apply .dark class BEFORE CSS loads to avoid FOUC -->
+    <script th:attr="nonce=${cspNonce}">
+        (function(){var t=localStorage.getItem('theme');if(t==='dark'||(t!=='light'&&window.matchMedia('(prefers-color-scheme:dark)').matches)){document.documentElement.classList.add('dark')}})();
+    </script>
+
     <!-- Safety: early no-op stub to avoid ReferenceError when pages call toggleNotifPanel before main scripts load -->
     <script th:attr="nonce=${cspNonce}">
         window.toggleNotifPanel = window.toggleNotifPanel || function() {
