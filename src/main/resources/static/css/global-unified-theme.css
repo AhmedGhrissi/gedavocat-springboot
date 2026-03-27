@@ -177,6 +177,25 @@
 .dark .table-hover tbody tr:hover,
 .dark .table-modern tbody tr:hover { background: var(--bg-surface-hover); }
 
+/* Dark mode: nav-tabs */
+.dark .nav-tabs { border-bottom-color: var(--border-default); }
+.dark .nav-tabs .nav-link { color: var(--text-secondary); }
+.dark .nav-tabs .nav-link:hover { color: var(--text-primary); border-bottom-color: var(--border-strong); }
+.dark .nav-tabs .nav-link.active { color: var(--color-accent); border-bottom-color: var(--color-accent); }
+
+/* Dark mode: floating labels & Bootstrap overrides */
+.dark .form-floating > label { color: var(--text-secondary); }
+.dark .form-label { color: var(--text-secondary); }
+.dark .card { background: var(--bg-surface); border-color: var(--border-default); color: var(--text-primary); }
+.dark .card-header { background: var(--bg-tertiary); border-color: var(--border-default); color: var(--text-primary); }
+.dark .card-footer { background: var(--bg-tertiary); border-color: var(--border-default); }
+.dark .page-header, .dark .content-header { color: var(--text-primary); }
+.dark .text-muted { color: var(--text-muted) !important; }
+.dark .text-body { color: var(--text-primary) !important; }
+.dark .bg-white { background-color: var(--bg-surface) !important; }
+.dark .bg-light { background-color: var(--bg-tertiary) !important; }
+.dark .border { border-color: var(--border-default) !important; }
+
 /* ── Base ──────────────────────────────────────────────── */
 *, *::before, *::after {
     box-sizing: border-box;

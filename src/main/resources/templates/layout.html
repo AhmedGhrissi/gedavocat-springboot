@@ -1245,37 +1245,8 @@
             } catch (err) { /* silent */ }
         });
 
-        // Ensure dark mode toggle works even if earlier scripts failed
-        function safeDarkToggle() {
-            try {
-                const html = document.documentElement;
-                const icon = document.getElementById('darkModeIcon');
-                const metaTheme = document.querySelector('meta[name="theme-color"]');
-                const isDark = !html.classList.contains('dark');
-                if (isDark) {
-                    html.classList.add('dark');
-                    if (metaTheme) metaTheme.content = '#080F1A';
-                } else {
-                    html.classList.remove('dark');
-                    if (metaTheme) metaTheme.content = '#0F172A';
-                }
-                try { localStorage.setItem('theme', isDark ? 'dark' : 'light'); } catch(e){}
-                if (icon) {
-                    icon.classList.toggle('fa-moon', !isDark);
-                    icon.classList.toggle('fa-sun', isDark);
-                }
-            } catch(e) { console.warn('safeDarkToggle failed', e); }
-        }
-
-        var dm = document.getElementById('darkModeToggle');
-        if (dm) {
-            // remove any inline onclick to avoid duplicates and attach robust handler
-            try { dm.removeAttribute('onclick'); } catch(e){}
-            dm.addEventListener('click', function(e){
-                e.preventDefault();
-                safeDarkToggle();
-            });
-        }
+        // Dark mode toggle is handled by the earlier script block.
+        // Removed duplicate safeDarkToggle handler that was cancelling the first handler.
 
         // Ensure notif bell works even if other scripts didn't attach handlers
         var bell = document.getElementById('notifBell');
