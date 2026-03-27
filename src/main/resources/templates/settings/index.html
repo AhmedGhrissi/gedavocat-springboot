@@ -53,43 +53,35 @@
                     <h3><i class="fas fa-user-edit"></i> Informations personnelles</h3>
                     
                     <form th:action="@{/settings/profile}" method="post">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-floating">
-                                    <input type="text" id="firstName" name="firstName" 
-                                           th:value="${user.firstName}" class="form-control" placeholder=" " required>
-                                    <label for="firstName">Prénom</label>
-                                </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6 mb-3">
+                                <label for="firstName" class="form-label">Prénom</label>
+                                <input type="text" id="firstName" name="firstName" 
+                                       th:value="${user.firstName}" class="form-control" required>
                             </div>
-                            <div class="col-md-6">
-                                <div class="form-floating">
-                                    <input type="text" id="lastName" name="lastName" 
-                                           th:value="${user.lastName}" class="form-control" placeholder=" " required>
-                                    <label for="lastName">Nom</label>
-                                </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="lastName" class="form-label">Nom</label>
+                                <input type="text" id="lastName" name="lastName" 
+                                       th:value="${user.lastName}" class="form-control" required>
                             </div>
                         </div>
 
-                        <div class="form-floating">
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email (non modifiable)</label>
                             <input type="email" id="email" th:value="${user.email}" 
-                                   class="form-control" placeholder=" " readonly>
-                            <label for="email">Email (non modifiable)</label>
+                                   class="form-control" readonly>
                         </div>
 
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-floating">
-                                    <input type="text" id="phone" name="phone" 
-                                           th:value="${user.phone}" class="form-control" placeholder=" ">
-                                    <label for="phone">Téléphone</label>
-                                </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6 mb-3">
+                                <label for="phone" class="form-label">Téléphone</label>
+                                <input type="text" id="phone" name="phone" 
+                                       th:value="${user.phone}" class="form-control">
                             </div>
-                            <div class="col-md-6">
-                                <div class="form-floating">
-                                    <input type="text" id="barNumber" name="barNumber" 
-                                           th:value="${user.barNumber}" class="form-control" placeholder=" ">
-                                    <label for="barNumber">Numéro au barreau</label>
-                                </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="barNumber" class="form-label">Numéro au barreau</label>
+                                <input type="text" id="barNumber" name="barNumber" 
+                                       th:value="${user.barNumber}" class="form-control">
                             </div>
                         </div>
 
@@ -118,10 +110,9 @@
                     </div>
 
                     <form th:action="@{/settings/yousign}" method="post">
-                        <div class="form-floating">
-                            <input type="password" id="apiKey" name="apiKey" 
-                                   class="form-control" placeholder=" ">
-                            <label for="apiKey">Clé API Yousign</label>
+                        <div class="mb-3">
+                            <label for="apiKey" class="form-label">Clé API Yousign</label>
+                            <input type="password" id="apiKey" name="apiKey" class="form-control">
                             <small class="text-muted">Format: prod_XXXXXXXX ou test_XXXXXXXX — Laissez vide pour conserver la clé actuelle</small>
                         </div>
 
@@ -168,22 +159,20 @@
                     <!-- Changement de mot de passe -->
                     <h5><i class="fas fa-key"></i> Changer le mot de passe</h5>
                     <form th:action="@{/settings/password}" method="post" class="mt-3" id="passwordForm">
-                        <div class="form-floating mb-3">
+                        <div class="mb-3">
+                            <label for="currentPassword" class="form-label">Mot de passe actuel</label>
                             <input type="password" id="currentPassword" name="currentPassword"
-                                   class="form-control" placeholder=" " required autocomplete="current-password">
-                            <label for="currentPassword">Mot de passe actuel</label>
+                                   class="form-control" required autocomplete="current-password">
                         </div>
-                        <div class="form-floating mb-3">
+                        <div class="mb-3">
+                            <label for="newPassword" class="form-label">Nouveau mot de passe (min. 8 caractères)</label>
                             <input type="password" id="newPassword" name="newPassword"
-                                   class="form-control" placeholder=" "
-                                   minlength="8" required autocomplete="new-password">
-                            <label for="newPassword">Nouveau mot de passe (min. 8 caractères)</label>
+                                   class="form-control" minlength="8" required autocomplete="new-password">
                         </div>
-                        <div class="form-floating mb-3">
+                        <div class="mb-3">
+                            <label for="confirmPassword" class="form-label">Confirmer le nouveau mot de passe</label>
                             <input type="password" id="confirmPassword" name="confirmPassword"
-                                   class="form-control" placeholder=" "
-                                   minlength="8" required autocomplete="new-password">
-                            <label for="confirmPassword">Confirmer le nouveau mot de passe</label>
+                                   class="form-control" minlength="8" required autocomplete="new-password">
                         </div>
                         <button type="submit" class="btn btn-warning">
                             <i class="fas fa-key"></i> Modifier le mot de passe
@@ -211,10 +200,10 @@
                             <div class="card card-body border-danger">
                                 <p class="text-danger"><strong>Attention :</strong> Cette action est irréversible. Toutes vos données seront anonymisées.</p>
                                 <form th:action="@{/rgpd/delete-account}" method="post">
-                                    <div class="form-floating mb-3">
+                                    <div class="mb-3">
+                                        <label for="confirmDeleteEmail" class="form-label">Confirmez votre email pour supprimer</label>
                                         <input type="email" id="confirmDeleteEmail" name="confirmEmail"
-                                               class="form-control" placeholder=" " required>
-                                        <label for="confirmDeleteEmail">Confirmez votre email pour supprimer</label>
+                                               class="form-control" required>
                                     </div>
                                     <button type="submit" class="btn btn-danger"
                                             data-confirm="Êtes-vous sûr de vouloir supprimer définitivement votre compte ?" data-confirm-type="danger">
