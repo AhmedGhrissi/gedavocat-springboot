@@ -2,262 +2,250 @@
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout}">
-<head><title>Facturation - Mes factures</title>
-</head>
+<head><title>Facturation</title></head>
 <body>
 <div layout:fragment="content">
-    <div class="container-fluid">
-        <!-- En-tête -->
-        <div class="hero-banner mb-4" style="background: #0F172A !important; border: 2px solid #C6A75E !important; padding: 2rem !important; border-radius: 12px !important;">
-            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
-                <div>
-                    <h1 style="color: #FFFFFF !important; font-size: 1.75rem !important; font-weight: 700 !important; margin-bottom: 0.5rem !important;">
-                        <i class="fas fa-file-invoice-dollar"></i> Facturation
-                    </h1>
-                    <p style="color: rgba(255,255,255,0.9) !important; font-size: 1rem !important; margin: 0 !important;">Gérez vos factures clients</p>
-                </div>
-                <div class="d-flex gap-2 flex-wrap">
-                    <button type="button" class="btn btn-light" id="openImportModalBtn" style="background: #FFFFFF !important; color: #0F172A !important; border: 2px solid #FFFFFF !important; font-weight: 600 !important;">
-                        <i class="fas fa-file-import"></i> Importer une facture
-                    </button>
-                    <a href="/invoices/new" class="btn btn-primary" style="background: #C6A75E !important; color: #0F172A !important; border: 2px solid #C6A75E !important; font-weight: 600 !important;">
-                        <i class="fas fa-plus"></i> Nouvelle facture
-                    </a>
-                </div>
-            </div>
-        </div>
 
-        <!-- Messages -->
-        <div th:if="${message}" class="alert alert-success alert-dismissible fade show" role="alert">
-            <i class="fas fa-check-circle"></i> <span th:text="${message}"></span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-        <div th:if="${importError}" class="alert alert-danger alert-dismissible fade show" role="alert">
-            <i class="fas fa-exclamation-circle"></i> <span th:text="${importError}"></span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
+    <!-- Alertes flash -->
+    <div th:if="${message}" class="alert alert-success animate-fade-in">
+        <i class="fas fa-check-circle"></i> <span th:text="${message}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" style="margin-left:auto"></button>
+    </div>
+    <div th:if="${importError}" class="alert alert-danger animate-fade-in">
+        <i class="fas fa-exclamation-circle"></i> <span th:text="${importError}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" style="margin-left:auto"></button>
+    </div>
 
-        <!-- Statistiques -->
-        <div class="row g-3 mb-4">
-            <div class="col-6 col-md-3">
-                <div class="stat-card">
-                    <div class="stat-icon blue">
-                        <i class="fas fa-euro-sign"></i>
-                    </div>
-                    <div class="stat-value" th:text="${totalAmount != null ? #numbers.formatDecimal(totalAmount, 0, 2) + ' €' : '0,00 €'}">0,00 €</div>
-                    <div class="stat-label">Total facturé</div>
-                </div>
-            </div>
-            
-            <div class="col-6 col-md-3">
-                <div class="stat-card">
-                    <div class="stat-icon green">
-                        <i class="fas fa-check-circle"></i>
-                    </div>
-                    <div class="stat-value" th:text="${paidCount != null ? paidCount : 0}">0</div>
-                    <div class="stat-label">Factures payées</div>
-                </div>
-            </div>
-            
-            <div class="col-6 col-md-3">
-                <div class="stat-card">
-                    <div class="stat-icon orange">
-                        <i class="fas fa-clock"></i>
-                    </div>
-                    <div class="stat-value" th:text="${pendingCount != null ? pendingCount : 0}">0</div>
-                    <div class="stat-label">En attente</div>
-                </div>
-            </div>
-            
-            <div class="col-6 col-md-3">
-                <div class="stat-card">
-                    <div class="stat-icon" style="background: rgba(220,38,38,0.1); color: #DC2626;">
-                        <i class="fas fa-exclamation-triangle"></i>
-                    </div>
-                    <div class="stat-value" style="color: #DC2626;" th:text="${overdueCount != null ? overdueCount : 0}">0</div>
-                    <div class="stat-label">En retard</div>
-                </div>
-            </div>
+    <!-- En-tête de page -->
+    <div class="page-header">
+        <div>
+            <h1 class="page-title"><i class="fas fa-file-invoice-dollar"></i>Facturation</h1>
+            <p class="page-subtitle">Gérez vos factures clients</p>
         </div>
+        <div class="d-flex gap-2 flex-wrap">
+            <button type="button" class="btn btn-secondary" id="openImportModalBtn">
+                <i class="fas fa-file-import"></i> Importer
+            </button>
+            <a href="/invoices/new" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Nouvelle facture
+            </a>
+        </div>
+    </div>
 
-        <!-- Filtres -->
-        <div class="card mb-4">
-            <div class="card-body">
-                <form method="get" action="/invoices" class="row g-3">
-                    <div class="col-12 col-md-6 col-lg-3">
+    <!-- Stat cards -->
+    <div class="stats-grid mb-4">
+        <div class="stat-card">
+            <div class="stat-icon blue"><i class="fas fa-euro-sign"></i></div>
+            <div class="stat-value" th:text="${totalAmount != null ? #numbers.formatDecimal(totalAmount,0,2) + ' €' : '0,00 €'}">0,00 €</div>
+            <div class="stat-label">Total facturé</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon green"><i class="fas fa-check-circle"></i></div>
+            <div class="stat-value" th:text="${paidCount != null ? paidCount : 0}">0</div>
+            <div class="stat-label">Payées</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon orange"><i class="fas fa-clock"></i></div>
+            <div class="stat-value" th:text="${pendingCount != null ? pendingCount : 0}">0</div>
+            <div class="stat-label">En attente</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon red"><i class="fas fa-exclamation-triangle"></i></div>
+            <div class="stat-value" style="color:var(--color-danger)" th:text="${overdueCount != null ? overdueCount : 0}">0</div>
+            <div class="stat-label">En retard</div>
+        </div>
+    </div>
+
+    <!-- Filtres -->
+    <div class="card mb-4">
+        <div class="card-body" style="padding:1rem 1.5rem">
+            <form method="get" action="/invoices">
+                <div class="row g-3 align-items-end">
+                    <div class="col-12 col-sm-6 col-lg-3">
                         <label class="form-label">Statut</label>
                         <select name="status" class="form-select">
                             <option value="">Tous les statuts</option>
-                            <option value="DRAFT">Brouillon</option>
-                            <option value="SENT">Envoyée</option>
-                            <option value="PAID">Payée</option>
-                            <option value="OVERDUE">En retard</option>
-                            <option value="CANCELLED">Annulée</option>
+                            <option value="DRAFT"     th:selected="${param.status == 'DRAFT'}">Brouillon</option>
+                            <option value="SENT"      th:selected="${param.status == 'SENT'}">Envoyée</option>
+                            <option value="PAID"      th:selected="${param.status == 'PAID'}">Payée</option>
+                            <option value="OVERDUE"   th:selected="${param.status == 'OVERDUE'}">En retard</option>
+                            <option value="CANCELLED" th:selected="${param.status == 'CANCELLED'}">Annulée</option>
                         </select>
                     </div>
-                    <div class="col-12 col-md-6 col-lg-3">
+                    <div class="col-12 col-sm-6 col-lg-3">
                         <label class="form-label">Client</label>
-                        <input type="text" name="client" class="form-control" placeholder="Nom du client">
+                        <input type="text" name="client" class="form-control" placeholder="Nom du client"
+                               th:value="${param.client}">
                     </div>
-                    <div class="col-12 col-md-6 col-lg-2">
-                        <label class="form-label">Date début</label>
-                        <input type="date" name="dateFrom" class="form-control">
+                    <div class="col-12 col-sm-6 col-lg-3">
+                        <label class="form-label">Période</label>
+                        <select name="period" class="form-select">
+                            <option value="">Toutes les dates</option>
+                            <option value="this_month"  th:selected="${param.period == 'this_month'}">Ce mois</option>
+                            <option value="last_month"  th:selected="${param.period == 'last_month'}">Mois dernier</option>
+                            <option value="this_year"   th:selected="${param.period == 'this_year'}">Cette année</option>
+                        </select>
                     </div>
-                    <div class="col-12 col-md-6 col-lg-2">
-                        <label class="form-label">Date fin</label>
-                        <input type="date" name="dateTo" class="form-control">
-                    </div>
-                    <div class="col-12 col-lg-2 d-flex align-items-end">
-                        <button type="submit" class="btn btn-primary w-100 rounded-md fw-600">
+                    <div class="col-12 col-sm-6 col-lg-3">
+                        <button type="submit" class="btn btn-primary w-100">
                             <i class="fas fa-search"></i> Filtrer
                         </button>
                     </div>
-                </form>
-            </div>
+                </div>
+            </form>
         </div>
+    </div>
 
-        <!-- Liste des factures -->
-        <div class="card">
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>N° Facture</th>
-                                <th>Client</th>
-                                <th>Date</th>
-                                <th>Échéance</th>
-                                <th class="text-end">Montant HT</th>
-                                <th class="text-end">Montant TTC</th>
-                                <th>Statut</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr th:if="${invoices == null or invoices.empty}">
-                                <td colspan="8" class="text-center py-5">
-                                    <div style="width:64px;height:64px;border-radius:var(--radius-xl);background:var(--bg-tertiary);display:inline-flex;align-items:center;justify-content:center;margin-bottom:1rem">
-                                        <i class="fas fa-inbox fa-2x" style="color:var(--text-tertiary)"></i>
-                                    </div>
-                                    <p class="text-muted">Aucune facture pour le moment</p>
-                                    <a href="/invoices/new" class="btn btn-primary rounded-md fw-600">
-                                        <i class="fas fa-plus"></i> Créer ma première facture
+    <!-- Tableau -->
+    <div class="card card-elevated animate-fade-in">
+        <div class="card-header">
+            <i class="fas fa-list"></i> Liste des factures
+        </div>
+        <div class="card-body" style="padding:0">
+            <div class="table-responsive">
+                <table class="table-modern">
+                    <thead>
+                        <tr>
+                            <th>N° Facture</th>
+                            <th>Client</th>
+                            <th>Date</th>
+                            <th>Échéance</th>
+                            <th style="text-align:right">HT</th>
+                            <th style="text-align:right">TTC</th>
+                            <th>Statut</th>
+                            <th style="text-align:right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${invoices == null or invoices.empty}">
+                            <td colspan="8">
+                                <div class="empty-state">
+                                    <i class="fas fa-file-invoice empty-state-icon"></i>
+                                    <h3 class="empty-state-title">Aucune facture</h3>
+                                    <p class="empty-state-message">Créez votre première facture</p>
+                                    <a href="/invoices/new" class="btn btn-primary" style="margin-top:1.25rem">
+                                        <i class="fas fa-plus"></i> Créer une facture
                                     </a>
-                                </td>
-                            </tr>
-                            <tr th:each="invoice : ${invoices}">
-                                <td>
-                                    <strong th:text="${invoice.invoiceNumber}">FACT-2026-00001</strong>
-                                </td>
-                                <td th:text="${invoice.clientName}">Client Name</td>
-                                <td th:text="${#temporals.format(invoice.invoiceDate, 'dd/MM/yyyy')}">01/01/2026</td>
-                                <td>
-                                    <span th:if="${invoice.dueDate != null}" 
-                                          th:text="${#temporals.format(invoice.dueDate, 'dd/MM/yyyy')}"
-                                          th:classappend="${invoice.overdue ? 'text-danger fw-bold' : ''}">
-                                        31/01/2026
-                                    </span>
-                                    <span th:unless="${invoice.dueDate != null}" class="text-muted">-</span>
-                                </td>
-                                <td class="text-end" th:text="${#numbers.formatDecimal(invoice.totalHT, 0, 2) + ' €'}">1 000,00 €</td>
-                                <td class="text-end">
-                                    <strong th:text="${#numbers.formatDecimal(invoice.totalTTC, 0, 2) + ' €'}">1 200,00 €</strong>
-                                </td>
-                                <td>
-                                    <span th:switch="${invoice.status?.name()}" class="badge">
-                                        <span th:case="'DRAFT'" class="badge bg-secondary">Brouillon</span>
-                                        <span th:case="'SENT'" class="badge bg-info">Envoyée</span>
-                                        <span th:case="'PAID'" class="badge bg-success">Payée</span>
-                                        <span th:case="'OVERDUE'" class="badge bg-danger">En retard</span>
-                                        <span th:case="'CANCELLED'" class="badge bg-dark">Annulée</span>
-                                    </span>
-                                </td>
-                                <td>
-                                    <div class="d-flex flex-wrap gap-2">
-                                        <a th:href="@{/invoices/{id}(id=${invoice.id})}" class="btn btn-sm btn-outline-primary" title="Voir">
-                                            <i class="fas fa-eye"></i><span class="d-none d-lg-inline ms-1">Voir</span>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr th:each="invoice : ${invoices}">
+                            <td><strong th:text="${invoice.invoiceNumber}">FACT-001</strong></td>
+                            <td style="font-weight:500" th:text="${invoice.clientName}">Client</td>
+                            <td style="font-size:.8125rem;color:var(--text-muted)"
+                                th:text="${#temporals.format(invoice.invoiceDate,'dd/MM/yyyy')}">01/01/2026</td>
+                            <td style="font-size:.8125rem">
+                                <span th:if="${invoice.dueDate != null}"
+                                      th:text="${#temporals.format(invoice.dueDate,'dd/MM/yyyy')}"
+                                      th:style="${invoice.overdue} ? 'color:var(--color-danger);font-weight:600' : 'color:var(--text-muted)'">
+                                    31/01/2026
+                                </span>
+                                <span th:unless="${invoice.dueDate != null}" style="color:var(--text-tertiary)">—</span>
+                            </td>
+                            <td style="text-align:right;font-size:.875rem"
+                                th:text="${#numbers.formatDecimal(invoice.totalHT,0,2) + ' €'}">0,00 €</td>
+                            <td style="text-align:right;font-weight:600"
+                                th:text="${#numbers.formatDecimal(invoice.totalTTC,0,2) + ' €'}">0,00 €</td>
+                            <td>
+                                <span th:switch="${invoice.status?.name()}" class="badge">
+                                    <span th:case="'DRAFT'"     class="badge bg-secondary">Brouillon</span>
+                                    <span th:case="'SENT'"      class="badge bg-info">Envoyée</span>
+                                    <span th:case="'PAID'"      class="badge bg-success">Payée</span>
+                                    <span th:case="'OVERDUE'"   class="badge bg-danger">En retard</span>
+                                    <span th:case="'CANCELLED'" class="badge" style="background:var(--bg-tertiary);color:var(--text-muted)">Annulée</span>
+                                </span>
+                            </td>
+                            <td>
+                                <div class="action-buttons" style="justify-content:flex-end">
+                                    <div class="tooltip">
+                                        <a th:href="@{/invoices/{id}(id=${invoice.id})}" class="btn btn-ghost btn-sm">
+                                            <i class="fas fa-eye"></i>
                                         </a>
-                                        <a th:href="@{/invoices/{id}/edit(id=${invoice.id})}" class="btn btn-sm btn-outline-secondary" title="Modifier">
-                                            <i class="fas fa-edit"></i><span class="d-none d-lg-inline ms-1">Modifier</span>
+                                        <span class="tooltip-text">Voir</span>
+                                    </div>
+                                    <div class="tooltip">
+                                        <a th:href="@{/invoices/{id}/edit(id=${invoice.id})}" class="btn btn-ghost btn-sm">
+                                            <i class="fas fa-edit"></i>
                                         </a>
-                                        <a th:href="@{/invoices/{id}/pdf(id=${invoice.id})}" class="btn btn-sm btn-outline-info" title="PDF" target="_blank">
-                                            <i class="fas fa-file-pdf"></i><span class="d-none d-lg-inline ms-1">PDF</span>
+                                        <span class="tooltip-text">Modifier</span>
+                                    </div>
+                                    <div class="tooltip">
+                                        <a th:href="@{/invoices/{id}/pdf(id=${invoice.id})}" class="btn btn-ghost btn-sm" target="_blank">
+                                            <i class="fas fa-file-pdf" style="color:var(--color-danger)"></i>
                                         </a>
-                                        <button type="button" class="btn btn-sm btn-outline-danger" title="Supprimer"
+                                        <span class="tooltip-text">PDF</span>
+                                    </div>
+                                    <div class="tooltip">
+                                        <button type="button" class="btn btn-ghost btn-sm"
                                                 th:data-id="${invoice.id}"
                                                 onclick="deleteInvoice(this.dataset.id)">
-                                            <i class="fas fa-trash"></i><span class="d-none d-lg-inline ms-1">Supprimer</span>
+                                            <i class="fas fa-trash" style="color:var(--color-danger)"></i>
                                         </button>
+                                        <span class="tooltip-text">Supprimer</span>
                                     </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 
-    <!-- Modal : Importer une facture PDF -->
-    <div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
+    <!-- Modal Import -->
+    <div class="modal fade" id="importModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="importModalLabel">
-                        <i class="fas fa-file-import me-2" style="color:var(--brand-500)"></i>Importer une facture existante
+                    <h5 class="modal-title">
+                        <i class="fas fa-file-import me-2" style="color:var(--color-accent)"></i>Importer une facture
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <form th:action="@{/invoices/import}" method="post" enctype="multipart/form-data">
                     <div class="modal-body">
-                        <p class="text-muted small">Importez un PDF de facture existante et enregistrez-la dans le système.</p>
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label class="form-label">Client <span class="text-danger">*</span></label>
+                                <label class="form-label">Client <span style="color:var(--color-danger)">*</span></label>
                                 <select name="clientId" class="form-select" required>
-                                    <option value="">-- Sélectionner un client --</option>
+                                    <option value="">— Sélectionner un client —</option>
                                     <option th:each="c : ${clients}" th:value="${c.id}" th:text="${c.name}">Client</option>
                                 </select>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">N° Facture <span class="text-danger">*</span></label>
-                                <input type="text" name="invoiceNumber" class="form-control" required
-                                       placeholder="Ex: FACT-2026-00001">
+                                <label class="form-label">N° Facture <span style="color:var(--color-danger)">*</span></label>
+                                <input type="text" name="invoiceNumber" class="form-control" required placeholder="FACT-2026-001">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Date de facture <span class="text-danger">*</span></label>
-                                <input type="date" name="invoiceDate" class="form-control" required
-                                       th:value="${today}">
+                                <label class="form-label">Date de facture <span style="color:var(--color-danger)">*</span></label>
+                                <input type="date" name="invoiceDate" class="form-control" required th:value="${today}">
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Date d'échéance</label>
                                 <input type="date" name="dueDate" class="form-control">
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label">Montant HT (€) <span class="text-danger">*</span></label>
-                                <input type="number" name="totalHT" class="form-control" required
-                                       step="0.01" min="0.01" placeholder="1000.00">
+                                <label class="form-label">Montant HT (€) <span style="color:var(--color-danger)">*</span></label>
+                                <input type="number" name="totalHT" class="form-control" required step="0.01" min="0.01" placeholder="1000.00">
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">Taux TVA (%)</label>
-                                <input type="number" name="tvaRate" class="form-control"
-                                       step="0.1" min="0" max="100" value="20" placeholder="20">
+                                <input type="number" name="tvaRate" class="form-control" step="0.1" min="0" max="100" value="20">
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label">Joindre le PDF</label>
+                                <label class="form-label">PDF (facultatif)</label>
                                 <input type="file" name="file" class="form-control" accept=".pdf,.PDF">
-                                <small class="text-muted">Facultatif — max 50 Mo</small>
+                                <p class="form-text">Max 50 Mo</p>
                             </div>
                             <div class="col-12">
                                 <label class="form-label">Notes</label>
-                                <textarea name="notes" class="form-control" rows="2"
-                                          placeholder="Notes internes sur la facture..."></textarea>
+                                <textarea name="notes" class="form-control" rows="2" placeholder="Notes internes…"></textarea>
                             </div>
                         </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                        <button type="submit" class="btn btn-primary rounded-md fw-600">
+                        <button type="submit" class="btn btn-primary">
                             <i class="fas fa-file-import"></i> Importer
                         </button>
                     </div>
@@ -267,42 +255,24 @@
     </div>
 
     <script th:attr="nonce=${cspNonce}">
-        function deleteInvoice(invoiceId) {
-            appConfirm('Êtes-vous sûr de vouloir supprimer cette facture ?', { type: 'danger', confirmText: 'Supprimer' }).then(function(ok) {
-            if (!ok) return;
-                var csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
-                var csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content || 'X-CSRF-TOKEN';
-                var delHeaders = { 'Content-Type': 'application/json' };
-                if (csrfToken && csrfHeader) delHeaders[csrfHeader] = csrfToken;
-                fetch('/api/invoices/' + invoiceId, {
-                    method: 'DELETE',
-                    headers: delHeaders
-                })
-                .then(response => {
-                    if (response.ok) {
-                        window.location.reload();
-                    } else {
-                        appAlert('Erreur lors de la suppression', 'danger');
-                    }
-                })
-                .catch(error => {
-                    console.error('Erreur:', error);
-                    appAlert('Erreur lors de la suppression', 'danger');
-                });
-            });
-        }
-    </script>
-
-    <script th:attr="nonce=${cspNonce}">
     document.addEventListener('DOMContentLoaded', function() {
-        var importBtn = document.getElementById('openImportModalBtn');
-        var importModal = document.getElementById('importModal');
-        if (importBtn && importModal) {
-            importBtn.addEventListener('click', function() {
-                new bootstrap.Modal(importModal).show();
-            });
-        }
+        const btn = document.getElementById('openImportModalBtn');
+        const modal = document.getElementById('importModal');
+        if (btn && modal) btn.addEventListener('click', () => new bootstrap.Modal(modal).show());
     });
+
+    function deleteInvoice(invoiceId) {
+        appConfirm('Supprimer cette facture définitivement ?', {type:'danger', confirmText:'Supprimer'}).then(ok => {
+            if (!ok) return;
+            const csrfToken  = document.querySelector('meta[name="_csrf"]')?.content;
+            const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content || 'X-CSRF-TOKEN';
+            fetch('/api/invoices/' + invoiceId, {
+                method: 'DELETE',
+                headers: Object.assign({'Content-Type':'application/json'}, csrfToken ? {[csrfHeader]:csrfToken} : {})
+            }).then(r => r.ok ? window.location.reload() : appAlert('Erreur lors de la suppression','danger'))
+              .catch(() => appAlert('Erreur lors de la suppression','danger'));
+        });
+    }
     </script>
 </div>
 </body>

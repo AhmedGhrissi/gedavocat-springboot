@@ -2,213 +2,59 @@
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout}">
-
+<head>
+    <title>Clients</title>
+</head>
+<body>
 <div layout:fragment="content">
 
-    <th:block layout:fragment="extra-css">
-        <style>
-            /* FIX URGENT - Boutons actions toujours visibles */
-            .btn {
-                display: inline-flex !important;
-                align-items: center;
-                gap: 0.25rem;
-                padding: 0.375rem 0.75rem;
-                border-radius: 6px;
-                text-decoration: none;
-                transition: all 0.2s;
-                white-space: nowrap;
-            }
-            .btn-ghost {
-                background: #F8FAFC !important;
-                border: 2px solid #0F172A !important;
-                color: #0F172A !important;
-                font-weight: 600 !important;
-            }
-            .btn-ghost:hover {
-                background: #0F172A !important;
-                color: #FFFFFF !important;
-                border-color: #0F172A !important;
-                transform: translateY(-1px);
-            }
-            .btn-sm {
-                padding: 0.5rem 0.75rem !important;
-                font-size: 0.875rem;
-            }
-            .btn i {
-                color: inherit !important;
-                font-size: 1rem;
-            }
-            .action-buttons {
-                display: flex !important;
-                gap: 0.5rem;
-                justify-content: flex-start;
-            }
-            .table-modern td {
-                padding: 1rem !important;
-                vertical-align: middle;
-            }
-            .table-modern thead th {
-                padding: 1rem !important;
-                background: #F8FAFC;
-                font-weight: 600;
-                color: #0F172A;
-            }
-            .card-body {
-                padding: 0 !important;
-            }
-            /* Avatar styling */
-            .avatar {
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                border-radius: 50%;
-                background: #0F172A;
-                color: #FFFFFF;
-                font-weight: 600;
-            }
-            .avatar-sm {
-                width: 40px;
-                height: 40px;
-                font-size: 0.875rem;
-            }
-
-            /* Tooltip styles: position tooltip text above the button on hover */
-            .tooltip {
-                position: relative;
-                display: inline-flex; /* keeps button sizing intact */
-                align-items: center;
-            }
-            .tooltip .tooltip-text {
-                visibility: hidden;
-                opacity: 0;
-                pointer-events: none;
-                position: absolute;
-                bottom: calc(100% + 8px);
-                left: 50%;
-                transform: translateX(-50%);
-                background: rgba(15, 23, 42, 0.95);
-                color: #fff;
-                padding: 6px 8px;
-                border-radius: 6px;
-                font-size: 0.8125rem;
-                white-space: nowrap;
-                z-index: 9999;
-                transition: opacity 150ms ease, transform 150ms ease;
-            }
-            .tooltip:hover .tooltip-text,
-            .tooltip:focus-within .tooltip-text {
-                visibility: visible;
-                opacity: 1;
-                transform: translateX(-50%) translateY(-4px);
-                pointer-events: auto;
-            }
-            /* Small arrow under tooltip */
-            .tooltip .tooltip-text::after {
-                content: '';
-                position: absolute;
-                top: 100%;
-                left: 50%;
-                transform: translateX(-50%);
-                border-width: 6px;
-                border-style: solid;
-                border-color: rgba(15, 23, 42, 0.95) transparent transparent transparent;
-            }
-
-            /* Ensure icon-only buttons remain square and visible */
-            .btn.btn-ghost.btn-sm {
-                min-width: 40px;
-                height: 36px;
-                justify-content: center;
-                padding: 0.375rem;
-            }
-
-            /* Accessible focus state */
-            .btn:focus {
-                outline: 2px solid rgba(99, 102, 241, 0.6);
-                outline-offset: 2px;
-            }
-
-            /* Responsive adjustments */
-            @media (max-width: 480px) {
-                .tooltip .tooltip-text { font-size: 0.75rem; }
-                .btn.btn-ghost.btn-sm { min-width: 36px; height: 34px; }
-            }
-        </style>
-    </th:block>
-
-    <!-- Toast notifications -->
-    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1100;">
+    <!-- Toasts -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index:1100">
         <div th:if="${message}" id="toastSuccess" class="toast align-items-center text-bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
             <div class="d-flex">
-                <div class="toast-body">
-                    <i class="fas fa-check-circle me-2"></i><span th:text="${message}"></span>
-                </div>
+                <div class="toast-body"><i class="fas fa-check-circle me-2"></i><span th:text="${message}"></span></div>
                 <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Fermer"></button>
-            </div>
-        </div>
-        <div th:if="${warning}" id="toastWarning" class="toast align-items-center text-bg-warning border-0" role="alert" aria-live="assertive" aria-atomic="true">
-            <div class="d-flex">
-                <div class="toast-body">
-                    <i class="fas fa-exclamation-triangle me-2"></i><span th:text="${warning}"></span>
-                </div>
-                <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Fermer"></button>
             </div>
         </div>
         <div th:if="${error}" id="toastError" class="toast align-items-center text-bg-danger border-0" role="alert" aria-live="assertive" aria-atomic="true">
             <div class="d-flex">
-                <div class="toast-body">
-                    <i class="fas fa-times-circle me-2"></i><span th:text="${error}"></span>
-                </div>
+                <div class="toast-body"><i class="fas fa-times-circle me-2"></i><span th:text="${error}"></span></div>
                 <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Fermer"></button>
             </div>
         </div>
     </div>
 
-    <!-- Page Header -->
-    <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2.5rem;">
+    <!-- En-tête -->
+    <div class="page-header">
         <div>
-            <h1 class="page-title" style="font-size: 1.75rem; font-weight: 700; color: #0F172A; margin-bottom: 0.5rem;">
-                <i class="fas fa-users" style="color: #C6A75E; margin-right: 0.75rem;"></i>
-                Mes clients
-            </h1>
-            <p class="page-subtitle">
-                <span th:text="${totalClients} + ' client(s) enregistré(s)'">0 clients</span>
-            </p>
+            <h1 class="page-title"><i class="fas fa-users"></i>Mes clients</h1>
+            <p class="page-subtitle" th:text="${totalClients + ' client(s) enregistré(s)'}">0 clients</p>
         </div>
-        <div style="display: flex; gap: 0.75rem;">
+        <div class="d-flex gap-2 flex-wrap">
             <a th:href="@{/clients/new}" class="btn btn-primary">
-                <i class="fas fa-user-plus"></i>
-                Nouveau client
+                <i class="fas fa-user-plus"></i> Nouveau client
             </a>
             <button class="btn btn-secondary" onclick="window.print()">
-                <i class="fas fa-print"></i>
-                Imprimer
+                <i class="fas fa-print"></i> Imprimer
             </button>
         </div>
     </div>
 
-    <!-- Search & Filters -->
-    <div class="card" style="margin-bottom: 1.5rem;">
-        <div class="card-body">
-            <div class="row g-3">
-                <div class="col-md-6">
+    <!-- Recherche & tri -->
+    <div class="card mb-4">
+        <div class="card-body" style="padding:1rem 1.5rem">
+            <div class="row g-3 align-items-end">
+                <div class="col-12 col-md-7">
                     <div class="search-bar">
                         <i class="fas fa-search search-icon"></i>
-                        <input type="text" class="search-input" placeholder="Rechercher un client..." 
+                        <input type="text" class="search-input" placeholder="Rechercher un client par nom, email…"
                                id="searchClients" onkeyup="filterClients()">
                     </div>
                 </div>
-                <div class="col-md-3">
-                    <select class="form-select" id="filterClientType" onchange="filterClients()">
-                        <option value="">Tous les types</option>
-                        <option value="INDIVIDUAL">Particulier</option>
-                        <option value="COMPANY">Entreprise</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
+                <div class="col-12 col-md-5">
                     <select class="form-select" id="sortClients" onchange="filterClients()">
-                        <option value="name-asc">Nom (A-Z)</option>
-                        <option value="name-desc">Nom (Z-A)</option>
+                        <option value="name-asc">Nom (A–Z)</option>
+                        <option value="name-desc">Nom (Z–A)</option>
                         <option value="date-desc">Plus récents</option>
                         <option value="date-asc">Plus anciens</option>
                     </select>
@@ -217,115 +63,110 @@
         </div>
     </div>
 
-    <!-- Clients List -->
-    <div class="card card-elevated">
+    <!-- Tableau clients -->
+    <div class="card card-elevated animate-fade-in">
         <div class="card-header">
-            <h3>
-                <i class="fas fa-list"></i>
-                Liste des clients
-            </h3>
+            <i class="fas fa-list"></i> Liste des clients
         </div>
-        <div class="card-body p-0">
+        <div class="card-body" style="padding:0">
             <div th:if="${clients != null and !clients.empty}">
                 <div class="table-responsive">
-                <table class="table-modern" id="clientsTable">
-                    <thead>
-                        <tr>
-                            <th><i class="fas fa-user"></i> Client</th>
-                            <th><i class="fas fa-envelope"></i> Email</th>
-                            <th><i class="fas fa-phone"></i> Téléphone</th>
-                            <th><i class="fas fa-folder"></i> Dossiers</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr th:each="client : ${clients}">
-                            <td>
-                                <div class="d-flex align-items-center gap-3">
-                                    <div class="avatar avatar-sm" th:text="${client.name != null and client.name.length() > 0 ? client.name.substring(0, 1).toUpperCase() : 'C'}">C</div>
-                                    <a th:href="@{/clients/{id}(id=${client.id})}" 
-                                       class="case-name-link"
-                                       th:text="${client.name}">Client</a>
-                                </div>
-                            </td>
-                            <td>
-                                <a th:href="'mailto:' + ${client.email}" class="client-link"
-                                   th:text="${client.email}">email@example.com</a>
-                            </td>
-                            <td>
-                                <span th:if="${client.phone != null}" th:text="${client.phone}">-</span>
-                                <span th:if="${client.phone == null}" class="text-muted">-</span>
-                            </td>
-                            <td>
-                                <span class="badge badge-info" 
-                                      th:text="${client.cases != null ? client.cases.size() + ' dossier(s)' : '0 dossier'}">0 dossiers</span>
-                            </td>
-                            <td>
-                                <div class="action-buttons">
-                                    <a th:href="@{/clients/{id}(id=${client.id})}" 
-                                       class="btn btn-ghost btn-sm tooltip" data-tooltip="Voir détails">
-                                        <i class="fas fa-eye"></i>
-                                        <span class="tooltip-text">Voir détails</span>
-                                    </a>
-                                    <a th:href="@{/clients/{id}/edit(id=${client.id})}" 
-                                       class="btn btn-ghost btn-sm tooltip" data-tooltip="Modifier">
-                                        <i class="fas fa-edit"></i>
-                                        <span class="tooltip-text">Modifier</span>
-                                    </a>
-                                    <button type="button"
-                                            class="btn btn-ghost btn-sm tooltip"
-                                            data-tooltip="Supprimer"
-                                            th:data-client-id="${client.id}"
-                                            th:data-client-name="${client.name}"
-                                            th:data-has-cases="${client.cases != null and !client.cases.isEmpty()}"
-                                            th:data-case-count="${client.cases != null ? client.cases.size() : 0}"
-                                            th:data-export-url="@{/clients/{id}/export-zip(id=${client.id})}"
-                                            onclick="listOpenDeleteModal(this)">
-                                        <i class="fas fa-trash" style="color: #ef4444;"></i>
-                                        <span class="tooltip-text">Supprimer</span>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+                    <table class="table-modern" id="clientsTable">
+                        <thead>
+                            <tr>
+                                <th>Client</th>
+                                <th>Email</th>
+                                <th>Téléphone</th>
+                                <th>Dossiers</th>
+                                <th style="text-align:right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="client : ${clients}">
+                                <td>
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="avatar avatar-sm"
+                                             th:text="${client.name != null and client.name.length() > 0 ? client.name.substring(0,1).toUpperCase() : 'C'}">C</div>
+                                        <a th:href="@{/clients/{id}(id=${client.id})}"
+                                           style="font-weight:600;color:var(--text-primary);text-decoration:none"
+                                           th:text="${client.name}">Client</a>
+                                    </div>
+                                </td>
+                                <td>
+                                    <a th:href="'mailto:' + ${client.email}"
+                                       style="color:var(--color-accent);text-decoration:none"
+                                       th:text="${client.email}">email@example.com</a>
+                                </td>
+                                <td style="color:var(--text-secondary);font-size:.875rem">
+                                    <span th:if="${client.phone != null}" th:text="${client.phone}">-</span>
+                                    <span th:if="${client.phone == null}" style="color:var(--text-tertiary)">—</span>
+                                </td>
+                                <td>
+                                    <span class="badge badge-info"
+                                          th:text="${client.cases != null ? client.cases.size() + ' dossier(s)' : '0 dossier'}">0 dossier</span>
+                                </td>
+                                <td>
+                                    <div class="action-buttons" style="justify-content:flex-end">
+                                        <div class="tooltip">
+                                            <a th:href="@{/clients/{id}(id=${client.id})}" class="btn btn-ghost btn-sm">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <span class="tooltip-text">Voir</span>
+                                        </div>
+                                        <div class="tooltip">
+                                            <a th:href="@{/clients/{id}/edit(id=${client.id})}" class="btn btn-ghost btn-sm">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <span class="tooltip-text">Modifier</span>
+                                        </div>
+                                        <div class="tooltip">
+                                            <button type="button" class="btn btn-ghost btn-sm"
+                                                    th:data-client-id="${client.id}"
+                                                    th:data-client-name="${client.name}"
+                                                    th:data-has-cases="${client.cases != null and !client.cases.isEmpty()}"
+                                                    th:data-case-count="${client.cases != null ? client.cases.size() : 0}"
+                                                    th:data-export-url="@{/clients/{id}/export-zip(id=${client.id})}"
+                                                    onclick="listOpenDeleteModal(this)">
+                                                <i class="fas fa-trash" style="color:var(--color-danger)"></i>
+                                            </button>
+                                            <span class="tooltip-text">Supprimer</span>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
             <div th:if="${clients == null or clients.empty}" class="empty-state">
                 <i class="fas fa-users empty-state-icon"></i>
                 <h3 class="empty-state-title">Aucun client</h3>
                 <p class="empty-state-message">Commencez par ajouter votre premier client</p>
-                <a th:href="@{/clients/new}" class="btn btn-primary mt-3">
+                <a th:href="@{/clients/new}" class="btn btn-primary" style="margin-top:1.25rem">
                     <i class="fas fa-user-plus"></i> Ajouter un client
                 </a>
             </div>
         </div>
     </div>
 
-    <!-- Modale : client possède des dossiers → bloquer et proposer le ZIP -->
-    <div class="modal fade" id="listModalHasCases" tabindex="-1" aria-labelledby="listModalHasCasesLabel" aria-hidden="true">
-        <div class="modal-dialog">
+    <!-- Modal : client a des dossiers -->
+    <div class="modal fade" id="listModalHasCases" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                <div class="modal-header bg-warning text-dark">
-                    <h5 class="modal-title" id="listModalHasCasesLabel">
+                <div class="modal-header" style="background:var(--color-warning-bg);border-bottom-color:rgba(180,83,9,.2)">
+                    <h5 class="modal-title" style="color:var(--color-warning)">
                         <i class="fas fa-exclamation-triangle me-2"></i>Suppression impossible
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
                 </div>
                 <div class="modal-body">
-                    <p>
-                        Le client <strong id="listHasCasesClientName"></strong> possède
-                        <strong id="listHasCasesCount"></strong> dossier(s) rattaché(s).
-                    </p>
-                    <p>
-                        Vous devez d'abord <strong>télécharger le ZIP complet du dossier client</strong>
-                        (tous les dossiers et documents), puis supprimer chaque dossier manuellement
-                        avant de pouvoir supprimer le client.
-                    </p>
+                    <p>Le client <strong id="listHasCasesClientName"></strong> possède
+                       <strong id="listHasCasesCount"></strong> dossier(s) rattaché(s).</p>
+                    <p class="text-muted" style="font-size:.875rem">Téléchargez le ZIP complet, supprimez chaque dossier manuellement, puis revenez supprimer ce client.</p>
                 </div>
                 <div class="modal-footer">
                     <a id="listHasCasesZipLink" href="#" class="btn btn-primary">
-                        <i class="fas fa-download me-1"></i>Télécharger le ZIP
+                        <i class="fas fa-download"></i> Télécharger le ZIP
                     </a>
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
                 </div>
@@ -333,26 +174,26 @@
         </div>
     </div>
 
-    <!-- Modale : client sans dossier → confirmer la suppression -->
-    <div class="modal fade" id="listModalConfirmDelete" tabindex="-1" aria-labelledby="listModalConfirmDeleteLabel" aria-hidden="true">
-        <div class="modal-dialog">
+    <!-- Modal : confirmer suppression -->
+    <div class="modal fade" id="listModalConfirmDelete" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                <div class="modal-header bg-danger text-white">
-                    <h5 class="modal-title" id="listModalConfirmDeleteLabel">
+                <div class="modal-header" style="background:var(--color-danger-bg);border-bottom-color:rgba(185,28,28,.2)">
+                    <h5 class="modal-title" style="color:var(--color-danger)">
                         <i class="fas fa-trash me-2"></i>Confirmer la suppression
                     </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
                 </div>
                 <div class="modal-body">
-                    <p>Êtes-vous sûr de vouloir supprimer le client <strong id="listDeleteClientName"></strong> ?</p>
-                    <p class="text-muted small">Cette action est irréversible.</p>
+                    <p>Êtes-vous sûr de vouloir supprimer le client <strong id="listDeleteClientName"></strong> ?</p>
+                    <p style="font-size:.8125rem;color:var(--text-muted)">Cette action est irréversible.</p>
                 </div>
                 <div class="modal-footer">
                     <form id="listDeleteForm" method="post">
                         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                         <input type="hidden" name="confirmed" value="true">
                         <button type="submit" class="btn btn-danger">
-                            <i class="fas fa-trash me-1"></i>Supprimer définitivement
+                            <i class="fas fa-trash"></i> Supprimer définitivement
                         </button>
                     </form>
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
@@ -362,27 +203,21 @@
     </div>
 
     <script th:attr="nonce=${cspNonce}">
-    document.addEventListener('DOMContentLoaded', function () {
-        ['toastSuccess', 'toastWarning', 'toastError'].forEach(function (id) {
+    document.addEventListener('DOMContentLoaded', function() {
+        ['toastSuccess','toastError'].forEach(id => {
             const el = document.getElementById(id);
-            if (el) {
-                const toast = new bootstrap.Toast(el, { delay: 5000 });
-                toast.show();
-            }
+            if (el) new bootstrap.Toast(el, {delay:5000}).show();
         });
     });
 
     function listOpenDeleteModal(btn) {
-        var hasCases = btn.dataset.hasCases === 'true';
-        var caseCount = btn.dataset.caseCount || '0';
-        var clientName = btn.dataset.clientName || '';
-        var clientId = btn.dataset.clientId || '';
-        var exportUrl = btn.dataset.exportUrl || '#';
-
+        const hasCases = btn.dataset.hasCases === 'true';
+        const clientName = btn.dataset.clientName || '';
+        const clientId = btn.dataset.clientId || '';
         if (hasCases) {
             document.getElementById('listHasCasesClientName').textContent = clientName;
-            document.getElementById('listHasCasesCount').textContent = caseCount;
-            document.getElementById('listHasCasesZipLink').href = exportUrl;
+            document.getElementById('listHasCasesCount').textContent = btn.dataset.caseCount || '0';
+            document.getElementById('listHasCasesZipLink').href = btn.dataset.exportUrl || '#';
             new bootstrap.Modal(document.getElementById('listModalHasCases')).show();
         } else {
             document.getElementById('listDeleteClientName').textContent = clientName;
@@ -392,17 +227,13 @@
     }
 
     function filterClients() {
-        const input = document.getElementById('searchClients');
-        const filter = input.value.toLowerCase();
-        const table = document.getElementById('clientsTable');
-        const rows = table.getElementsByTagName('tr');
-        
-        for (let i = 1; i < rows.length; i++) {
-            const row = rows[i];
-            const text = row.textContent || row.innerText;
-            row.style.display = text.toLowerCase().indexOf(filter) > -1 ? '' : 'none';
-        }
+        const filter = document.getElementById('searchClients').value.toLowerCase();
+        const rows = document.querySelectorAll('#clientsTable tbody tr');
+        rows.forEach(row => {
+            row.style.display = (row.textContent||row.innerText).toLowerCase().includes(filter) ? '' : 'none';
+        });
     }
     </script>
 </div>
+</body>
 </html>
