@@ -50,9 +50,9 @@ table button.btn-ghost {
     justify-content: center !important;
     gap: 0.375rem !important;
     padding: 0.5rem 0.75rem !important;
-    background: #F8FAFC !important;
-    border: 2px solid #0F172A !important;
-    color: #0F172A !important;
+    background: var(--bg-surface, #F8FAFC) !important;
+    border: 2px solid var(--text-primary, #0F172A) !important;
+    color: var(--text-primary, #0F172A) !important;
     border-radius: 6px !important;
     font-weight: 600 !important;
     text-decoration: none !important;
@@ -67,9 +67,9 @@ table button.btn-ghost {
 .btn-ghost:hover,
 a.btn-ghost:hover,
 button.btn-ghost:hover {
-    background: #0F172A !important;
-    color: #FFFFFF !important;
-    border-color: #0F172A !important;
+    background: var(--text-primary, #0F172A) !important;
+    color: var(--bg-surface, #FFFFFF) !important;
+    border-color: var(--text-primary, #0F172A) !important;
     transform: translateY(-1px) !important;
     text-decoration: none !important;
 }
