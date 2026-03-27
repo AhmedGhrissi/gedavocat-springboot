@@ -19,15 +19,7 @@
         </a>
     </div>
 
-    <!-- Alerte : envoi direct non disponible -->
-    <div class="alert alert-info mb-4">
-        <i class="fas fa-info-circle"></i>
-        <div>
-            <strong>Envoi direct en cours de développement.</strong>
-            L'intégration native nécessite le référencement CNB (procédure en cours).
-            Utilisez l'<strong>export manuel</strong> ci-dessous pour déposer vos actes dès maintenant.
-        </div>
-    </div>
+
 
     <div class="rpva-send-grid">
 
@@ -81,39 +73,47 @@
                 </div>
             </div>
 
-            <!-- Formulaire d'envoi (désactivé — structure prête) -->
-            <div class="card" style="opacity:.55;pointer-events:none">
+            <!-- Formulaire d'envoi direct -->
+            <div class="card card-elevated">
                 <div class="card-header">
-                    <i class="fas fa-edit"></i> Envoi direct — Bientôt disponible
+                    <i class="fas fa-paper-plane"></i> Envoi direct
                 </div>
                 <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label">Juridiction destinataire</label>
-                            <select class="form-select" disabled></select>
+                    <form th:action="@{/rpva/send}" method="post" enctype="multipart/form-data">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Juridiction destinataire</label>
+                                <select name="jurisdictionCode" class="form-select" required>
+                                    <option value="">— Sélectionner —</option>
+                                    <option th:each="j : ${jurisdictions}" th:value="${j.key}" th:text="${j.value}"></option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Dossier associé</label>
+                                <select name="caseReference" class="form-select" required>
+                                    <option value="">— Sélectionner —</option>
+                                    <option th:each="c : ${userCases}" th:value="${c.reference != null ? c.reference : c.id}" th:text="${c.name}"></option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Objet</label>
+                                <input type="text" name="subject" class="form-control" required>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Message</label>
+                                <textarea name="content" class="form-control" rows="5" required></textarea>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Pièces jointes</label>
+                                <input type="file" name="attachments" class="form-control" multiple>
+                            </div>
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-paper-plane"></i> Envoyer
+                                </button>
+                            </div>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Dossier associé</label>
-                            <select class="form-select" disabled></select>
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label">Objet</label>
-                            <input type="text" class="form-control" disabled>
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label">Message</label>
-                            <textarea class="form-control" rows="5" disabled></textarea>
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label">Pièces jointes</label>
-                            <input type="file" class="form-control" disabled>
-                        </div>
-                        <div class="col-12">
-                            <button class="btn btn-primary" disabled>
-                                <i class="fas fa-paper-plane"></i> Envoyer
-                            </button>
-                        </div>
-                    </div>
+                    </form>
                 </div>
             </div>
         </div>

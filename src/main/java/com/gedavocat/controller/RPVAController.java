@@ -143,6 +143,10 @@ public class RPVAController {
 
         model.addAttribute("jurisdictions", jurisdictions);
 
+        // Liste des dossiers de l'utilisateur pour le formulaire d'envoi
+        List<Case> userCases = caseRepository.findByLawyerId(user.getId());
+        model.addAttribute("userCases", userCases);
+
         return "rpva/send";
     }
 
