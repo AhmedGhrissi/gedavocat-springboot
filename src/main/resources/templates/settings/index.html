@@ -120,9 +120,7 @@
                     <form th:action="@{/settings/yousign}" method="post">
                         <div class="form-floating">
                             <input type="password" id="apiKey" name="apiKey" 
-                                   class="form-control" 
-                                   th:attr="placeholder=${yousignConfigured ? '••••••••••••(clé configurée)' : 'Votre clé API Yousign'}"
-                                   placeholder="Votre clé API Yousign">
+                                   class="form-control" placeholder=" ">
                             <label for="apiKey">Clé API Yousign</label>
                             <small class="text-muted">Format: prod_XXXXXXXX ou test_XXXXXXXX — Laissez vide pour conserver la clé actuelle</small>
                         </div>
@@ -172,18 +170,18 @@
                     <form th:action="@{/settings/password}" method="post" class="mt-3" id="passwordForm">
                         <div class="form-floating mb-3">
                             <input type="password" id="currentPassword" name="currentPassword"
-                                   class="form-control" placeholder="Mot de passe actuel" required autocomplete="current-password">
+                                   class="form-control" placeholder=" " required autocomplete="current-password">
                             <label for="currentPassword">Mot de passe actuel</label>
                         </div>
                         <div class="form-floating mb-3">
                             <input type="password" id="newPassword" name="newPassword"
-                                   class="form-control" placeholder="Nouveau mot de passe"
+                                   class="form-control" placeholder=" "
                                    minlength="8" required autocomplete="new-password">
                             <label for="newPassword">Nouveau mot de passe (min. 8 caractères)</label>
                         </div>
                         <div class="form-floating mb-3">
                             <input type="password" id="confirmPassword" name="confirmPassword"
-                                   class="form-control" placeholder="Confirmer le nouveau mot de passe"
+                                   class="form-control" placeholder=" "
                                    minlength="8" required autocomplete="new-password">
                             <label for="confirmPassword">Confirmer le nouveau mot de passe</label>
                         </div>
@@ -215,7 +213,7 @@
                                 <form th:action="@{/rgpd/delete-account}" method="post">
                                     <div class="form-floating mb-3">
                                         <input type="email" id="confirmDeleteEmail" name="confirmEmail"
-                                               class="form-control" placeholder="Confirmez votre email" required>
+                                               class="form-control" placeholder=" " required>
                                         <label for="confirmDeleteEmail">Confirmez votre email pour supprimer</label>
                                     </div>
                                     <button type="submit" class="btn btn-danger"
@@ -250,18 +248,18 @@
 
                 <div class="mb-4">
                     <label class="form-label fw-semibold">Aperçu de l'email</label>
-                    <div id="emailPreview" style="border:1px solid #E2E8F0;border-radius:8px;overflow:hidden;max-width:560px">
+                    <div id="emailPreview" style="border:1px solid var(--border-light,#E2E8F0);border-radius:8px;overflow:hidden;max-width:560px">
                         <div style="background:#1E3A5F;padding:20px 28px;display:flex;justify-content:space-between;align-items:center">
                             <span style="color:#fff;font-weight:700;font-size:17px">GedAvocat</span>
                             <span style="color:#C6A75E;font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase">Communication officielle</span>
                         </div>
-                        <div style="background:#fff;padding:28px">
-                            <h4 style="color:#0F172A;font-size:16px;font-weight:700;margin:0 0 16px;padding-bottom:12px;border-bottom:2px solid #F1F5F9">Rendez-vous confirmé : Consultation initiale</h4>
-                            <p style="color:#374151;font-size:14px;line-height:1.7;margin:0">Bonjour,<br><br>Votre rendez-vous a été confirmé par votre avocat.<br><br>Date : Mercredi 5 mars 2026 à 14h00</p>
+                        <div style="background:var(--bg-surface,#fff);padding:28px">
+                            <h4 style="color:var(--text-primary,#0F172A);font-size:16px;font-weight:700;margin:0 0 16px;padding-bottom:12px;border-bottom:2px solid var(--border-light,#F1F5F9)">Rendez-vous confirmé : Consultation initiale</h4>
+                            <p style="color:var(--text-secondary,#374151);font-size:14px;line-height:1.7;margin:0">Bonjour,<br><br>Votre rendez-vous a été confirmé par votre avocat.<br><br>Date : Mercredi 5 mars 2026 à 14h00</p>
                         </div>
-                        <div style="background:#F8FAFC;border-top:3px solid #C6A75E;padding:20px 28px">
-                            <p style="margin:0 0 10px;color:#94A3B8;font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase">De la part de</p>
-                            <div id="signaturePreview" style="color:#374151;font-size:14px;line-height:1.7;white-space:pre-line"></div>
+                        <div style="background:var(--bg-tertiary,#F8FAFC);border-top:3px solid #C6A75E;padding:20px 28px">
+                            <p style="margin:0 0 10px;color:var(--text-muted,#94A3B8);font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase">De la part de</p>
+                            <div id="signaturePreview" style="color:var(--text-secondary,#374151);font-size:14px;line-height:1.7;white-space:pre-line"></div>
                         </div>
                     </div>
                 </div>
