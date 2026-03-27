@@ -90,28 +90,23 @@
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label">Juridiction destinataire</label>
-                            <select name="jurisdictionCode" class="form-select" disabled>
-                                <option>— Sélectionner une juridiction —</option>
-                                <option th:each="j : ${jurisdictions}" th:value="${j.key}" th:text="${j.value}">TJ</option>
-                            </select>
+                            <select class="form-select" disabled></select>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Dossier associé</label>
-                            <select name="caseReference" class="form-select" disabled>
-                                <option>Aucun dossier</option>
-                            </select>
+                            <select class="form-select" disabled></select>
                         </div>
                         <div class="col-12">
                             <label class="form-label">Objet</label>
-                            <input type="text" class="form-control" placeholder="Objet de la communication" disabled>
+                            <input type="text" class="form-control" disabled>
                         </div>
                         <div class="col-12">
                             <label class="form-label">Message</label>
                             <textarea class="form-control" rows="5" disabled></textarea>
                         </div>
                         <div class="col-12">
-                            <label class="form-label">Pièces jointes (PDF uniquement, max 10 Mo)</label>
-                            <input type="file" class="form-control" multiple accept=".pdf" disabled>
+                            <label class="form-label">Pièces jointes</label>
+                            <input type="file" class="form-control" disabled>
                         </div>
                         <div class="col-12">
                             <button class="btn btn-primary" disabled>
@@ -125,24 +120,49 @@
 
         <!-- Colonne latérale : infos & étapes -->
         <div>
-            <!-- Statut CNB -->
+            <!-- Options d'intégration RPVA -->
             <div class="card mb-3">
                 <div class="card-header">
-                    <i class="fas fa-university"></i> Statut référencement CNB
+                    <i class="fas fa-plug"></i> Options d'intégration RPVA
                 </div>
                 <div class="card-body">
-                    <div style="display:flex;align-items:center;gap:.625rem;margin-bottom:.75rem">
-                        <div style="width:10px;height:10px;border-radius:50%;background:var(--color-warning);flex-shrink:0"></div>
-                        <span style="font-weight:600;font-size:.875rem;color:var(--color-warning)">En cours de démarche</span>
+
+                    <!-- Option A -->
+                    <div style="margin-bottom:1rem;padding-bottom:1rem;border-bottom:1px solid var(--border-light)">
+                        <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem">
+                            <span class="badge badge-info" style="font-size:.7rem">A</span>
+                            <strong style="font-size:.875rem;color:var(--text-primary)">Proxy via LGC référencé</strong>
+                        </div>
+                        <p style="font-size:.8125rem;color:var(--text-secondary);margin:0;line-height:1.5">
+                            Passer par un éditeur référencé (SECIB, Kleos, Jarvis Legal) via leur API/connecteur, s'ils exposent des webhooks ou une API tierce.
+                        </p>
                     </div>
-                    <p style="font-size:.8125rem;color:var(--text-secondary);margin:0;line-height:1.5">
-                        Dossier de candidature envoyé au CNB.
-                        Procédure de référencement TRA en attente.
-                    </p>
-                    <div style="margin-top:.875rem;font-size:.75rem;color:var(--text-tertiary)">
-                        Contact CNB :
-                        <a href="mailto:assistance@cnb.avocat.fr" style="color:var(--color-accent)">assistance@cnb.avocat.fr</a>
+
+                    <!-- Option B -->
+                    <div style="margin-bottom:1rem;padding-bottom:1rem;border-bottom:1px solid var(--border-light)">
+                        <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem">
+                            <span class="badge badge-warning" style="font-size:.7rem">B</span>
+                            <strong style="font-size:.875rem;color:var(--text-primary)">Référencement CNB</strong>
+                        </div>
+                        <p style="font-size:.8125rem;color:var(--text-secondary);margin:0;line-height:1.5">
+                            Si DocAvocat évolue vers un LGC commercial : contacter le CNB pour la procédure de référencement (tests TRA, redevance). Démarche longue mais faisable.
+                        </p>
+                        <div style="margin-top:.5rem;font-size:.75rem;color:var(--text-tertiary)">
+                            Contact : <a href="mailto:assistance@cnb.avocat.fr" style="color:var(--color-accent)">assistance@cnb.avocat.fr</a>
+                        </div>
                     </div>
+
+                    <!-- Option C -->
+                    <div>
+                        <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem">
+                            <span class="badge badge-success" style="font-size:.7rem">C</span>
+                            <strong style="font-size:.875rem;color:var(--text-primary)">Export manuel (actuel)</strong>
+                        </div>
+                        <p style="font-size:.8125rem;color:var(--text-secondary);margin:0;line-height:1.5">
+                            Générer des exports PDF/ZIP aux normes depuis DocAvocat, que l'avocat dépose lui-même sur e-Barreau. C'est l'approche actuellement utilisée.
+                        </p>
+                    </div>
+
                 </div>
             </div>
 

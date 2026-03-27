@@ -374,6 +374,17 @@
 .dark .rpva-export-section { background: var(--color-surface); border-color: var(--color-border); }
 .dark .rpva-export-section h5 { color: var(--text-primary); }
 
+/* Steps (send sidebar) */
+.dark .rpva-step { border-color: var(--border-light); }
+.dark .rpva-step:hover { background: var(--bg-surface-hover); }
+.dark .rpva-step-num { background: var(--color-accent); color: var(--color-primary); }
+.dark .rpva-step-title { color: var(--text-primary); }
+.dark .rpva-step-desc { color: var(--text-muted); }
+
+/* Stat icon gold variant */
+.stat-icon.gold { background: rgba(201,169,110,.1); color: var(--color-accent); }
+.dark .stat-icon.gold { background: rgba(201,169,110,.15); color: var(--color-accent); }
+
 .rpva-step {
     display: flex;
     align-items: flex-start;
