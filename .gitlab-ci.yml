@@ -480,6 +480,12 @@ deploy:
       done
 
       echo "=== Migration SQL (tables manquantes) ==="
+      # Charger les variables du .env (MYSQL_PASSWORD, etc.)
+      if [ -f .env ]; then
+        set -a
+        . ./.env
+        set +a
+      fi
       if [ -f migrations/pending.sql ]; then
         echo "Execution de migrations/pending.sql..."
         docker compose exec -T mysql mysql -u gedavocat -p"${MYSQL_PASSWORD}" gedavocat < migrations/pending.sql && echo "Migration OK" || echo "WARN: Migration echouee (tables deja existantes?)"
