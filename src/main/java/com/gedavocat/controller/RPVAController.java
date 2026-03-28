@@ -124,7 +124,7 @@ public class RPVAController {
 
         // Si un dossier est spécifié
         if (caseId != null) {
-            Case caseEntity = caseRepository.findById(caseId).orElse(null);
+            Case caseEntity = caseRepository.findByIdWithClientAndLawyer(caseId).orElse(null);
             // Ownership check: verify case belongs to authenticated lawyer
             if (caseEntity != null && caseEntity.getLawyer() != null
                     && !caseEntity.getLawyer().getId().equals(user.getId())) {
@@ -298,7 +298,7 @@ public class RPVAController {
             User user = userRepository.findByEmail(userDetails.getUsername())
                     .orElseThrow(() -> new RuntimeException("Utilisateur non trouv\u00e9"));
 
-            Case caseEntity = caseRepository.findById(caseId)
+            Case caseEntity = caseRepository.findByIdWithClientAndLawyer(caseId)
                     .orElseThrow(() -> new RuntimeException("Dossier non trouv\u00e9"));
 
             // Ownership check: verify this case belongs to the authenticated lawyer

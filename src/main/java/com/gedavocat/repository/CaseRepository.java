@@ -68,6 +68,9 @@ public interface CaseRepository extends JpaRepository<Case, String> {
     @Query("SELECT c FROM Case c LEFT JOIN FETCH c.client WHERE c.id = :id")
     Optional<Case> findByIdWithClient(@Param("id") String id);
 
+    @Query("SELECT c FROM Case c LEFT JOIN FETCH c.client LEFT JOIN FETCH c.lawyer WHERE c.id = :id")
+    Optional<Case> findByIdWithClientAndLawyer(@Param("id") String id);
+
     @Query("SELECT c FROM Case c LEFT JOIN FETCH c.client LEFT JOIN FETCH c.documents WHERE c.lawyer.id = :lawyerId")
     List<Case> findAllByLawyerIdWithClient(@Param("lawyerId") String lawyerId);
 

@@ -54,7 +54,7 @@ public class RpvaExportController {
         User user = userRepository.findByEmail(userDetails.getUsername())
             .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
 
-        Case dossier = caseRepository.findById(caseId).orElse(null);
+        Case dossier = caseRepository.findByIdWithClientAndLawyer(caseId).orElse(null);
         if (dossier == null || (dossier.getLawyer() != null
                 && !dossier.getLawyer().getId().equals(user.getId()))) {
             return ResponseEntity.status(403).build();
@@ -64,7 +64,7 @@ public class RpvaExportController {
             ActeProcedure acte = mapCaseToActe(dossier, user);
             byte[] pdf = pdfExportService.genererFicheTransmission(acte);
             return buildPdfResponse(pdf, "fiche-rpva-" + sanitize(caseId) + ".pdf");
-        } catch (IOException e) {
+        } catch (Exception e) {
             log.error("Erreur génération PDF fiche RPVA pour {}", caseId, e);
             return ResponseEntity.internalServerError().build();
         }
@@ -84,7 +84,7 @@ public class RpvaExportController {
         User user = userRepository.findByEmail(userDetails.getUsername())
             .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
 
-        Case dossier = caseRepository.findById(caseId).orElse(null);
+        Case dossier = caseRepository.findByIdWithClientAndLawyer(caseId).orElse(null);
         if (dossier == null || (dossier.getLawyer() != null
                 && !dossier.getLawyer().getId().equals(user.getId()))) {
             return ResponseEntity.status(403).build();
@@ -94,7 +94,7 @@ public class RpvaExportController {
             ActeProcedure acte = mapCaseToActe(dossier, user);
             byte[] pdf = pdfExportService.genererChecklistDepot(acte);
             return buildPdfResponse(pdf, "checklist-ebarreau-" + sanitize(caseId) + ".pdf");
-        } catch (IOException e) {
+        } catch (Exception e) {
             log.error("Erreur génération checklist RPVA pour {}", caseId, e);
             return ResponseEntity.internalServerError().build();
         }
