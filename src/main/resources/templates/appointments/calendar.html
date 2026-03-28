@@ -226,11 +226,8 @@
             <!-- Calendrier principal -->
             <div class="col-lg-8 mb-4 mb-lg-0">
                 <div class="card border-0 shadow-sm" style="border-radius: 16px; overflow: hidden;">
-                    <div class="card-header text-white" style="background: linear-gradient(135deg, #1E3A5F 0%, #0F172A 100%); border: none; padding: 1.25rem;">
-                        <h5 class="mb-0"><i class="fas fa-calendar me-2"></i> Calendrier</h5>
-                    </div>
-                    <div class="card-body p-3" style="overflow-x: hidden;">
-                        <div id="calendar" style="max-width: 100%; overflow: hidden;"></div>
+                    <div class="card-body p-0">
+                        <div id="calendar"></div>
                     </div>
                 </div>
             </div>
@@ -540,6 +537,8 @@
                 window.location.href = '/appointments/' + info.event.id + '/edit';
             },
             dateClick: function(info) {
+                var clickDay = info.date.getDay();
+                if (clickDay === 0 || clickDay === 6) return; // Bloquer sam/dim
                 var dateTime = info.dateStr.includes('T') ? info.dateStr.split('+')[0] : info.dateStr + 'T09:00';
                 document.getElementById('modalStartDate').value = dateTime;
                 // Auto-set end date 1 hour later
