@@ -16,6 +16,14 @@
     border-radius: 12px 12px 0 0;
     margin-bottom: 0;
     box-shadow: 0 4px 12px rgba(30, 58, 95, 0.15);
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.fc .fc-toolbar-chunk {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 .fc .fc-toolbar-title {
