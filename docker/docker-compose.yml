@@ -125,10 +125,11 @@ services:
       # Base de données — SEC-HARDENED : useSSL=true, ddl-auto=validate
       # DB_HOST=mysql         → MySQL local Docker (défaut, développement)
       # DB_HOST=10.0.0.2      → VM dédiée Hetzner via vSwitch (production cible)
+      # TODO: remettre validate après le premier deploy réussi avec la nouvelle table
       SPRING_DATASOURCE_URL: "jdbc:mysql://${DB_HOST:-mysql}:${DB_PORT:-3306}/gedavocat?useSSL=true&requireSSL=true&serverTimezone=Europe/Paris&allowPublicKeyRetrieval=true&useUnicode=true&characterEncoding=UTF-8"
       SPRING_DATASOURCE_USERNAME: ${DB_USERNAME:-gedavocat}
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
-      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
       DB_HOST: ${DB_HOST:-mysql}
       DB_PORT: ${DB_PORT:-3306}
       DB_USERNAME: ${DB_USERNAME:-gedavocat}
@@ -264,10 +265,11 @@ services:
     environment:
       SERVER_PORT: 8080
       # Base de données — même config que blue
+      # TODO: remettre validate après le premier deploy réussi avec la nouvelle table
       SPRING_DATASOURCE_URL: "jdbc:mysql://${DB_HOST:-mysql}:${DB_PORT:-3306}/gedavocat?useSSL=true&requireSSL=true&serverTimezone=Europe/Paris&allowPublicKeyRetrieval=true&useUnicode=true&characterEncoding=UTF-8"
       SPRING_DATASOURCE_USERNAME: ${DB_USERNAME:-gedavocat}
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
-      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
       DB_HOST: ${DB_HOST:-mysql}
       DB_PORT: ${DB_PORT:-3306}
       DB_USERNAME: ${DB_USERNAME:-gedavocat}
