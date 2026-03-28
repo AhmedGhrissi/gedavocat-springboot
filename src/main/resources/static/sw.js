@@ -3,7 +3,7 @@
 //   Cache-first pour les assets, network-first pour les pages
 // ════════════════════════════════════════════════
 
-const CACHE_NAME = 'docavocat-v3';
+const CACHE_NAME = 'docavocat-v4';
 const STATIC_ASSETS = [
     '/css/layout.css',
     '/css/global-unified-theme.css',
