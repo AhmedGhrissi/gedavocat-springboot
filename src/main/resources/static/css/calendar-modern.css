@@ -6,6 +6,8 @@
 /* ===== FULLCALENDAR CUSTOMIZATION ===== */
 .fc {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    overflow: hidden !important;
+    max-width: 100% !important;
 }
 
 /* Header du calendrier - Modern Light Gradient */
@@ -79,8 +81,21 @@
 .fc .fc-view-harness {
     background: white;
     border-radius: 0 0 12px 12px;
-    padding: 1rem;
     overflow: hidden;
+}
+
+.fc table {
+    width: 100% !important;
+    table-layout: fixed !important;
+}
+
+.fc .fc-scrollgrid {
+    overflow: hidden !important;
+    border: none !important;
+}
+
+.fc .fc-scroller {
+    overflow-x: hidden !important;
 }
 
 /* Weekend cells - dimmed, non-clickable, non-selectable */
