@@ -644,8 +644,8 @@ table tbody td a.btn, table tbody td button.btn {
     TOOLTIPS
 ══════════════════════════════════════════════════════════ */
 
-.tooltip { position: relative; display: inline-flex; align-items: center; }
-.tooltip .tooltip-text {
+.tip { position: relative; display: inline-flex; align-items: center; }
+.tip .tooltip-text {
     visibility: hidden; opacity: 0; pointer-events: none;
     position: absolute; bottom: calc(100% + 8px); left: 50%;
     transform: translateX(-50%);
@@ -655,11 +655,11 @@ table tbody td a.btn, table tbody td button.btn {
     transition: opacity 150ms ease, transform 150ms ease;
     font-family: var(--font-family-base);
 }
-.tooltip:hover .tooltip-text, .tooltip:focus-within .tooltip-text {
+.tip:hover .tooltip-text, .tip:focus-within .tooltip-text {
     visibility: visible; opacity: 1;
     transform: translateX(-50%) translateY(-3px);
 }
-.tooltip .tooltip-text::after {
+.tip .tooltip-text::after {
     content:''; position:absolute; top:100%; left:50%;
     transform: translateX(-50%);
     border:5px solid transparent;

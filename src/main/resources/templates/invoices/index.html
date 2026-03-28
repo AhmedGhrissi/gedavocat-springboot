@@ -157,25 +157,25 @@
                             </td>
                             <td>
                                 <div class="action-buttons" style="justify-content:flex-end">
-                                    <div class="tooltip">
+                                    <div class="tip">
                                         <a th:href="@{/invoices/{id}(id=${invoice.id})}" class="btn btn-ghost btn-sm">
                                             <i class="fas fa-eye"></i>
                                         </a>
                                         <span class="tooltip-text">Voir</span>
                                     </div>
-                                    <div class="tooltip">
+                                    <div class="tip">
                                         <a th:href="@{/invoices/{id}/edit(id=${invoice.id})}" class="btn btn-ghost btn-sm">
                                             <i class="fas fa-edit"></i>
                                         </a>
                                         <span class="tooltip-text">Modifier</span>
                                     </div>
-                                    <div class="tooltip">
+                                    <div class="tip">
                                         <a th:href="@{/invoices/{id}/pdf(id=${invoice.id})}" class="btn btn-ghost btn-sm" target="_blank">
                                             <i class="fas fa-file-pdf" style="color:var(--color-danger)"></i>
                                         </a>
                                         <span class="tooltip-text">PDF</span>
                                     </div>
-                                    <div class="tooltip">
+                                    <div class="tip">
                                         <button type="button" class="btn btn-ghost btn-sm"
                                                 th:data-id="${invoice.id}"
                                                 onclick="deleteInvoice(this.dataset.id)">

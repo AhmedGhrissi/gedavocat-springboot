@@ -107,19 +107,19 @@
                                 </td>
                                 <td>
                                     <div class="action-buttons" style="justify-content:flex-end">
-                                        <div class="tooltip">
+                                        <div class="tip">
                                             <a th:href="@{/clients/{id}(id=${client.id})}" class="btn btn-ghost btn-sm">
                                                 <i class="fas fa-eye"></i>
                                             </a>
                                             <span class="tooltip-text">Voir</span>
                                         </div>
-                                        <div class="tooltip">
+                                        <div class="tip">
                                             <a th:href="@{/clients/{id}/edit(id=${client.id})}" class="btn btn-ghost btn-sm">
                                                 <i class="fas fa-edit"></i>
                                             </a>
                                             <span class="tooltip-text">Modifier</span>
                                         </div>
-                                        <div class="tooltip">
+                                        <div class="tip">
                                             <button type="button" class="btn btn-ghost btn-sm"
                                                     th:data-client-id="${client.id}"
                                                     th:data-client-name="${client.name}"

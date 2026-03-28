@@ -95,7 +95,7 @@
                                 th:text="${result.hearingDate != null ? #temporals.format(result.hearingDate, 'dd/MM/yyyy') : '—'}">—</td>
                             <td>
                                 <div class="action-buttons" style="justify-content:flex-end">
-                                    <div class="tooltip">
+                                    <div class="tip">
                                         <a th:href="@{/rpva/view/{id}(id=${result.id})}" class="btn btn-ghost btn-sm">
                                             <i class="fas fa-eye"></i>
                                         </a>
