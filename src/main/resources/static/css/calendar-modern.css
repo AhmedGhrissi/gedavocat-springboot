@@ -748,6 +748,30 @@
 .badge {
     font-weight: 600;
     padding: 0.35em 0.65em;
+}
+
+/* ===== RESCHEDULE REQUEST CARDS ===== */
+.reschedule-request-card {
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+.reschedule-request-card:hover {
+    transform: translateX(4px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 576px) {
+    .reschedule-actions {
+        width: 100%;
+        margin-top: 1rem;
+    }
+    .reschedule-actions form,
+    .reschedule-actions button,
+    .reschedule-actions .btn {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+}
     border-radius: 6px;
     letter-spacing: 0.025em;
 }
