@@ -261,7 +261,7 @@ public class InvoiceService {
     }
 
     /**
-     * Marque une facture comme payée
+     * Marque une facture comme payée (par l'avocat)
      * SEC-IDOR FIX : vérification ownership
      */
     @Transactional
@@ -280,6 +280,85 @@ public class InvoiceService {
         if (paymentMethod != null && !paymentMethod.isEmpty()) {
             invoice.setPaymentMethod(paymentMethod);
         }
+
+        Invoice updatedInvoice = invoiceRepository.save(invoice);
+        return convertToResponse(updatedInvoice);
+    }
+
+    /**
+     * Client déclare avoir payé une facture.
+     * La facture passe en PAYMENT_DECLARED, l'avocat devra valider.
+     */
+    @Transactional
+    public InvoiceResponse declarePayment(String invoiceId, String paymentMethod, String clientUserId) {
+        Invoice invoice = invoiceRepository.findById(invoiceId)
+            .orElseThrow(() -> new RuntimeException("Facture non trouvée"));
+
+        // SÉCURITÉ : vérifier que la facture appartient bien au client connecté
+        if (invoice.getClient() == null || invoice.getClient().getClientUser() == null
+                || !invoice.getClient().getClientUser().getId().equals(clientUserId)) {
+            throw new SecurityException("Accès non autorisé à cette facture");
+        }
+
+        // Seules les factures SENT ou OVERDUE peuvent être déclarées payées
+        if (invoice.getStatus() != InvoiceStatus.SENT && invoice.getStatus() != InvoiceStatus.OVERDUE) {
+            throw new RuntimeException("Cette facture ne peut pas être déclarée comme payée dans son état actuel");
+        }
+
+        invoice.setStatus(InvoiceStatus.PAYMENT_DECLARED);
+        if (paymentMethod != null && !paymentMethod.isEmpty()) {
+            invoice.setPaymentMethod(paymentMethod);
+        }
+
+        Invoice updatedInvoice = invoiceRepository.save(invoice);
+        return convertToResponse(updatedInvoice);
+    }
+
+    /**
+     * L'avocat valide le paiement déclaré par le client → facture passe en PAID.
+     */
+    @Transactional
+    public InvoiceResponse validatePayment(String invoiceId, String lawyerId) {
+        Invoice invoice = invoiceRepository.findById(invoiceId)
+            .orElseThrow(() -> new RuntimeException("Facture non trouvée"));
+
+        // SÉCURITÉ : vérifier ownership
+        if (invoice.getClient() == null || invoice.getClient().getLawyer() == null
+                || !invoice.getClient().getLawyer().getId().equals(lawyerId)) {
+            throw new SecurityException("Accès non autorisé à cette facture");
+        }
+
+        if (invoice.getStatus() != InvoiceStatus.PAYMENT_DECLARED) {
+            throw new RuntimeException("Cette facture n'a pas de paiement déclaré à valider");
+        }
+
+        invoice.setStatus(InvoiceStatus.PAID);
+        invoice.setPaidDate(LocalDate.now());
+
+        Invoice updatedInvoice = invoiceRepository.save(invoice);
+        return convertToResponse(updatedInvoice);
+    }
+
+    /**
+     * L'avocat rejette le paiement déclaré par le client → facture repasse en SENT.
+     */
+    @Transactional
+    public InvoiceResponse rejectPayment(String invoiceId, String lawyerId) {
+        Invoice invoice = invoiceRepository.findById(invoiceId)
+            .orElseThrow(() -> new RuntimeException("Facture non trouvée"));
+
+        // SÉCURITÉ : vérifier ownership
+        if (invoice.getClient() == null || invoice.getClient().getLawyer() == null
+                || !invoice.getClient().getLawyer().getId().equals(lawyerId)) {
+            throw new SecurityException("Accès non autorisé à cette facture");
+        }
+
+        if (invoice.getStatus() != InvoiceStatus.PAYMENT_DECLARED) {
+            throw new RuntimeException("Cette facture n'a pas de paiement déclaré à rejeter");
+        }
+
+        invoice.setStatus(InvoiceStatus.SENT);
+        invoice.setPaymentMethod(null);
 
         Invoice updatedInvoice = invoiceRepository.save(invoice);
         return convertToResponse(updatedInvoice);

@@ -62,6 +62,7 @@
                                     <span th:switch="${invoice.status?.name()}" class="badge">
                                         <span th:case="'DRAFT'" class="badge bg-secondary">Brouillon</span>
                                         <span th:case="'SENT'" class="badge bg-warning">En attente de paiement</span>
+                                        <span th:case="'PAYMENT_DECLARED'" class="badge bg-info">Paiement déclaré</span>
                                         <span th:case="'PAID'" class="badge bg-success">Payée</span>
                                         <span th:case="'OVERDUE'" class="badge bg-danger">En retard</span>
                                         <span th:case="'CANCELLED'" class="badge bg-dark">Annulée</span>

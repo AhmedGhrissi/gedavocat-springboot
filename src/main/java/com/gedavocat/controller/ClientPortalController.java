@@ -65,6 +65,9 @@ public class ClientPortalController {
     private final AppointmentService appointmentService;
     private final PermissionRepository permissionRepository;
     private final SignatureRepository signatureRepository;
+    private final com.gedavocat.repository.DocumentDeletionRequestRepository documentDeletionRequestRepository;
+    private final com.gedavocat.repository.DocumentRepository documentRepository;
+    private final com.gedavocat.service.NotificationService notificationService;
 
     /**
      * Liste des dossiers du client connecté
@@ -555,6 +558,71 @@ public class ClientPortalController {
     }
 
     // =========================================================================
+    // Demande de suppression de document
+    // =========================================================================
+
+    /**
+     * Le client demande la suppression d'un document.
+     * L'avocat sera notifié et devra approuver ou rejeter la demande.
+     */
+    @PostMapping("/documents/{documentId}/request-deletion")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> requestDocumentDeletion(
+            @PathVariable String documentId,
+            @RequestBody(required = false) Map<String, String> body,
+            Authentication authentication) {
+        try {
+            User user = getCurrentUser(authentication);
+            java.util.Optional<Client> clientOpt = clientRepository.findByClientUserId(user.getId());
+            if (clientOpt.isEmpty()) {
+                return ResponseEntity.status(403).body(Map.of("success", false, "message", "Client non trouvé"));
+            }
+            Client client = clientOpt.get();
+
+            Document document = documentService.getDocumentById(documentId);
+
+            // SÉCURITÉ : vérifier que le document appartient au client
+            if (document.getCaseEntity().getClient() == null ||
+                    !document.getCaseEntity().getClient().getId().equals(client.getId())) {
+                return ResponseEntity.status(403).body(Map.of("success", false, "message", "Accès non autorisé"));
+            }
+
+            // Vérifier qu'il n'y a pas déjà une demande PENDING
+            if (documentDeletionRequestRepository.existsByDocumentIdAndStatus(
+                    documentId, com.gedavocat.model.DocumentDeletionRequest.RequestStatus.PENDING)) {
+                return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Une demande de suppression est déjà en cours pour ce document"));
+            }
+
+            String reason = body != null ? body.get("reason") : null;
+
+            com.gedavocat.model.DocumentDeletionRequest request = new com.gedavocat.model.DocumentDeletionRequest();
+            request.setDocument(document);
+            request.setRequestedBy(user);
+            request.setReason(reason);
+            documentDeletionRequestRepository.save(request);
+
+            // Notifier l'avocat
+            User lawyer = document.getCaseEntity().getLawyer();
+            if (lawyer != null) {
+                notificationService.create(
+                    lawyer,
+                    "DOCUMENT_DELETION_REQUEST",
+                    "Demande de suppression",
+                    client.getName() + " demande la suppression du document « " + document.getOriginalName() + " »",
+                    "/documents/case/" + document.getCaseEntity().getId(),
+                    "fa-trash-alt",
+                    "warning"
+                );
+            }
+
+            return ResponseEntity.ok(Map.of("success", true, "message", "Demande de suppression envoyée à votre avocat"));
+        } catch (Exception e) {
+            log.error("Erreur demande suppression document {}", documentId, e);
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Erreur lors de la demande de suppression"));
+        }
+    }
+
+    // =========================================================================
     // Profil du client – informations personnelles
     // =========================================================================
 
@@ -572,6 +640,8 @@ public class ClientPortalController {
     /** SEC-11 FIX : Sauvegarde les informations personnelles du client avec validation. */
     @PostMapping("/profile")
     public String updateProfile(
+            @RequestParam(value = "firstName", required = false) String firstName,
+            @RequestParam(value = "lastName", required = false) String lastName,
             @RequestParam(value = "phone", required = false) String phone,
             @RequestParam(value = "address", required = false) String address,
             @RequestParam(value = "companyName", required = false) String companyName,
@@ -586,6 +656,16 @@ public class ClientPortalController {
         if (clientOpt.isEmpty()) {
             redirectAttributes.addFlashAttribute("error", "Profil client introuvable");
             return "redirect:/my-cases";
+        }
+
+        // Validation firstName / lastName
+        if (firstName != null && !firstName.isBlank() && firstName.trim().length() > 100) {
+            redirectAttributes.addFlashAttribute("error", "Prénom trop long (max 100 caractères).");
+            return "redirect:/my-cases/profile";
+        }
+        if (lastName != null && !lastName.isBlank() && lastName.trim().length() > 100) {
+            redirectAttributes.addFlashAttribute("error", "Nom trop long (max 100 caractères).");
+            return "redirect:/my-cases/profile";
         }
 
         // SEC-11 FIX : validation des champs
@@ -607,6 +687,12 @@ public class ClientPortalController {
         }
 
         Client client = clientOpt.get();
+        if (firstName != null && !firstName.isBlank()) {
+            client.setFirstName(firstName.trim());
+        }
+        if (lastName != null && !lastName.isBlank()) {
+            client.setLastName(lastName.trim());
+        }
         client.setPhone(phone != null ? phone.trim() : null);
         client.setAddress(address != null ? address.trim() : null);
         if (client.getClientType() == Client.ClientType.PROFESSIONAL) {

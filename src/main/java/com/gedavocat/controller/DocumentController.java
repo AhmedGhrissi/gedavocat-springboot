@@ -44,6 +44,8 @@ public class DocumentController {
     private final UserRepository userRepository;
     private final com.gedavocat.service.CaseService caseService;
     private final WatermarkService watermarkService;
+    private final com.gedavocat.repository.DocumentDeletionRequestRepository documentDeletionRequestRepository;
+    private final com.gedavocat.service.NotificationService notificationService;
 
     /**
      * Page d'accueil des documents - liste tous les documents de l'utilisateur
@@ -446,5 +448,130 @@ public class DocumentController {
         String email = authentication.getName();
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+    }
+
+    // =========================================================================
+    // Gestion des demandes de suppression de documents
+    // =========================================================================
+
+    /**
+     * Liste les demandes de suppression en attente pour l'avocat.
+     */
+    @GetMapping("/deletion-requests")
+    @ResponseBody
+    public ResponseEntity<?> getDeletionRequests(Authentication authentication) {
+        try {
+            User user = getCurrentUser(authentication);
+            var requests = documentDeletionRequestRepository.findByLawyerAndStatus(
+                    user.getId(),
+                    com.gedavocat.model.DocumentDeletionRequest.RequestStatus.PENDING);
+            var result = requests.stream().map(r -> java.util.Map.of(
+                    "id", r.getId(),
+                    "documentName", r.getDocument().getOriginalName(),
+                    "documentId", r.getDocument().getId(),
+                    "caseId", r.getDocument().getCaseEntity().getId(),
+                    "caseName", r.getDocument().getCaseEntity().getName(),
+                    "requestedBy", r.getRequestedBy().getName(),
+                    "reason", r.getReason() != null ? r.getReason() : "",
+                    "createdAt", r.getCreatedAt().toString()
+            )).collect(java.util.stream.Collectors.toList());
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            log.error("Erreur récupération demandes de suppression", e);
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    /**
+     * L'avocat approuve la demande de suppression → soft delete du document.
+     */
+    @PostMapping("/deletion-requests/{requestId}/approve")
+    @ResponseBody
+    public ResponseEntity<java.util.Map<String, Object>> approveDeletionRequest(
+            @PathVariable String requestId,
+            Authentication authentication) {
+        try {
+            User user = getCurrentUser(authentication);
+            var request = documentDeletionRequestRepository.findById(requestId)
+                    .orElseThrow(() -> new RuntimeException("Demande non trouvée"));
+
+            // SÉCURITÉ : vérifier que l'avocat possède le dossier
+            Document doc = request.getDocument();
+            if (!doc.getCaseEntity().getLawyer().getId().equals(user.getId())) {
+                return ResponseEntity.status(403).body(java.util.Map.of("success", false, "message", "Accès non autorisé"));
+            }
+
+            // Approuver et soft-delete le document
+            request.setStatus(com.gedavocat.model.DocumentDeletionRequest.RequestStatus.APPROVED);
+            request.setReviewedBy(user);
+            request.setReviewedAt(java.time.LocalDateTime.now());
+            documentDeletionRequestRepository.save(request);
+
+            documentService.softDeleteDocument(doc.getId(), user.getId());
+
+            // Notifier le client
+            if (request.getRequestedBy() != null) {
+                notificationService.create(
+                    request.getRequestedBy(),
+                    "DOCUMENT_DELETION_APPROVED",
+                    "Suppression approuvée",
+                    "Votre demande de suppression du document « " + doc.getOriginalName() + " » a été approuvée",
+                    "/my-cases/" + doc.getCaseEntity().getId(),
+                    "fa-check-circle",
+                    "success"
+                );
+            }
+
+            return ResponseEntity.ok(java.util.Map.of("success", true, "message", "Document supprimé"));
+        } catch (Exception e) {
+            log.error("Erreur approbation demande de suppression {}", requestId, e);
+            return ResponseEntity.badRequest().body(java.util.Map.of("success", false, "message", "Erreur lors de l'approbation"));
+        }
+    }
+
+    /**
+     * L'avocat rejette la demande de suppression.
+     */
+    @PostMapping("/deletion-requests/{requestId}/reject")
+    @ResponseBody
+    public ResponseEntity<java.util.Map<String, Object>> rejectDeletionRequest(
+            @PathVariable String requestId,
+            @RequestBody(required = false) java.util.Map<String, String> body,
+            Authentication authentication) {
+        try {
+            User user = getCurrentUser(authentication);
+            var request = documentDeletionRequestRepository.findById(requestId)
+                    .orElseThrow(() -> new RuntimeException("Demande non trouvée"));
+
+            // SÉCURITÉ : vérifier ownership
+            Document doc = request.getDocument();
+            if (!doc.getCaseEntity().getLawyer().getId().equals(user.getId())) {
+                return ResponseEntity.status(403).body(java.util.Map.of("success", false, "message", "Accès non autorisé"));
+            }
+
+            request.setStatus(com.gedavocat.model.DocumentDeletionRequest.RequestStatus.REJECTED);
+            request.setReviewedBy(user);
+            request.setReviewedAt(java.time.LocalDateTime.now());
+            request.setReviewComment(body != null ? body.get("comment") : null);
+            documentDeletionRequestRepository.save(request);
+
+            // Notifier le client
+            if (request.getRequestedBy() != null) {
+                notificationService.create(
+                    request.getRequestedBy(),
+                    "DOCUMENT_DELETION_REJECTED",
+                    "Suppression refusée",
+                    "Votre demande de suppression du document « " + doc.getOriginalName() + " » a été refusée",
+                    "/my-cases/" + doc.getCaseEntity().getId(),
+                    "fa-times-circle",
+                    "danger"
+                );
+            }
+
+            return ResponseEntity.ok(java.util.Map.of("success", true, "message", "Demande rejetée"));
+        } catch (Exception e) {
+            log.error("Erreur rejet demande de suppression {}", requestId, e);
+            return ResponseEntity.badRequest().body(java.util.Map.of("success", false, "message", "Erreur lors du rejet"));
+        }
     }
 }

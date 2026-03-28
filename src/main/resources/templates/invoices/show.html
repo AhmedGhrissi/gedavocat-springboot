@@ -1,6 +1,7 @@
 ﻿<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
       layout:decorate="~{layout}">
 <head>
   <title>Facture</title>
@@ -53,6 +54,7 @@
     .badge-draft   { background:rgba(149,165,166,.15);color:#95a5a6; border:1px solid rgba(149,165,166,.3); }
     .badge-overdue { background:rgba(231,76,60,.15);  color:#dc2626; border:1px solid rgba(231,76,60,.3); }
     .badge-cancelled{background:rgba(44,62,80,.5);   color:#7f8c8d; border:1px solid rgba(127,140,141,.3);}
+    .badge-payment-declared{background:rgba(243,156,18,.15); color:#f39c12; border:1px solid rgba(243,156,18,.3);}
 
     /* Layout */
     .inv-body { padding:2.5rem; display:grid; grid-template-columns:1fr 320px; gap:2rem; }
@@ -178,7 +180,8 @@
         <h1 class="inv-title animate-fade-in-up">Facture <strong th:text="${invoice.invoiceNumber}">FACT-2026-00001</strong></h1>
       </div>
       <div class="inv-header-actions">
-        <a th:href="@{/invoices/{id}/edit(id=${invoice.id})}" class="btn-gold"><i class="fas fa-pen"></i> Modifier</a>
+        <a th:href="@{/invoices/{id}/edit(id=${invoice.id})}" class="btn-gold"
+           sec:authorize="hasAnyRole('LAWYER','ADMIN','AVOCAT_ADMIN')"><i class="fas fa-pen"></i> Modifier</a>
         <a th:href="@{/invoices/{id}/pdf(id=${invoice.id})}" class="btn-gold-solid rounded-md fw-600" target="_blank"><i class="fas fa-file-pdf"></i> PDF</a>
         <form th:action="@{/invoices/{id}/send(id=${invoice.id})}" method="post" style="display:inline;"
               sec:authorize="hasAnyRole('LAWYER','ADMIN','AVOCAT_ADMIN')">
@@ -186,7 +189,7 @@
             <i class="fas fa-envelope"></i> Envoyer
           </button>
         </form>
-        <a href="/invoices" class="btn-ghost"><i class="fas fa-arrow-left"></i> Retour</a>
+        <a th:href="${#authorization.expression('hasRole(''CLIENT'')')} ? '/invoices/my-invoices' : '/invoices'" class="btn-ghost"><i class="fas fa-arrow-left"></i> Retour</a>
       </div>
     </div>
     <div class="status-bar">
@@ -195,6 +198,7 @@
         <span th:switch="${invoice.status?.name()}">
           <span th:case="'DRAFT'"      class="badge-pill badge-draft">    <i class="fas fa-circle" style="font-size:.45em"></i> Brouillon</span>
           <span th:case="'SENT'"       class="badge-pill badge-sent">     <i class="fas fa-circle" style="font-size:.45em"></i> Envoyée</span>
+          <span th:case="'PAYMENT_DECLARED'" class="badge-pill badge-payment-declared"><i class="fas fa-circle" style="font-size:.45em"></i> Paiement déclaré</span>
           <span th:case="'PAID'"       class="badge-pill badge-paid">     <i class="fas fa-circle" style="font-size:.45em"></i> Payée</span>
           <span th:case="'OVERDUE'"    class="badge-pill badge-overdue">  <i class="fas fa-circle" style="font-size:.45em"></i> En retard</span>
           <span th:case="'CANCELLED'"  class="badge-pill badge-cancelled"><i class="fas fa-circle" style="font-size:.45em"></i> Annulée</span>
@@ -311,7 +315,9 @@
         </div>
         <div class="inv-card-body">
           <div class="action-list">
-            <a th:href="@{/invoices/{id}/edit(id=${invoice.id})}" class="action-btn"><i class="fas fa-pen"></i> Modifier la facture</a>
+            <!-- Actions avocat uniquement -->
+            <a th:href="@{/invoices/{id}/edit(id=${invoice.id})}" class="action-btn"
+               sec:authorize="hasAnyRole('LAWYER','ADMIN','AVOCAT_ADMIN')"><i class="fas fa-pen"></i> Modifier la facture</a>
             <a th:href="@{/invoices/{id}/pdf(id=${invoice.id})}" class="action-btn" target="_blank"><i class="fas fa-download"></i> Télécharger PDF</a>
             <form th:action="@{/invoices/{id}/send(id=${invoice.id})}" method="post" style="display:block;width:100%"
                   sec:authorize="hasAnyRole('LAWYER','ADMIN','AVOCAT_ADMIN')">
@@ -320,12 +326,40 @@
                 <i class="fas fa-envelope"></i> Envoyer par email
               </button>
             </form>
+
+            <!-- Avocat : marquer comme payée (directement) -->
             <button class="action-btn success"
-                    th:if="${invoice.status?.name() != 'PAID' and invoice.status?.name() != 'CANCELLED'}"
+                    sec:authorize="hasAnyRole('LAWYER','ADMIN','AVOCAT_ADMIN')"
+                    th:if="${invoice.status?.name() != 'PAID' and invoice.status?.name() != 'CANCELLED' and invoice.status?.name() != 'PAYMENT_DECLARED'}"
                     onclick="openPaidModal()">
               <i class="fas fa-check-circle"></i> Marquer comme payée
             </button>
+
+            <!-- Avocat : valider ou rejeter un paiement déclaré par le client -->
+            <button class="action-btn success"
+                    sec:authorize="hasAnyRole('LAWYER','ADMIN','AVOCAT_ADMIN')"
+                    th:if="${invoice.status?.name() == 'PAYMENT_DECLARED'}"
+                    onclick="validatePayment()">
+              <i class="fas fa-check-double"></i> Valider le paiement
+            </button>
             <button class="action-btn danger"
+                    sec:authorize="hasAnyRole('LAWYER','ADMIN','AVOCAT_ADMIN')"
+                    th:if="${invoice.status?.name() == 'PAYMENT_DECLARED'}"
+                    onclick="rejectPayment()">
+              <i class="fas fa-times-circle"></i> Rejeter le paiement
+            </button>
+
+            <!-- Client : déclarer un paiement -->
+            <button class="action-btn success"
+                    sec:authorize="hasRole('CLIENT')"
+                    th:if="${invoice.status?.name() == 'SENT' or invoice.status?.name() == 'OVERDUE'}"
+                    onclick="openPaidModal()">
+              <i class="fas fa-money-check-alt"></i> Déclarer un paiement
+            </button>
+
+            <!-- Supprimer : avocat uniquement -->
+            <button class="action-btn danger"
+                    sec:authorize="hasAnyRole('LAWYER','ADMIN','AVOCAT_ADMIN')"
                     th:attr="data-invoice-id=${invoice.id}" onclick="deleteInvoice(this.dataset.invoiceId)">
               <i class="fas fa-trash"></i> Supprimer
             </button>
@@ -357,8 +391,14 @@
   <div class="inv-overlay" id="paidOverlay">
     <div class="inv-modal">
       <div class="inv-modal-hd">
-        <h5><i class="fas fa-check-circle" style="color:var(--gold-lt);margin-right:.5rem"></i> Confirmer le paiement</h5>
-        <p>Indiquez le mode de règlement reçu</p>
+        <h5><i class="fas fa-check-circle" style="color:var(--gold-lt);margin-right:.5rem"></i>
+          <span sec:authorize="hasRole('CLIENT')">Déclarer un paiement</span>
+          <span sec:authorize="hasAnyRole('LAWYER','ADMIN','AVOCAT_ADMIN')">Confirmer le paiement</span>
+        </h5>
+        <p>
+          <span sec:authorize="hasRole('CLIENT')">Indiquez le mode de règlement utilisé</span>
+          <span sec:authorize="hasAnyRole('LAWYER','ADMIN','AVOCAT_ADMIN')">Indiquez le mode de règlement reçu</span>
+        </p>
       </div>
       <div class="inv-modal-bd">
         <label class="field-label">Mode de paiement</label>
@@ -381,17 +421,47 @@
   <script th:inline="javascript" th:attr="nonce=${cspNonce}">
     const invoiceId = /*[[${invoice.id}]]*/ '';
     const csrf = document.querySelector('meta[name="_csrf"]') ? document.querySelector('meta[name="_csrf"]').content : '';
+    const isClient = /*[[${#authorization.expression("hasRole('CLIENT')")}]]*/ false;
 
     function openPaidModal()  { document.getElementById('paidOverlay').classList.add('open'); }
     function closePaidModal() { document.getElementById('paidOverlay').classList.remove('open'); }
     document.getElementById('paidOverlay').addEventListener('click', e => { if(e.target===document.getElementById('paidOverlay')) closePaidModal(); });
 
     function confirmMarkAsPaid() {
-      fetch('/api/invoices/'+invoiceId+'/mark-as-paid', {
-        method:'PATCH', headers:{'Content-Type':'application/json','X-CSRF-TOKEN':csrf},
-        body: JSON.stringify({paymentMethod: document.getElementById('paymentMethod').value || null})
-      }).then(r => r.ok ? location.reload() : appAlert('Erreur', 'danger'));
+      const paymentMethod = document.getElementById('paymentMethod').value || null;
+      if (isClient) {
+        // Client : déclarer le paiement (l'avocat devra valider)
+        fetch('/api/invoices/'+invoiceId+'/declare-payment', {
+          method:'POST', headers:{'Content-Type':'application/json','X-CSRF-TOKEN':csrf},
+          body: JSON.stringify({paymentMethod: paymentMethod})
+        }).then(r => r.ok ? location.reload() : r.json().then(d => appAlert(d.message || 'Erreur', 'danger')).catch(() => appAlert('Erreur', 'danger')));
+      } else {
+        // Avocat : marquer directement comme payée
+        fetch('/api/invoices/'+invoiceId+'/mark-as-paid', {
+          method:'PATCH', headers:{'Content-Type':'application/json','X-CSRF-TOKEN':csrf},
+          body: JSON.stringify({paymentMethod: paymentMethod})
+        }).then(r => r.ok ? location.reload() : appAlert('Erreur', 'danger'));
+      }
     }
+
+    function validatePayment() {
+      appConfirm('Confirmer la réception du paiement ?', { type: 'success', confirmText: 'Valider' }).then(function(ok) {
+        if (!ok) return;
+        fetch('/api/invoices/'+invoiceId+'/validate-payment', {
+          method:'PATCH', headers:{'Content-Type':'application/json','X-CSRF-TOKEN':csrf}
+        }).then(r => r.ok ? location.reload() : appAlert('Erreur', 'danger'));
+      });
+    }
+
+    function rejectPayment() {
+      appConfirm('Rejeter la déclaration de paiement du client ? La facture repassera en attente.', { type: 'danger', confirmText: 'Rejeter' }).then(function(ok) {
+        if (!ok) return;
+        fetch('/api/invoices/'+invoiceId+'/reject-payment', {
+          method:'PATCH', headers:{'Content-Type':'application/json','X-CSRF-TOKEN':csrf}
+        }).then(r => r.ok ? location.reload() : appAlert('Erreur', 'danger'));
+      });
+    }
+
     function deleteInvoice(id) {
       appConfirm('Supprimer définitivement cette facture ?', { type: 'danger', confirmText: 'Supprimer' }).then(function(ok) {
       if (!ok) return;

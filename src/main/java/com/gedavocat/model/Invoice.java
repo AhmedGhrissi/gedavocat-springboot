@@ -145,6 +145,7 @@ public class Invoice {
     public enum InvoiceStatus {
         DRAFT("Brouillon"),
         SENT("Envoyée"),
+        PAYMENT_DECLARED("Paiement déclaré"),
         PAID("Payée"),
         OVERDUE("En retard"),
         CANCELLED("Annulée");

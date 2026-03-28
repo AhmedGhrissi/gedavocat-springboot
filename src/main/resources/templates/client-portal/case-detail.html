@@ -167,6 +167,13 @@
                                        onmouseover="this.style.background='#1E293B'; this.style.borderColor='#1E293B'" onmouseout="this.style.background='#0F172A'; this.style.borderColor='#0F172A'">
                                         <i class="fas fa-download"></i> Télécharger
                                     </a>
+                                    <button type="button"
+                                            style="background: #FFFFFF; border: 2px solid #DC2626; color: #DC2626; padding: 0.5rem 1rem; border-radius: 6px; font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem; cursor: pointer; transition: all 0.2s;"
+                                            th:onclick="'openDeleteRequestModal(\'' + ${doc.id} + '\', \'' + ${#strings.escapeJavaScript(doc.originalName)} + '\')'"
+                                            title="Demander la suppression"
+                                            onmouseover="this.style.background='#DC2626'; this.style.color='#FFFFFF'" onmouseout="this.style.background='#FFFFFF'; this.style.color='#DC2626'">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -249,6 +256,101 @@
                 </div>
             </div>
         </div>
+
+        <!-- Modal demande de suppression de document -->
+        <div class="modal fade" id="deleteRequestModal" tabindex="-1" aria-labelledby="deleteRequestModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="deleteRequestModalLabel">
+                            <i class="fas fa-trash-alt text-danger"></i> Demander la suppression
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Vous demandez la suppression du document :</p>
+                        <p class="fw-bold" id="deleteDocName"></p>
+                        <div class="mb-3">
+                            <label for="deleteReason" class="form-label">Motif (facultatif)</label>
+                            <textarea class="form-control" id="deleteReason" rows="3" placeholder="Indiquez la raison de votre demande..."></textarea>
+                        </div>
+                        <div class="alert alert-info small mb-0">
+                            <i class="fas fa-info-circle"></i> Votre avocat recevra une notification et pourra approuver ou refuser cette demande.
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                        <button type="button" class="btn btn-danger" id="confirmDeleteRequest" onclick="submitDeleteRequest()">
+                            <i class="fas fa-paper-plane"></i> Envoyer la demande
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script th:inline="javascript">
+            var deleteDocId = null;
+
+            function openDeleteRequestModal(docId, docName) {
+                deleteDocId = docId;
+                document.getElementById('deleteDocName').textContent = docName;
+                document.getElementById('deleteReason').value = '';
+                var modal = new bootstrap.Modal(document.getElementById('deleteRequestModal'));
+                modal.show();
+            }
+
+            function submitDeleteRequest() {
+                if (!deleteDocId) return;
+                var reason = document.getElementById('deleteReason').value.trim();
+                var btn = document.getElementById('confirmDeleteRequest');
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Envoi...';
+
+                fetch('/my-cases/documents/' + deleteDocId + '/request-deletion', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        [_csrfHeader]: _csrfToken
+                    },
+                    body: JSON.stringify({ reason: reason }),
+                    credentials: 'same-origin'
+                })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    bootstrap.Modal.getInstance(document.getElementById('deleteRequestModal')).hide();
+                    if (data.success) {
+                        showAlert('success', 'Votre demande de suppression a été envoyée à votre avocat.');
+                    } else {
+                        showAlert('danger', data.message || 'Erreur lors de l\'envoi de la demande.');
+                    }
+                })
+                .catch(function() {
+                    bootstrap.Modal.getInstance(document.getElementById('deleteRequestModal')).hide();
+                    showAlert('danger', 'Erreur de connexion. Veuillez réessayer.');
+                })
+                .finally(function() {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-paper-plane"></i> Envoyer la demande';
+                });
+            }
+
+            function showAlert(type, message) {
+                var alertsContainer = document.querySelector('.info-card .alert');
+                var parent = document.querySelector('.info-card');
+                if (!parent) return;
+                var alertDiv = document.createElement('div');
+                alertDiv.className = 'alert alert-' + type + ' alert-dismissible fade show mt-2';
+                alertDiv.setAttribute('role', 'alert');
+                alertDiv.innerHTML = message + '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>';
+                // Insert after the upload form
+                var uploadForm = document.getElementById('uploadForm');
+                if (uploadForm) {
+                    uploadForm.parentNode.insertBefore(alertDiv, uploadForm.nextSibling);
+                } else {
+                    parent.insertBefore(alertDiv, parent.firstChild);
+                }
+            }
+        </script>
     </div>
 </body>
 </html>
