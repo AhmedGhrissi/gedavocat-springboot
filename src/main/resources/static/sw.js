@@ -3,7 +3,7 @@
 //   Cache-first pour les assets, network-first pour les pages
 // ════════════════════════════════════════════════
 
-const CACHE_NAME = 'docavocat-v2';
+const CACHE_NAME = 'docavocat-v3';
 const STATIC_ASSETS = [
     '/css/layout.css',
     '/css/global-unified-theme.css',
@@ -56,8 +56,10 @@ self.addEventListener('fetch', event => {
         event.respondWith(
             fetch(request)
                 .then(response => {
-                    const clone = response.clone();
-                    caches.open(CACHE_NAME).then(cache => cache.put(request, clone));
+                    if (response.ok && response.type !== 'opaqueredirect') {
+                        const clone = response.clone();
+                        caches.open(CACHE_NAME).then(cache => cache.put(request, clone));
+                    }
                     return response;
                 })
                 .catch(() => caches.match(request).then(cached => cached || caches.match('/dashboard')))
@@ -89,8 +91,10 @@ self.addEventListener('fetch', event => {
     event.respondWith(
         fetch(request)
             .then(response => {
-                const clone = response.clone();
-                caches.open(CACHE_NAME).then(cache => cache.put(request, clone));
+                if (response.ok) {
+                    const clone = response.clone();
+                    caches.open(CACHE_NAME).then(cache => cache.put(request, clone));
+                }
                 return response;
             })
             .catch(() => caches.match(request))

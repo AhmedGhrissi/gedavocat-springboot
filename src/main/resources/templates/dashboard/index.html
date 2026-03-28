@@ -4,7 +4,7 @@
       layout:decorate="~{layout}">
 <head>
     <title>Tableau de bord</title>
-    <link rel="stylesheet" th:href="@{/css/pages/dashboard-institutional.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/dashboard.css}">
 </head>
 <body>
 <div layout:fragment="content">
@@ -33,27 +33,27 @@
         ══════════════════════════════════════════════════════════ -->
         <div class="kpi-grid">
             <div class="kpi-card">
-                <div class="kpi-value" th:text="${metrics.activeCases != null ? metrics.activeCases : 12}">12</div>
+                <div class="kpi-value" th:text="${activeCases != null ? activeCases : 0}">0</div>
                 <div class="kpi-label">Dossiers actifs</div>
-                <div class="kpi-change">+2 ce mois-ci</div>
+                <div class="kpi-change" th:text="${casesCount != null ? casesCount + ' au total' : ''}"></div>
             </div>
             
             <div class="kpi-card">
-                <div class="kpi-value" th:text="${metrics.unpaidInvoices != null ? metrics.unpaidInvoices : 5}">5</div>
-                <div class="kpi-label">Factures impayées</div>
-                <div class="kpi-change">-1 cette semaine</div>
+                <div class="kpi-value" th:text="${clientsCount != null ? clientsCount : 0}">0</div>
+                <div class="kpi-label">Clients</div>
+                <div class="kpi-change" th:text="${totalClients != null ? totalClients + ' au total' : ''}"></div>
             </div>
             
             <div class="kpi-card">
-                <div class="kpi-value" th:text="${metrics.pendingSignatures != null ? metrics.pendingSignatures : 3}">3</div>
+                <div class="kpi-value" th:text="${signaturesCount != null ? signaturesCount : 0}">0</div>
                 <div class="kpi-label">Signatures en cours</div>
                 <div class="kpi-change">En attente</div>
             </div>
             
             <div class="kpi-card">
-                <div class="kpi-value" th:text="${metrics.upcomingDeadlines != null ? metrics.upcomingDeadlines : 8}">8</div>
-                <div class="kpi-label">Échéances proches</div>
-                <div class="kpi-change">7 prochains jours</div>
+                <div class="kpi-value" th:text="${documentsCount != null ? documentsCount : 0}">0</div>
+                <div class="kpi-label">Documents</div>
+                <div class="kpi-change" th:text="${openCases != null ? openCases + ' dossiers ouverts' : ''}"></div>
             </div>
         </div>
 
