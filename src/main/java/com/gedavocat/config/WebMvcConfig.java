@@ -21,40 +21,50 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(@NonNull ResourceHandlerRegistry registry) {
+        int oneYear = 31536000;
+
         // Webjars (Bootstrap, Font Awesome, jQuery)
         registry.addResourceHandler("/webjars/**")
                 .addResourceLocations("classpath:/META-INF/resources/webjars/")
-                .resourceChain(false);
+                .setCachePeriod(oneYear)
+                .resourceChain(true);
 
         // Static resources (CSS, JS, images)
         registry.addResourceHandler("/css/**")
                 .addResourceLocations("classpath:/static/css/")
-                .resourceChain(false);
+                .setCachePeriod(oneYear)
+                .resourceChain(true);
 
         registry.addResourceHandler("/js/**")
                 .addResourceLocations("classpath:/static/js/")
-                .resourceChain(false);
+                .setCachePeriod(oneYear)
+                .resourceChain(true);
 
         registry.addResourceHandler("/img/**")
                 .addResourceLocations("classpath:/static/img/")
-                .resourceChain(false);
+                .setCachePeriod(oneYear)
+                .resourceChain(true);
 
         registry.addResourceHandler("/favicon.svg")
                 .addResourceLocations("classpath:/static/")
-                .resourceChain(false);
+                .setCachePeriod(oneYear)
+                .resourceChain(true);
 
         registry.addResourceHandler("/robots.txt")
                 .addResourceLocations("classpath:/static/")
-                .resourceChain(false);
+                .setCachePeriod(86400)
+                .resourceChain(true);
 
         registry.addResourceHandler("/.well-known/**")
                 .addResourceLocations("classpath:/static/.well-known/")
-                .resourceChain(false);
+                .setCachePeriod(86400)
+                .resourceChain(true);
 
         // PWA manifest and service worker
         registry.addResourceHandler("/manifest.json")
                 .addResourceLocations("classpath:/static/")
-                .resourceChain(false);
+                .setCachePeriod(86400)
+                .resourceChain(true);
 
         registry.addResourceHandler("/sw.js")
                 .addResourceLocations("classpath:/static/")
