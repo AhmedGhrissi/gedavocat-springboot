@@ -150,14 +150,6 @@ public class DashboardController {
         model.addAttribute("pendingSignatures", pendingSignatures);
         model.addAttribute("signedSignatures", signedSignatures);
         
-        // Objet metrics pour le nouveau template dashboard-institutional
-        java.util.Map<String, Object> metrics = new java.util.HashMap<>();
-        metrics.put("activeCases", activeCases);
-        metrics.put("unpaidInvoices", 0); // Factures impayées - à implémenter avec module facturation
-        metrics.put("pendingSignatures", pendingSignatures);
-        metrics.put("upcomingDeadlines", 0); // Échéances proches - à implémenter avec module calendrier
-        model.addAttribute("metrics", metrics);
-        
         // Activités récentes depuis l'audit log
         model.addAttribute("recentActivities", buildRecentActivities(user.getId()));
     }
@@ -194,14 +186,6 @@ public class DashboardController {
         model.addAttribute("recentCases",    cases);
         model.addAttribute("recentClients",  new ArrayList<>());
         
-        // Objet metrics pour le nouveau template dashboard-institutional
-        java.util.Map<String, Object> metrics = new java.util.HashMap<>();
-        metrics.put("activeCases", activeCases);
-        metrics.put("unpaidInvoices", 0);
-        metrics.put("pendingSignatures", 0);
-        metrics.put("upcomingDeadlines", 0);
-        model.addAttribute("metrics", metrics);
-        
         // Activités récentes depuis l'audit log
         model.addAttribute("recentActivities", buildRecentActivities(user.getId()));
     }
@@ -224,14 +208,6 @@ public class DashboardController {
         model.addAttribute("totalStorage",   0L);
         model.addAttribute("recentCases",    new ArrayList<>());
         model.addAttribute("recentClients",  new ArrayList<>());
-        
-        // Objet metrics pour le nouveau template dashboard-institutional
-        java.util.Map<String, Object> metrics = new java.util.HashMap<>();
-        metrics.put("activeCases", 0);
-        metrics.put("unpaidInvoices", 0);
-        metrics.put("pendingSignatures", 0);
-        metrics.put("upcomingDeadlines", 0);
-        model.addAttribute("metrics", metrics);
         
         // Activités récentes vides
         model.addAttribute("recentActivities", new ArrayList<>());
