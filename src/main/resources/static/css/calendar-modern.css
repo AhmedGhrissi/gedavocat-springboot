@@ -31,6 +31,10 @@
     font-weight: 700;
     color: white !important;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    text-transform: capitalize;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+    min-width: max-content;
 }
 
 .fc .fc-button {
@@ -69,6 +73,28 @@
     background: white;
     border-radius: 0 0 12px 12px;
     padding: 1rem;
+    overflow-x: hidden;
+}
+
+.fc {
+    overflow-x: hidden;
+}
+
+/* Weekend cells - dimmed / non-business */
+.fc .fc-day-sat,
+.fc .fc-day-sun {
+    background: #f8f9fa !important;
+    opacity: 0.7;
+}
+
+.fc .fc-day-sat .fc-daygrid-day-number,
+.fc .fc-day-sun .fc-daygrid-day-number {
+    color: #94a3b8;
+}
+
+.fc .fc-col-header-cell.fc-day-sat .fc-col-header-cell-cushion,
+.fc .fc-col-header-cell.fc-day-sun .fc-col-header-cell-cushion {
+    color: #94a3b8;
 }
 
 /* En-têtes des jours - Soft Gradient */

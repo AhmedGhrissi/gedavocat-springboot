@@ -229,8 +229,8 @@
                     <div class="card-header text-white" style="background: linear-gradient(135deg, #1E3A5F 0%, #0F172A 100%); border: none; padding: 1.25rem;">
                         <h5 class="mb-0"><i class="fas fa-calendar me-2"></i> Calendrier</h5>
                     </div>
-                    <div class="card-body p-3" style="overflow-x: auto;">
-                        <div id="calendar" style="max-width: 100%;"></div>
+                    <div class="card-body p-3" style="overflow-x: hidden;">
+                        <div id="calendar" style="max-width: 100%; overflow: hidden;"></div>
                     </div>
                 </div>
             </div>
@@ -478,6 +478,10 @@
             dayMaxEvents: isMobile ? 2 : 4,
             selectable: true,
             selectMirror: true,
+            selectAllow: function(selectInfo) {
+                var day = selectInfo.start.getDay();
+                return day !== 0 && day !== 6; // 0=dim, 6=sam
+            },
             nowIndicator: true,
             slotMinTime: '07:00:00',
             slotMaxTime: '20:00:00',
