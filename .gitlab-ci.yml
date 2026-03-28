@@ -423,6 +423,12 @@ deploy:
       # Synchroniser docker-compose.yml sur le serveur (toujours à jour avec le repo)
       scp docker/docker-compose.yml root@"${SERVER_HOST}":/opt/docavocat/docker-compose.yml
     - |
+      # Synchroniser les migrations SQL si présentes
+      if [ -d migrations ]; then
+        ssh root@"${SERVER_HOST}" "mkdir -p /opt/docavocat/migrations"
+        scp -r migrations/* root@"${SERVER_HOST}":/opt/docavocat/migrations/ 2>/dev/null || true
+      fi
+    - |
       ssh root@"${SERVER_HOST}" bash -s << 'ENDSSH'
       set -e
       cd /opt/docavocat
@@ -472,6 +478,14 @@ deploy:
         echo "Attente MySQL ($i/30)..."
         sleep 2
       done
+
+      echo "=== Migration SQL (tables manquantes) ==="
+      if [ -f migrations/pending.sql ]; then
+        echo "Execution de migrations/pending.sql..."
+        docker compose exec -T mysql mysql -u gedavocat -p"${MYSQL_PASSWORD}" gedavocat < migrations/pending.sql && echo "Migration OK" || echo "WARN: Migration echouee (tables deja existantes?)"
+      else
+        echo "Aucune migration en attente"
+      fi
 
       echo "=== Demarrage slot ${IDLE_SLOT} (l ancien reste actif) ==="
       docker compose up -d --no-deps --force-recreate ${IDLE_SERVICE}
